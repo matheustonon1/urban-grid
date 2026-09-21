@@ -134,7 +134,9 @@ projeto na Vercel para testar. Sem essa variável, o restante do app
 funciona normalmente; só o envio de fotos falha.
 
 `NEXT_PUBLIC_APP_URL` é opcional (usada para montar o link no e-mail de
-verificação de conta). Default: `http://localhost:3000`.
+verificação de conta, e as URLs absolutas em `robots.txt`/`sitemap.xml`).
+Default: `http://localhost:3000` — **em produção, configure com o domínio
+real**, senão o sitemap aponta pro localhost.
 
 `RESEND_API_KEY` e `RESEND_FROM_EMAIL` são opcionais — ativam o envio
 real do e-mail de verificação via [Resend](https://resend.com) (plano

@@ -3,6 +3,7 @@ import { randomBytes } from "crypto";
 import { Resend } from "resend";
 
 import { prisma } from "@/lib/prisma";
+import { montarUrl } from "@/lib/url";
 
 const VALIDADE_TOKEN_MS = 24 * 60 * 60 * 1000;
 
@@ -19,10 +20,6 @@ export async function criarTokenVerificacao(email: string): Promise<string> {
   });
 
   return token;
-}
-
-function montarUrl(caminho: string) {
-  return `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}${caminho}`;
 }
 
 // Sem RESEND_API_KEY configurada, o e-mail fica no log do servidor (útil
