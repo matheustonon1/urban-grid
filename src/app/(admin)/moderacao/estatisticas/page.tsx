@@ -126,6 +126,12 @@ export default async function EstatisticasModeracaoPage() {
     total: contagemPorDia.get(chave) ?? 0,
   }));
   const maximoVolume = Math.max(...volumeDiario.map((d) => d.total), 1);
+  const totalVolumePeriodo = volumeDiario.reduce((soma, dia) => soma + dia.total, 0);
+  const diaPico = volumeDiario.reduce(
+    (maior, dia) => (dia.total > maior.total ? dia : maior),
+    volumeDiario[0]
+  );
+  const chaveHoje = formatarDiaChave(agora);
 
   const linhasPorTipo = (["RECLAMACAO", "COMENTARIO"] as const).map((tipo) => ({
     tipo,
@@ -216,19 +222,43 @@ export default async function EstatisticasModeracaoPage() {
           )}
 
           <div className={`flex flex-col gap-3 ${cartao}`}>
-            <h2 className="font-semibold text-slate-900 dark:text-slate-100">
-              Volume nos últimos {DIAS_VOLUME} dias
-            </h2>
-            <div className="flex h-32 items-end gap-1">
+            <div>
+              <h2 className="font-semibold text-slate-900 dark:text-slate-100">
+                Volume nos últimos {DIAS_VOLUME} dias
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {totalVolumePeriodo} análise(s) no período
+                {diaPico.total > 0 &&
+                  ` · pico de ${diaPico.total} em ${formatarDiaCurto(diaPico.chave)}`}
+              </p>
+            </div>
+            <div className="flex h-32 gap-1">
               {volumeDiario.map((dia) => (
                 <div
                   key={dia.chave}
                   title={`${formatarDiaCurto(dia.chave)}: ${dia.total} análise(s)`}
-                  className="flex-1 rounded-t bg-primary/70 transition-colors hover:bg-primary"
-                  style={{
-                    height: `${dia.total > 0 ? Math.max((dia.total / maximoVolume) * 100, 4) : 1}%`,
-                  }}
-                />
+                  className="flex flex-1 flex-col items-center justify-end gap-0.5"
+                >
+                  {dia.total > 0 && (
+                    <span className="text-[10px] leading-none text-slate-500 dark:text-slate-400">
+                      {dia.total}
+                    </span>
+                  )}
+                  <div
+                    // Hoje ganha a cor de destaque (accent) em vez do azul
+                    // padrão - só pra dar uma âncora temporal rápida, sem
+                    // precisar de outro elemento (legenda, marcador etc.)
+                    // que pesaria mais no gráfico.
+                    className={`w-full rounded-t transition-colors ${
+                      dia.chave === chaveHoje
+                        ? "bg-accent"
+                        : "bg-primary/70 hover:bg-primary"
+                    }`}
+                    style={{
+                      height: `${dia.total > 0 ? Math.max((dia.total / maximoVolume) * 100, 4) : 1}%`,
+                    }}
+                  />
+                </div>
               ))}
             </div>
             <div className="flex justify-between text-xs text-slate-400 dark:text-slate-500">

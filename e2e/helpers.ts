@@ -214,7 +214,14 @@ export async function limparDadosTeste() {
       await prisma.user.deleteMany({ where: { id: { in: userIds } } });
     }
 
-    await prisma.orgao.deleteMany({ where: { nome: { contains: "Órgão E2E" } } });
+    // "contains: 'E2E'" (não só "Órgão E2E") de propósito - o fluxo real
+    // de onboarding (orgao-onboarding.spec.ts) cria o órgão com o nome
+    // digitado no formulário ("Secretaria E2E ..."), não o helper direto
+    // no banco. Órgão não tem onDelete: Cascade a partir de User (é o
+    // User que aponta pro Órgão, não o contrário), então um filtro
+    // estreito demais deixava esses órgãos órfãos pra sempre, poluindo
+    // a lista de /orgaos-categorias a cada rodada de teste.
+    await prisma.orgao.deleteMany({ where: { nome: { contains: "E2E" } } });
 
     await prisma.solicitacaoOrgao.deleteMany({
       where: { email: { contains: PREFIXO_TESTE } },
