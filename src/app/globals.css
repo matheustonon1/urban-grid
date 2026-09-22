@@ -7,6 +7,11 @@
   --foreground: #0f172a;
   --primary: #1d4ed8;
   --primary-dark: #1e40af;
+  /* Terracota - contraponto quente ao azul, usado com moderação (placas
+     de sinalização urbana, não mais um gradiente "SaaS" no botão
+     principal). */
+  --accent: #c2410c;
+  --accent-dark: #9a3412;
 }
 
 .dark {
@@ -14,6 +19,8 @@
   --foreground: #f1f5f9;
   --primary: #60a5fa;
   --primary-dark: #93c5fd;
+  --accent: #fb923c;
+  --accent-dark: #fdba74;
 }
 
 @theme inline {
@@ -21,8 +28,18 @@
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
   --color-primary-dark: var(--primary-dark);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-accent: var(--accent);
+  --color-accent-dark: var(--accent-dark);
+  --font-sans: var(--font-plex-sans);
+  --font-mono: var(--font-plex-mono);
+  --font-display: var(--font-display);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.01em;
 }
 
 body {
@@ -102,6 +119,25 @@ body {
   }
 }
 
+@keyframes city-grid-drift {
+  from {
+    background-position:
+      0 0,
+      0 0,
+      0 0,
+      0 0;
+  }
+  to {
+    /* 40px = um quarteirão inteiro da grade menor - o laço fecha sem
+       "pulo" visível quando volta pro início. */
+    background-position:
+      40px 40px,
+      40px 40px,
+      40px 40px,
+      40px 40px;
+  }
+}
+
 .animate-fade-in {
   animation: fade-in 0.35s ease-out both;
 }
@@ -126,6 +162,12 @@ body {
   animation: icon-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
+/* Bem lento e sutil de propósito - é textura ambiente, não algo pra
+   chamar atenção pra si mesmo. */
+.animate-city-grid-drift {
+  animation: city-grid-drift 50s linear infinite;
+}
+
 .bg-dot-grid {
   background-image: radial-gradient(circle, rgba(100, 116, 139, 0.35) 1px, transparent 1px);
   background-size: 28px 28px;
@@ -137,12 +179,40 @@ body {
   background-image: radial-gradient(circle, rgba(148, 163, 184, 0.18) 1px, transparent 1px);
 }
 
+/* Grade de linhas (quarteirão/planta baixa) no lugar do padrão de pontos -
+   remete ao nome do produto em vez de ser um fundo genérico. Uma linha em
+   cada 4 é levemente mais forte, pra sugerir avenidas entre quarteirões
+   sem virar ruído visual. */
+.bg-city-grid {
+  background-image:
+    linear-gradient(rgba(29, 78, 216, 0.14) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(29, 78, 216, 0.14) 1px, transparent 1px),
+    linear-gradient(rgba(29, 78, 216, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(29, 78, 216, 0.05) 1px, transparent 1px);
+  background-size:
+    160px 160px,
+    160px 160px,
+    40px 40px,
+    40px 40px;
+  -webkit-mask-image: radial-gradient(ellipse 75% 65% at 50% 0%, black, transparent);
+  mask-image: radial-gradient(ellipse 75% 65% at 50% 0%, black, transparent);
+}
+
+.dark .bg-city-grid {
+  background-image:
+    linear-gradient(rgba(96, 165, 250, 0.16) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(96, 165, 250, 0.16) 1px, transparent 1px),
+    linear-gradient(rgba(96, 165, 250, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(96, 165, 250, 0.07) 1px, transparent 1px);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in,
   .animate-pop-in,
   .animate-float,
   .animate-float-alt,
   .animate-grid-drift,
+  .animate-city-grid-drift,
   .animate-icon-pop {
     animation: none;
   }
