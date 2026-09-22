@@ -16,17 +16,14 @@ export function Revelar({
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  // Inicializa já visível se o usuário preferir menos movimento - evita
-  // precisar de um setState síncrono dentro do effect só pra esse caso.
-  const [visivel, setVisivel] = useState(
-    () =>
-      typeof window !== "undefined" &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  );
+  // Sempre false na primeira renderização, tanto no servidor quanto no
+  // cliente - window não existe no servidor, então decidir isso já no
+  // valor inicial do useState faz o cliente hidratar com um resultado
+  // diferente do HTML que veio do servidor (erro de hidratação). O valor
+  // real só muda depois de montar, no effect abaixo.
+  const [visivel, setVisivel] = useState(false);
 
   useEffect(() => {
-    if (visivel) return;
-
     const elemento = ref.current;
     if (!elemento) return;
 
@@ -41,13 +38,18 @@ export function Revelar({
     );
     observador.observe(elemento);
     return () => observador.disconnect();
-  }, [visivel]);
+  }, []);
 
   return (
     <div
       ref={ref}
       style={{ transitionDelay: visivel ? `${atraso}ms` : "0ms" }}
-      className={`transition-all duration-700 ease-out ${
+      // motion-reduce: força opacidade/posição final e desliga a transição
+      // via CSS puro, ativo desde o primeiro pixel renderizado - não
+      // depende do JS rodar primeiro (diferente de checar matchMedia no
+      // effect, que ainda deixaria a transição de 700ms tocar, só que
+      // mais cedo).
+      className={`motion-reduce:transition-none motion-reduce:translate-y-0 motion-reduce:opacity-100 transition-all duration-700 ease-out ${
         visivel ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
       } ${className}`}
     >
