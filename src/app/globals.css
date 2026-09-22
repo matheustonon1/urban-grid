@@ -227,3 +227,16 @@ body {
   transition: none !important;
   animation-play-state: paused !important;
 }
+
+/* Continua rolável (arrastar/gesto/scroll do trackpad), só sem a barra
+   de rolagem visível - usado em tiras horizontais de abas que só
+   precisam rolar em telas bem estreitas (em telas normais, tudo cabe
+   numa linha só). */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}

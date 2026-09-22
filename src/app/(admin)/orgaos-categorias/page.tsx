@@ -29,7 +29,7 @@ export default async function OrgaosCategoriasPage({
   const totalPaginas = calcularTotalPaginas(totalOrgaos);
 
   return (
-    <main className={containerPagina}>
+    <main className={`${containerPagina} max-w-3xl`}>
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
           Categorias por órgão

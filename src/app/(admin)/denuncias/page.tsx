@@ -50,14 +50,9 @@ export default async function DenunciasPage({ searchParams }: PageProps<"/denunc
 
   return (
     <main className={`${containerPagina} max-w-3xl`}>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-          Denúncias
-        </h1>
-        <Link href="/moderacao" className="text-sm text-primary underline">
-          Fila de moderação
-        </Link>
-      </div>
+      <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+        Denúncias
+      </h1>
 
       {denuncias.length === 0 && (
         <p className="text-sm text-slate-500 dark:text-slate-400">Nenhuma denúncia em aberto.</p>

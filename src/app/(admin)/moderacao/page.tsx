@@ -51,20 +51,9 @@ export default async function ModeracaoPage({ searchParams }: PageProps<"/modera
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
           Fila de moderação
         </h1>
-        <div className="flex gap-3">
-          <Link href="/denuncias" className="text-sm text-primary underline">
-            Denúncias
-          </Link>
-          <Link href="/moderacao/comentarios" className="text-sm text-primary underline">
-            Comentários
-          </Link>
-          <Link href="/moderacao/estatisticas" className="text-sm text-primary underline">
-            Estatísticas
-          </Link>
-          <Link href="/moderacao/historico" className="text-sm text-primary underline">
-            Ver histórico completo
-          </Link>
-        </div>
+        <Link href="/moderacao/historico" className="text-sm text-primary underline">
+          Ver histórico completo
+        </Link>
       </div>
 
       {pendentes.length === 0 && (

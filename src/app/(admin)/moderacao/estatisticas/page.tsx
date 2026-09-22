@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import { prisma } from "@/lib/prisma";
 import { cartao, containerPagina } from "@/lib/estilos";
 
@@ -136,19 +134,9 @@ export default async function EstatisticasModeracaoPage() {
 
   return (
     <main className={`${containerPagina} max-w-3xl`}>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-          Estatísticas de moderação
-        </h1>
-        <div className="flex gap-3">
-          <Link href="/moderacao" className="text-sm text-primary underline">
-            Fila pendente
-          </Link>
-          <Link href="/moderacao/historico" className="text-sm text-primary underline">
-            Histórico
-          </Link>
-        </div>
-      </div>
+      <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+        Estatísticas de moderação
+      </h1>
 
       {totalAnalises === 0 ? (
         <p className="text-sm text-slate-500 dark:text-slate-400">

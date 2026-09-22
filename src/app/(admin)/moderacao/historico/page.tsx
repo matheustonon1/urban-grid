@@ -54,14 +54,9 @@ export default async function HistoricoModeracaoPage({
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
           Histórico de moderação
         </h1>
-        <div className="flex gap-3">
-          <Link href="/moderacao/historico/comentarios" className="text-sm text-primary underline">
-            Comentários
-          </Link>
-          <Link href="/moderacao" className="text-sm text-primary underline">
-            Fila pendente
-          </Link>
-        </div>
+        <Link href="/moderacao/historico/comentarios" className="text-sm text-primary underline">
+          Histórico de comentários
+        </Link>
       </div>
       <p className="text-sm text-slate-500 dark:text-slate-400">
         Decisões automáticas e humanas, mais recentes primeiro

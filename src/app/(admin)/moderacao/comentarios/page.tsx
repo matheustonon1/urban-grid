@@ -42,17 +42,9 @@ export default async function ModeracaoComentariosPage({
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
           Comentários reprovados pela IA
         </h1>
-        <div className="flex gap-3">
-          <Link href="/moderacao" className="text-sm text-primary underline">
-            Reclamações
-          </Link>
-          <Link
-            href="/moderacao/historico/comentarios"
-            className="text-sm text-primary underline"
-          >
-            Ver histórico completo
-          </Link>
-        </div>
+        <Link href="/moderacao/historico/comentarios" className="text-sm text-primary underline">
+          Ver histórico completo
+        </Link>
       </div>
       <p className="text-sm text-slate-500 dark:text-slate-400">
         Comentário reprovado é ocultado na hora - esta fila é pra corrigir
