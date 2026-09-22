@@ -57,6 +57,10 @@ export default function LoginPage() {
             Entrar
           </button>
 
+          <Link href="/esqueci-senha" className="text-center text-xs text-slate-400 hover:text-primary dark:text-slate-500 dark:hover:text-blue-400">
+            Esqueceu sua senha?
+          </Link>
+
           <div className="mt-1 flex flex-col items-center gap-1 border-t border-slate-100 pt-4 dark:border-slate-800">
             <Link href="/cadastro" className={linkSutil}>
               Ainda não tem conta? <span className="font-semibold">Cadastre-se</span>

@@ -6,20 +6,47 @@ import { prisma } from "@/lib/prisma";
 import { montarUrl } from "@/lib/url";
 
 const VALIDADE_TOKEN_MS = 24 * 60 * 60 * 1000;
+// Mais curto que o de verificação/convite de órgão - redefinir senha é uma
+// ação sensível, então o link fica valido por menos tempo.
+const VALIDADE_TOKEN_REDEFINICAO_MS = 60 * 60 * 1000;
 
-export async function criarTokenVerificacao(email: string): Promise<string> {
-  await prisma.verificationToken.deleteMany({ where: { identifier: email } });
+// Prefixo no identifier (não um campo "tipo" à parte) pra impedir que um
+// token de VERIFICAÇÃO de e-mail - que de propósito fica válido até expirar
+// naturalmente, já que provedores de e-mail costumam pré-visitar esses
+// links (ver comentário em verificar-email/[token]/page.tsx) - seja
+// reaproveitado pra REDEFINIR senha. Sem essa distinção, os dois fluxos
+// dividiriam a mesma tabela sem nenhum jeito de diferenciar o propósito.
+const PREFIXO_REDEFINICAO = "redefinir-senha:";
+
+async function criarToken(identifier: string, validadeMs: number): Promise<string> {
+  await prisma.verificationToken.deleteMany({ where: { identifier } });
 
   const token = randomBytes(32).toString("hex");
   await prisma.verificationToken.create({
     data: {
-      identifier: email,
+      identifier,
       token,
-      expires: new Date(Date.now() + VALIDADE_TOKEN_MS),
+      expires: new Date(Date.now() + validadeMs),
     },
   });
 
   return token;
+}
+
+export async function criarTokenVerificacao(email: string): Promise<string> {
+  return criarToken(email, VALIDADE_TOKEN_MS);
+}
+
+export async function criarTokenRedefinicaoSenha(email: string): Promise<string> {
+  return criarToken(`${PREFIXO_REDEFINICAO}${email}`, VALIDADE_TOKEN_REDEFINICAO_MS);
+}
+
+// Extrai o e-mail de um identifier de token de redefinição - retorna null
+// se o token pertencer a outro propósito (ex.: verificação de e-mail).
+export function emailDoTokenRedefinicao(identifier: string): string | null {
+  return identifier.startsWith(PREFIXO_REDEFINICAO)
+    ? identifier.slice(PREFIXO_REDEFINICAO.length)
+    : null;
 }
 
 // Sem RESEND_API_KEY configurada, o e-mail fica no log do servidor (útil
@@ -121,6 +148,43 @@ export async function enviarEmailAcessoOrgao({
     to: email,
     subject: "Acesso de órgão aprovado — Urban Grid",
     html: montarHtmlAcessoOrgao(url, nomeOrgao),
+  });
+}
+
+function montarHtmlRedefinicaoSenha(url: string) {
+  return `
+    <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
+      <h1 style="color: #1d4ed8; font-size: 20px;">Urban Grid</h1>
+      <p style="color: #334155; font-size: 14px; line-height: 1.5;">
+        Recebemos um pedido para redefinir a senha da sua conta.
+      </p>
+      <a
+        href="${url}"
+        style="display: inline-block; background: #1d4ed8; color: #ffffff; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; margin: 8px 0;"
+      >
+        Criar nova senha
+      </a>
+      <p style="color: #94a3b8; font-size: 12px; margin-top: 24px;">
+        Este link expira em 1 hora e só pode ser usado uma vez. Se você não
+        pediu essa redefinição, ignore este e-mail - sua senha continua a
+        mesma.
+      </p>
+    </div>
+  `;
+}
+
+export async function enviarEmailRedefinicaoSenha({
+  email,
+  token,
+}: {
+  email: string;
+  token: string;
+}) {
+  const url = montarUrl(`/redefinir-senha/${token}`);
+  await enviarEmail({
+    to: email,
+    subject: "Redefinir sua senha — Urban Grid",
+    html: montarHtmlRedefinicaoSenha(url),
   });
 }
 

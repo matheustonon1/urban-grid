@@ -19,23 +19,24 @@ function limparExpirados(agora: number) {
   }
 }
 
-// Retorna true se o IP excedeu o limite de chamadas na janela de tempo.
-// Sem IP identificável, não há como limitar - deixa passar, mesmo critério
-// usado nos outros limites por IP do projeto (cadastro, solicitação de órgão).
+// Retorna true se a chave (IP, e-mail, etc.) excedeu o limite de chamadas
+// na janela de tempo. Sem chave identificável, não há como limitar - deixa
+// passar, mesmo critério usado nos outros limites por IP do projeto
+// (cadastro, solicitação de órgão).
 export function excedeuLimitePorIp(
   escopo: string,
-  ip: string | null,
+  chaveIdentificadora: string | null,
   limite: number,
   janelaMs: number
 ): boolean {
-  if (!ip) return false;
+  if (!chaveIdentificadora) return false;
 
   const agora = Date.now();
   if (registros.size > LIMITE_ENTRADAS_ANTES_DE_LIMPAR) {
     limparExpirados(agora);
   }
 
-  const chave = `${escopo}:${ip}`;
+  const chave = `${escopo}:${chaveIdentificadora}`;
   const registro = registros.get(chave);
 
   if (!registro || registro.expiraEm <= agora) {
