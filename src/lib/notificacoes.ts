@@ -1,7 +1,7 @@
 import type { TipoNotificacao } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
-import { enviarEmailNotificacao } from "@/lib/email";
+import { enviarEmailNotificacao, enviarEmailSenhaAlterada } from "@/lib/email";
 
 // Só os eventos que fazem sentido o cidadão saber mesmo sem estar com o
 // app aberto. NOVO_COMENTARIO fica de fora (pode ser frequente demais,
@@ -59,4 +59,29 @@ export async function criarNotificacao({
   } catch (erro) {
     console.error("Falha ao enviar e-mail de notificação:", erro);
   }
+}
+
+// Alerta de segurança quando a senha da conta muda (redefinição por
+// e-mail ou troca autosserviço em "Minha conta") - sempre notifica e
+// sempre manda e-mail, mesmo sem e-mail verificado (ver comentário em
+// enviarEmailSenhaAlterada).
+export async function alertarSenhaAlterada(userId: string) {
+  const usuario = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { email: true },
+  });
+  if (!usuario) {
+    return;
+  }
+
+  await prisma.notificacao.create({
+    data: {
+      userId,
+      tipo: "CONTA_SEGURANCA",
+      titulo: "Sua senha foi alterada",
+      mensagem: "Se não foi você, entre em contato com o suporte imediatamente.",
+    },
+  });
+
+  await enviarEmailSenhaAlterada({ email: usuario.email });
 }

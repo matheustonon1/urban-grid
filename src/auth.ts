@@ -95,11 +95,42 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
+    async jwt({ token, user }) {
       if (user) {
         token.papel = (user as { papel: typeof token.papel }).papel;
         token.orgaoId = (user as { orgaoId: string | null }).orgaoId;
+        token.sessaoEmitidaEm = Date.now();
+        return token;
       }
+
+      // Chamado a cada leitura da sessão, não só no login - sessão JWT é
+      // stateless por padrão (não revalida contra o banco a cada
+      // requisição), então esta é a única forma de derrubar uma sessão já
+      // emitida sem trocar toda a estratégia pra "database". Cobre dois
+      // casos: senha trocada depois deste token ter sido emitido (alguém
+      // pode ter comprometido a sessão antiga) e banimento aplicado
+      // enquanto a sessão já estava ativa (antes, só o login novo era
+      // barrado - uma sessão já aberta continuava valendo até expirar).
+      if (token.sub) {
+        const usuario = await prisma.user.findUnique({
+          where: { id: token.sub },
+          select: { senhaAlteradaEm: true, banidoAte: true },
+        });
+
+        if (!usuario) {
+          return null;
+        }
+        if (usuario.banidoAte && usuario.banidoAte > new Date()) {
+          return null;
+        }
+        if (
+          usuario.senhaAlteradaEm &&
+          (!token.sessaoEmitidaEm || usuario.senhaAlteradaEm.getTime() > token.sessaoEmitidaEm)
+        ) {
+          return null;
+        }
+      }
+
       return token;
     },
     session({ session, token }) {

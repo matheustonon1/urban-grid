@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { signIn } from "@/auth";
 import { emailDoTokenRedefinicao } from "@/lib/email";
+import { alertarSenhaAlterada } from "@/lib/notificacoes";
 
 import { RedefinirSenhaSchema, type RedefinirSenhaFormState } from "./definitions";
 
@@ -44,6 +45,10 @@ export async function redefinirSenha(
       where: { id: usuario.id },
       data: {
         senhaHash,
+        // senhaAlteradaEm invalida qualquer sessão JWT emitida antes desta
+        // troca (ver callback jwt em auth.ts) - se a conta foi comprometida,
+        // trocar a senha agora também derruba quem estava com acesso.
+        senhaAlteradaEm: new Date(),
         // Quem prova controle do e-mail redefinindo a senha já demonstrou
         // ser o dono da conta - não faz sentido continuar bloqueado por
         // tentativas de senha erradas anteriores.
@@ -56,6 +61,8 @@ export async function redefinirSenha(
     // sensível, então apagar impede reaproveitar o mesmo link depois.
     prisma.verificationToken.delete({ where: { token } }),
   ]);
+
+  await alertarSenhaAlterada(usuario.id);
 
   try {
     await signIn("credentials", {

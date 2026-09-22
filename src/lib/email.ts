@@ -188,6 +188,34 @@ export async function enviarEmailRedefinicaoSenha({
   });
 }
 
+function montarHtmlSenhaAlterada() {
+  return `
+    <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
+      <h1 style="color: #1d4ed8; font-size: 20px;">Urban Grid</h1>
+      <p style="color: #334155; font-size: 14px; line-height: 1.5;">
+        A senha da sua conta foi alterada agora.
+      </p>
+      <p style="color: #b91c1c; font-size: 14px; line-height: 1.5; font-weight: 600;">
+        Se não foi você, sua conta pode estar comprometida — troque a
+        senha imediatamente e entre em contato com o suporte.
+      </p>
+    </div>
+  `;
+}
+
+// Alerta de segurança - diferente das outras funções de e-mail deste
+// arquivo, é chamada direto (não passa por criarNotificacao/enviarEmailNotificacao),
+// porque não deve depender de e-mail verificado: quem troca a senha pelo
+// link de redefinição já provou controlar essa caixa de entrada ao
+// clicar nele, então o alerta tem que sair mesmo assim.
+export async function enviarEmailSenhaAlterada({ email }: { email: string }) {
+  await enviarEmail({
+    to: email,
+    subject: "Sua senha foi alterada — Urban Grid",
+    html: montarHtmlSenhaAlterada(),
+  });
+}
+
 function montarHtmlSolicitacaoRejeitada(motivo: string) {
   return `
     <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">

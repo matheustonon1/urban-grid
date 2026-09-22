@@ -94,6 +94,7 @@ enum TipoNotificacao {
   NOVO_COMENTARIO
   PEDIDO_AVALIACAO
   ATIVIDADE_SUSPEITA
+  CONTA_SEGURANCA
 }
 
 // ===========================================================================
@@ -109,9 +110,10 @@ model User {
   emailVerified DateTime?
   image         String?
 
-  senhaHash String? // login por credenciais
-  cpfHash   String? @unique // apenas hash, nunca o CPF em texto
-  telefone  String?
+  senhaHash       String? // login por credenciais
+  senhaAlteradaEm DateTime? // usado pra invalidar sessões JWT emitidas antes da troca (ver callback jwt em auth.ts)
+  cpfHash         String? @unique // apenas hash, nunca o CPF em texto
+  telefone        String?
 
   // 2FA por aplicativo autenticador (TOTP). totpSecret fica cifrado
   // (AES-256-GCM, chave derivada de AUTH_SECRET) - nunca em texto puro,

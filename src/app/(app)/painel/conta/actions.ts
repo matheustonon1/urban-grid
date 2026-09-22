@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 
 import { auth, signOut } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { alertarSenhaAlterada } from "@/lib/notificacoes";
 
 import {
   ExclusaoSchema,
@@ -82,10 +83,21 @@ export async function alterarSenha(
   const novaSenhaHash = await bcrypt.hash(validado.data.novaSenha, 10);
   await prisma.user.update({
     where: { id: session.user.id },
-    data: { senhaHash: novaSenhaHash },
+    data: {
+      senhaHash: novaSenhaHash,
+      // Invalida a sessão atual também (não só outras) - ver callback jwt
+      // em auth.ts. Evita comportamento assimétrico com a redefinição por
+      // e-mail, que também encerra sessões antigas.
+      senhaAlteradaEm: new Date(),
+    },
   });
 
-  return { mensagem: "Senha alterada com sucesso." };
+  await alertarSenhaAlterada(session.user.id);
+
+  // A própria sessão atual acabou de ser invalidada pela troca acima -
+  // encerra explicitamente em vez de deixar a próxima requisição
+  // descobrir isso sozinha.
+  await signOut({ redirectTo: "/login" });
 }
 
 export async function excluirConta(
