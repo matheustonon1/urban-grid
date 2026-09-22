@@ -1,13 +1,28 @@
 import * as z from "zod";
 
+// Só telefone é editável aqui - nome não é um campo que o usuário deve
+// poder ficar trocando livremente (é usado como identificação pública
+// em comentários e, no caso de conta de órgão, remonta à pessoa
+// responsável cadastrada na solicitação de acesso).
 export const PerfilSchema = z.object({
-  nome: z.string().trim().min(2, { error: "Informe seu nome completo." }).max(100),
   telefone: z.string().trim().max(20).optional().or(z.literal("")),
 });
 
 export type PerfilFormState =
   | {
-      erros?: { nome?: string[]; telefone?: string[] };
+      erros?: { telefone?: string[] };
+      mensagem?: string;
+    }
+  | undefined;
+
+export const TrocaEmailSchema = z.object({
+  novoEmail: z.email({ error: "Informe um e-mail válido." }).trim().max(254),
+  senhaAtual: z.string().min(1, { error: "Informe sua senha atual." }).max(100),
+});
+
+export type TrocaEmailFormState =
+  | {
+      erros?: { novoEmail?: string[]; senhaAtual?: string[] };
       mensagem?: string;
     }
   | undefined;

@@ -316,7 +316,7 @@ urban-grid/
 │   │   ├── identificador.ts # busca de usuário por e-mail ou CPF
 │   │   ├── verificacao.ts   # regra de e-mail obrigatório p/ confirmar e denunciar
 │   │   ├── turnstile.ts     # verificação antifake do Cloudflare Turnstile
-│   │   ├── protocolo.ts     # geração do número de protocolo (RC-AAAA-NNNNNNN)
+│   │   ├── protocolo.ts     # geração do número de protocolo (UG-AAAA-NNNNNNN)
 │   │   ├── tempo-relativo.ts # formatação de datas relativas ("há 2 dias")
 │   │   └── reputacaoOrgao.ts # métricas e selo de reputação por órgão
 │   └── types/

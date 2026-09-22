@@ -1,11 +1,11 @@
 "use client";
 
 import { useActionState } from "react";
-import { Lock, Trash2, User } from "lucide-react";
+import { Lock, Mail, Trash2, User } from "lucide-react";
 
 import { botaoPrimario, campoInput, cartao } from "@/lib/estilos";
 
-import { alterarSenha, atualizarPerfil, excluirConta } from "./actions";
+import { alterarSenha, atualizarPerfil, excluirConta, solicitarTrocaEmail } from "./actions";
 
 function Rotulo({ children, htmlFor }: { children: string; htmlFor: string }) {
   return (
@@ -18,13 +18,7 @@ function Rotulo({ children, htmlFor }: { children: string; htmlFor: string }) {
   );
 }
 
-export function FormularioPerfil({
-  nome,
-  telefone,
-}: {
-  nome: string;
-  telefone: string;
-}) {
+export function FormularioPerfil({ telefone }: { telefone: string }) {
   const [state, action, pending] = useActionState(atualizarPerfil, undefined);
 
   return (
@@ -32,21 +26,6 @@ export function FormularioPerfil({
       <div className="flex items-center gap-2">
         <User className="h-5 w-5 text-slate-400 dark:text-slate-500" aria-hidden />
         <h2 className="font-semibold text-slate-900 dark:text-slate-100">Dados pessoais</h2>
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <Rotulo htmlFor="perfil-nome">Nome completo</Rotulo>
-        <input
-          id="perfil-nome"
-          type="text"
-          name="nome"
-          defaultValue={nome}
-          placeholder="Seu nome completo"
-          className={campoInput}
-        />
-        {state?.erros?.nome && (
-          <p className="text-sm text-red-600 dark:text-red-400">{state.erros.nome[0]}</p>
-        )}
       </div>
 
       <div className="flex flex-col gap-1">
@@ -133,6 +112,57 @@ export function FormularioSenha() {
 
       <button type="submit" disabled={pending} className={`${botaoPrimario} w-fit`}>
         Alterar senha
+      </button>
+    </form>
+  );
+}
+
+export function FormularioTrocaEmail({ emailAtual }: { emailAtual: string }) {
+  const [state, action, pending] = useActionState(solicitarTrocaEmail, undefined);
+
+  return (
+    <form action={action} className={`flex flex-col gap-3 ${cartao}`}>
+      <div className="flex items-center gap-2">
+        <Mail className="h-5 w-5 text-slate-400 dark:text-slate-500" aria-hidden />
+        <h2 className="font-semibold text-slate-900 dark:text-slate-100">Trocar e-mail</h2>
+      </div>
+      <p className="text-sm text-slate-500 dark:text-slate-400">
+        E-mail atual: <span className="font-medium">{emailAtual}</span>. A troca só
+        passa a valer depois de confirmada pelo novo endereço.
+      </p>
+
+      <div className="flex flex-col gap-1">
+        <Rotulo htmlFor="email-novo">Novo e-mail</Rotulo>
+        <input
+          id="email-novo"
+          type="email"
+          name="novoEmail"
+          className={campoInput}
+        />
+        {state?.erros?.novoEmail && (
+          <p className="text-sm text-red-600 dark:text-red-400">{state.erros.novoEmail[0]}</p>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <Rotulo htmlFor="email-senha-atual">Confirme sua senha</Rotulo>
+        <input
+          id="email-senha-atual"
+          type="password"
+          name="senhaAtual"
+          className={campoInput}
+        />
+        {state?.erros?.senhaAtual && (
+          <p className="text-sm text-red-600 dark:text-red-400">{state.erros.senhaAtual[0]}</p>
+        )}
+      </div>
+
+      {state?.mensagem && (
+        <p className="text-sm text-slate-600 dark:text-slate-400">{state.mensagem}</p>
+      )}
+
+      <button type="submit" disabled={pending} className={`${botaoPrimario} w-fit`}>
+        Enviar link de confirmação
       </button>
     </form>
   );

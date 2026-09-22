@@ -6,15 +6,18 @@ import bcrypt from "bcryptjs";
 
 import { auth, signOut } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { alertarSenhaAlterada } from "@/lib/notificacoes";
+import { alertarSenhaAlterada, alertarTrocaEmailSolicitada } from "@/lib/notificacoes";
+import { criarTokenTrocaEmail, enviarEmailConfirmarTrocaEmail } from "@/lib/email";
 
 import {
   ExclusaoSchema,
   PerfilSchema,
   SenhaSchema,
+  TrocaEmailSchema,
   type ExclusaoFormState,
   type PerfilFormState,
   type SenhaFormState,
+  type TrocaEmailFormState,
 } from "./definitions";
 
 export async function atualizarPerfil(
@@ -27,24 +30,71 @@ export async function atualizarPerfil(
   }
 
   const validado = PerfilSchema.safeParse({
-    nome: formData.get("nome"),
     telefone: formData.get("telefone"),
   });
   if (!validado.success) {
     return { erros: validado.error.flatten().fieldErrors };
   }
 
-  const { nome, telefone } = validado.data;
-
   await prisma.user.update({
     where: { id: session.user.id },
-    data: { name: nome, telefone: telefone || null },
+    data: { telefone: validado.data.telefone || null },
   });
 
   revalidatePath("/painel/conta");
   revalidatePath("/painel");
 
   return { mensagem: "Dados atualizados." };
+}
+
+export async function solicitarTrocaEmail(
+  _state: TrocaEmailFormState,
+  formData: FormData
+): Promise<TrocaEmailFormState> {
+  const session = await auth();
+  if (!session?.user) {
+    redirect("/login");
+  }
+
+  const validado = TrocaEmailSchema.safeParse({
+    novoEmail: formData.get("novoEmail"),
+    senhaAtual: formData.get("senhaAtual"),
+  });
+  if (!validado.success) {
+    return { erros: validado.error.flatten().fieldErrors };
+  }
+
+  const { novoEmail, senhaAtual } = validado.data;
+
+  const usuario = await prisma.user.findUnique({ where: { id: session.user.id } });
+  if (!usuario?.senhaHash) {
+    return { mensagem: "Não foi possível trocar o e-mail." };
+  }
+
+  const senhaValida = await bcrypt.compare(senhaAtual, usuario.senhaHash);
+  if (!senhaValida) {
+    return { erros: { senhaAtual: ["Senha incorreta."] } };
+  }
+
+  if (novoEmail === usuario.email) {
+    return { erros: { novoEmail: ["Este já é o seu e-mail atual."] } };
+  }
+
+  const emailEmUso = await prisma.user.findUnique({ where: { email: novoEmail } });
+  if (emailEmUso) {
+    return { erros: { novoEmail: ["Já existe uma conta com este e-mail."] } };
+  }
+
+  const token = await criarTokenTrocaEmail(usuario.id, novoEmail);
+  await enviarEmailConfirmarTrocaEmail({ email: novoEmail, token, emailAtual: usuario.email });
+  // Aviso pro e-mail atual sai mesmo se falhar o envio acima (enviarEmail
+  // nunca lança) - dono da conta precisa saber que uma troca foi pedida,
+  // independente do e-mail novo ter recebido o link ou não.
+  await alertarTrocaEmailSolicitada(usuario.id, novoEmail);
+
+  return {
+    mensagem: `Enviamos um link de confirmação para ${novoEmail}. O e-mail de acesso só muda depois que você confirmar por lá.`,
+  };
 }
 
 export async function alterarSenha(

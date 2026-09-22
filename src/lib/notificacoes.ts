@@ -1,7 +1,11 @@
 import type { TipoNotificacao } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
-import { enviarEmailNotificacao, enviarEmailSenhaAlterada } from "@/lib/email";
+import {
+  enviarEmailNotificacao,
+  enviarEmailSenhaAlterada,
+  enviarEmailTrocaEmailSolicitada,
+} from "@/lib/email";
 
 // Só os eventos que fazem sentido o cidadão saber mesmo sem estar com o
 // app aberto. NOVO_COMENTARIO fica de fora (pode ser frequente demais,
@@ -84,4 +88,28 @@ export async function alertarSenhaAlterada(userId: string) {
   });
 
   await enviarEmailSenhaAlterada({ email: usuario.email });
+}
+
+// Mesmo espírito de alertarSenhaAlterada: avisa o e-mail ATUAL assim que
+// a troca é pedida (não só quando confirmada) - se não foi o dono da
+// conta, ele precisa saber a tempo de agir.
+export async function alertarTrocaEmailSolicitada(userId: string, novoEmail: string) {
+  const usuario = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { email: true },
+  });
+  if (!usuario) {
+    return;
+  }
+
+  await prisma.notificacao.create({
+    data: {
+      userId,
+      tipo: "CONTA_SEGURANCA",
+      titulo: "Troca de e-mail solicitada",
+      mensagem: `Pediram a troca do e-mail de acesso para ${novoEmail}. Se não foi você, troque sua senha imediatamente.`,
+    },
+  });
+
+  await enviarEmailTrocaEmailSolicitada({ email: usuario.email, novoEmail });
 }

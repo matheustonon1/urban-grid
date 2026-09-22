@@ -17,6 +17,13 @@ const VALIDADE_TOKEN_REDEFINICAO_MS = 60 * 60 * 1000;
 // reaproveitado pra REDEFINIR senha. Sem essa distinção, os dois fluxos
 // dividiriam a mesma tabela sem nenhum jeito de diferenciar o propósito.
 const PREFIXO_REDEFINICAO = "redefinir-senha:";
+// Sensível como redefinir senha (muda a credencial de login) - mesma
+// validade curta. Guarda userId + e-mail novo no identifier porque o
+// token de confirmação precisa saber os dois: qual conta muda, e pra
+// qual e-mail (diferente dos outros fluxos, que só têm um e-mail
+// envolvido).
+const PREFIXO_TROCA_EMAIL = "trocar-email:";
+const VALIDADE_TOKEN_TROCA_EMAIL_MS = 60 * 60 * 1000;
 
 async function criarToken(identifier: string, validadeMs: number): Promise<string> {
   await prisma.verificationToken.deleteMany({ where: { identifier } });
@@ -47,6 +54,34 @@ export function emailDoTokenRedefinicao(identifier: string): string | null {
   return identifier.startsWith(PREFIXO_REDEFINICAO)
     ? identifier.slice(PREFIXO_REDEFINICAO.length)
     : null;
+}
+
+export async function criarTokenTrocaEmail(userId: string, novoEmail: string): Promise<string> {
+  // Limpa qualquer pedido de troca anterior deste usuário (pra e-mail
+  // diferente, por exemplo) antes de criar o novo - o deleteMany() do
+  // criarToken() só limparia por identifier exato, que aqui muda a cada
+  // e-mail novo pedido.
+  await prisma.verificationToken.deleteMany({
+    where: { identifier: { startsWith: `${PREFIXO_TROCA_EMAIL}${userId}:` } },
+  });
+  return criarToken(`${PREFIXO_TROCA_EMAIL}${userId}:${novoEmail}`, VALIDADE_TOKEN_TROCA_EMAIL_MS);
+}
+
+// userId não tem ":" (é um cuid), então o primeiro ":" depois do prefixo
+// separa ele do e-mail novo - retorna null se o token for de outro propósito.
+export function dadosDoTokenTrocaEmail(
+  identifier: string
+): { userId: string; novoEmail: string } | null {
+  if (!identifier.startsWith(PREFIXO_TROCA_EMAIL)) return null;
+
+  const resto = identifier.slice(PREFIXO_TROCA_EMAIL.length);
+  const indiceSeparador = resto.indexOf(":");
+  if (indiceSeparador === -1) return null;
+
+  return {
+    userId: resto.slice(0, indiceSeparador),
+    novoEmail: resto.slice(indiceSeparador + 1),
+  };
 }
 
 // Sem RESEND_API_KEY configurada, o e-mail fica no log do servidor (útil
@@ -213,6 +248,79 @@ export async function enviarEmailSenhaAlterada({ email }: { email: string }) {
     to: email,
     subject: "Sua senha foi alterada — Urban Grid",
     html: montarHtmlSenhaAlterada(),
+  });
+}
+
+function montarHtmlConfirmarTrocaEmail(url: string, emailAtual: string) {
+  return `
+    <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
+      <h1 style="color: #1d4ed8; font-size: 20px;">Urban Grid</h1>
+      <p style="color: #334155; font-size: 14px; line-height: 1.5;">
+        Recebemos um pedido para trocar o e-mail de acesso da conta
+        <strong>${emailAtual}</strong> para este endereço.
+      </p>
+      <a
+        href="${url}"
+        style="display: inline-block; background: #1d4ed8; color: #ffffff; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; margin: 8px 0;"
+      >
+        Confirmar novo e-mail
+      </a>
+      <p style="color: #94a3b8; font-size: 12px; margin-top: 24px;">
+        Este link expira em 1 hora. Se você não pediu essa troca, ignore
+        este e-mail - seu e-mail de acesso continua o mesmo.
+      </p>
+    </div>
+  `;
+}
+
+export async function enviarEmailConfirmarTrocaEmail({
+  email,
+  token,
+  emailAtual,
+}: {
+  email: string;
+  token: string;
+  emailAtual: string;
+}) {
+  const url = montarUrl(`/confirmar-email/${token}`);
+  await enviarEmail({
+    to: email,
+    subject: "Confirme seu novo e-mail — Urban Grid",
+    html: montarHtmlConfirmarTrocaEmail(url, emailAtual),
+  });
+}
+
+function montarHtmlTrocaEmailSolicitada(novoEmail: string) {
+  return `
+    <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
+      <h1 style="color: #1d4ed8; font-size: 20px;">Urban Grid</h1>
+      <p style="color: #334155; font-size: 14px; line-height: 1.5;">
+        Pediram a troca do e-mail de acesso da sua conta para
+        <strong>${novoEmail}</strong>. A troca só passa a valer depois de
+        confirmada pelo novo endereço.
+      </p>
+      <p style="color: #b91c1c; font-size: 14px; line-height: 1.5; font-weight: 600;">
+        Se não foi você, sua conta pode estar comprometida - troque sua
+        senha imediatamente.
+      </p>
+    </div>
+  `;
+}
+
+// Avisa o e-mail ANTIGO assim que a troca é pedida (não só quando é
+// confirmada) - se não foi o dono da conta quem pediu, ele precisa saber
+// a tempo de agir, antes que o link no e-mail novo seja confirmado.
+export async function enviarEmailTrocaEmailSolicitada({
+  email,
+  novoEmail,
+}: {
+  email: string;
+  novoEmail: string;
+}) {
+  await enviarEmail({
+    to: email,
+    subject: "Troca de e-mail solicitada — Urban Grid",
+    html: montarHtmlTrocaEmailSolicitada(novoEmail),
   });
 }
 

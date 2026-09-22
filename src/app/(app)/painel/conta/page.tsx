@@ -6,7 +6,12 @@ import { containerPagina } from "@/lib/estilos";
 import { decifrarSegredoTotp, gerarQrCodeTotp, gerarUriTotp } from "@/lib/totp";
 import { iniciaisDoNome } from "@/lib/texto";
 
-import { FormularioExclusao, FormularioPerfil, FormularioSenha } from "./formularios";
+import {
+  FormularioExclusao,
+  FormularioPerfil,
+  FormularioSenha,
+  FormularioTrocaEmail,
+} from "./formularios";
 import { FormularioTotp } from "./totp-formulario";
 
 const PAPEL_LABEL: Record<string, string> = {
@@ -62,8 +67,9 @@ export default async function ContaPage() {
         </div>
       </div>
 
-      <FormularioPerfil nome={usuario.name ?? ""} telefone={usuario.telefone ?? ""} />
+      <FormularioPerfil telefone={usuario.telefone ?? ""} />
       <FormularioSenha />
+      <FormularioTrocaEmail emailAtual={usuario.email} />
       <FormularioTotp
         ativo={!!usuario.totpConfirmadoEm}
         pendente={pendente}
