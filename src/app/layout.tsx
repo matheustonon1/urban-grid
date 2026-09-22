@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { IBM_Plex_Mono, IBM_Plex_Sans, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
@@ -49,8 +50,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col">
         <SiteHeader />
         {children}
-        <footer className="border-t border-slate-200 py-4 text-center text-xs text-slate-400 dark:border-slate-800 dark:text-slate-500">
-          Urban Grid — Trabalho de Conclusão de Curso
+        <footer className="flex flex-col items-center gap-1 border-t border-slate-200 py-4 text-center text-xs text-slate-400 dark:border-slate-800 dark:text-slate-500">
+          <span>Urban Grid — Trabalho de Conclusão de Curso</span>
+          <Link href="/termos" className="underline hover:text-slate-600 dark:hover:text-slate-300">
+            Termos de Uso e Política de Privacidade
+          </Link>
         </footer>
       </body>
     </html>

@@ -19,6 +19,7 @@ export async function solicitarOrgao(
     nomeResponsavel: formData.get("nomeResponsavel"),
     email: formData.get("email"),
     telefone: formData.get("telefone"),
+    aceitaTermos: formData.get("aceitaTermos"),
   });
   if (!validado.success) {
     return { erros: validado.error.flatten().fieldErrors };

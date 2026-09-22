@@ -20,6 +20,7 @@ test("solicita acesso como órgão, admin aprova, define senha e loga", async ({
   await page.locator('main button[role="option"]').first().click();
   await page.fill('input[name="nomeResponsavel"]', "Responsável E2E");
   await page.fill('input[name="email"]', emailOrgao);
+  await page.check('input[name="aceitaTermos"]');
   await page.click('button:has-text("Enviar solicitação")');
   await expect(page.getByRole("heading", { name: "Solicitação enviada!" })).toBeVisible();
 

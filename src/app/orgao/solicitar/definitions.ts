@@ -11,6 +11,9 @@ export const SolicitarOrgaoSchema = z.object({
     .max(100),
   email: z.email({ error: "Informe um e-mail válido." }).trim().max(254),
   telefone: z.string().trim().max(20).optional().or(z.literal("")),
+  aceitaTermos: z.literal("on", {
+    error: "É preciso aceitar os Termos de Uso e a Política de Privacidade.",
+  }),
 });
 
 export type SolicitarOrgaoFormState =
@@ -22,6 +25,7 @@ export type SolicitarOrgaoFormState =
         nomeResponsavel?: string[];
         email?: string[];
         telefone?: string[];
+        aceitaTermos?: string[];
       };
       mensagem?: string;
       sucesso?: boolean;

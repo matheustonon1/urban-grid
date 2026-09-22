@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState } from "react";
 
 import { SeletorCidade } from "@/components/cidade-combobox";
+import { TermosModal } from "@/components/termos-modal";
 import { botaoPrimario, botaoSecundario, campoInput, cartaoDestaque, linkSutil } from "@/lib/estilos";
 
 import { solicitarOrgao } from "./actions";
@@ -73,6 +74,16 @@ export function FormularioSolicitarOrgao() {
           placeholder="Telefone (opcional)"
           className={campoInput}
         />
+
+        <label className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
+          <input type="checkbox" name="aceitaTermos" required className="mt-0.5" />
+          <span>
+            Li e aceito os <TermosModal />.
+          </span>
+        </label>
+        {state?.erros?.aceitaTermos && (
+          <p className="text-sm text-red-600 dark:text-red-400">{state.erros.aceitaTermos[0]}</p>
+        )}
 
         {state?.mensagem && (
           <p className="text-sm text-red-600 dark:text-red-400">{state.mensagem}</p>
