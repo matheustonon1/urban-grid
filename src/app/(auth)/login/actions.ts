@@ -2,6 +2,7 @@
 
 import { AuthError } from "next-auth";
 import bcrypt from "bcryptjs";
+import { getTranslations } from "next-intl/server";
 
 import { signIn } from "@/auth";
 import { buscarUsuarioPorIdentificador } from "@/lib/identificador";
@@ -19,25 +20,24 @@ export async function login(
   _state: LoginFormState,
   formData: FormData
 ): Promise<LoginFormState> {
+  const t = await getTranslations("Login");
   const identificador = formData.get("identificador");
   const senha = formData.get("senha");
   const codigoTotp = formData.get("codigoTotp");
 
   if (typeof identificador !== "string" || typeof senha !== "string") {
-    return { erro: "Informe e-mail/CPF e senha." };
+    return { erro: t("erroCamposObrigatorios") };
   }
   if (identificador.length > 254 || senha.length > 100) {
-    return { erro: "E-mail/CPF ou senha inválidos." };
+    return { erro: t("erroCredenciaisInvalidas") };
   }
 
   const usuario = await buscarUsuarioPorIdentificador(identificador);
   if (usuario?.banidoAte && usuario.banidoAte > new Date()) {
-    return { erro: "Esta conta está suspensa." };
+    return { erro: t("erroContaSuspensa") };
   }
   if (usuario && usuarioBloqueadoPorLogin(usuario)) {
-    return {
-      erro: "Muitas tentativas de login incorretas. Aguarde alguns minutos e tente novamente.",
-    };
+    return { erro: t("erroMuitasTentativas") };
   }
 
   // Pré-checagem só de UX: mostra o campo de código antes de tentar,
@@ -64,8 +64,8 @@ export async function login(
     if (erro instanceof AuthError) {
       return {
         erro: precisaTotp
-          ? "E-mail/CPF, senha ou código inválidos."
-          : "E-mail/CPF ou senha inválidos.",
+          ? t("erroCredenciaisOuCodigoInvalidos")
+          : t("erroCredenciaisInvalidas"),
         identificador,
         etapaTotp: precisaTotp,
       };

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { IBM_Plex_Mono, IBM_Plex_Sans, Space_Grotesk } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import "./globals.css";
 
 import { SiteHeader } from "@/components/site-header";
@@ -33,10 +35,14 @@ export const metadata: Metadata = {
     "Plataforma de reclamações urbanas por município, com moderação de conteúdo assistida por IA.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+  const t = await getTranslations("Footer");
+
   return (
     <html
-      lang="pt-BR"
+      lang={locale}
       className={`${spaceGrotesk.variable} ${plexSans.variable} ${plexMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
@@ -48,14 +54,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
       </head>
       <body className="flex min-h-full flex-col">
-        <SiteHeader />
-        {children}
-        <footer className="flex flex-col items-center gap-1 border-t border-slate-200 py-4 text-center text-xs text-slate-400 dark:border-slate-800 dark:text-slate-500">
-          <span>Urban Grid — Trabalho de Conclusão de Curso</span>
-          <Link href="/termos" className="underline hover:text-slate-600 dark:hover:text-slate-300">
-            Termos de Uso e Política de Privacidade
-          </Link>
-        </footer>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <SiteHeader />
+          {children}
+          <footer className="flex flex-col items-center gap-1 border-t border-slate-200 py-4 text-center text-xs text-slate-400 dark:border-slate-800 dark:text-slate-500">
+            <span>{t("tcc")}</span>
+            <Link href="/termos" className="underline hover:text-slate-600 dark:hover:text-slate-300">
+              {t("termos")}
+            </Link>
+          </footer>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

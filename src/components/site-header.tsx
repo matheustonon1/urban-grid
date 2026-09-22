@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -6,10 +7,12 @@ import { botaoSecundario } from "@/lib/estilos";
 
 import { BuscaCidadeHeader, BuscaCidadeMobile } from "./busca-cidade-header";
 import { NotificacoesSino } from "./notificacoes-sino";
+import { SeletorIdioma } from "./seletor-idioma";
 import { ThemeToggle } from "./theme-toggle";
 import { UserMenu } from "./user-menu";
 
 export async function SiteHeader() {
+  const t = await getTranslations("Header");
   const session = await auth();
   const ehModerador =
     session?.user?.papel === "MODERADOR" || session?.user?.papel === "ADMIN";
@@ -52,7 +55,7 @@ export async function SiteHeader() {
             href="/reclamacoes"
             className="hidden text-slate-600 hover:text-slate-900 sm:inline dark:text-slate-400 dark:hover:text-slate-100"
           >
-            Reclamações
+            {t("reclamacoes")}
           </Link>
 
           <BuscaCidadeMobile />
@@ -84,14 +87,15 @@ export async function SiteHeader() {
                 href="/login"
                 className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
               >
-                Entrar
+                {t("entrar")}
               </Link>
               <Link href="/cadastro" className={botaoSecundario}>
-                Cadastrar
+                {t("cadastrar")}
               </Link>
             </>
           )}
 
+          <SeletorIdioma />
           <ThemeToggle />
         </nav>
       </div>

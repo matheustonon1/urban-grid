@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 
 import { botaoPrimario, campoInput, cartaoDestaque, linkSutil } from "@/lib/estilos";
 
 import { login } from "./actions";
 
 export default function LoginPage() {
+  const t = useTranslations("Login");
   const [state, action, pending] = useActionState(login, undefined);
 
   return (
@@ -23,14 +25,14 @@ export default function LoginPage() {
 
       <div className="animate-fade-in flex w-full max-w-sm flex-col items-center gap-6">
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-          Entrar
+          {t("titulo")}
         </h1>
 
         <form action={action} className={`flex flex-col gap-3 ${cartaoDestaque}`}>
           <input
             type="text"
             name="identificador"
-            placeholder="E-mail ou CPF"
+            placeholder={t("identificador")}
             defaultValue={state?.identificador ?? ""}
             required
             className={campoInput}
@@ -38,7 +40,7 @@ export default function LoginPage() {
           <input
             type="password"
             name="senha"
-            placeholder="Senha"
+            placeholder={t("senha")}
             required
             className={campoInput}
           />
@@ -47,29 +49,29 @@ export default function LoginPage() {
               type="text"
               name="codigoTotp"
               inputMode="numeric"
-              placeholder="Código do autenticador (ou código de backup)"
+              placeholder={t("codigoTotp")}
               autoFocus
               className={campoInput}
             />
           )}
           {state?.erro && <p className="text-sm text-red-600 dark:text-red-400">{state.erro}</p>}
           <button type="submit" disabled={pending} className={botaoPrimario}>
-            Entrar
+            {t("titulo")}
           </button>
 
           <Link href="/esqueci-senha" className="text-center text-xs text-slate-400 hover:text-primary dark:text-slate-500 dark:hover:text-blue-400">
-            Esqueceu sua senha?
+            {t("esqueceuSenha")}
           </Link>
 
           <div className="mt-1 flex flex-col items-center gap-1 border-t border-slate-100 pt-4 dark:border-slate-800">
             <Link href="/cadastro" className={linkSutil}>
-              Ainda não tem conta? <span className="font-semibold">Cadastre-se</span>
+              {t("semConta")} <span className="font-semibold">{t("cadastrese")}</span>
             </Link>
             <Link
               href="/cadastro?tipo=orgao"
               className="text-xs text-slate-400 transition-colors hover:text-primary dark:text-slate-500 dark:hover:text-blue-400"
             >
-              É um órgão público? Solicite acesso
+              {t("ehOrgao")}
             </Link>
           </div>
         </form>

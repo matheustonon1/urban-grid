@@ -11,6 +11,7 @@ import {
   Sparkles,
   TrendingUp,
 } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import { CategoriaIcon } from "@/components/categoria-icon";
@@ -26,57 +27,23 @@ const STATUS_PUBLICOS = [
   "ARQUIVADA",
 ] as const;
 
-const PASSOS = [
-  {
-    titulo: "1. Registre",
-    descricao:
-      "Descreva o problema urbano do seu bairro — buraco, iluminação, coleta de lixo e outros — com fotos, se quiser.",
-  },
-  {
-    titulo: "2. Moderação por IA",
-    descricao:
-      "Cada reclamação passa por checagens automáticas de conteúdo antes de ir ao ar publicamente.",
-  },
-  {
-    titulo: "3. Órgão responde",
-    descricao:
-      "O órgão responsável responde oficialmente e atualiza o status do problema.",
-  },
-  {
-    titulo: "4. Você confirma",
-    descricao:
-      "Avalie se o problema foi realmente resolvido — sua nota entra no índice público da cidade.",
-  },
-];
-
-const DIFERENCIAIS = [
-  {
-    icone: BrainCircuit,
-    titulo: "Moderação por IA",
-    descricao:
-      "Texto e imagem passam por checagens automáticas — conteúdo ofensivo, spam, dados pessoais, repostagem — antes de qualquer publicação.",
-  },
-  {
-    icone: Award,
-    titulo: "Reputação pública de órgãos",
-    descricao:
-      "Cada órgão tem um selo público (Ótimo, Bom, Regular, Ruim), calculado a partir do tempo de resposta e da taxa real de resolução.",
-  },
-  {
-    icone: MessageSquare,
-    titulo: "Comunidade ativa",
-    descricao:
-      "Confirme problemas que também afetam você e comente em qualquer reclamação — com moderação e fila de revisão humana.",
-  },
-  {
-    icone: ShieldCheck,
-    titulo: "Conta protegida",
-    descricao:
-      "Autenticação em duas etapas por aplicativo autenticador, CPF único por conta e verificação de e-mail.",
-  },
-];
-
 export default async function Home() {
+  const t = await getTranslations("Home");
+
+  const PASSOS = [
+    { titulo: t("passo1Titulo"), descricao: t("passo1Desc") },
+    { titulo: t("passo2Titulo"), descricao: t("passo2Desc") },
+    { titulo: t("passo3Titulo"), descricao: t("passo3Desc") },
+    { titulo: t("passo4Titulo"), descricao: t("passo4Desc") },
+  ];
+
+  const DIFERENCIAIS = [
+    { icone: BrainCircuit, titulo: t("diferencial1Titulo"), descricao: t("diferencial1Desc") },
+    { icone: Award, titulo: t("diferencial2Titulo"), descricao: t("diferencial2Desc") },
+    { icone: MessageSquare, titulo: t("diferencial3Titulo"), descricao: t("diferencial3Desc") },
+    { icone: ShieldCheck, titulo: t("diferencial4Titulo"), descricao: t("diferencial4Desc") },
+  ];
+
   const [
     totalReclamacoes,
     totalResolvidas,
@@ -130,12 +97,12 @@ export default async function Home() {
     totalReclamacoes > 0 ? Math.round((totalResolvidas / totalReclamacoes) * 100) : null;
 
   const ESTATISTICAS = [
-    { valor: totalReclamacoes, rotulo: "reclamações registradas" },
-    { valor: totalCidades, rotulo: "cidades atendidas" },
-    { valor: totalOrgaos, rotulo: "órgãos participantes" },
+    { valor: totalReclamacoes, rotulo: t("statReclamacoes") },
+    { valor: totalCidades, rotulo: t("statCidades") },
+    { valor: totalOrgaos, rotulo: t("statOrgaos") },
     {
       valor: indiceResolucao !== null ? `${indiceResolucao}%` : "—",
-      rotulo: "índice de resolução",
+      rotulo: t("statIndice"),
     },
   ];
 
@@ -150,31 +117,27 @@ export default async function Home() {
         <div className="animate-fade-in flex max-w-2xl flex-col items-center gap-5 text-center">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-medium text-accent-dark dark:text-accent">
             <Sparkles className="h-3.5 w-3.5" aria-hidden />
-            Moderação de conteúdo assistida por IA
+            {t("badge")}
           </span>
 
           <h1 className="text-5xl font-semibold tracking-tight text-slate-900 sm:text-6xl dark:text-slate-100">
             Urban <span className="text-primary">Grid</span>
           </h1>
-          <p className="text-lg text-slate-600 dark:text-slate-400">
-            Registre problemas urbanos do seu município, acompanhe a resposta
-            oficial do órgão responsável e confirme quando o problema for
-            resolvido de verdade.
-          </p>
+          <p className="text-lg text-slate-600 dark:text-slate-400">{t("subtitulo")}</p>
           <div className="mt-2 flex flex-wrap justify-center gap-3">
             <Link href="/reclamacoes" className={`${botaoPrimario} group px-6 py-3 text-base`}>
-              Ver reclamações públicas
+              {t("verReclamacoes")}
               <ArrowRight
                 className="h-4 w-4 transition-transform group-hover:translate-x-1"
                 aria-hidden
               />
             </Link>
             <Link href="/cadastro" className={`${botaoSecundario} px-6 py-3 text-base`}>
-              Criar conta
+              {t("criarConta")}
             </Link>
           </div>
           <Link href="/login" className="text-sm text-primary underline">
-            Já tem conta? Entrar
+            {t("jaTemConta")}
           </Link>
         </div>
 
@@ -199,10 +162,10 @@ export default async function Home() {
       <section className="flex w-full flex-col items-center gap-8 px-6 py-16 sm:px-8">
         <Revelar className="flex flex-col items-center gap-2 text-center">
           <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            Como funciona
+            {t("comoFunciona")}
           </h2>
           <p className="max-w-md text-sm text-slate-500 dark:text-slate-400">
-            Do registro à confirmação, cada etapa é pública e auditável.
+            {t("comoFuncionaSub")}
           </p>
         </Revelar>
 
@@ -224,11 +187,10 @@ export default async function Home() {
         <section className="flex w-full flex-col items-center gap-8 border-t border-slate-200 bg-slate-50 px-6 py-16 sm:px-8 dark:border-slate-800 dark:bg-slate-950/50">
           <Revelar className="flex flex-col items-center gap-2 text-center">
             <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-              Acontecendo agora
+              {t("acontecendoAgora")}
             </h2>
             <p className="max-w-md text-sm text-slate-500 dark:text-slate-400">
-              As reclamações mais recentes registradas na plataforma, em
-              tempo real.
+              {t("acontecendoAgoraSub")}
             </p>
           </Revelar>
 
@@ -255,7 +217,7 @@ export default async function Home() {
                 </p>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   {reclamacao.cidade.nome} - {reclamacao.cidade.estado.uf} ·{" "}
-                  {reclamacao._count.confirmacoes} confirmação(ões)
+                  {t("confirmacoes", { count: reclamacao._count.confirmacoes })}
                 </p>
               </Link>
             ))}
@@ -265,7 +227,7 @@ export default async function Home() {
             href="/reclamacoes"
             className="flex items-center gap-1 text-sm font-medium text-primary underline"
           >
-            Ver todas as reclamações
+            {t("verTodasReclamacoes")}
             <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>
         </section>
@@ -274,12 +236,9 @@ export default async function Home() {
       <section className="flex w-full flex-col items-center gap-8 border-t border-slate-200 px-6 py-16 sm:px-8 dark:border-slate-800">
         <Revelar className="flex flex-col items-center gap-2 text-center">
           <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            Por que o Urban Grid é diferente
+            {t("diferente")}
           </h2>
-          <p className="max-w-md text-sm text-slate-500 dark:text-slate-400">
-            Um canal direto entre cidadão e órgão público, com transparência
-            em cada etapa.
-          </p>
+          <p className="max-w-md text-sm text-slate-500 dark:text-slate-400">{t("diferenteSub")}</p>
         </Revelar>
 
         <Revelar atraso={120} className="grid w-full max-w-4xl gap-4 sm:grid-cols-2">
@@ -308,11 +267,10 @@ export default async function Home() {
               <TrendingUp className="h-5 w-5" aria-hidden />
             </span>
             <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-              Órgãos mais bem avaliados
+              {t("melhorAvaliados")}
             </h2>
             <p className="max-w-md text-sm text-slate-500 dark:text-slate-400">
-              Selo público calculado a partir do tempo de resposta e da taxa
-              real de resolução — sem autoavaliação.
+              {t("melhorAvaliadosSub")}
             </p>
           </Revelar>
 
@@ -344,8 +302,8 @@ export default async function Home() {
                     {orgao.sigla && ` (${orgao.sigla})`}
                   </p>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {orgao.cidade.nome} · {metricas.totalRespondidas} reclamação(ões)
-                    respondida(s)
+                    {orgao.cidade.nome} ·{" "}
+                    {t("reclamacoesRespondidas", { count: metricas.totalRespondidas })}
                   </p>
                 </Link>
               );
@@ -358,11 +316,10 @@ export default async function Home() {
         <Revelar className="flex flex-col items-center gap-4">
           <MapPin className="h-8 w-8 text-primary" aria-hidden />
           <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            Pronto para participar?
+            {t("prontoParticipar")}
           </h2>
           <p className="max-w-md text-sm text-slate-600 dark:text-slate-400">
-            Cidadãos registram problemas do seu bairro. Órgãos públicos
-            respondem oficialmente e constroem sua reputação.
+            {t("prontoParticiparSub")}
           </p>
 
           <div className="mt-4 grid w-full max-w-3xl gap-4 sm:grid-cols-2">
@@ -371,14 +328,11 @@ export default async function Home() {
                 <IdCard className="h-5 w-5 text-primary" aria-hidden />
               </div>
               <p className="font-semibold text-slate-900 dark:text-slate-100">
-                Sou cidadão
+                {t("souCidadao")}
               </p>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                Registre a primeira reclamação da sua cidade — o feed público
-                e o índice de resolução são criados automaticamente.
-              </p>
+              <p className="text-sm text-slate-600 dark:text-slate-400">{t("souCidadaoDesc")}</p>
               <Link href="/cadastro" className={`${botaoPrimario} mt-1`}>
-                Criar conta gratuita
+                {t("criarContaGratuita")}
               </Link>
             </div>
 
@@ -386,15 +340,10 @@ export default async function Home() {
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 transition-transform group-hover:scale-110 dark:bg-blue-500/10">
                 <Landmark className="h-5 w-5 text-primary" aria-hidden />
               </div>
-              <p className="font-semibold text-slate-900 dark:text-slate-100">
-                Sou órgão público
-              </p>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                Solicite acesso para responder oficialmente às reclamações da
-                sua cidade. Um administrador analisa cada pedido.
-              </p>
+              <p className="font-semibold text-slate-900 dark:text-slate-100">{t("souOrgao")}</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400">{t("souOrgaoDesc")}</p>
               <Link href="/cadastro?tipo=orgao" className={`${botaoSecundario} mt-1`}>
-                Solicitar acesso
+                {t("solicitarAcesso")}
               </Link>
             </div>
           </div>
