@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { botaoSecundario } from "@/lib/estilos";
 
-import { BuscaCidadeHeader } from "./busca-cidade-header";
+import { BuscaCidadeHeader, BuscaCidadeMobile } from "./busca-cidade-header";
 import { NotificacoesSino } from "./notificacoes-sino";
 import { ThemeToggle } from "./theme-toggle";
 import { UserMenu } from "./user-menu";
@@ -39,7 +39,7 @@ export async function SiteHeader() {
   ]);
 
   return (
-    <header className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+    <header className="relative border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
       <div className="mx-auto flex max-w-4xl items-center gap-4 px-6 py-3 sm:px-8">
         <Link href="/" className="text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100">
           Urban <span className="text-primary">Grid</span>
@@ -54,6 +54,8 @@ export async function SiteHeader() {
           >
             Reclamações
           </Link>
+
+          <BuscaCidadeMobile />
 
           {usuario ? (
             <>

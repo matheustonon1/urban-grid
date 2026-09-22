@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 
 export function prefixoProtocolo(ano: number): string {
-  return `RC-${ano}-`;
+  return `UG-${ano}-`;
 }
 
 // Baseado no maior número já existente, não na contagem de linhas - uma

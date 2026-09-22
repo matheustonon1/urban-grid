@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { prisma } from "@/lib/prisma";
 
-import { criarCidadaoTeste, criarReclamacaoTeste, limparDadosTeste } from "./helpers";
+import { apagarLogsDeModeracao, criarCidadaoTeste, criarReclamacaoTeste, limparDadosTeste } from "./helpers";
 
 let usuarioIdParaLimpar: string | undefined;
 
@@ -11,7 +11,9 @@ test.afterAll(async () => {
   // deixa de bater no filtro por prefixo que limparDadosTeste() usa - sem
   // isso, ela (e a reclamação anonimizada) ficaria órfã pra sempre no banco.
   if (usuarioIdParaLimpar) {
-    await prisma.reclamacao.deleteMany({ where: { autorId: usuarioIdParaLimpar } });
+    const filtro = { autorId: usuarioIdParaLimpar };
+    await apagarLogsDeModeracao(filtro);
+    await prisma.reclamacao.deleteMany({ where: filtro });
     await prisma.user.deleteMany({ where: { id: usuarioIdParaLimpar } });
   }
   await limparDadosTeste();

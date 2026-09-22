@@ -55,7 +55,13 @@ export function NotificacoesSino({
       </button>
 
       {aberto && (
-        <div className="animate-pop-in absolute right-0 z-10 mt-1 w-80 origin-top-right rounded-lg border border-slate-200 bg-white py-1 shadow-md dark:border-slate-700 dark:bg-slate-900">
+        // Em telas estreitas, "absolute right-0" com largura fixa (w-80)
+        // estourava a viewport pra esquerda - o botão do sino não fica
+        // colado na borda direita (tem o menu do usuário e o alternador
+        // de tema depois dele). Vira um painel fixo ancorado na própria
+        // tela (não no botão) até o breakpoint sm, onde volta ao
+        // posicionamento relativo ao botão de sempre.
+        <div className="animate-pop-in fixed inset-x-4 top-16 z-10 origin-top rounded-lg border border-slate-200 bg-white py-1 shadow-md sm:absolute sm:inset-x-auto sm:top-auto sm:right-0 sm:mt-1 sm:w-80 sm:origin-top-right dark:border-slate-700 dark:bg-slate-900">
           <div className="flex items-center justify-between px-3 py-2">
             <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Notificações</p>
             {totalNaoLidas > 0 && (

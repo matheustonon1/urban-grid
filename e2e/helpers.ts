@@ -1,5 +1,6 @@
 import { generate } from "otplib";
 import bcrypt from "bcryptjs";
+import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { hashCpf } from "@/lib/cpf";
@@ -150,6 +151,25 @@ export async function criarReclamacaoTeste(
   });
 }
 
+// LogModeracao.alvoId é um campo polimórfico (aponta pra Reclamacao OU
+// Comentario, conforme alvoTipo), não uma FK de verdade - o cascade do
+// Prisma ao apagar a reclamação não alcança essa tabela. Sem isso, o log
+// de moderação pendente fica órfão pra sempre: continua contando na
+// paginação da fila de revisão, mas o item não existe mais pra exibir.
+export async function apagarLogsDeModeracao(where: Prisma.ReclamacaoWhereInput) {
+  const reclamacoes = await prisma.reclamacao.findMany({ where, select: { id: true } });
+  const reclamacaoIds = reclamacoes.map((r) => r.id);
+  if (reclamacaoIds.length === 0) return;
+
+  const comentarios = await prisma.comentario.findMany({
+    where: { reclamacaoId: { in: reclamacaoIds } },
+    select: { id: true },
+  });
+  const alvoIds = [...reclamacaoIds, ...comentarios.map((c) => c.id)];
+
+  await prisma.logModeracao.deleteMany({ where: { alvoId: { in: alvoIds } } });
+}
+
 // Limpeza best-effort de tudo que os testes E2E possam ter criado,
 // identificado pelo prefixo comum em e-mail/protocolo. Chamada nos
 // afterEach/afterAll de cada spec - nunca deve lançar (limpeza não pode
@@ -181,14 +201,14 @@ export async function limparDadosTeste() {
     // gerado por gerarProtocolo(), sem o prefixo de teste. Sem isso, o
     // deleteMany de User abaixo falha por FK (autorId) e a função inteira
     // aborta no catch, deixando usuário e reclamação órfãos no banco.
-    await prisma.reclamacao.deleteMany({
-      where: {
-        OR: [
-          { protocolo: { contains: PREFIXO_TESTE } },
-          ...(userIds.length > 0 ? [{ autorId: { in: userIds } }] : []),
-        ],
-      },
-    });
+    const filtroReclamacoes: Prisma.ReclamacaoWhereInput = {
+      OR: [
+        { protocolo: { contains: PREFIXO_TESTE } },
+        ...(userIds.length > 0 ? [{ autorId: { in: userIds } }] : []),
+      ],
+    };
+    await apagarLogsDeModeracao(filtroReclamacoes);
+    await prisma.reclamacao.deleteMany({ where: filtroReclamacoes });
 
     if (userIds.length > 0) {
       await prisma.user.deleteMany({ where: { id: { in: userIds } } });
