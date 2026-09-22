@@ -12,15 +12,18 @@ import { botaoPrimario, campoInput, cartao, containerPagina } from "@/lib/estilo
 export default async function ReclamacoesPublicasPage({
   searchParams,
 }: PageProps<"/reclamacoes">) {
-  const { cidadeId, q, page } = await searchParams;
+  const { cidadeId, categoriaId, q, page } = await searchParams;
   const cidadeIdFiltro =
     typeof cidadeId === "string" && cidadeId ? cidadeId : undefined;
+  const categoriaIdFiltro =
+    typeof categoriaId === "string" && categoriaId ? categoriaId : undefined;
   const buscaFiltro = typeof q === "string" && q.trim() ? q.trim() : undefined;
   const paginaAtual = lerPaginaAtual(page);
 
   const filtro = {
     status: "PUBLICADA" as const,
     ...(cidadeIdFiltro ? { cidadeId: cidadeIdFiltro } : {}),
+    ...(categoriaIdFiltro ? { categoriaId: categoriaIdFiltro } : {}),
     ...(buscaFiltro
       ? {
           OR: [
@@ -31,7 +34,7 @@ export default async function ReclamacoesPublicasPage({
       : {}),
   };
 
-  const [reclamacoes, totalReclamacoes, cidadeFiltro] = await Promise.all([
+  const [reclamacoes, totalReclamacoes, cidadeFiltro, categoriasAtivas] = await Promise.all([
     prisma.reclamacao.findMany({
       where: filtro,
       orderBy: { publicadaEm: "desc" },
@@ -51,8 +54,12 @@ export default async function ReclamacoesPublicasPage({
           select: { id: true, nome: true, slug: true, estado: { select: { uf: true } } },
         })
       : null,
+    prisma.categoria.findMany({ where: { ativa: true }, orderBy: { ordem: "asc" } }),
   ]);
   const totalPaginas = calcularTotalPaginas(totalReclamacoes);
+  const categoriaFiltro = categoriaIdFiltro
+    ? categoriasAtivas.find((categoria) => categoria.id === categoriaIdFiltro)
+    : undefined;
 
   return (
     <main className={containerPagina}>
@@ -82,18 +89,36 @@ export default async function ReclamacoesPublicasPage({
             }
           />
         </div>
+        <select
+          name="categoriaId"
+          defaultValue={categoriaIdFiltro ?? ""}
+          className={`min-w-48 flex-1 ${campoInput}`}
+        >
+          <option value="">Todas as categorias</option>
+          {categoriasAtivas.map((categoria) => (
+            <option key={categoria.id} value={categoria.id}>
+              {categoria.nome}
+            </option>
+          ))}
+        </select>
         <button type="submit" className={botaoPrimario}>
           Filtrar
         </button>
       </form>
 
-      {(cidadeFiltro || buscaFiltro) && (
+      {(cidadeFiltro || categoriaFiltro || buscaFiltro) && (
         <p className="text-sm text-slate-500 dark:text-slate-400">
           Mostrando resultados
           {buscaFiltro && (
             <>
               {" "}
               para <strong>&quot;{buscaFiltro}&quot;</strong>
+            </>
+          )}
+          {categoriaFiltro && (
+            <>
+              {" "}
+              em <strong>{categoriaFiltro.nome}</strong>
             </>
           )}
           {cidadeFiltro && (
@@ -159,7 +184,7 @@ export default async function ReclamacoesPublicasPage({
         paginaAtual={paginaAtual}
         totalPaginas={totalPaginas}
         basePath="/reclamacoes"
-        searchParams={{ cidadeId: cidadeIdFiltro, q: buscaFiltro }}
+        searchParams={{ cidadeId: cidadeIdFiltro, categoriaId: categoriaIdFiltro, q: buscaFiltro }}
       />
     </main>
   );
