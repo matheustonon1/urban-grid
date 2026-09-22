@@ -116,6 +116,14 @@ export function NotificacoesSino({
               );
             })}
           </ul>
+
+          <Link
+            href="/painel/notificacoes"
+            onClick={() => setAberto(false)}
+            className="block border-t border-slate-100 px-3 py-2 text-center text-xs font-medium text-primary hover:underline dark:border-slate-800"
+          >
+            Ver todas as notificações
+          </Link>
         </div>
       )}
     </div>
