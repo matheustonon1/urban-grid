@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
+import { getTranslations } from "next-intl/server";
 
 import { auth, signOut } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -10,10 +11,10 @@ import { alertarSenhaAlterada, alertarTrocaEmailSolicitada } from "@/lib/notific
 import { criarTokenTrocaEmail, enviarEmailConfirmarTrocaEmail } from "@/lib/email";
 
 import {
-  ExclusaoSchema,
-  PerfilSchema,
-  SenhaSchema,
-  TrocaEmailSchema,
+  criarExclusaoSchema,
+  criarPerfilSchema,
+  criarSenhaSchema,
+  criarTrocaEmailSchema,
   type ExclusaoFormState,
   type PerfilFormState,
   type SenhaFormState,
@@ -24,12 +25,13 @@ export async function atualizarPerfil(
   _state: PerfilFormState,
   formData: FormData
 ): Promise<PerfilFormState> {
+  const t = await getTranslations("Conta");
   const session = await auth();
   if (!session?.user) {
     redirect("/login");
   }
 
-  const validado = PerfilSchema.safeParse({
+  const validado = criarPerfilSchema().safeParse({
     telefone: formData.get("telefone"),
   });
   if (!validado.success) {
@@ -44,19 +46,20 @@ export async function atualizarPerfil(
   revalidatePath("/painel/conta");
   revalidatePath("/painel");
 
-  return { mensagem: "Dados atualizados." };
+  return { mensagem: t("dadosAtualizados") };
 }
 
 export async function solicitarTrocaEmail(
   _state: TrocaEmailFormState,
   formData: FormData
 ): Promise<TrocaEmailFormState> {
+  const t = await getTranslations("Conta");
   const session = await auth();
   if (!session?.user) {
     redirect("/login");
   }
 
-  const validado = TrocaEmailSchema.safeParse({
+  const validado = criarTrocaEmailSchema(t).safeParse({
     novoEmail: formData.get("novoEmail"),
     senhaAtual: formData.get("senhaAtual"),
   });
@@ -68,21 +71,21 @@ export async function solicitarTrocaEmail(
 
   const usuario = await prisma.user.findUnique({ where: { id: session.user.id } });
   if (!usuario?.senhaHash) {
-    return { mensagem: "Não foi possível trocar o e-mail." };
+    return { mensagem: t("erroTrocarEmail") };
   }
 
   const senhaValida = await bcrypt.compare(senhaAtual, usuario.senhaHash);
   if (!senhaValida) {
-    return { erros: { senhaAtual: ["Senha incorreta."] } };
+    return { erros: { senhaAtual: [t("erroSenhaIncorreta")] } };
   }
 
   if (novoEmail === usuario.email) {
-    return { erros: { novoEmail: ["Este já é o seu e-mail atual."] } };
+    return { erros: { novoEmail: [t("erroJaEEmailAtual")] } };
   }
 
   const emailEmUso = await prisma.user.findUnique({ where: { email: novoEmail } });
   if (emailEmUso) {
-    return { erros: { novoEmail: ["Já existe uma conta com este e-mail."] } };
+    return { erros: { novoEmail: [t("erroEmailDuplicado")] } };
   }
 
   const token = await criarTokenTrocaEmail(usuario.id, novoEmail);
@@ -92,21 +95,20 @@ export async function solicitarTrocaEmail(
   // independente do e-mail novo ter recebido o link ou não.
   await alertarTrocaEmailSolicitada(usuario.id, novoEmail);
 
-  return {
-    mensagem: `Enviamos um link de confirmação para ${novoEmail}. O e-mail de acesso só muda depois que você confirmar por lá.`,
-  };
+  return { mensagem: t("linkConfirmacaoEnviado", { email: novoEmail }) };
 }
 
 export async function alterarSenha(
   _state: SenhaFormState,
   formData: FormData
 ): Promise<SenhaFormState> {
+  const t = await getTranslations("Conta");
   const session = await auth();
   if (!session?.user) {
     redirect("/login");
   }
 
-  const validado = SenhaSchema.safeParse({
+  const validado = criarSenhaSchema(t).safeParse({
     senhaAtual: formData.get("senhaAtual"),
     novaSenha: formData.get("novaSenha"),
     confirmarNovaSenha: formData.get("confirmarNovaSenha"),
@@ -119,7 +121,7 @@ export async function alterarSenha(
     where: { id: session.user.id },
   });
   if (!usuario?.senhaHash) {
-    return { mensagem: "Não foi possível alterar a senha." };
+    return { mensagem: t("erroAlterarSenha") };
   }
 
   const senhaAtualValida = await bcrypt.compare(
@@ -127,7 +129,7 @@ export async function alterarSenha(
     usuario.senhaHash
   );
   if (!senhaAtualValida) {
-    return { erros: { senhaAtual: ["Senha atual incorreta."] } };
+    return { erros: { senhaAtual: [t("erroSenhaAtualIncorreta")] } };
   }
 
   const novaSenhaHash = await bcrypt.hash(validado.data.novaSenha, 10);
@@ -154,12 +156,13 @@ export async function excluirConta(
   _state: ExclusaoFormState,
   formData: FormData
 ): Promise<ExclusaoFormState> {
+  const t = await getTranslations("Conta");
   const session = await auth();
   if (!session?.user) {
     redirect("/login");
   }
 
-  const validado = ExclusaoSchema.safeParse({
+  const validado = criarExclusaoSchema(t).safeParse({
     senhaAtual: formData.get("senhaAtual"),
   });
   if (!validado.success) {
@@ -170,12 +173,12 @@ export async function excluirConta(
     where: { id: session.user.id },
   });
   if (!usuario?.senhaHash) {
-    return { mensagem: "Não foi possível excluir a conta." };
+    return { mensagem: t("erroExcluirConta") };
   }
 
   const senhaValida = await bcrypt.compare(validado.data.senhaAtual, usuario.senhaHash);
   if (!senhaValida) {
-    return { erros: { senhaAtual: ["Senha incorreta."] } };
+    return { erros: { senhaAtual: [t("erroSenhaIncorreta")] } };
   }
 
   // Anonimiza em vez de apagar: preserva as reclamações publicadas como

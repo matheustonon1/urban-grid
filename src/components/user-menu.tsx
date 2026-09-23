@@ -16,6 +16,7 @@ import {
   User,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { sair } from "@/app/(app)/painel/actions";
 import { iniciaisDoNome } from "@/lib/texto";
@@ -64,6 +65,7 @@ export function UserMenu({
   ehOrgao: boolean;
   ehAdmin: boolean;
 }) {
+  const t = useTranslations("UserMenu");
   const [aberto, setAberto] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -100,35 +102,35 @@ export function UserMenu({
           <p className="truncate px-3 py-2 text-xs text-slate-400 dark:text-slate-500">{email}</p>
 
           <ItemMenu href="/painel" icone={LayoutDashboard} onClick={fechar}>
-            Painel
+            {t("painel")}
           </ItemMenu>
           <ItemMenu href="/painel/conta" icone={User} onClick={fechar}>
-            Minha conta
+            {t("minhaConta")}
           </ItemMenu>
           {ehOrgao && (
             <ItemMenu href="/orgao" icone={Building2} onClick={fechar}>
-              Painel do órgão
+              {t("painelOrgao")}
             </ItemMenu>
           )}
 
           {ehModerador && (
             <>
               <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
-              <TituloSecao>Moderação</TituloSecao>
+              <TituloSecao>{t("moderacao")}</TituloSecao>
               <ItemMenu href="/moderacao" icone={ClipboardList} onClick={fechar}>
-                Fila de moderação
+                {t("filaModeracao")}
               </ItemMenu>
               <ItemMenu href="/moderacao/historico" icone={History} onClick={fechar}>
-                Histórico de moderação
+                {t("historicoModeracao")}
               </ItemMenu>
               <ItemMenu href="/moderacao/comentarios" icone={MessageSquareOff} onClick={fechar}>
-                Comentários reprovados
+                {t("comentariosReprovados")}
               </ItemMenu>
               <ItemMenu href="/moderacao/estatisticas" icone={BarChart3} onClick={fechar}>
-                Estatísticas de moderação
+                {t("estatisticasModeracao")}
               </ItemMenu>
               <ItemMenu href="/denuncias" icone={Flag} onClick={fechar}>
-                Denúncias
+                {t("denuncias")}
               </ItemMenu>
             </>
           )}
@@ -136,12 +138,12 @@ export function UserMenu({
           {ehAdmin && (
             <>
               <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
-              <TituloSecao>Administração</TituloSecao>
+              <TituloSecao>{t("administracao")}</TituloSecao>
               <ItemMenu href="/solicitacoes-orgao" icone={Building2} onClick={fechar}>
-                Solicitações de órgão
+                {t("solicitacoesOrgao")}
               </ItemMenu>
               <ItemMenu href="/orgaos-categorias" icone={ListChecks} onClick={fechar}>
-                Categorias por órgão
+                {t("categoriasPorOrgao")}
               </ItemMenu>
             </>
           )}
@@ -152,7 +154,7 @@ export function UserMenu({
               className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-red-600 hover:bg-slate-50 dark:text-red-400 dark:hover:bg-slate-800"
             >
               <LogOut className="h-4 w-4 shrink-0" aria-hidden />
-              Sair
+              {t("sair")}
             </button>
           </form>
         </div>

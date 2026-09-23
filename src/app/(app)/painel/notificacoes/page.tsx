@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -12,6 +13,8 @@ import { botaoSecundario, cartao, containerPagina } from "@/lib/estilos";
 export default async function NotificacoesPage({
   searchParams,
 }: PageProps<"/painel/notificacoes">) {
+  const t = await getTranslations("Notificacoes");
+  const locale = await getLocale();
   const session = await auth();
   if (!session?.user) {
     redirect("/login");
@@ -38,21 +41,19 @@ export default async function NotificacoesPage({
     <main className={containerPagina}>
       <div className="flex items-center justify-between gap-2">
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-          Notificações {totalNotificacoes > 0 && `(${totalNotificacoes})`}
+          {t("titulo")} {totalNotificacoes > 0 && `(${totalNotificacoes})`}
         </h1>
         {totalNaoLidas > 0 && (
           <form action={marcarTodasLidas}>
             <button type="submit" className={botaoSecundario}>
-              Marcar todas como lidas
+              {t("marcarTodasLidas")}
             </button>
           </form>
         )}
       </div>
 
       {notificacoes.length === 0 && (
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Nenhuma notificação ainda.
-        </p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhuma")}</p>
       )}
 
       {notificacoes.map((notificacao) => (
@@ -68,7 +69,7 @@ export default async function NotificacoesPage({
             </p>
             <p className="text-sm text-slate-600 dark:text-slate-400">{notificacao.mensagem}</p>
             <div className="flex flex-wrap items-center gap-2 text-xs text-slate-400 dark:text-slate-500">
-              <span>{formatarTempoRelativo(notificacao.createdAt)}</span>
+              <span>{formatarTempoRelativo(notificacao.createdAt, locale)}</span>
               {notificacao.reclamacao && (
                 <>
                   ·{" "}
@@ -76,7 +77,7 @@ export default async function NotificacoesPage({
                     href={`/reclamacoes/${notificacao.reclamacao.protocolo}`}
                     className="text-primary underline"
                   >
-                    Ver reclamação
+                    {t("verReclamacao")}
                   </Link>
                 </>
               )}
@@ -86,7 +87,7 @@ export default async function NotificacoesPage({
           {!notificacao.lida && (
             <form action={marcarNotificacaoLida.bind(null, notificacao.id)}>
               <button type="submit" className="shrink-0 text-xs text-primary hover:underline">
-                Marcar como lida
+                {t("marcarComoLida")}
               </button>
             </form>
           )}

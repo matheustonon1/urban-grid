@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { Lock, Mail, Trash2, User } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { botaoPrimario, campoInput, cartao } from "@/lib/estilos";
 
@@ -19,23 +20,24 @@ function Rotulo({ children, htmlFor }: { children: string; htmlFor: string }) {
 }
 
 export function FormularioPerfil({ telefone }: { telefone: string }) {
+  const t = useTranslations("Conta");
   const [state, action, pending] = useActionState(atualizarPerfil, undefined);
 
   return (
     <form action={action} className={`flex flex-col gap-3 ${cartao}`}>
       <div className="flex items-center gap-2">
         <User className="h-5 w-5 text-slate-400 dark:text-slate-500" aria-hidden />
-        <h2 className="font-semibold text-slate-900 dark:text-slate-100">Dados pessoais</h2>
+        <h2 className="font-semibold text-slate-900 dark:text-slate-100">{t("dadosPessoais")}</h2>
       </div>
 
       <div className="flex flex-col gap-1">
-        <Rotulo htmlFor="perfil-telefone">Telefone</Rotulo>
+        <Rotulo htmlFor="perfil-telefone">{t("telefone")}</Rotulo>
         <input
           id="perfil-telefone"
           type="tel"
           name="telefone"
           defaultValue={telefone}
-          placeholder="Opcional"
+          placeholder={t("opcional")}
           className={campoInput}
         />
         {state?.erros?.telefone && (
@@ -48,24 +50,25 @@ export function FormularioPerfil({ telefone }: { telefone: string }) {
       )}
 
       <button type="submit" disabled={pending} className={`${botaoPrimario} w-fit`}>
-        Salvar dados
+        {t("salvarDados")}
       </button>
     </form>
   );
 }
 
 export function FormularioSenha() {
+  const t = useTranslations("Conta");
   const [state, action, pending] = useActionState(alterarSenha, undefined);
 
   return (
     <form action={action} className={`flex flex-col gap-3 ${cartao}`}>
       <div className="flex items-center gap-2">
         <Lock className="h-5 w-5 text-slate-400 dark:text-slate-500" aria-hidden />
-        <h2 className="font-semibold text-slate-900 dark:text-slate-100">Alterar senha</h2>
+        <h2 className="font-semibold text-slate-900 dark:text-slate-100">{t("alterarSenha")}</h2>
       </div>
 
       <div className="flex flex-col gap-1">
-        <Rotulo htmlFor="senha-atual">Senha atual</Rotulo>
+        <Rotulo htmlFor="senha-atual">{t("senhaAtual")}</Rotulo>
         <input
           id="senha-atual"
           type="password"
@@ -78,12 +81,12 @@ export function FormularioSenha() {
       </div>
 
       <div className="flex flex-col gap-1">
-        <Rotulo htmlFor="senha-nova">Nova senha</Rotulo>
+        <Rotulo htmlFor="senha-nova">{t("novaSenha")}</Rotulo>
         <input
           id="senha-nova"
           type="password"
           name="novaSenha"
-          placeholder="Mínimo de 8 caracteres"
+          placeholder={t("minimoCaracteres")}
           className={campoInput}
         />
         {state?.erros?.novaSenha && (
@@ -92,7 +95,7 @@ export function FormularioSenha() {
       </div>
 
       <div className="flex flex-col gap-1">
-        <Rotulo htmlFor="senha-confirmar">Confirmar nova senha</Rotulo>
+        <Rotulo htmlFor="senha-confirmar">{t("confirmarNovaSenha")}</Rotulo>
         <input
           id="senha-confirmar"
           type="password"
@@ -111,28 +114,28 @@ export function FormularioSenha() {
       )}
 
       <button type="submit" disabled={pending} className={`${botaoPrimario} w-fit`}>
-        Alterar senha
+        {t("alterarSenha")}
       </button>
     </form>
   );
 }
 
 export function FormularioTrocaEmail({ emailAtual }: { emailAtual: string }) {
+  const t = useTranslations("Conta");
   const [state, action, pending] = useActionState(solicitarTrocaEmail, undefined);
 
   return (
     <form action={action} className={`flex flex-col gap-3 ${cartao}`}>
       <div className="flex items-center gap-2">
         <Mail className="h-5 w-5 text-slate-400 dark:text-slate-500" aria-hidden />
-        <h2 className="font-semibold text-slate-900 dark:text-slate-100">Trocar e-mail</h2>
+        <h2 className="font-semibold text-slate-900 dark:text-slate-100">{t("trocarEmail")}</h2>
       </div>
       <p className="text-sm text-slate-500 dark:text-slate-400">
-        E-mail atual: <span className="font-medium">{emailAtual}</span>. A troca só
-        passa a valer depois de confirmada pelo novo endereço.
+        {t("emailAtual")} <span className="font-medium">{emailAtual}</span>. {t("trocaEmailDesc")}
       </p>
 
       <div className="flex flex-col gap-1">
-        <Rotulo htmlFor="email-novo">Novo e-mail</Rotulo>
+        <Rotulo htmlFor="email-novo">{t("novoEmail")}</Rotulo>
         <input
           id="email-novo"
           type="email"
@@ -145,7 +148,7 @@ export function FormularioTrocaEmail({ emailAtual }: { emailAtual: string }) {
       </div>
 
       <div className="flex flex-col gap-1">
-        <Rotulo htmlFor="email-senha-atual">Confirme sua senha</Rotulo>
+        <Rotulo htmlFor="email-senha-atual">{t("confirmeSuaSenha")}</Rotulo>
         <input
           id="email-senha-atual"
           type="password"
@@ -162,13 +165,14 @@ export function FormularioTrocaEmail({ emailAtual }: { emailAtual: string }) {
       )}
 
       <button type="submit" disabled={pending} className={`${botaoPrimario} w-fit`}>
-        Enviar link de confirmação
+        {t("enviarLinkConfirmacao")}
       </button>
     </form>
   );
 }
 
 export function FormularioExclusao() {
+  const t = useTranslations("Conta");
   const [state, action, pending] = useActionState(excluirConta, undefined);
 
   return (
@@ -178,16 +182,12 @@ export function FormularioExclusao() {
     >
       <div className="flex items-center gap-2">
         <Trash2 className="h-5 w-5 text-red-600 dark:text-red-400" aria-hidden />
-        <h2 className="font-semibold text-red-800 dark:text-red-400">Excluir conta</h2>
+        <h2 className="font-semibold text-red-800 dark:text-red-400">{t("excluirConta")}</h2>
       </div>
-      <p className="text-sm text-red-700 dark:text-red-400">
-        Seus dados pessoais (nome, e-mail, CPF, telefone) são apagados. As
-        reclamações que você publicou continuam visíveis, mas sem
-        identificação do autor. Essa ação não pode ser desfeita.
-      </p>
+      <p className="text-sm text-red-700 dark:text-red-400">{t("excluirContaDesc")}</p>
 
       <div className="flex flex-col gap-1">
-        <Rotulo htmlFor="exclusao-senha">Confirme sua senha</Rotulo>
+        <Rotulo htmlFor="exclusao-senha">{t("confirmeSuaSenha")}</Rotulo>
         <input
           id="exclusao-senha"
           type="password"
@@ -207,7 +207,7 @@ export function FormularioExclusao() {
         disabled={pending}
         className="w-fit rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-800 active:scale-95 disabled:opacity-50 disabled:active:scale-100 dark:bg-red-600 dark:hover:bg-red-500"
       >
-        Excluir minha conta
+        {t("excluirMinhaConta")}
       </button>
     </form>
   );

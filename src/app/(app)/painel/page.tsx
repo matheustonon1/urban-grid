@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -11,6 +12,8 @@ import { botaoPrimario, botaoSecundario, cartao, containerPagina } from "@/lib/e
 import { reenviarVerificacao } from "./actions";
 
 export default async function PainelPage({ searchParams }: PageProps<"/painel">) {
+  const t = await getTranslations("Painel");
+  const tPapel = await getTranslations("Papel");
   const session = await auth();
 
   if (!session?.user) {
@@ -39,37 +42,33 @@ export default async function PainelPage({ searchParams }: PageProps<"/painel">)
   return (
     <main className={containerPagina}>
       <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-        Painel
+        {t("titulo")}
       </h1>
       <p className="text-sm text-slate-600 dark:text-slate-400">
-        Logado como <strong>{session.user.email}</strong> ({session.user.papel})
+        {t("logadoComo")} <strong>{session.user.email}</strong> ({tPapel(session.user.papel)})
       </p>
 
       {!usuario?.emailVerified && (
         <div className={`flex items-center justify-between gap-3 ${cartao}`}>
-          <p className="text-sm text-amber-700 dark:text-amber-400">
-            Seu e-mail ainda não foi verificado.
-          </p>
+          <p className="text-sm text-amber-700 dark:text-amber-400">{t("emailNaoVerificado")}</p>
           <form action={reenviarVerificacao}>
             <button type="submit" className={botaoSecundario}>
-              Reenviar e-mail de verificação
+              {t("reenviarVerificacao")}
             </button>
           </form>
         </div>
       )}
 
       <Link href="/reclamacoes/nova" className={`${botaoPrimario} w-fit`}>
-        Nova reclamação
+        {t("novaReclamacao")}
       </Link>
 
       <div className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          Minhas reclamações
+          {t("minhasReclamacoes")}
         </h2>
         {reclamacoes.length === 0 && (
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Você ainda não registrou nenhuma reclamação.
-          </p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumaReclamacao")}</p>
         )}
         {reclamacoes.map((reclamacao) => (
           <Link

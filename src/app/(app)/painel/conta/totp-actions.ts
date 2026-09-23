@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
+import { getTranslations } from "next-intl/server";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -16,8 +17,8 @@ import {
 } from "@/lib/totp";
 
 import {
-  ConfirmarTotpSchema,
-  DesativarTotpSchema,
+  criarConfirmarTotpSchema,
+  criarDesativarTotpSchema,
   type ConfirmarTotpFormState,
   type DesativarTotpFormState,
 } from "./definitions";
@@ -64,19 +65,20 @@ export async function confirmarTotp(
     redirect("/login");
   }
 
-  const validado = ConfirmarTotpSchema.safeParse({ codigo: formData.get("codigo") });
+  const t = await getTranslations("Totp");
+  const validado = criarConfirmarTotpSchema(t).safeParse({ codigo: formData.get("codigo") });
   if (!validado.success) {
     return { erros: validado.error.flatten().fieldErrors };
   }
 
   const usuario = await prisma.user.findUniqueOrThrow({ where: { id: session.user.id } });
   if (!usuario.totpSecret || usuario.totpConfirmadoEm) {
-    return { mensagem: "Não há uma configuração de autenticador pendente." };
+    return { mensagem: t("erroSemConfiguracaoPendente") };
   }
 
   const segredo = decifrarSegredoTotp(usuario.totpSecret);
   if (!(await codigoTotpValido(segredo, validado.data.codigo))) {
-    return { erros: { codigo: ["Código inválido."] } };
+    return { erros: { codigo: [t("erroCodigoInvalido")] } };
   }
 
   const codigosBackup = gerarCodigosBackup();
@@ -97,7 +99,7 @@ export async function confirmarTotp(
   revalidatePath("/painel/conta");
 
   return {
-    mensagem: "Autenticação em duas etapas ativada.",
+    mensagem: t("ativadaMensagem"),
     codigosBackup,
   };
 }
@@ -111,7 +113,8 @@ export async function desativarTotp(
     redirect("/login");
   }
 
-  const validado = DesativarTotpSchema.safeParse({
+  const t = await getTranslations("Totp");
+  const validado = criarDesativarTotpSchema(t).safeParse({
     senhaAtual: formData.get("senhaAtual"),
   });
   if (!validado.success) {
@@ -120,12 +123,12 @@ export async function desativarTotp(
 
   const usuario = await prisma.user.findUnique({ where: { id: session.user.id } });
   if (!usuario?.senhaHash) {
-    return { mensagem: "Não foi possível desativar o autenticador." };
+    return { mensagem: t("erroDesativar") };
   }
 
   const senhaValida = await bcrypt.compare(validado.data.senhaAtual, usuario.senhaHash);
   if (!senhaValida) {
-    return { erros: { senhaAtual: ["Senha incorreta."] } };
+    return { erros: { senhaAtual: [t("erroSenhaIncorreta")] } };
   }
 
   await prisma.$transaction([
@@ -143,5 +146,5 @@ export async function desativarTotp(
 
   revalidatePath("/painel/conta");
 
-  return { mensagem: "Autenticação em duas etapas desativada." };
+  return { mensagem: t("desativadaMensagem") };
 }

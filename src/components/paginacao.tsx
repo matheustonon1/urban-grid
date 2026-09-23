@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { botaoSecundario } from "@/lib/estilos";
 
@@ -15,6 +16,8 @@ export function Paginacao({
   paramName?: string;
   searchParams?: Record<string, string | undefined>;
 }) {
+  const t = useTranslations("Paginacao");
+
   if (totalPaginas <= 1) {
     return null;
   }
@@ -30,22 +33,22 @@ export function Paginacao({
   }
 
   return (
-    <nav className="flex items-center justify-between gap-3 pt-2" aria-label="Paginação">
+    <nav className="flex items-center justify-between gap-3 pt-2" aria-label={t("navegacao")}>
       {paginaAtual > 1 ? (
         <Link href={href(paginaAtual - 1)} className={botaoSecundario}>
-          Anterior
+          {t("anterior")}
         </Link>
       ) : (
         <span />
       )}
 
       <p className="text-sm text-slate-500 dark:text-slate-400">
-        Página {paginaAtual} de {totalPaginas}
+        {t("pagina", { atual: paginaAtual, total: totalPaginas })}
       </p>
 
       {paginaAtual < totalPaginas ? (
         <Link href={href(paginaAtual + 1)} className={botaoSecundario}>
-          Próxima
+          {t("proxima")}
         </Link>
       ) : (
         <span />

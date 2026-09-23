@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -14,14 +15,9 @@ import {
 } from "./formularios";
 import { FormularioTotp } from "./totp-formulario";
 
-const PAPEL_LABEL: Record<string, string> = {
-  CIDADAO: "Cidadão",
-  MODERADOR: "Moderador",
-  ADMIN: "Administrador",
-  ORGAO: "Órgão público",
-};
-
 export default async function ContaPage() {
+  const t = await getTranslations("Conta");
+  const tPapel = await getTranslations("Papel");
   const session = await auth();
   if (!session?.user) {
     redirect("/login");
@@ -56,12 +52,12 @@ export default async function ContaPage() {
         </span>
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            {usuario.name || "Minha conta"}
+            {usuario.name || t("titulo")}
           </h1>
           <div className="flex flex-wrap items-center gap-2">
             <p className="text-sm text-slate-500 dark:text-slate-400">{usuario.email}</p>
             <span className="inline-block w-fit rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-              {PAPEL_LABEL[session.user.papel] ?? session.user.papel}
+              {tPapel(session.user.papel)}
             </span>
           </div>
         </div>
