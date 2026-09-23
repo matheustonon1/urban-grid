@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { StatusBadge } from "@/components/status-badge";
 import { CategoriaIcon } from "@/components/categoria-icon";
 import { botaoPrimario, campoInput, cartao, containerPagina } from "@/lib/estilos";
-import { calcularMetricasOrgao, classificarIndice } from "@/lib/reputacaoOrgao";
+import { SELO_LABEL_PT, calcularMetricasOrgao, classificarIndice } from "@/lib/reputacaoOrgao";
 
 const STATUS_PUBLICOS = [
   "PUBLICADA",
@@ -238,7 +238,7 @@ export default async function CidadePage({
               <span
                 className={`inline-block shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${classificacao.className}`}
               >
-                {classificacao.label}
+                {SELO_LABEL_PT[classificacao.chave]}
               </span>
             </Link>
           );

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Bell } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 
 import { formatarTempoRelativo } from "@/lib/tempo-relativo";
 
@@ -24,6 +25,8 @@ export function NotificacoesSino({
   notificacoes: NotificacaoItem[];
   totalNaoLidas: number;
 }) {
+  const t = useTranslations("Notificacoes");
+  const locale = useLocale();
   const [aberto, setAberto] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -43,7 +46,7 @@ export function NotificacoesSino({
         type="button"
         onClick={() => setAberto((valor) => !valor)}
         aria-expanded={aberto}
-        aria-label="Notificações"
+        aria-label={t("titulo")}
         className="relative rounded-lg p-2 text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
       >
         <Bell className="h-5 w-5" aria-hidden />
@@ -63,11 +66,11 @@ export function NotificacoesSino({
         // posicionamento relativo ao botão de sempre.
         <div className="animate-pop-in fixed inset-x-4 top-16 z-10 origin-top rounded-lg border border-slate-200 bg-white py-1 shadow-md sm:absolute sm:inset-x-auto sm:top-auto sm:right-0 sm:mt-1 sm:w-80 sm:origin-top-right dark:border-slate-700 dark:bg-slate-900">
           <div className="flex items-center justify-between px-3 py-2">
-            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Notificações</p>
+            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t("titulo")}</p>
             {totalNaoLidas > 0 && (
               <form action={marcarTodasLidas}>
                 <button type="submit" className="text-xs text-primary hover:underline">
-                  Marcar todas como lidas
+                  {t("marcarTodasLidas")}
                 </button>
               </form>
             )}
@@ -75,7 +78,7 @@ export function NotificacoesSino({
 
           {notificacoes.length === 0 && (
             <p className="px-3 py-4 text-center text-sm text-slate-500 dark:text-slate-400">
-              Nenhuma notificação ainda.
+              {t("nenhuma")}
             </p>
           )}
 
@@ -90,7 +93,7 @@ export function NotificacoesSino({
                     {notificacao.mensagem}
                   </p>
                   <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
-                    {formatarTempoRelativo(notificacao.createdAt)}
+                    {formatarTempoRelativo(notificacao.createdAt, locale)}
                   </p>
                 </>
               );
@@ -128,7 +131,7 @@ export function NotificacoesSino({
             onClick={() => setAberto(false)}
             className="block border-t border-slate-100 px-3 py-2 text-center text-xs font-medium text-primary hover:underline dark:border-slate-800"
           >
-            Ver todas as notificações
+            {t("verTodas")}
           </Link>
         </div>
       )}

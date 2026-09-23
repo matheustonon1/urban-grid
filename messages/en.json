@@ -7,7 +7,16 @@
   "Header": {
     "reclamacoes": "Complaints",
     "entrar": "Log in",
-    "cadastrar": "Sign up"
+    "cadastrar": "Sign up",
+    "buscarCidade": "Search city...",
+    "buscarCidadeAbrir": "Search city",
+    "buscarCidadeFechar": "Close city search"
+  },
+  "Notificacoes": {
+    "titulo": "Notifications",
+    "marcarTodasLidas": "Mark all as read",
+    "nenhuma": "No notifications yet.",
+    "verTodas": "View all notifications"
   },
   "Footer": {
     "tcc": "Urban Grid — Capstone Project",
@@ -49,6 +58,11 @@
     "diferencial4Desc": "Two-factor authentication via authenticator app, a unique national ID per account, and email verification.",
     "melhorAvaliados": "Top-rated departments",
     "melhorAvaliadosSub": "Public badge calculated from response time and actual resolution rate — no self-assessment.",
+    "seloPoucosDados": "Not enough data yet",
+    "seloOtimo": "Great",
+    "seloBom": "Good",
+    "seloRegular": "Fair",
+    "seloRuim": "Poor",
     "reclamacoesRespondidas": "{count, plural, one {# complaint answered} other {# complaints answered}}",
     "prontoParticipar": "Ready to get involved?",
     "prontoParticiparSub": "Citizens report problems in their neighborhood. Public departments respond officially and build their reputation.",

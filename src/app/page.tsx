@@ -18,7 +18,7 @@ import { CategoriaIcon } from "@/components/categoria-icon";
 import { StatusBadge } from "@/components/status-badge";
 import { Revelar } from "@/components/revelar";
 import { botaoPrimario, botaoSecundario, cartao } from "@/lib/estilos";
-import { calcularMetricasOrgao, classificarIndice } from "@/lib/reputacaoOrgao";
+import { calcularMetricasOrgao, classificarIndice, type SeloChave } from "@/lib/reputacaoOrgao";
 
 const STATUS_PUBLICOS = [
   "PUBLICADA",
@@ -43,6 +43,14 @@ export default async function Home() {
     { icone: MessageSquare, titulo: t("diferencial3Titulo"), descricao: t("diferencial3Desc") },
     { icone: ShieldCheck, titulo: t("diferencial4Titulo"), descricao: t("diferencial4Desc") },
   ];
+
+  const SELO_TRADUCAO: Record<SeloChave, string> = {
+    poucosDados: t("seloPoucosDados"),
+    otimo: t("seloOtimo"),
+    bom: t("seloBom"),
+    regular: t("seloRegular"),
+    ruim: t("seloRuim"),
+  };
 
   const [
     totalReclamacoes,
@@ -291,7 +299,7 @@ export default async function Home() {
                     <span
                       className={`inline-block shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${classificacao.className}`}
                     >
-                      {classificacao.label}
+                      {SELO_TRADUCAO[classificacao.chave]}
                     </span>
                     <span className="text-xs font-semibold text-slate-400 dark:text-slate-600">
                       #{indice + 1}

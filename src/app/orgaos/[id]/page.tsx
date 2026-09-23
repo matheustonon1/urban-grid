@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { StatusBadge } from "@/components/status-badge";
 import { cartao, containerPagina } from "@/lib/estilos";
-import { calcularMetricasOrgao, classificarIndice } from "@/lib/reputacaoOrgao";
+import { SELO_LABEL_PT, calcularMetricasOrgao, classificarIndice } from "@/lib/reputacaoOrgao";
 
 function Metrica({ label, valor }: { label: string; valor: string }) {
   return (
@@ -58,7 +58,7 @@ export default async function OrgaoPage({ params }: PageProps<"/orgaos/[id]">) {
           <span
             className={`inline-block w-fit rounded-full px-2 py-0.5 text-xs font-medium ${classificacao.className}`}
           >
-            {classificacao.label}
+            {SELO_LABEL_PT[classificacao.chave]}
           </span>
           <span className="text-sm text-slate-500 dark:text-slate-400">
             {metricas.totalRespondidas} reclamação(ões) respondida(s)

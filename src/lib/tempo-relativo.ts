@@ -1,5 +1,3 @@
-const RTF = new Intl.RelativeTimeFormat("pt-BR", { numeric: "auto" });
-
 const UNIDADES: [Intl.RelativeTimeFormatUnit, number][] = [
   ["year", 31536000],
   ["month", 2592000],
@@ -9,14 +7,19 @@ const UNIDADES: [Intl.RelativeTimeFormatUnit, number][] = [
   ["minute", 60],
 ];
 
-export function formatarTempoRelativo(data: Date): string {
+// locale por parâmetro (não fixo) - a maioria das chamadas está em
+// páginas ainda só em português (mantêm o padrão "pt-BR"), mas
+// componentes já traduzidos (ex.: NotificacoesSino) passam o locale
+// ativo via useLocale().
+export function formatarTempoRelativo(data: Date, locale: string = "pt-BR"): string {
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
   const segundos = (data.getTime() - Date.now()) / 1000;
 
   for (const [unidade, segundosPorUnidade] of UNIDADES) {
     if (Math.abs(segundos) >= segundosPorUnidade) {
-      return RTF.format(Math.round(segundos / segundosPorUnidade), unidade);
+      return rtf.format(Math.round(segundos / segundosPorUnidade), unidade);
     }
   }
 
-  return RTF.format(Math.round(segundos / 60), "minute");
+  return rtf.format(Math.round(segundos / 60), "minute");
 }

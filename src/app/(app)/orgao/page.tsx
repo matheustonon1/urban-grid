@@ -6,7 +6,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { Paginacao } from "@/components/paginacao";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
 import { botaoPrimario, campoInput, cartao, containerPagina } from "@/lib/estilos";
-import { calcularMetricasOrgao, classificarIndice } from "@/lib/reputacaoOrgao";
+import { SELO_LABEL_PT, calcularMetricasOrgao, classificarIndice } from "@/lib/reputacaoOrgao";
 
 import { responderReclamacao } from "../reclamacoes/[protocolo]/actions";
 import { exigirOrgao } from "../reclamacoes/[protocolo]/exigir-orgao";
@@ -115,7 +115,7 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
               <span
                 className={`inline-block w-fit rounded-full px-2 py-0.5 text-xs font-medium ${classificacao.className}`}
               >
-                {classificacao.label}
+                {SELO_LABEL_PT[classificacao.chave]}
               </span>
               <span className="text-sm text-slate-500 dark:text-slate-400">
                 sua reputação pública

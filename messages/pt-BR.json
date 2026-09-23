@@ -7,7 +7,16 @@
   "Header": {
     "reclamacoes": "Reclamações",
     "entrar": "Entrar",
-    "cadastrar": "Cadastrar"
+    "cadastrar": "Cadastrar",
+    "buscarCidade": "Buscar cidade...",
+    "buscarCidadeAbrir": "Buscar cidade",
+    "buscarCidadeFechar": "Fechar busca de cidade"
+  },
+  "Notificacoes": {
+    "titulo": "Notificações",
+    "marcarTodasLidas": "Marcar todas como lidas",
+    "nenhuma": "Nenhuma notificação ainda.",
+    "verTodas": "Ver todas as notificações"
   },
   "Footer": {
     "tcc": "Urban Grid — Trabalho de Conclusão de Curso",
@@ -49,6 +58,11 @@
     "diferencial4Desc": "Autenticação em duas etapas por aplicativo autenticador, CPF único por conta e verificação de e-mail.",
     "melhorAvaliados": "Órgãos mais bem avaliados",
     "melhorAvaliadosSub": "Selo público calculado a partir do tempo de resposta e da taxa real de resolução — sem autoavaliação.",
+    "seloPoucosDados": "Poucos dados ainda",
+    "seloOtimo": "Ótimo",
+    "seloBom": "Bom",
+    "seloRegular": "Regular",
+    "seloRuim": "Ruim",
     "reclamacoesRespondidas": "{count, plural, one {# reclamação respondida} other {# reclamações respondidas}}",
     "prontoParticipar": "Pronto para participar?",
     "prontoParticiparSub": "Cidadãos registram problemas do seu bairro. Órgãos públicos respondem oficialmente e constroem sua reputação.",

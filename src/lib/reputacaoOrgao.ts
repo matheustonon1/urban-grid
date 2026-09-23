@@ -83,36 +83,49 @@ export async function calcularMetricasOrgao(orgaoId: string): Promise<MetricasOr
   };
 }
 
+export type SeloChave = "poucosDados" | "otimo" | "bom" | "regular" | "ruim";
+
+// Rótulo em português usado pelas páginas que ainda não têm tradução
+// (painel do órgão, detalhe de órgão, detalhe de cidade) - a home usa
+// suas próprias chaves de tradução (namespace Home) em vez deste mapa.
+export const SELO_LABEL_PT: Record<SeloChave, string> = {
+  poucosDados: "Poucos dados ainda",
+  otimo: "Ótimo",
+  bom: "Bom",
+  regular: "Regular",
+  ruim: "Ruim",
+};
+
 export function classificarIndice(
   indice: number | null,
   totalRespondidas: number
-): { label: string; className: string } {
+): { chave: SeloChave; className: string } {
   if (indice === null || totalRespondidas < MINIMO_PARA_CLASSIFICAR) {
     return {
-      label: "Poucos dados ainda",
+      chave: "poucosDados",
       className: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
     };
   }
   if (indice >= 80) {
     return {
-      label: "Ótimo",
+      chave: "otimo",
       className: "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-400",
     };
   }
   if (indice >= 60) {
     return {
-      label: "Bom",
+      chave: "bom",
       className: "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-400",
     };
   }
   if (indice >= 40) {
     return {
-      label: "Regular",
+      chave: "regular",
       className: "bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-400",
     };
   }
   return {
-    label: "Ruim",
+    chave: "ruim",
     className: "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400",
   };
 }
