@@ -1,24 +1,26 @@
 "use server";
 
 import { headers } from "next/headers";
+import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import { criarTokenRedefinicaoSenha, enviarEmailRedefinicaoSenha } from "@/lib/email";
 import { excedeuLimitePorIp } from "@/lib/rateLimitMemoria";
 
-import { EsqueciSenhaSchema, type EsqueciSenhaFormState } from "./definitions";
+import { criarEsqueciSenhaSchema, type EsqueciSenhaFormState } from "./definitions";
 
 const LIMITE_POR_IP_HORA = 5;
 const LIMITE_POR_EMAIL_HORA = 3;
-
-const MENSAGEM_GENERICA =
-  "Se existir uma conta com esse e-mail, enviamos um link para redefinir a senha.";
 
 export async function solicitarRedefinicaoSenha(
   _state: EsqueciSenhaFormState,
   formData: FormData
 ): Promise<EsqueciSenhaFormState> {
-  const validado = EsqueciSenhaSchema.safeParse({ email: formData.get("email") });
+  const t = await getTranslations("EsqueciSenha");
+  const mensagemGenerica = t("mensagemGenerica");
+  const validado = criarEsqueciSenhaSchema(await getTranslations("Cadastro")).safeParse({
+    email: formData.get("email"),
+  });
   if (!validado.success) {
     return { erros: validado.error.flatten().fieldErrors };
   }
@@ -33,7 +35,7 @@ export async function solicitarRedefinicaoSenha(
     excedeuLimitePorIp("redefinir-senha-ip", ip, LIMITE_POR_IP_HORA, 60 * 60 * 1000) ||
     excedeuLimitePorIp("redefinir-senha-email", email, LIMITE_POR_EMAIL_HORA, 60 * 60 * 1000)
   ) {
-    return { mensagem: MENSAGEM_GENERICA };
+    return { mensagem: mensagemGenerica };
   }
 
   const usuario = await prisma.user.findUnique({ where: { email } });
@@ -46,5 +48,5 @@ export async function solicitarRedefinicaoSenha(
     await enviarEmailRedefinicaoSenha({ email, token });
   }
 
-  return { mensagem: MENSAGEM_GENERICA };
+  return { mensagem: mensagemGenerica };
 }

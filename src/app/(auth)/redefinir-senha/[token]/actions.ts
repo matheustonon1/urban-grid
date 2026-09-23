@@ -2,20 +2,22 @@
 
 import { AuthError } from "next-auth";
 import bcrypt from "bcryptjs";
+import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import { signIn } from "@/auth";
 import { emailDoTokenRedefinicao } from "@/lib/email";
 import { alertarSenhaAlterada } from "@/lib/notificacoes";
 
-import { RedefinirSenhaSchema, type RedefinirSenhaFormState } from "./definitions";
+import { criarRedefinirSenhaSchema, type RedefinirSenhaFormState } from "./definitions";
 
 export async function redefinirSenha(
   token: string,
   _state: RedefinirSenhaFormState,
   formData: FormData
 ): Promise<RedefinirSenhaFormState> {
-  const validado = RedefinirSenhaSchema.safeParse({
+  const t = await getTranslations("RedefinirSenha");
+  const validado = criarRedefinirSenhaSchema(await getTranslations("Cadastro")).safeParse({
     senha: formData.get("senha"),
     confirmarSenha: formData.get("confirmarSenha"),
   });
@@ -25,17 +27,17 @@ export async function redefinirSenha(
 
   const registro = await prisma.verificationToken.findUnique({ where: { token } });
   if (!registro || registro.expires <= new Date()) {
-    return { mensagem: "Este link expirou. Peça um novo em 'Esqueci minha senha'." };
+    return { mensagem: t("erroLinkExpirado") };
   }
 
   const email = emailDoTokenRedefinicao(registro.identifier);
   if (!email) {
-    return { mensagem: "Este link não é válido para redefinição de senha." };
+    return { mensagem: t("erroLinkInvalido") };
   }
 
   const usuario = await prisma.user.findUnique({ where: { email } });
   if (!usuario?.senhaHash) {
-    return { mensagem: "Este link já foi usado ou não é mais válido." };
+    return { mensagem: t("erroLinkUsado") };
   }
 
   const senhaHash = await bcrypt.hash(validado.data.senha, 10);
@@ -72,7 +74,7 @@ export async function redefinirSenha(
     });
   } catch (erro) {
     if (erro instanceof AuthError) {
-      return { mensagem: "Senha redefinida! Faça login para continuar." };
+      return { mensagem: t("senhaRedefinida") };
     }
     throw erro;
   }

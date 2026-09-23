@@ -1,10 +1,11 @@
 "use server";
 
 import { headers } from "next/headers";
+import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 
-import { SolicitarOrgaoSchema, type SolicitarOrgaoFormState } from "./definitions";
+import { criarSolicitarOrgaoSchema, type SolicitarOrgaoFormState } from "./definitions";
 
 const LIMITE_SOLICITACOES_POR_IP_HORA = 3;
 
@@ -12,7 +13,8 @@ export async function solicitarOrgao(
   _state: SolicitarOrgaoFormState,
   formData: FormData
 ): Promise<SolicitarOrgaoFormState> {
-  const validado = SolicitarOrgaoSchema.safeParse({
+  const t = await getTranslations("Cadastro");
+  const validado = criarSolicitarOrgaoSchema(t).safeParse({
     nomeOrgao: formData.get("nomeOrgao"),
     sigla: formData.get("sigla"),
     cidadeId: formData.get("cidadeId"),
@@ -34,29 +36,25 @@ export async function solicitarOrgao(
       where: { criadoDeIp: ip, createdAt: { gte: umaHoraAtras } },
     });
     if (solicitacoesRecentes >= LIMITE_SOLICITACOES_POR_IP_HORA) {
-      return {
-        mensagem: "Muitas solicitações a partir deste endereço recentemente. Tente novamente mais tarde.",
-      };
+      return { mensagem: t("erroLimiteSolicitacoes") };
     }
   }
 
   const cidade = await prisma.cidade.findUnique({ where: { id: cidadeId } });
   if (!cidade) {
-    return { erros: { cidadeId: ["Cidade inválida."] } };
+    return { erros: { cidadeId: [t("erroCidadeInvalida")] } };
   }
 
   const usuarioExistente = await prisma.user.findUnique({ where: { email } });
   if (usuarioExistente) {
-    return { erros: { email: ["Já existe uma conta com este e-mail."] } };
+    return { erros: { email: [t("erroEmailDuplicado")] } };
   }
 
   const solicitacaoPendente = await prisma.solicitacaoOrgao.findFirst({
     where: { email, status: "PENDENTE" },
   });
   if (solicitacaoPendente) {
-    return {
-      mensagem: "Já existe uma solicitação pendente com este e-mail. Aguarde a análise.",
-    };
+    return { mensagem: t("erroSolicitacaoPendente") };
   }
 
   await prisma.solicitacaoOrgao.create({
@@ -71,8 +69,5 @@ export async function solicitarOrgao(
     },
   });
 
-  return {
-    sucesso: true,
-    mensagem: "Solicitação enviada! Um administrador vai analisar e você recebe um e-mail com o resultado.",
-  };
+  return { sucesso: true, mensagem: t("solicitacaoEnviada") };
 }

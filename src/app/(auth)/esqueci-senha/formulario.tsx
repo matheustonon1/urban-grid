@@ -1,12 +1,14 @@
 "use client";
 
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 
 import { botaoPrimario, campoInput, cartaoDestaque } from "@/lib/estilos";
 
 import { solicitarRedefinicaoSenha } from "./actions";
 
 export function FormularioEsqueciSenha() {
+  const t = useTranslations("EsqueciSenha");
   const [state, action, pending] = useActionState(solicitarRedefinicaoSenha, undefined);
 
   return (
@@ -14,7 +16,7 @@ export function FormularioEsqueciSenha() {
       <input
         type="email"
         name="email"
-        placeholder="Seu e-mail cadastrado"
+        placeholder={t("emailPlaceholder")}
         required
         className={campoInput}
       />
@@ -27,7 +29,7 @@ export function FormularioEsqueciSenha() {
       )}
 
       <button type="submit" disabled={pending} className={botaoPrimario}>
-        Enviar link de redefinição
+        {t("enviarLink")}
       </button>
     </form>
   );

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { IdCard, Landmark } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { FormularioCadastroPessoa } from "@/app/(auth)/cadastro/formulario-pessoa";
 import { FormularioSolicitarOrgao } from "@/app/orgao/solicitar/formulario";
@@ -9,6 +10,7 @@ import { FormularioSolicitarOrgao } from "@/app/orgao/solicitar/formulario";
 type TipoCadastro = "pessoa" | "orgao";
 
 export function CadastroTipoSwitch({ tipoInicial }: { tipoInicial: TipoCadastro }) {
+  const t = useTranslations("Cadastro");
   const [tipo, setTipo] = useState<TipoCadastro>(tipoInicial);
   const ehOrgao = tipo === "orgao";
 
@@ -16,25 +18,17 @@ export function CadastroTipoSwitch({ tipoInicial }: { tipoInicial: TipoCadastro 
     <>
       <div className="flex w-full flex-col items-center gap-3 text-center">
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-          {ehOrgao ? "Solicitar acesso como órgão" : "Criar conta"}
+          {ehOrgao ? t("tituloOrgao") : t("criarConta")}
         </h1>
         {ehOrgao && (
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Uma conta de órgão pode responder oficialmente às reclamações da
-            sua cidade. Um administrador analisa cada pedido antes de liberar
-            o acesso.
-          </p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{t("descOrgao")}</p>
         )}
 
         <button
           type="button"
           role="switch"
           aria-checked={ehOrgao}
-          aria-label={
-            ehOrgao
-              ? "Cadastro de órgão público selecionado. Clique para trocar para cadastro de pessoa"
-              : "Cadastro de pessoa selecionado. Clique para trocar para solicitação de órgão público"
-          }
+          aria-label={ehOrgao ? t("ariaOrgaoSelecionado") : t("ariaPessoaSelecionado")}
           onClick={() => setTipo(ehOrgao ? "pessoa" : "orgao")}
           className={`relative mt-1 h-9 w-18 shrink-0 rounded-full transition-colors duration-300 ease-in-out active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
             ehOrgao ? "bg-primary dark:bg-blue-600" : "bg-slate-300 dark:bg-slate-700"

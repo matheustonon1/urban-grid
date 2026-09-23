@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { Prisma } from "@prisma/client";
 import { AuthError } from "next-auth";
 import bcrypt from "bcryptjs";
+import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import { signIn } from "@/auth";
@@ -11,7 +12,7 @@ import { hashCpf } from "@/lib/cpf";
 import { criarTokenVerificacao, enviarEmailVerificacao } from "@/lib/email";
 import { verificarTurnstile } from "@/lib/turnstile";
 
-import { CadastroSchema, type CadastroFormState } from "./definitions";
+import { criarCadastroSchema, type CadastroFormState } from "./definitions";
 
 const LIMITE_CONTAS_POR_IP_HORA = 3;
 
@@ -19,7 +20,8 @@ export async function cadastrar(
   _state: CadastroFormState,
   formData: FormData
 ): Promise<CadastroFormState> {
-  const validado = CadastroSchema.safeParse({
+  const t = await getTranslations("Cadastro");
+  const validado = criarCadastroSchema(t).safeParse({
     nome: formData.get("nome"),
     email: formData.get("email"),
     cpf: formData.get("cpf"),
@@ -39,7 +41,7 @@ export async function cadastrar(
     ip
   );
   if (!turnstileOk) {
-    return { mensagem: "Não foi possível confirmar que você não é um robô. Tente novamente." };
+    return { mensagem: t("erroTurnstile") };
   }
 
   if (ip) {
@@ -48,9 +50,7 @@ export async function cadastrar(
       where: { criadoDeIp: ip, createdAt: { gte: umaHoraAtras } },
     });
     if (contasRecentes >= LIMITE_CONTAS_POR_IP_HORA) {
-      return {
-        mensagem: "Muitas contas criadas a partir deste endereço recentemente. Tente novamente mais tarde.",
-      };
+      return { mensagem: t("erroLimiteContas") };
     }
   }
 
@@ -84,9 +84,9 @@ export async function cadastrar(
         : typeof alvo === "string" && alvo.toLowerCase().includes("cpf");
 
       if (colidiuComCpf) {
-        return { erros: { cpf: ["Já existe uma conta com este CPF."] } };
+        return { erros: { cpf: [t("erroCpfDuplicado")] } };
       }
-      return { erros: { email: ["Já existe uma conta com este e-mail."] } };
+      return { erros: { email: [t("erroEmailDuplicado")] } };
     }
     throw erro;
   }
@@ -102,10 +102,7 @@ export async function cadastrar(
     });
   } catch (erro) {
     if (erro instanceof AuthError) {
-      return {
-        mensagem:
-          "Conta criada, mas não foi possível entrar automaticamente. Faça login.",
-      };
+      return { mensagem: t("erroLoginAutomatico") };
     }
     throw erro;
   }

@@ -1,12 +1,14 @@
 "use client";
 
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 
 import { botaoPrimario, campoInput, cartao } from "@/lib/estilos";
 
 import { redefinirSenha } from "./actions";
 
 export function FormularioRedefinirSenha({ token }: { token: string }) {
+  const t = useTranslations("RedefinirSenha");
   const acaoComToken = redefinirSenha.bind(null, token);
   const [state, action, pending] = useActionState(acaoComToken, undefined);
 
@@ -15,7 +17,7 @@ export function FormularioRedefinirSenha({ token }: { token: string }) {
       <input
         type="password"
         name="senha"
-        placeholder="Nova senha"
+        placeholder={t("novaSenha")}
         className={campoInput}
       />
       {state?.erros?.senha && (
@@ -25,7 +27,7 @@ export function FormularioRedefinirSenha({ token }: { token: string }) {
       <input
         type="password"
         name="confirmarSenha"
-        placeholder="Confirme a nova senha"
+        placeholder={t("confirmeNovaSenha")}
         className={campoInput}
       />
       {state?.erros?.confirmarSenha && (
@@ -39,7 +41,7 @@ export function FormularioRedefinirSenha({ token }: { token: string }) {
       )}
 
       <button type="submit" disabled={pending} className={botaoPrimario}>
-        Redefinir senha e entrar
+        {t("redefinirEEntrar")}
       </button>
     </form>
   );

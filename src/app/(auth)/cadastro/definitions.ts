@@ -1,25 +1,27 @@
 import * as z from "zod";
+import type { getTranslations } from "next-intl/server";
 
 import { validarCpf } from "@/lib/cpf";
 
-export const CadastroSchema = z
-  .object({
-    nome: z.string().trim().min(2, { error: "Informe seu nome completo." }).max(100),
-    email: z.email({ error: "Informe um e-mail válido." }).trim().max(254),
-    cpf: z.string().trim().refine(validarCpf, { error: "CPF inválido." }),
-    senha: z
-      .string()
-      .min(8, { error: "A senha deve ter ao menos 8 caracteres." })
-      .max(100),
-    confirmarSenha: z.string().max(100),
-    aceitaTermos: z.literal("on", {
-      error: "É preciso aceitar os Termos de Uso e a Política de Privacidade.",
-    }),
-  })
-  .refine((dados) => dados.senha === dados.confirmarSenha, {
-    error: "As senhas não conferem.",
-    path: ["confirmarSenha"],
-  });
+// Schema como fábrica (não um objeto pronto no topo do módulo) porque as
+// mensagens de erro do Zod precisam do dicionário do idioma ativo no
+// momento da requisição - getTranslations() só existe dentro de uma
+// server action, não no escopo do módulo.
+export function criarCadastroSchema(t: Awaited<ReturnType<typeof getTranslations>>) {
+  return z
+    .object({
+      nome: z.string().trim().min(2, { error: t("erroNome") }).max(100),
+      email: z.email({ error: t("erroEmail") }).trim().max(254),
+      cpf: z.string().trim().refine(validarCpf, { error: t("erroCpf") }),
+      senha: z.string().min(8, { error: t("erroSenhaCurta") }).max(100),
+      confirmarSenha: z.string().max(100),
+      aceitaTermos: z.literal("on", { error: t("erroTermos") }),
+    })
+    .refine((dados) => dados.senha === dados.confirmarSenha, {
+      error: t("erroSenhasDiferentes"),
+      path: ["confirmarSenha"],
+    });
+}
 
 export type CadastroFormState =
   | {
