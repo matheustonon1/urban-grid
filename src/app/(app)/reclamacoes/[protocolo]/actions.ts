@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -9,7 +10,12 @@ import { criarNotificacao } from "@/lib/notificacoes";
 import { orgaoAtendeCategoria } from "@/lib/orgaoCategoria";
 import { precisaVerificarEmail } from "@/lib/verificacao";
 
-import { AvaliacaoSchema, DenunciaSchema, RecursoSchema, RespostaOficialSchema } from "./definitions";
+import {
+  criarAvaliacaoSchema,
+  criarDenunciaSchema,
+  criarRecursoSchema,
+  criarRespostaOficialSchema,
+} from "./definitions";
 import { exigirOrgao } from "./exigir-orgao";
 
 const LIMITE_DENUNCIAS_DIA = 10;
@@ -113,7 +119,7 @@ export async function criarDenuncia(
     redirect("/login");
   }
 
-  const validado = DenunciaSchema.safeParse({
+  const validado = criarDenunciaSchema(await getTranslations("ReclamacaoDetalhe")).safeParse({
     motivo: formData.get("motivo"),
     descricao: formData.get("descricao"),
     declaracaoVeracidade: formData.get("declaracaoVeracidade"),
@@ -179,7 +185,9 @@ export async function responderReclamacao(
 ) {
   const session = await exigirOrgao();
 
-  const validado = RespostaOficialSchema.safeParse({
+  const validado = criarRespostaOficialSchema(
+    await getTranslations("ReclamacaoDetalhe")
+  ).safeParse({
     texto: formData.get("texto"),
     novoStatus: formData.get("novoStatus"),
     prazoEstimado: formData.get("prazoEstimado"),
@@ -273,7 +281,7 @@ export async function avaliarReclamacao(
     redirect("/login");
   }
 
-  const validado = AvaliacaoSchema.safeParse({
+  const validado = criarAvaliacaoSchema().safeParse({
     nota: formData.get("nota"),
     resolvido: formData.get("resolvido"),
     comentario: formData.get("comentario"),
@@ -328,7 +336,7 @@ export async function contestarRejeicao(
     redirect("/login");
   }
 
-  const validado = RecursoSchema.safeParse({
+  const validado = criarRecursoSchema(await getTranslations("ReclamacaoDetalhe")).safeParse({
     texto: formData.get("texto"),
   });
   if (!validado.success) {

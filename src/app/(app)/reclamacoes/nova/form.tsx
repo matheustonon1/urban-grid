@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { SeletorCidade } from "@/components/cidade-combobox";
 import { botaoPrimario, campoInput, cartao } from "@/lib/estilos";
@@ -23,6 +24,7 @@ export function NovaReclamacaoForm({
 }: {
   categorias: Categoria[];
 }) {
+  const t = useTranslations("NovaReclamacao");
   const [state, action, pending] = useActionState(criarReclamacao, undefined);
   const enderecoRef = useRef<HTMLInputElement>(null);
   const bairroRef = useRef<HTMLInputElement>(null);
@@ -74,13 +76,13 @@ export function NovaReclamacaoForm({
     <form action={action} className={`flex flex-col gap-5 ${cartao}`}>
       <div className="flex flex-col gap-3">
         <h2 className="text-sm font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400">
-          Sobre o problema
+          {t("sobreProblema")}
         </h2>
 
         <input
           type="text"
           name="titulo"
-          placeholder="Título"
+          placeholder={t("titulo")}
           className={campoInput}
         />
         {state?.erros?.titulo && (
@@ -89,7 +91,7 @@ export function NovaReclamacaoForm({
 
         <textarea
           name="descricao"
-          placeholder="Descreva o problema"
+          placeholder={t("descrevaProblema")}
           rows={5}
           className={campoInput}
         />
@@ -99,7 +101,7 @@ export function NovaReclamacaoForm({
 
         <select name="categoriaId" defaultValue="" className={campoInput}>
           <option value="" disabled>
-            Categoria
+            {t("categoria")}
           </option>
           {categorias.map((categoria) => (
             <option key={categoria.id} value={categoria.id}>
@@ -114,24 +116,22 @@ export function NovaReclamacaoForm({
 
       <div className="flex flex-col gap-3 border-t border-slate-200 pt-4 dark:border-slate-800">
         <h2 className="text-sm font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400">
-          Localização
+          {t("localizacao")}
         </h2>
 
         <input
           type="text"
           name="cep"
           required
-          placeholder="CEP"
+          placeholder={t("cep")}
           onChange={(evento) => buscarCep(evento.target.value)}
           className={campoInput}
         />
         {statusCep === "buscando" && (
-          <p className="text-sm text-slate-500 dark:text-slate-400">Buscando endereço...</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{t("buscandoEndereco")}</p>
         )}
         {statusCep === "nao-encontrado" && (
-          <p className="text-sm text-amber-600 dark:text-amber-400">
-            CEP não encontrado — preencha o endereço manualmente.
-          </p>
+          <p className="text-sm text-amber-600 dark:text-amber-400">{t("cepNaoEncontrado")}</p>
         )}
         {state?.erros?.cep && (
           <p className="text-sm text-red-600 dark:text-red-400">{state.erros.cep[0]}</p>
@@ -140,7 +140,7 @@ export function NovaReclamacaoForm({
         <SeletorCidade
           key={cidadeAutoPreenchida?.id ?? "manual"}
           required
-          placeholder="Cidade"
+          placeholder={t("cidade")}
           defaultValue={cidadeAutoPreenchida}
         />
         {state?.erros?.cidadeId && (
@@ -151,7 +151,7 @@ export function NovaReclamacaoForm({
           ref={enderecoRef}
           type="text"
           name="endereco"
-          placeholder="Endereço (rua e número)"
+          placeholder={t("endereco")}
           className={campoInput}
         />
         {state?.erros?.endereco && (
@@ -162,7 +162,7 @@ export function NovaReclamacaoForm({
           ref={bairroRef}
           type="text"
           name="bairro"
-          placeholder="Bairro"
+          placeholder={t("bairro")}
           className={campoInput}
         />
         {state?.erros?.bairro && (
@@ -172,14 +172,14 @@ export function NovaReclamacaoForm({
         <input
           type="text"
           name="referencia"
-          placeholder="Ponto de referência (opcional)"
+          placeholder={t("referencia")}
           className={campoInput}
         />
       </div>
 
       <div className="flex flex-col gap-3 border-t border-slate-200 pt-4 dark:border-slate-800">
         <h2 className="text-sm font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400">
-          Fotos (opcional)
+          {t("fotos")}
         </h2>
 
         <input
@@ -190,7 +190,7 @@ export function NovaReclamacaoForm({
           onChange={(evento) => selecionarImagens(evento.target.files)}
           className="text-sm text-slate-600 dark:text-slate-400"
         />
-        <p className="text-xs text-slate-400 dark:text-slate-500">Até 5 fotos, 5MB cada.</p>
+        <p className="text-xs text-slate-400 dark:text-slate-500">{t("ateCincoFotos")}</p>
 
         {previews.length > 0 && (
           <div className="flex flex-wrap gap-2">
@@ -214,10 +214,7 @@ export function NovaReclamacaoForm({
           required
           className="mt-0.5"
         />
-        <span>
-          Declaro que as informações fornecidas são verdadeiras e assumo
-          responsabilidade pelo conteúdo desta reclamação.
-        </span>
+        <span>{t("declaracaoVeracidade")}</span>
       </label>
       {state?.erros?.declaracaoVeracidade && (
         <p className="text-sm text-red-600 dark:text-red-400">{state.erros.declaracaoVeracidade[0]}</p>
@@ -228,7 +225,7 @@ export function NovaReclamacaoForm({
       )}
 
       <button type="submit" disabled={pending} className={botaoPrimario}>
-        Enviar reclamação
+        {t("enviarReclamacao")}
       </button>
     </form>
   );

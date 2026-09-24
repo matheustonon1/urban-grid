@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import sharp from "sharp";
 import { Prisma } from "@prisma/client";
+import { getTranslations } from "next-intl/server";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -11,7 +12,7 @@ import { gerarProtocolo } from "@/lib/protocolo";
 import { uploadImagem } from "@/lib/storage";
 import { aplicarBlur, calcularPhash, distanciaHamming, extrairExif } from "@/lib/imagem";
 
-import { NovaReclamacaoSchema, type NovaReclamacaoFormState } from "./definitions";
+import { criarNovaReclamacaoSchema, type NovaReclamacaoFormState } from "./definitions";
 
 const MAX_IMAGENS = 5;
 const MAX_TAMANHO_BYTES = 5 * 1024 * 1024;
@@ -24,12 +25,13 @@ export async function criarReclamacao(
   _state: NovaReclamacaoFormState,
   formData: FormData
 ): Promise<NovaReclamacaoFormState> {
+  const t = await getTranslations("NovaReclamacao");
   const session = await auth();
   if (!session?.user) {
     redirect("/login");
   }
 
-  const validado = NovaReclamacaoSchema.safeParse({
+  const validado = criarNovaReclamacaoSchema(t).safeParse({
     titulo: formData.get("titulo"),
     descricao: formData.get("descricao"),
     categoriaId: formData.get("categoriaId") ?? "",
@@ -51,7 +53,7 @@ export async function criarReclamacao(
     where: { autorId: session.user.id, createdAt: { gte: inicioDoDia } },
   });
   if (reclamacoesHoje >= LIMITE_RECLAMACOES_DIA) {
-    return { mensagem: "Você atingiu o limite de reclamações por dia. Tente novamente amanhã." };
+    return { mensagem: t("erroLimiteDiario") };
   }
 
   const arquivos = formData
@@ -59,14 +61,14 @@ export async function criarReclamacao(
     .filter((valor): valor is File => valor instanceof File && valor.size > 0);
 
   if (arquivos.length > MAX_IMAGENS) {
-    return { mensagem: `Envie no máximo ${MAX_IMAGENS} imagens.` };
+    return { mensagem: t("erroMaxImagens", { max: MAX_IMAGENS }) };
   }
   for (const arquivo of arquivos) {
     if (!TIPOS_ACEITOS.includes(arquivo.type)) {
-      return { mensagem: "As imagens devem ser JPEG, PNG ou WebP." };
+      return { mensagem: t("erroTipoImagem") };
     }
     if (arquivo.size > MAX_TAMANHO_BYTES) {
-      return { mensagem: "Cada imagem deve ter no máximo 5MB." };
+      return { mensagem: t("erroTamanhoImagem") };
     }
   }
 

@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { StatusReclamacao } from "@prisma/client";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import { StatusBadge } from "@/components/status-badge";
 import { Paginacao } from "@/components/paginacao";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
 import { botaoPrimario, campoInput, cartao, containerPagina } from "@/lib/estilos";
-import { SELO_LABEL_PT, calcularMetricasOrgao, classificarIndice } from "@/lib/reputacaoOrgao";
+import { calcularMetricasOrgao, classificarIndice } from "@/lib/reputacaoOrgao";
 
 import { responderReclamacao } from "../reclamacoes/[protocolo]/actions";
 import { exigirOrgao } from "../reclamacoes/[protocolo]/exigir-orgao";
@@ -21,6 +22,10 @@ function Metrica({ label, valor }: { label: string; valor: string }) {
 }
 
 export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orgao">) {
+  const t = await getTranslations("PainelOrgao");
+  const tResp = await getTranslations("ReclamacaoDetalhe");
+  const tSelo = await getTranslations("Selo");
+  const locale = await getLocale();
   const session = await exigirOrgao();
 
   const { pagePendentes, pageHistorico } = await searchParams;
@@ -97,13 +102,13 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
     <main className={`${containerPagina} max-w-3xl`}>
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-          Painel do órgão{orgao ? ` — ${orgao.nome}` : ""}
+          {t("titulo")}{orgao ? ` — ${orgao.nome}` : ""}
         </h1>
         {orgao && (
           <p className="text-sm text-slate-500 dark:text-slate-400">
             {categoriaIds
-              ? `Atende: ${orgao.categorias.map((c) => c.nome).join(", ")}`
-              : "Atende todas as categorias desta cidade (nenhuma categoria específica atribuída)."}
+              ? t("atende", { categorias: orgao.categorias.map((c) => c.nome).join(", ") })
+              : t("atendeTodas")}
           </p>
         )}
       </div>
@@ -115,24 +120,24 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
               <span
                 className={`inline-block w-fit rounded-full px-2 py-0.5 text-xs font-medium ${classificacao.className}`}
               >
-                {SELO_LABEL_PT[classificacao.chave]}
+                {tSelo(classificacao.chave)}
               </span>
               <span className="text-sm text-slate-500 dark:text-slate-400">
-                sua reputação pública
+                {t("suaReputacao")}
               </span>
             </div>
             <Link href={`/orgaos/${orgao.id}`} className="text-sm text-primary underline">
-              Ver como os cidadãos veem
+              {t("verComoOsCidadaosVeem")}
             </Link>
           </div>
 
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <Metrica
-              label="Resolvidas"
+              label={t("resolvidas")}
               valor={metricas.indiceResolucao !== null ? `${metricas.indiceResolucao}%` : "—"}
             />
             <Metrica
-              label="Tempo médio de resposta"
+              label={t("tempoMedioResposta")}
               valor={
                 metricas.tempoMedioRespostaDias !== null
                   ? `${metricas.tempoMedioRespostaDias}d`
@@ -140,23 +145,21 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
               }
             />
             <Metrica
-              label="Nota dos cidadãos"
+              label={t("notaCidadaos")}
               valor={metricas.notaMedia !== null ? `${metricas.notaMedia}/5` : "—"}
             />
-            <Metrica label="Avaliações recebidas" valor={String(metricas.totalAvaliacoes)} />
+            <Metrica label={t("avaliacoesRecebidas")} valor={String(metricas.totalAvaliacoes)} />
           </div>
         </div>
       )}
 
       <div className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          Pendentes de resposta {totalPendentes > 0 && `(${totalPendentes})`}
+          {t("pendentesDeResposta")} {totalPendentes > 0 && `(${totalPendentes})`}
         </h2>
 
         {pendentes.length === 0 && (
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Nenhuma reclamação pendente de resposta no momento.
-          </p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumaPendente")}</p>
         )}
 
         {pendentes.map((reclamacao) => (
@@ -175,18 +178,18 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
                 name="texto"
                 required
                 minLength={10}
-                placeholder="Resposta oficial"
+                placeholder={tResp("respostaOficial")}
                 rows={3}
                 className={campoInput}
               />
               <select name="novoStatus" defaultValue="" className={campoInput}>
-                <option value="">Manter status atual</option>
-                <option value="EM_ANDAMENTO">Marcar como em andamento</option>
-                <option value="RESOLVIDA">Marcar como resolvida</option>
+                <option value="">{tResp("manterStatus")}</option>
+                <option value="EM_ANDAMENTO">{tResp("marcarEmAndamento")}</option>
+                <option value="RESOLVIDA">{tResp("marcarResolvida")}</option>
               </select>
               <input type="date" name="prazoEstimado" className={campoInput} />
               <button type="submit" className={`${botaoPrimario} w-fit`}>
-                Enviar resposta
+                {tResp("enviarResposta")}
               </button>
             </form>
           </div>
@@ -205,13 +208,11 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
 
       <div className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          Histórico de respostas {totalHistorico > 0 && `(${totalHistorico})`}
+          {t("historicoRespostas")} {totalHistorico > 0 && `(${totalHistorico})`}
         </h2>
 
         {historico.length === 0 && (
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Você ainda não respondeu nenhuma reclamação.
-          </p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumaRespondida")}</p>
         )}
 
         {historico.map((resposta) => (
@@ -229,7 +230,7 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
             <p className="text-sm text-slate-700 dark:text-slate-300">{resposta.texto}</p>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="text-xs text-slate-400 dark:text-slate-500">
-                {resposta.reclamacao.protocolo} · {resposta.createdAt.toLocaleDateString("pt-BR")}
+                {resposta.reclamacao.protocolo} · {resposta.createdAt.toLocaleDateString(locale)}
               </p>
               {resposta.reclamacao.avaliacao ? (
                 <p
@@ -240,13 +241,13 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
                   }`}
                 >
                   {resposta.reclamacao.avaliacao.resolvido
-                    ? "✓ Cidadão confirmou resolução"
-                    : "✗ Cidadão diz que não foi resolvido"}{" "}
+                    ? `✓ ${t("cidadaoConfirmou")}`
+                    : `✗ ${t("cidadaoDizNaoResolvido")}`}{" "}
                   ({resposta.reclamacao.avaliacao.nota}/5)
                 </p>
               ) : (
                 <p className="text-xs text-slate-400 dark:text-slate-500">
-                  Aguardando avaliação do cidadão
+                  {t("aguardandoAvaliacao")}
                 </p>
               )}
             </div>

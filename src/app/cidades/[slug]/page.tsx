@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ListFilter } from "lucide-react";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import { StatusBadge } from "@/components/status-badge";
 import { CategoriaIcon } from "@/components/categoria-icon";
 import { botaoPrimario, campoInput, cartao, containerPagina } from "@/lib/estilos";
-import { SELO_LABEL_PT, calcularMetricasOrgao, classificarIndice } from "@/lib/reputacaoOrgao";
+import { calcularMetricasOrgao, classificarIndice } from "@/lib/reputacaoOrgao";
 
 const STATUS_PUBLICOS = [
   "PUBLICADA",
@@ -14,13 +15,6 @@ const STATUS_PUBLICOS = [
   "RESOLVIDA",
   "ARQUIVADA",
 ] as const;
-
-const STATUS_LABEL: Record<(typeof STATUS_PUBLICOS)[number], string> = {
-  PUBLICADA: "Publicada",
-  EM_ANDAMENTO: "Em andamento",
-  RESOLVIDA: "Resolvida",
-  ARQUIVADA: "Arquivada",
-};
 
 const TAMANHO_PAGINA = 10;
 
@@ -53,6 +47,10 @@ export default async function CidadePage({
   params,
   searchParams,
 }: PageProps<"/cidades/[slug]">) {
+  const t = await getTranslations("CidadeDetalhe");
+  const tStatus = await getTranslations("Status");
+  const tSelo = await getTranslations("Selo");
+  const locale = await getLocale();
   const { slug } = await params;
   const query = await searchParams;
 
@@ -164,27 +162,31 @@ export default async function CidadePage({
 
       <div className={`flex flex-col gap-2 ${cartao}`}>
         <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          Índice de resolução
+          {t("indiceResolucao")}
         </h2>
         <p className="text-sm text-slate-600 dark:text-slate-400">
           {indiceOrgao !== null
-            ? `${indiceOrgao}% das reclamações públicas estão marcadas como resolvidas (autorreportado pelo órgão).`
-            : "Ainda não há reclamações públicas suficientes nesta cidade."}
+            ? t("indiceOrgaoTexto", { indice: indiceOrgao })
+            : t("semReclamacoesSuficientes")}
         </p>
         <p className="text-sm text-slate-600 dark:text-slate-400">
           {indiceCidadao !== null
-            ? `${indiceCidadao}% dos cidadãos que avaliaram confirmam que o problema foi resolvido (${confirmadasPeloCidadao} de ${totalAvaliadas} avaliadas).`
-            : "Ainda não há avaliações de cidadãos suficientes nesta cidade."}
+            ? t("indiceCidadaoTexto", {
+                indice: indiceCidadao,
+                confirmadas: confirmadasPeloCidadao,
+                total: totalAvaliadas,
+              })
+            : t("semAvaliacoesSuficientes")}
         </p>
       </div>
 
       <div className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          Categorias mais reclamadas
+          {t("categoriasMaisReclamadas")}
         </h2>
         {ranking.length === 0 && (
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Nenhuma reclamação pública nesta cidade ainda.
+            {t("nenhumaReclamacaoPublica")}
           </p>
         )}
         {ranking.map(
@@ -208,11 +210,11 @@ export default async function CidadePage({
 
       <div className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          Órgãos desta cidade
+          {t("orgaosDestaCidade")}
         </h2>
         {rankingOrgaos.length === 0 && (
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Nenhum órgão cadastrado nesta cidade ainda.
+            {t("nenhumOrgaoCadastrado")}
           </p>
         )}
         {rankingOrgaos.map(({ orgao, metricas }) => {
@@ -232,13 +234,13 @@ export default async function CidadePage({
                   {orgao.sigla && ` (${orgao.sigla})`}
                 </span>
                 <span className="text-xs text-slate-500 dark:text-slate-400">
-                  {metricas.totalRespondidas} reclamação(ões) respondida(s)
+                  {t("reclamacoesRespondidas", { count: metricas.totalRespondidas })}
                 </span>
               </div>
               <span
                 className={`inline-block shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${classificacao.className}`}
               >
-                {SELO_LABEL_PT[classificacao.chave]}
+                {tSelo(classificacao.chave)}
               </span>
             </Link>
           );
@@ -247,7 +249,7 @@ export default async function CidadePage({
 
       <div className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          Reclamações {totalFeed > 0 && `(${totalFeed})`}
+          {t("reclamacoes")} {totalFeed > 0 && `(${totalFeed})`}
         </h2>
 
         <div className={`flex flex-col gap-4 ${cartao}`}>
@@ -258,7 +260,7 @@ export default async function CidadePage({
                 htmlFor="categoriaId"
                 className="text-xs font-medium text-slate-500 dark:text-slate-400"
               >
-                Categoria
+                {t("categoria")}
               </label>
               <select
                 id="categoriaId"
@@ -266,7 +268,7 @@ export default async function CidadePage({
                 defaultValue={categoriaId ?? ""}
                 className={campoInput}
               >
-                <option value="">Todas</option>
+                <option value="">{t("todas")}</option>
                 {categoriasAtivas.map((cat) => (
                   <option key={cat.id} value={cat.id}>
                     {cat.nome}
@@ -279,7 +281,7 @@ export default async function CidadePage({
                 htmlFor="status"
                 className="text-xs font-medium text-slate-500 dark:text-slate-400"
               >
-                Status
+                {t("status")}
               </label>
               <select
                 id="status"
@@ -287,23 +289,23 @@ export default async function CidadePage({
                 defaultValue={status ?? ""}
                 className={campoInput}
               >
-                <option value="">Todos</option>
+                <option value="">{t("todos")}</option>
                 {STATUS_PUBLICOS.map((s) => (
                   <option key={s} value={s}>
-                    {STATUS_LABEL[s]}
+                    {tStatus(s)}
                   </option>
                 ))}
               </select>
             </div>
             <button type="submit" className={botaoPrimario}>
               <ListFilter className="h-4 w-4" />
-              Filtrar
+              {t("filtrar")}
             </button>
           </form>
 
           <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
             <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-              Ordenar por
+              {t("ordenarPor")}
             </span>
             <div className="flex gap-1 rounded-full bg-slate-100 p-1 dark:bg-slate-800">
               <Link
@@ -314,7 +316,7 @@ export default async function CidadePage({
                     : "rounded-full px-3 py-1 text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
                 }
               >
-                Mais recentes
+                {t("maisRecentes")}
               </Link>
               <Link
                 href={linkFeed(slug, estadoFeed, { ordenar: "confirmadas", pagina: 1 })}
@@ -324,16 +326,14 @@ export default async function CidadePage({
                     : "rounded-full px-3 py-1 text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
                 }
               >
-                Mais confirmadas
+                {t("maisConfirmadas")}
               </Link>
             </div>
           </div>
         </div>
 
         {reclamacoes.length === 0 && (
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Nenhuma reclamação encontrada com esses filtros.
-          </p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumaComFiltros")}</p>
         )}
 
         {reclamacoes.map((reclamacao) => (
@@ -360,8 +360,8 @@ export default async function CidadePage({
               {reclamacao.descricao}
             </p>
             <p className="text-xs text-slate-400 dark:text-slate-500">
-              {reclamacao._count.confirmacoes} pessoa(s) confirmaram ·{" "}
-              {reclamacao.createdAt.toLocaleDateString("pt-BR")}
+              {t("pessoasConfirmaram", { count: reclamacao._count.confirmacoes })} ·{" "}
+              {reclamacao.createdAt.toLocaleDateString(locale)}
             </p>
           </Link>
         ))}
@@ -373,20 +373,20 @@ export default async function CidadePage({
                 href={linkFeed(slug, estadoFeed, { pagina: paginaAtual - 1 })}
                 className="text-primary underline"
               >
-                ← Anterior
+                ← {t("anterior")}
               </Link>
             ) : (
               <span />
             )}
             <span className="text-slate-500 dark:text-slate-400">
-              Página {paginaAtual} de {totalPaginas}
+              {t("paginaXDeY", { atual: paginaAtual, total: totalPaginas })}
             </span>
             {paginaAtual < totalPaginas ? (
               <Link
                 href={linkFeed(slug, estadoFeed, { pagina: paginaAtual + 1 })}
                 className="text-primary underline"
               >
-                Próxima →
+                {t("proxima")} →
               </Link>
             ) : (
               <span />

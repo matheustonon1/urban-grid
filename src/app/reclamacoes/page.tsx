@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import { SeletorCidade } from "@/components/cidade-combobox";
@@ -12,6 +13,8 @@ import { botaoPrimario, campoInput, cartao, containerPagina } from "@/lib/estilo
 export default async function ReclamacoesPublicasPage({
   searchParams,
 }: PageProps<"/reclamacoes">) {
+  const t = await getTranslations("Reclamacoes");
+  const locale = await getLocale();
   const { cidadeId, categoriaId, q, page } = await searchParams;
   const cidadeIdFiltro =
     typeof cidadeId === "string" && cidadeId ? cidadeId : undefined;
@@ -64,7 +67,7 @@ export default async function ReclamacoesPublicasPage({
   return (
     <main className={containerPagina}>
       <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-        Reclamações públicas
+        {t("titulo")}
       </h1>
 
       <form className="flex flex-wrap gap-2">
@@ -72,12 +75,12 @@ export default async function ReclamacoesPublicasPage({
           type="text"
           name="q"
           defaultValue={buscaFiltro ?? ""}
-          placeholder="Buscar por palavra-chave..."
+          placeholder={t("buscarPalavraChave")}
           className={`min-w-48 flex-1 ${campoInput}`}
         />
         <div className="min-w-48 flex-1">
           <SeletorCidade
-            placeholder="Buscar por cidade ou estado..."
+            placeholder={t("buscarCidadeEstado")}
             defaultValue={
               cidadeFiltro
                 ? {
@@ -94,7 +97,7 @@ export default async function ReclamacoesPublicasPage({
           defaultValue={categoriaIdFiltro ?? ""}
           className={`min-w-48 flex-1 ${campoInput}`}
         >
-          <option value="">Todas as categorias</option>
+          <option value="">{t("todasCategorias")}</option>
           {categoriasAtivas.map((categoria) => (
             <option key={categoria.id} value={categoria.id}>
               {categoria.nome}
@@ -102,29 +105,29 @@ export default async function ReclamacoesPublicasPage({
           ))}
         </select>
         <button type="submit" className={botaoPrimario}>
-          Filtrar
+          {t("filtrar")}
         </button>
       </form>
 
       {(cidadeFiltro || categoriaFiltro || buscaFiltro) && (
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          Mostrando resultados
+          {t("mostrandoResultados")}
           {buscaFiltro && (
             <>
               {" "}
-              para <strong>&quot;{buscaFiltro}&quot;</strong>
+              {t("para")} <strong>&quot;{buscaFiltro}&quot;</strong>
             </>
           )}
           {categoriaFiltro && (
             <>
               {" "}
-              em <strong>{categoriaFiltro.nome}</strong>
+              {t("em")} <strong>{categoriaFiltro.nome}</strong>
             </>
           )}
           {cidadeFiltro && (
             <>
               {" "}
-              em{" "}
+              {t("em")}{" "}
               <Link href={`/cidades/${cidadeFiltro.slug}`} className="text-primary underline">
                 <strong>
                   {cidadeFiltro.nome} - {cidadeFiltro.estado.uf}
@@ -134,15 +137,13 @@ export default async function ReclamacoesPublicasPage({
           )}{" "}
           ·{" "}
           <Link href="/reclamacoes" className="text-primary underline">
-            limpar
+            {t("limpar")}
           </Link>
         </p>
       )}
 
       {reclamacoes.length === 0 && (
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Nenhuma reclamação publicada ainda.
-        </p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumaPublicada")}</p>
       )}
 
       {reclamacoes.map((reclamacao) => (
@@ -171,10 +172,10 @@ export default async function ReclamacoesPublicasPage({
             </div>
             <p className="text-sm text-slate-500 dark:text-slate-400">
               {reclamacao.categoria.nome} · {reclamacao.cidade.nome} ·{" "}
-              {formatarTempoRelativo(reclamacao.publicadaEm ?? reclamacao.createdAt)}
+              {formatarTempoRelativo(reclamacao.publicadaEm ?? reclamacao.createdAt, locale)}
             </p>
             <p className="mt-1 text-sm font-medium text-primary">
-              {reclamacao._count.confirmacoes} confirmação(ões)
+              {t("confirmacoes", { count: reclamacao._count.confirmacoes })}
             </p>
           </div>
         </Link>

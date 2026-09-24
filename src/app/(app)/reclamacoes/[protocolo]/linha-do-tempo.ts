@@ -1,4 +1,5 @@
 import type { Avaliacao, Orgao, Reclamacao, RespostaOficial } from "@prisma/client";
+import type { getTranslations } from "next-intl/server";
 
 export interface EventoTimeline {
   data: Date;
@@ -6,23 +7,28 @@ export interface EventoTimeline {
   descricao?: string;
 }
 
+// Recebe as funções de tradução por parâmetro (não usa useTranslations/
+// getTranslations direto aqui) porque isto não é um componente - é uma
+// função pura chamada de dentro do Server Component da página.
 export function construirLinhaDoTempo(
   reclamacao: Reclamacao,
   respostas: (RespostaOficial & { orgao: Orgao })[],
-  avaliacao: Avaliacao | null
+  avaliacao: Avaliacao | null,
+  t: Awaited<ReturnType<typeof getTranslations>>,
+  tStatus: Awaited<ReturnType<typeof getTranslations>>
 ): EventoTimeline[] {
   const eventos: EventoTimeline[] = [
-    { data: reclamacao.createdAt, titulo: "Reclamação registrada" },
+    { data: reclamacao.createdAt, titulo: t("timelineRegistrada") },
   ];
 
   if (reclamacao.publicadaEm) {
-    eventos.push({ data: reclamacao.publicadaEm, titulo: "Publicada" });
+    eventos.push({ data: reclamacao.publicadaEm, titulo: t("timelinePublicada") });
   }
 
   if (reclamacao.status === "REJEITADA" && reclamacao.motivoRejeicao) {
     eventos.push({
       data: reclamacao.updatedAt,
-      titulo: "Rejeitada",
+      titulo: t("timelineRejeitada"),
       descricao: reclamacao.motivoRejeicao,
     });
   }
@@ -30,10 +36,12 @@ export function construirLinhaDoTempo(
   for (const resposta of respostas) {
     eventos.push({
       data: resposta.createdAt,
-      titulo: `Resposta de ${resposta.orgao.nome}`,
+      titulo: t("timelineRespostaDe", { orgao: resposta.orgao.nome }),
       descricao:
         resposta.texto +
-        (resposta.novoStatus ? ` (novo status: ${resposta.novoStatus})` : ""),
+        (resposta.novoStatus
+          ? ` (${t("timelineNovoStatus", { status: tStatus(resposta.novoStatus) })})`
+          : ""),
     });
   }
 
@@ -41,8 +49,8 @@ export function construirLinhaDoTempo(
     eventos.push({
       data: avaliacao.createdAt,
       titulo: avaliacao.resolvido
-        ? "Cidadão confirmou a resolução"
-        : "Cidadão contestou a resolução",
+        ? t("timelineConfirmouResolucao")
+        : t("timelineContestouResolucao"),
       descricao: avaliacao.comentario ?? undefined,
     });
   }

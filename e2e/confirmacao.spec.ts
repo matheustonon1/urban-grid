@@ -20,10 +20,10 @@ test('"também sofro com isso" alterna confirmação e o contador reflete isso',
   await page.waitForURL(/\/painel$/);
 
   await page.goto(`/reclamacoes/${reclamacao.protocolo}`);
-  await expect(page.getByText("0 pessoa(s) confirmaram este problema.")).toBeVisible();
+  await expect(page.getByText("0 pessoa confirmou este problema.")).toBeVisible();
 
   await page.click('button:has-text("Também sofro com isso")');
-  await expect(page.getByText("1 pessoa(s) confirmaram este problema.")).toBeVisible();
+  await expect(page.getByText("1 pessoa confirmou este problema.")).toBeVisible();
 
   const confirmacao = await prisma.confirmacao.findUnique({
     where: { userId_reclamacaoId: { userId: usuario.id, reclamacaoId: reclamacao.id } },
@@ -31,7 +31,7 @@ test('"também sofro com isso" alterna confirmação e o contador reflete isso',
   expect(confirmacao).not.toBeNull();
 
   await page.click('button:has-text("✓ Também sofro com isso")');
-  await expect(page.getByText("0 pessoa(s) confirmaram este problema.")).toBeVisible();
+  await expect(page.getByText("0 pessoa confirmou este problema.")).toBeVisible();
 
   const confirmacaoRemovida = await prisma.confirmacao.findUnique({
     where: { userId_reclamacaoId: { userId: usuario.id, reclamacaoId: reclamacao.id } },

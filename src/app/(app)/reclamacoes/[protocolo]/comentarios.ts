@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -9,7 +10,7 @@ import { criarNotificacao } from "@/lib/notificacoes";
 import { precisaVerificarEmail } from "@/lib/verificacao";
 import { moderarComentario } from "@/lib/moderacaoComentario";
 
-import { ComentarioSchema } from "./definitions";
+import { criarComentarioSchema } from "./definitions";
 
 const LIMITE_COMENTARIOS_DIA = 20;
 
@@ -30,7 +31,7 @@ export async function criarComentario(
     redirect("/login");
   }
 
-  const validado = ComentarioSchema.safeParse({
+  const validado = criarComentarioSchema(await getTranslations("ReclamacaoDetalhe")).safeParse({
     texto: formData.get("texto"),
     paiId: formData.get("paiId"),
   });

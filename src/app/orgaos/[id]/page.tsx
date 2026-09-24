@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import { StatusBadge } from "@/components/status-badge";
 import { cartao, containerPagina } from "@/lib/estilos";
-import { SELO_LABEL_PT, calcularMetricasOrgao, classificarIndice } from "@/lib/reputacaoOrgao";
+import { calcularMetricasOrgao, classificarIndice } from "@/lib/reputacaoOrgao";
 
 function Metrica({ label, valor }: { label: string; valor: string }) {
   return (
@@ -16,6 +17,9 @@ function Metrica({ label, valor }: { label: string; valor: string }) {
 }
 
 export default async function OrgaoPage({ params }: PageProps<"/orgaos/[id]">) {
+  const t = await getTranslations("OrgaoDetalhe");
+  const tSelo = await getTranslations("Selo");
+  const locale = await getLocale();
   const { id } = await params;
 
   const orgao = await prisma.orgao.findUnique({
@@ -49,7 +53,7 @@ export default async function OrgaoPage({ params }: PageProps<"/orgaos/[id]">) {
           <Link href={`/cidades/${orgao.cidade.slug}`} className="text-primary underline">
             {orgao.cidade.nome}
           </Link>
-          {!orgao.ativo && " · Órgão inativo"}
+          {!orgao.ativo && ` · ${t("orgaoInativo")}`}
         </p>
       </div>
 
@@ -58,20 +62,20 @@ export default async function OrgaoPage({ params }: PageProps<"/orgaos/[id]">) {
           <span
             className={`inline-block w-fit rounded-full px-2 py-0.5 text-xs font-medium ${classificacao.className}`}
           >
-            {SELO_LABEL_PT[classificacao.chave]}
+            {tSelo(classificacao.chave)}
           </span>
           <span className="text-sm text-slate-500 dark:text-slate-400">
-            {metricas.totalRespondidas} reclamação(ões) respondida(s)
+            {t("reclamacoesRespondidas", { count: metricas.totalRespondidas })}
           </span>
         </div>
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           <Metrica
-            label="Resolvidas"
+            label={t("resolvidas")}
             valor={metricas.indiceResolucao !== null ? `${metricas.indiceResolucao}%` : "—"}
           />
           <Metrica
-            label="Tempo médio de resposta"
+            label={t("tempoMedioResposta")}
             valor={
               metricas.tempoMedioRespostaDias !== null
                 ? `${metricas.tempoMedioRespostaDias}d`
@@ -79,22 +83,20 @@ export default async function OrgaoPage({ params }: PageProps<"/orgaos/[id]">) {
             }
           />
           <Metrica
-            label="Nota dos cidadãos"
+            label={t("notaCidadaos")}
             valor={metricas.notaMedia !== null ? `${metricas.notaMedia}/5` : "—"}
           />
-          <Metrica label="Avaliações recebidas" valor={String(metricas.totalAvaliacoes)} />
+          <Metrica label={t("avaliacoesRecebidas")} valor={String(metricas.totalAvaliacoes)} />
         </div>
       </div>
 
       <div className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          Respostas recentes
+          {t("respostasRecentes")}
         </h2>
 
         {respostasRecentes.length === 0 && (
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Este órgão ainda não respondeu nenhuma reclamação publicamente.
-          </p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumaResposta")}</p>
         )}
 
         {respostasRecentes.map((resposta) => (
@@ -111,7 +113,7 @@ export default async function OrgaoPage({ params }: PageProps<"/orgaos/[id]">) {
             </div>
             <p className="text-sm text-slate-700 dark:text-slate-300">{resposta.texto}</p>
             <p className="text-xs text-slate-400 dark:text-slate-500">
-              {resposta.createdAt.toLocaleDateString("pt-BR")}
+              {resposta.createdAt.toLocaleDateString(locale)}
             </p>
           </Link>
         ))}

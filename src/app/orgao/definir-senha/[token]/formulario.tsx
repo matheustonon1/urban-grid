@@ -1,12 +1,14 @@
 "use client";
 
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 
 import { botaoPrimario, campoInput, cartao } from "@/lib/estilos";
 
 import { definirSenhaOrgao } from "./actions";
 
 export function FormularioDefinirSenha({ token }: { token: string }) {
+  const t = useTranslations("DefinirSenhaOrgao");
   const acaoComToken = definirSenhaOrgao.bind(null, token);
   const [state, action, pending] = useActionState(acaoComToken, undefined);
 
@@ -15,7 +17,7 @@ export function FormularioDefinirSenha({ token }: { token: string }) {
       <input
         type="password"
         name="senha"
-        placeholder="Crie uma senha"
+        placeholder={t("crieSenha")}
         className={campoInput}
       />
       {state?.erros?.senha && (
@@ -25,7 +27,7 @@ export function FormularioDefinirSenha({ token }: { token: string }) {
       <input
         type="password"
         name="confirmarSenha"
-        placeholder="Confirme a senha"
+        placeholder={t("confirmeSenha")}
         className={campoInput}
       />
       {state?.erros?.confirmarSenha && (
@@ -39,7 +41,7 @@ export function FormularioDefinirSenha({ token }: { token: string }) {
       )}
 
       <button type="submit" disabled={pending} className={botaoPrimario}>
-        Definir senha e entrar
+        {t("definirEEntrar")}
       </button>
     </form>
   );

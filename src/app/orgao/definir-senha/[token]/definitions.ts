@@ -1,14 +1,17 @@
 import * as z from "zod";
+import type { getTranslations } from "next-intl/server";
 
-export const DefinirSenhaSchema = z
-  .object({
-    senha: z.string().min(8, { error: "A senha deve ter ao menos 8 caracteres." }).max(100),
-    confirmarSenha: z.string().max(100),
-  })
-  .refine((dados) => dados.senha === dados.confirmarSenha, {
-    error: "As senhas não conferem.",
-    path: ["confirmarSenha"],
-  });
+export function criarDefinirSenhaSchema(t: Awaited<ReturnType<typeof getTranslations>>) {
+  return z
+    .object({
+      senha: z.string().min(8, { error: t("erroSenhaCurta") }).max(100),
+      confirmarSenha: z.string().max(100),
+    })
+    .refine((dados) => dados.senha === dados.confirmarSenha, {
+      error: t("erroSenhasDiferentes"),
+      path: ["confirmarSenha"],
+    });
+}
 
 export type DefinirSenhaFormState =
   | {

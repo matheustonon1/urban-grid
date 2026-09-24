@@ -2,18 +2,20 @@
 
 import { AuthError } from "next-auth";
 import bcrypt from "bcryptjs";
+import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import { signIn } from "@/auth";
 
-import { DefinirSenhaSchema, type DefinirSenhaFormState } from "./definitions";
+import { criarDefinirSenhaSchema, type DefinirSenhaFormState } from "./definitions";
 
 export async function definirSenhaOrgao(
   token: string,
   _state: DefinirSenhaFormState,
   formData: FormData
 ): Promise<DefinirSenhaFormState> {
-  const validado = DefinirSenhaSchema.safeParse({
+  const t = await getTranslations("DefinirSenhaOrgao");
+  const validado = criarDefinirSenhaSchema(await getTranslations("Cadastro")).safeParse({
     senha: formData.get("senha"),
     confirmarSenha: formData.get("confirmarSenha"),
   });
@@ -23,12 +25,12 @@ export async function definirSenhaOrgao(
 
   const registro = await prisma.verificationToken.findUnique({ where: { token } });
   if (!registro || registro.expires <= new Date()) {
-    return { mensagem: "Este link expirou. Peça pra um administrador reenviar o convite." };
+    return { mensagem: t("erroLinkExpirado") };
   }
 
   const usuario = await prisma.user.findUnique({ where: { email: registro.identifier } });
   if (!usuario || usuario.papel !== "ORGAO" || usuario.senhaHash) {
-    return { mensagem: "Este link já foi usado ou não é mais válido." };
+    return { mensagem: t("erroLinkUsado") };
   }
 
   const senhaHash = await bcrypt.hash(validado.data.senha, 10);
@@ -49,7 +51,7 @@ export async function definirSenhaOrgao(
     });
   } catch (erro) {
     if (erro instanceof AuthError) {
-      return { mensagem: "Senha definida! Faça login para continuar." };
+      return { mensagem: t("senhaDefinida") };
     }
     throw erro;
   }

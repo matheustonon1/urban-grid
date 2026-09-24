@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -17,20 +18,23 @@ import {
 import { criarComentario } from "./comentarios";
 import { construirLinhaDoTempo } from "./linha-do-tempo";
 
-const MOTIVO_LABEL: Record<string, string> = {
-  OFENSIVO: "Conteúdo ofensivo",
-  SPAM: "Spam",
-  DESINFORMACAO: "Desinformação",
-  FORA_DE_ESCOPO: "Fora do escopo municipal",
-  DADOS_PESSOAIS: "Exposição de dados pessoais",
-  DUPLICADA: "Reclamação duplicada",
-  OUTRO: "Outro",
-};
+const MOTIVOS_DENUNCIA = [
+  "OFENSIVO",
+  "SPAM",
+  "DESINFORMACAO",
+  "FORA_DE_ESCOPO",
+  "DADOS_PESSOAIS",
+  "DUPLICADA",
+  "OUTRO",
+] as const;
 
 export default async function ReclamacaoPage({
   params,
   searchParams,
 }: PageProps<"/reclamacoes/[protocolo]">) {
+  const t = await getTranslations("ReclamacaoDetalhe");
+  const tMotivo = await getTranslations("MotivoDenuncia");
+  const locale = await getLocale();
   const { protocolo } = await params;
   const { erro } = await searchParams;
 
@@ -104,7 +108,9 @@ export default async function ReclamacaoPage({
   const linhaDoTempo = construirLinhaDoTempo(
     reclamacao,
     reclamacao.respostas,
-    reclamacao.avaliacao
+    reclamacao.avaliacao,
+    t,
+    await getTranslations("Status")
   );
 
   const comentarios = await prisma.comentario.findMany({
@@ -127,7 +133,7 @@ export default async function ReclamacaoPage({
           {reclamacao.titulo}
         </h1>
         <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-          <span>Protocolo {reclamacao.protocolo}</span>
+          <span>{t("protocolo")} {reclamacao.protocolo}</span>
           <StatusBadge status={reclamacao.status} />
         </div>
         <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -153,7 +159,7 @@ export default async function ReclamacaoPage({
         )}
         {reclamacao.status === "REJEITADA" && reclamacao.motivoRejeicao && (
           <p className="text-sm text-red-600 dark:text-red-400">
-            Motivo da rejeição: {reclamacao.motivoRejeicao}
+            {t("motivoRejeicao")} {reclamacao.motivoRejeicao}
           </p>
         )}
         {reclamacao.status === "REJEITADA" && ehAutor && !reclamacao.emRecurso && (
@@ -161,42 +167,33 @@ export default async function ReclamacaoPage({
             action={contestarRejeicao.bind(null, reclamacao.id, protocolo)}
             className="flex flex-col gap-2"
           >
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              Se você acha que essa rejeição foi um engano, pode contestar
-              uma vez — um moderador humano vai revisar.
-            </p>
+            <p className="text-sm text-slate-600 dark:text-slate-400">{t("contestarDesc")}</p>
             <textarea
               name="texto"
               required
               minLength={20}
-              placeholder="Explique por que essa decisão deveria ser revista"
+              placeholder={t("contestarPlaceholder")}
               rows={3}
               className={campoInput}
             />
             <button type="submit" className={`${botaoSecundario} w-fit`}>
-              Contestar rejeição
+              {t("contestarRejeicao")}
             </button>
           </form>
         )}
         {reclamacao.status === "REJEITADA" && ehAutor && reclamacao.emRecurso && (
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Você já contestou esta decisão e um moderador manteve a
-            rejeição.
-          </p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{t("jaContestou")}</p>
         )}
         {reclamacao.status === "AGUARDANDO_REVISAO" && (
           <p className="text-sm text-amber-600 dark:text-amber-400">
-            {reclamacao.emRecurso
-              ? "Seu recurso contra a rejeição está em análise por um moderador."
-              : "Esta reclamação foi encaminhada para revisão humana antes da publicação."}
+            {reclamacao.emRecurso ? t("recursoEmAnalise") : t("encaminhadaRevisao")}
           </p>
         )}
         {erro === "email-nao-verificado" && (
           <p className="text-sm text-amber-600 dark:text-amber-400">
-            Verifique seu e-mail antes de confirmar ou denunciar reclamações —
-            reenvie o link em{" "}
+            {t("verifiqueEmail")}{" "}
             <Link href="/painel" className="underline">
-              seu painel
+              {t("seuPainel")}
             </Link>
             .
           </p>
@@ -207,9 +204,7 @@ export default async function ReclamacaoPage({
               action={alternarConfirmacao.bind(null, reclamacao.id, protocolo)}
             >
               <button type="submit" className={`${botaoSecundario} w-fit`}>
-                {jaConfirmou
-                  ? "✓ Também sofro com isso"
-                  : "Também sofro com isso"}
+                {jaConfirmou ? `✓ ${t("tambemSofro")}` : t("tambemSofro")}
               </button>
             </form>
             {!denunciaAberta && (
@@ -217,7 +212,7 @@ export default async function ReclamacaoPage({
                 <summary
                   className={`${botaoSecundario} inline-flex w-fit cursor-pointer list-none text-red-700 dark:text-red-400`}
                 >
-                  Denunciar
+                  {t("denunciar")}
                 </summary>
                 <form
                   action={criarDenuncia.bind(null, reclamacao.id, protocolo)}
@@ -225,17 +220,17 @@ export default async function ReclamacaoPage({
                 >
                   <select name="motivo" required defaultValue="" className={campoInput}>
                     <option value="" disabled>
-                      Motivo
+                      {t("motivo")}
                     </option>
-                    {Object.entries(MOTIVO_LABEL).map(([valor, label]) => (
+                    {MOTIVOS_DENUNCIA.map((valor) => (
                       <option key={valor} value={valor}>
-                        {label}
+                        {tMotivo(valor)}
                       </option>
                     ))}
                   </select>
                   <textarea
                     name="descricao"
-                    placeholder="Descrição (opcional)"
+                    placeholder={t("descricaoOpcional")}
                     rows={2}
                     className={campoInput}
                   />
@@ -246,10 +241,10 @@ export default async function ReclamacaoPage({
                       required
                       className="mt-0.5"
                     />
-                    <span>Declaro que esta denúncia é feita de boa-fé.</span>
+                    <span>{t("declaracaoBoaFe")}</span>
                   </label>
                   <button type="submit" className={`${botaoPrimario} w-fit`}>
-                    Enviar denúncia
+                    {t("enviarDenuncia")}
                   </button>
                 </form>
               </details>
@@ -257,21 +252,21 @@ export default async function ReclamacaoPage({
           </div>
         )}
         <p className="text-sm text-slate-500 dark:text-slate-400">
-          {reclamacao._count.confirmacoes} pessoa(s) confirmaram este problema.
+          {t("pessoasConfirmaram", { count: reclamacao._count.confirmacoes })}
         </p>
       </div>
 
       {linhaDoTempo.length > 1 && (
         <div className="flex flex-col gap-2">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-            Linha do tempo
+            {t("linhaDoTempo")}
           </h2>
           <ol className="flex flex-col gap-2">
             {linhaDoTempo.map((evento, indice) => (
               <li key={indice} className={cartao}>
                 <p className="font-medium text-slate-900 dark:text-slate-100">{evento.titulo}</p>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                  {evento.data.toLocaleString("pt-BR")}
+                  {evento.data.toLocaleString(locale)}
                 </p>
                 {evento.descricao && (
                   <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">
@@ -290,24 +285,24 @@ export default async function ReclamacaoPage({
           className={`flex flex-col gap-2 ${cartao}`}
         >
           <h2 className="font-semibold text-slate-900 dark:text-slate-100">
-            Responder como órgão
+            {t("responderComoOrgao")}
           </h2>
           <textarea
             name="texto"
             required
             minLength={10}
-            placeholder="Resposta oficial"
+            placeholder={t("respostaOficial")}
             rows={3}
             className={campoInput}
           />
           <select name="novoStatus" defaultValue="" className={campoInput}>
-            <option value="">Manter status atual</option>
-            <option value="EM_ANDAMENTO">Marcar como em andamento</option>
-            <option value="RESOLVIDA">Marcar como resolvida</option>
+            <option value="">{t("manterStatus")}</option>
+            <option value="EM_ANDAMENTO">{t("marcarEmAndamento")}</option>
+            <option value="RESOLVIDA">{t("marcarResolvida")}</option>
           </select>
           <input type="date" name="prazoEstimado" className={campoInput} />
           <button type="submit" className={`${botaoPrimario} w-fit`}>
-            Enviar resposta
+            {t("enviarResposta")}
           </button>
         </form>
       )}
@@ -318,11 +313,11 @@ export default async function ReclamacaoPage({
           className={`flex flex-col gap-2 ${cartao}`}
         >
           <h2 className="font-semibold text-slate-900 dark:text-slate-100">
-            O problema foi realmente resolvido?
+            {t("foiRealmenteResolvido")}
           </h2>
           <select name="nota" required defaultValue="" className={campoInput}>
             <option value="" disabled>
-              Nota (1 a 5)
+              {t("notaUmACinco")}
             </option>
             {[1, 2, 3, 4, 5].map((nota) => (
               <option key={nota} value={nota}>
@@ -333,28 +328,28 @@ export default async function ReclamacaoPage({
           <div className="flex gap-4 text-sm text-slate-700 dark:text-slate-300">
             <label className="flex items-center gap-1">
               <input type="radio" name="resolvido" value="true" required />
-              Sim, foi resolvido
+              {t("simFoiResolvido")}
             </label>
             <label className="flex items-center gap-1">
               <input type="radio" name="resolvido" value="false" required />
-              Não foi resolvido
+              {t("naoFoiResolvido")}
             </label>
           </div>
           <textarea
             name="comentario"
-            placeholder="Comentário (opcional)"
+            placeholder={t("comentarioOpcional")}
             rows={2}
             className={campoInput}
           />
           <button type="submit" className={`${botaoPrimario} w-fit`}>
-            Enviar avaliação
+            {t("enviarAvaliacao")}
           </button>
         </form>
       )}
 
       <div className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          Comentários {comentarios.length > 0 && `(${comentarios.length})`}
+          {t("comentarios")} {comentarios.length > 0 && `(${comentarios.length})`}
         </h2>
 
         {session?.user && (
@@ -367,18 +362,18 @@ export default async function ReclamacaoPage({
               required
               minLength={3}
               maxLength={1000}
-              placeholder="Deixe um comentário"
+              placeholder={t("deixeComentario")}
               rows={2}
               className={campoInput}
             />
             <button type="submit" className={`${botaoSecundario} w-fit`}>
-              Comentar
+              {t("comentar")}
             </button>
           </form>
         )}
 
         {comentarios.length === 0 && (
-          <p className="text-sm text-slate-500 dark:text-slate-400">Nenhum comentário ainda.</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumComentario")}</p>
         )}
 
         {comentarios.map((comentario) => (
@@ -386,7 +381,7 @@ export default async function ReclamacaoPage({
             <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
               {comentario.autor.name ?? comentario.autor.email}
               <span className="ml-2 font-normal text-slate-400 dark:text-slate-500">
-                {comentario.createdAt.toLocaleString("pt-BR")}
+                {comentario.createdAt.toLocaleString(locale)}
               </span>
             </p>
             <p className="text-sm text-slate-700 dark:text-slate-300">{comentario.texto}</p>
@@ -394,7 +389,7 @@ export default async function ReclamacaoPage({
             {session?.user && (
               <details>
                 <summary className="w-fit cursor-pointer text-xs text-primary">
-                  Responder
+                  {t("responder")}
                 </summary>
                 <form
                   action={criarComentario.bind(null, reclamacao.id, protocolo)}
@@ -406,12 +401,12 @@ export default async function ReclamacaoPage({
                     required
                     minLength={3}
                     maxLength={1000}
-                    placeholder="Escreva uma resposta"
+                    placeholder={t("escrevaResposta")}
                     rows={2}
                     className={campoInput}
                   />
                   <button type="submit" className={`${botaoSecundario} w-fit`}>
-                    Responder
+                    {t("responder")}
                   </button>
                 </form>
               </details>
@@ -424,7 +419,7 @@ export default async function ReclamacaoPage({
                     <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
                       {resposta.autor.name ?? resposta.autor.email}
                       <span className="ml-2 font-normal text-slate-400 dark:text-slate-500">
-                        {resposta.createdAt.toLocaleString("pt-BR")}
+                        {resposta.createdAt.toLocaleString(locale)}
                       </span>
                     </p>
                     <p className="text-sm text-slate-700 dark:text-slate-300">{resposta.texto}</p>
