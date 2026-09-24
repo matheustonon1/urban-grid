@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { MapPinOff } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { botaoPrimario, botaoSecundario } from "@/lib/estilos";
 
-export default function NotFound() {
+export default async function NotFound() {
+  const t = await getTranslations("NotFound");
+
   return (
     <main className="relative flex flex-1 flex-col items-center justify-center gap-6 overflow-hidden p-8 text-center">
       <div
@@ -19,20 +22,17 @@ export default function NotFound() {
 
       <div className="flex max-w-md flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-          Página não encontrada
+          {t("titulo")}
         </h1>
-        <p className="text-sm text-slate-600 dark:text-slate-400">
-          O endereço que você tentou acessar não existe ou foi removido.
-          Talvez o link esteja incorreto ou a página tenha mudado de lugar.
-        </p>
+        <p className="text-sm text-slate-600 dark:text-slate-400">{t("descricao")}</p>
       </div>
 
       <div className="flex flex-wrap justify-center gap-3">
         <Link href="/" className={botaoPrimario}>
-          Voltar ao início
+          {t("voltarInicio")}
         </Link>
         <Link href="/reclamacoes" className={botaoSecundario}>
-          Ver reclamações públicas
+          {t("verReclamacoes")}
         </Link>
       </div>
     </main>

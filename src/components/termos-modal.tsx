@@ -2,12 +2,15 @@
 
 import { useRef } from "react";
 import { X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { botaoPrimario } from "@/lib/estilos";
 
 import { TermosConteudo } from "./termos-conteudo";
 
 export function TermosModal() {
+  const t = useTranslations("TermosModal");
+  const tFooter = useTranslations("Footer");
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   return (
@@ -17,7 +20,7 @@ export function TermosModal() {
         onClick={() => dialogRef.current?.showModal()}
         className="text-primary underline"
       >
-        Termos de Uso e a Política de Privacidade
+        {t("linkTexto")}
       </button>
 
       <dialog
@@ -32,12 +35,12 @@ export function TermosModal() {
         <div className="flex max-h-[80vh] flex-col">
           <div className="flex items-center justify-between border-b border-slate-200 p-4 dark:border-slate-800">
             <h2 className="font-semibold text-slate-900 dark:text-slate-100">
-              Termos de Uso e Política de Privacidade
+              {tFooter("termos")}
             </h2>
             <button
               type="button"
               onClick={() => dialogRef.current?.close()}
-              aria-label="Fechar"
+              aria-label={t("fechar")}
               className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-300"
             >
               <X className="h-5 w-5" aria-hidden />
@@ -54,7 +57,7 @@ export function TermosModal() {
               onClick={() => dialogRef.current?.close()}
               className={`${botaoPrimario} w-fit`}
             >
-              Fechar
+              {t("fechar")}
             </button>
           </div>
         </div>

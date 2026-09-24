@@ -165,6 +165,39 @@
     "erroLinkUsado": "Este link já foi usado ou não é mais válido.",
     "senhaDefinida": "Senha definida! Faça login para continuar."
   },
+  "NotFound": {
+    "titulo": "Página não encontrada",
+    "descricao": "O endereço que você tentou acessar não existe ou foi removido. Talvez o link esteja incorreto ou a página tenha mudado de lugar.",
+    "voltarInicio": "Voltar ao início",
+    "verReclamacoes": "Ver reclamações públicas"
+  },
+  "ErrorBoundary": {
+    "titulo": "Algo deu errado",
+    "descricao": "Um erro inesperado aconteceu. Você pode tentar de novo, ou voltar ao início se o problema persistir.",
+    "codigoReferencia": "Código de referência:",
+    "tentarDeNovo": "Tentar de novo",
+    "voltarInicio": "Voltar ao início"
+  },
+  "Metadata": {
+    "descricao": "Plataforma de reclamações urbanas por município, com moderação de conteúdo assistida por IA."
+  },
+  "TermosModal": {
+    "linkTexto": "Termos de Uso e a Política de Privacidade",
+    "fechar": "Fechar"
+  },
+  "Termos": {
+    "aviso": "Este documento é um rascunho elaborado para fins de Trabalho de Conclusão de Curso e não substitui aconselhamento jurídico profissional. Antes de qualquer uso real da plataforma, recomenda-se revisão por um advogado especialista em proteção de dados.",
+    "secao1Titulo": "1. Termos de Uso",
+    "secao1Paragrafo1": "Ao criar uma conta no Urban Grid, você concorda em fornecer informações verdadeiras, não publicar conteúdo ofensivo, difamatório, fraudulento ou fora do escopo de problemas urbanos do seu município, e assumir responsabilidade pelo conteúdo que publicar. O uso da plataforma para criar contas falsas, coordenar denúncias em massa de má-fé, ou manipular artificialmente a percepção pública sobre qualquer pessoa, órgão ou grupo político é proibido e pode resultar em suspensão da conta.",
+    "secao1Paragrafo2": "Todo conteúdo submetido passa por um pipeline de moderação automatizada e, quando necessário, revisão humana, antes de ser publicado. Reclamações e denúncias podem ser rejeitadas, arquivadas ou ter o autor suspenso em caso de uso indevido, conforme os critérios descritos publicamente no repositório do projeto.",
+    "secao2Titulo": "2. Política de Privacidade (LGPD)",
+    "secao2Paragrafo1": "Coletamos apenas os dados necessários para o funcionamento da plataforma: nome, e-mail, CPF (armazenado somente como hash, nunca em texto), telefone (opcional) e, quando você anexa fotos a uma reclamação, as imagens enviadas e seus metadados técnicos.",
+    "secao2Paragrafo2": "Esses dados são usados para autenticação, prevenção de contas duplicadas ou falsas, comunicação sobre o andamento das suas reclamações, e auditoria do pipeline de moderação. Imagens passam por detecção automática de rosto e placa veicular, com desfoque antes da publicação.",
+    "secao2Paragrafo3": "Você tem direito, a qualquer momento, de acessar, corrigir ou excluir seus dados pessoais pela página \"Minha conta\". A exclusão de conta anonimiza seus dados pessoais; reclamações já publicadas são mantidas como registro de interesse público da cidade, sem identificação do autor."
+  },
+  "ThemeToggle": {
+    "alternarTema": "Alternar tema claro/escuro"
+  },
   "Status": {
     "RASCUNHO": "Rascunho",
     "EM_MODERACAO": "Em moderação",

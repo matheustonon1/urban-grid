@@ -165,6 +165,39 @@
     "erroLinkUsado": "This link has already been used or is no longer valid.",
     "senhaDefinida": "Password set! Log in to continue."
   },
+  "NotFound": {
+    "titulo": "Page not found",
+    "descricao": "The address you tried to access doesn't exist or has been removed. The link might be incorrect, or the page may have moved.",
+    "voltarInicio": "Back to home",
+    "verReclamacoes": "View public complaints"
+  },
+  "ErrorBoundary": {
+    "titulo": "Something went wrong",
+    "descricao": "An unexpected error occurred. You can try again, or go back home if the problem persists.",
+    "codigoReferencia": "Reference code:",
+    "tentarDeNovo": "Try again",
+    "voltarInicio": "Back to home"
+  },
+  "Metadata": {
+    "descricao": "Urban complaint platform by municipality, with AI-assisted content moderation."
+  },
+  "TermosModal": {
+    "linkTexto": "Terms of Use and Privacy Policy",
+    "fechar": "Close"
+  },
+  "Termos": {
+    "aviso": "This document is a draft prepared for capstone project (TCC) purposes and does not replace professional legal advice. Before any real-world use of the platform, review by a data protection lawyer is recommended.",
+    "secao1Titulo": "1. Terms of Use",
+    "secao1Paragrafo1": "By creating an account on Urban Grid, you agree to provide truthful information, not to publish offensive, defamatory, fraudulent content or content outside the scope of urban problems in your city, and to take responsibility for the content you publish. Using the platform to create fake accounts, coordinate bad-faith mass reports, or artificially manipulate public perception of any person, department, or political group is prohibited and may result in account suspension.",
+    "secao1Paragrafo2": "All submitted content goes through an automated moderation pipeline and, when necessary, human review, before being published. Complaints and reports may be rejected, archived, or have the author suspended in case of misuse, according to the criteria described publicly in the project's repository.",
+    "secao2Titulo": "2. Privacy Policy (Brazil's LGPD)",
+    "secao2Paragrafo1": "We collect only the data necessary for the platform to work: name, email, national ID / CPF (stored only as a hash, never as plain text), phone (optional), and, when you attach photos to a complaint, the uploaded images and their technical metadata.",
+    "secao2Paragrafo2": "This data is used for authentication, preventing duplicate or fake accounts, communicating about the progress of your complaints, and auditing the moderation pipeline. Images go through automatic face and license plate detection, with blurring applied before publication.",
+    "secao2Paragrafo3": "You have the right, at any time, to access, correct, or delete your personal data through the \"My account\" page. Deleting your account anonymizes your personal data; complaints already published are kept as a public-interest record for the city, without identifying the author."
+  },
+  "ThemeToggle": {
+    "alternarTema": "Toggle light/dark theme"
+  },
   "Status": {
     "RASCUNHO": "Draft",
     "EM_MODERACAO": "Under moderation",

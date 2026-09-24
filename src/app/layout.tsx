@@ -29,11 +29,13 @@ const plexMono = IBM_Plex_Mono({
   weight: ["400", "500"],
 });
 
-export const metadata: Metadata = {
-  title: "Urban Grid",
-  description:
-    "Plataforma de reclamações urbanas por município, com moderação de conteúdo assistida por IA.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("Metadata");
+  return {
+    title: "Urban Grid",
+    description: t("descricao"),
+  };
+}
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const locale = await getLocale();

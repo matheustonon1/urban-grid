@@ -2,6 +2,7 @@
 
 import { useLayoutEffect } from "react";
 import { Moon, Sun } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 function aplicarTemaSalvo() {
   try {
@@ -16,6 +17,8 @@ function aplicarTemaSalvo() {
 }
 
 export function ThemeToggle() {
+  const t = useTranslations("ThemeToggle");
+
   // Reaplica depois que o Strict Mode do dev remonta <html> e limpa a
   // classe que o script inline do <head> já tinha setado antes do
   // primeiro paint. Não-op em produção.
@@ -46,7 +49,7 @@ export function ThemeToggle() {
     <button
       type="button"
       onClick={alternar}
-      aria-label="Alternar tema claro/escuro"
+      aria-label={t("alternarTema")}
       className="relative rounded-lg p-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
     >
       <Sun

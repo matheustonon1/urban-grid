@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { ServerCrash } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { botaoPrimario, botaoSecundario } from "@/lib/estilos";
 
@@ -13,6 +14,8 @@ export default function ErrorBoundary({
   error: Error & { digest?: string };
   retry: () => void;
 }) {
+  const t = useTranslations("ErrorBoundary");
+
   useEffect(() => {
     console.error(error);
   }, [error]);
@@ -28,15 +31,14 @@ export default function ErrorBoundary({
 
       <div className="flex max-w-md flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-          Algo deu errado
+          {t("titulo")}
         </h1>
         <p className="text-sm text-slate-600 dark:text-slate-400">
-          Um erro inesperado aconteceu. Você pode tentar de novo, ou voltar
-          ao início se o problema persistir.
+          {t("descricao")}
           {error.digest && (
             <>
               {" "}
-              Código de referência: <code className="font-mono">{error.digest}</code>.
+              {t("codigoReferencia")} <code className="font-mono">{error.digest}</code>.
             </>
           )}
         </p>
@@ -44,10 +46,10 @@ export default function ErrorBoundary({
 
       <div className="flex flex-wrap justify-center gap-3">
         <button type="button" onClick={() => retry()} className={botaoPrimario}>
-          Tentar de novo
+          {t("tentarDeNovo")}
         </button>
         <Link href="/" className={botaoSecundario}>
-          Voltar ao início
+          {t("voltarInicio")}
         </Link>
       </div>
     </main>
