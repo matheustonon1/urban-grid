@@ -12,26 +12,28 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface ItemNav {
   href: string;
-  label: string;
+  chave: string;
   icone: LucideIcon;
 }
 
 const ITENS_MODERADOR: ItemNav[] = [
-  { href: "/moderacao", label: "Moderação", icone: ClipboardList },
-  { href: "/moderacao/comentarios", label: "Comentários", icone: MessageSquareOff },
-  { href: "/denuncias", label: "Denúncias", icone: Flag },
-  { href: "/moderacao/estatisticas", label: "Estatísticas", icone: BarChart3 },
+  { href: "/moderacao", chave: "moderacao", icone: ClipboardList },
+  { href: "/moderacao/comentarios", chave: "comentarios", icone: MessageSquareOff },
+  { href: "/denuncias", chave: "denuncias", icone: Flag },
+  { href: "/moderacao/estatisticas", chave: "estatisticas", icone: BarChart3 },
 ];
 
 const ITENS_ADMIN: ItemNav[] = [
-  { href: "/solicitacoes-orgao", label: "Solicitações", icone: ShieldCheck },
-  { href: "/orgaos-categorias", label: "Categorias", icone: ListChecks },
+  { href: "/solicitacoes-orgao", chave: "solicitacoes", icone: ShieldCheck },
+  { href: "/orgaos-categorias", chave: "categorias", icone: ListChecks },
 ];
 
 export function AdminNav({ ehAdmin }: { ehAdmin: boolean }) {
+  const t = useTranslations("AdminNav");
   const pathname = usePathname();
   const itens = ehAdmin ? [...ITENS_MODERADOR, ...ITENS_ADMIN] : ITENS_MODERADOR;
   const navRef = useRef<HTMLElement>(null);
@@ -87,7 +89,7 @@ export function AdminNav({ ehAdmin }: { ehAdmin: boolean }) {
               }`}
             >
               <item.icone className="h-3.5 w-3.5" aria-hidden />
-              {item.label}
+              {t(item.chave)}
             </Link>
           );
         })}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import { Paginacao } from "@/components/paginacao";
@@ -8,11 +9,6 @@ import { botaoPrimario, botaoSecundario, campoInput, cartao, containerPagina } f
 import { aprovarSolicitacao, rejeitarSolicitacao } from "./actions";
 import { exigirAdmin } from "./exigir-admin";
 
-const STATUS_LABEL: Record<string, string> = {
-  APROVADA: "Aprovada",
-  REJEITADA: "Rejeitada",
-};
-
 const STATUS_COR: Record<string, string> = {
   APROVADA: "text-green-700 dark:text-green-400",
   REJEITADA: "text-red-700 dark:text-red-400",
@@ -21,6 +17,8 @@ const STATUS_COR: Record<string, string> = {
 export default async function SolicitacoesOrgaoPage({
   searchParams,
 }: PageProps<"/solicitacoes-orgao">) {
+  const t = await getTranslations("SolicitacoesOrgao");
+  const locale = await getLocale();
   await exigirAdmin();
 
   const { pagePendentes, pageDecididas } = await searchParams;
@@ -52,13 +50,11 @@ export default async function SolicitacoesOrgaoPage({
   return (
     <main className={`${containerPagina} max-w-3xl`}>
       <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-        Solicitações de acesso como órgão
+        {t("titulo")}
       </h1>
 
       {pendentes.length === 0 && (
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Nenhuma solicitação pendente.
-        </p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumaPendente")}</p>
       )}
 
       {pendentes.map((solicitacao) => (
@@ -71,17 +67,17 @@ export default async function SolicitacoesOrgaoPage({
             {solicitacao.cidade.nome} - {solicitacao.cidade.estado.uf}
           </p>
           <p className="text-sm text-slate-600 dark:text-slate-400">
-            Responsável: {solicitacao.nomeResponsavel} · {solicitacao.email}
+            {t("responsavel")} {solicitacao.nomeResponsavel} · {solicitacao.email}
             {solicitacao.telefone && ` · ${solicitacao.telefone}`}
           </p>
           <p className="text-xs text-slate-400 dark:text-slate-500">
-            Enviado em {solicitacao.createdAt.toLocaleString("pt-BR")}
+            {t("enviadoEm")} {solicitacao.createdAt.toLocaleString(locale)}
           </p>
 
           <div className="flex items-start gap-2">
             <form action={aprovarSolicitacao.bind(null, solicitacao.id)}>
               <button type="submit" className={botaoPrimario}>
-                Aprovar
+                {t("aprovar")}
               </button>
             </form>
 
@@ -93,12 +89,12 @@ export default async function SolicitacoesOrgaoPage({
                 name="motivo"
                 required
                 minLength={10}
-                placeholder="Motivo da rejeição"
+                placeholder={t("motivoRejeicaoPlaceholder")}
                 rows={1}
                 className={`flex-1 ${campoInput}`}
               />
               <button type="submit" className={botaoSecundario}>
-                Rejeitar
+                {t("rejeitar")}
               </button>
             </form>
           </div>
@@ -118,7 +114,7 @@ export default async function SolicitacoesOrgaoPage({
       {decididasRecentemente.length > 0 && (
         <div className="flex flex-col gap-2">
           <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-            Decididas recentemente {totalDecididas > 0 && `(${totalDecididas})`}
+            {t("decididasRecentemente")} {totalDecididas > 0 && `(${totalDecididas})`}
           </h2>
           {decididasRecentemente.map((solicitacao) => (
             <div key={solicitacao.id} className={`flex flex-col gap-1 ${cartao}`}>
@@ -128,13 +124,13 @@ export default async function SolicitacoesOrgaoPage({
                   {solicitacao.sigla && ` (${solicitacao.sigla})`} · {solicitacao.cidade.nome}
                 </p>
                 <span className={`text-sm font-medium ${STATUS_COR[solicitacao.status]}`}>
-                  {STATUS_LABEL[solicitacao.status]}
+                  {solicitacao.status === "APROVADA" ? t("aprovada") : t("rejeitada")}
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                {solicitacao.email} · por{" "}
-                {solicitacao.analisadoPor?.name ?? solicitacao.analisadoPor?.email ?? "—"} em{" "}
-                {solicitacao.analisadoEm?.toLocaleString("pt-BR")}
+                {solicitacao.email} · {t("por")}{" "}
+                {solicitacao.analisadoPor?.name ?? solicitacao.analisadoPor?.email ?? "—"} {t("em")}{" "}
+                {solicitacao.analisadoEm?.toLocaleString(locale)}
               </p>
               {solicitacao.motivoRejeicao && (
                 <p className="text-sm italic text-slate-600 dark:text-slate-400">
@@ -157,7 +153,7 @@ export default async function SolicitacoesOrgaoPage({
       )}
 
       <Link href="/cadastro?tipo=orgao" className="text-sm text-primary underline">
-        Ver formulário público de solicitação
+        {t("verFormularioPublico")}
       </Link>
     </main>
   );

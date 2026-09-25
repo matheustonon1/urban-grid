@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -9,17 +10,10 @@ import { botaoPrimario, botaoSecundario, cartao, containerPagina } from "@/lib/e
 import { exigirModerador } from "../moderacao/exigir-moderador";
 import { banirAutor, marcarImprocedente, marcarProcedente } from "./actions";
 
-const MOTIVO_LABEL: Record<string, string> = {
-  OFENSIVO: "Conteúdo ofensivo",
-  SPAM: "Spam",
-  DESINFORMACAO: "Desinformação",
-  FORA_DE_ESCOPO: "Fora do escopo municipal",
-  DADOS_PESSOAIS: "Exposição de dados pessoais",
-  DUPLICADA: "Reclamação duplicada",
-  OUTRO: "Outro",
-};
-
 export default async function DenunciasPage({ searchParams }: PageProps<"/denuncias">) {
+  const t = await getTranslations("Denuncias");
+  const tMotivo = await getTranslations("MotivoDenuncia");
+  const locale = await getLocale();
   await exigirModerador();
   const session = await auth();
   const ehAdmin = session?.user?.papel === "ADMIN";
@@ -51,11 +45,11 @@ export default async function DenunciasPage({ searchParams }: PageProps<"/denunc
   return (
     <main className={`${containerPagina} max-w-3xl`}>
       <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-        Denúncias
+        {t("titulo")}
       </h1>
 
       {denuncias.length === 0 && (
-        <p className="text-sm text-slate-500 dark:text-slate-400">Nenhuma denúncia em aberto.</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumaEmAberto")}</p>
       )}
 
       {denuncias.map((denuncia) => {
@@ -72,7 +66,7 @@ export default async function DenunciasPage({ searchParams }: PageProps<"/denunc
               </Link>
             ) : (
               <p className="font-medium text-slate-400 dark:text-slate-500">
-                (conteúdo removido)
+                {t("conteudoRemovido")}
               </p>
             )}
             {reclamacao && (
@@ -80,9 +74,9 @@ export default async function DenunciasPage({ searchParams }: PageProps<"/denunc
             )}
 
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              Motivo: <strong>{MOTIVO_LABEL[denuncia.motivo]}</strong> · Denunciado por{" "}
-              {denuncia.denunciante.name ?? denuncia.denunciante.email} em{" "}
-              {denuncia.createdAt.toLocaleString("pt-BR")}
+              {t("motivo")} <strong>{tMotivo(denuncia.motivo)}</strong> · {t("denunciadoPor")}{" "}
+              {denuncia.denunciante.name ?? denuncia.denunciante.email} {t("em")}{" "}
+              {denuncia.createdAt.toLocaleString(locale)}
             </p>
             {denuncia.descricao && (
               <p className="text-sm italic text-slate-600 dark:text-slate-400">
@@ -93,12 +87,12 @@ export default async function DenunciasPage({ searchParams }: PageProps<"/denunc
             <div className="flex flex-wrap items-center gap-2">
               <form action={marcarProcedente.bind(null, denuncia.id)}>
                 <button type="submit" className={botaoPrimario}>
-                  Procedente (arquivar reclamação)
+                  {t("procedente")}
                 </button>
               </form>
               <form action={marcarImprocedente.bind(null, denuncia.id)}>
                 <button type="submit" className={botaoSecundario}>
-                  Improcedente
+                  {t("improcedente")}
                 </button>
               </form>
 
@@ -112,15 +106,15 @@ export default async function DenunciasPage({ searchParams }: PageProps<"/denunc
                     defaultValue="7"
                     className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
                   >
-                    <option value="7">7 dias</option>
-                    <option value="30">30 dias</option>
-                    <option value="permanente">Permanente</option>
+                    <option value="7">{t("seteDias")}</option>
+                    <option value="30">{t("trintaDias")}</option>
+                    <option value="permanente">{t("permanente")}</option>
                   </select>
                   <button
                     type="submit"
                     className="rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-700 transition hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/40"
                   >
-                    Banir autor
+                    {t("banirAutor")}
                   </button>
                 </form>
               )}

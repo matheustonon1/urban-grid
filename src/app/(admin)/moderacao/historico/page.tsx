@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import { Paginacao } from "@/components/paginacao";
@@ -13,15 +14,12 @@ const DECISAO_ESTILO: Record<string, string> = {
   ENCAMINHAR_REVISAO: "bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-400",
 };
 
-const DECISAO_LABEL: Record<string, string> = {
-  APROVAR: "Aprovado",
-  REPROVAR: "Reprovado",
-  ENCAMINHAR_REVISAO: "Encaminhado p/ revisão",
-};
-
 export default async function HistoricoModeracaoPage({
   searchParams,
 }: PageProps<"/moderacao/historico">) {
+  const t = await getTranslations("HistoricoModeracao");
+  const tDecisao = await getTranslations("Decisao");
+  const locale = await getLocale();
   await exigirModerador();
 
   const { page } = await searchParams;
@@ -52,21 +50,19 @@ export default async function HistoricoModeracaoPage({
     <main className={`${containerPagina} max-w-3xl`}>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-          Histórico de moderação
+          {t("titulo")}
         </h1>
         <Link href="/moderacao/historico/comentarios" className="text-sm text-primary underline">
-          Histórico de comentários
+          {t("historicoComentarios")}
         </Link>
       </div>
       <p className="text-sm text-slate-500 dark:text-slate-400">
-        Decisões automáticas e humanas, mais recentes primeiro
+        {t("decisoesDesc")}
         {totalLogs > 0 && ` (${totalLogs})`}.
       </p>
 
       {logs.length === 0 && (
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Nenhuma decisão de moderação registrada ainda.
-        </p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumaDecisao")}</p>
       )}
 
       {logs.map((log) => {
@@ -85,11 +81,11 @@ export default async function HistoricoModeracaoPage({
                   </Link>
                 ) : (
                   <p className="font-medium text-slate-400 dark:text-slate-500">
-                    (reclamação removida — {log.alvoId})
+                    {t("reclamacaoRemovida", { id: log.alvoId })}
                   </p>
                 )}
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {reclamacao?.protocolo} · {log.createdAt.toLocaleString("pt-BR")} ·
+                  {reclamacao?.protocolo} · {log.createdAt.toLocaleString(locale)} ·
                   {" "}v{log.versaoPrompt}
                   {log.latenciaMs != null && ` · ${log.latenciaMs}ms`}
                 </p>
@@ -97,17 +93,17 @@ export default async function HistoricoModeracaoPage({
               <span
                 className={`inline-block shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${DECISAO_ESTILO[log.decisao]}`}
               >
-                {DECISAO_LABEL[log.decisao]} (IA)
+                {tDecisao(log.decisao)} ({t("ia")})
               </span>
             </div>
 
             <p className="text-sm text-slate-700 dark:text-slate-300">
-              Geral: {log.scoreGeral.toFixed(2)} · Ofensivo: {log.scoreOfensivo?.toFixed(2)} ·
-              {" "}Spam: {log.scoreSpam?.toFixed(2)} · Dados pessoais: {log.scoreDadosPessoais?.toFixed(2)} ·
-              {" "}Fora de escopo: {log.scoreForaEscopo?.toFixed(2)} · Desinformação:{" "}
+              {t("geral")} {log.scoreGeral.toFixed(2)} · {t("ofensivo")}: {log.scoreOfensivo?.toFixed(2)} ·
+              {" "}{t("spam")}: {log.scoreSpam?.toFixed(2)} · {t("dadosPessoais")}: {log.scoreDadosPessoais?.toFixed(2)} ·
+              {" "}{t("foraDeEscopo")}: {log.scoreForaEscopo?.toFixed(2)} · {t("desinformacao")}:{" "}
               {log.scoreDesinformacao?.toFixed(2)}
               {log.coerenciaTextoImagem !== null &&
-                ` · Coerência texto/imagem: ${log.coerenciaTextoImagem?.toFixed(2)}`}
+                ` · ${t("coerenciaTextoImagem")}: ${log.coerenciaTextoImagem?.toFixed(2)}`}
             </p>
 
             {log.justificativa && (
@@ -118,9 +114,9 @@ export default async function HistoricoModeracaoPage({
 
             {log.decisaoFinal && (
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Revisado por {log.revisadoPor?.name ?? log.revisadoPor?.email ?? "—"} em{" "}
-                {log.revisadoEm?.toLocaleString("pt-BR")} → decisão final:{" "}
-                <span className="font-medium">{DECISAO_LABEL[log.decisaoFinal]}</span>
+                {t("revisadoPor")} {log.revisadoPor?.name ?? log.revisadoPor?.email ?? "—"} {t("em")}{" "}
+                {log.revisadoEm?.toLocaleString(locale)} → {t("decisaoFinal")}:{" "}
+                <span className="font-medium">{tDecisao(log.decisaoFinal)}</span>
               </p>
             )}
           </div>

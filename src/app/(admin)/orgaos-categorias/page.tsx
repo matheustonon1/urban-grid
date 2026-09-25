@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 import { prisma } from "@/lib/prisma";
 import { Paginacao } from "@/components/paginacao";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
@@ -9,6 +11,7 @@ import { atualizarCategoriasOrgao } from "./actions";
 export default async function OrgaosCategoriasPage({
   searchParams,
 }: PageProps<"/orgaos-categorias">) {
+  const t = await getTranslations("OrgaosCategorias");
   await exigirAdmin();
 
   const { page } = await searchParams;
@@ -32,19 +35,13 @@ export default async function OrgaosCategoriasPage({
     <main className={`${containerPagina} max-w-3xl`}>
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-          Categorias por órgão
+          {t("titulo")}
         </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Define quais categorias de reclamação cada órgão vê e pode responder.
-          Um órgão sem nenhuma categoria marcada continua atendendo qualquer
-          reclamação da sua cidade (comportamento padrão).
-        </p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">{t("descricao")}</p>
       </div>
 
       {orgaos.length === 0 && (
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Nenhum órgão ativo cadastrado ainda.
-        </p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumOrgaoAtivo")}</p>
       )}
 
       {orgaos.map((orgao) => (
@@ -79,7 +76,7 @@ export default async function OrgaosCategoriasPage({
           </div>
 
           <button type="submit" className={`${botaoPrimario} w-fit`}>
-            Salvar
+            {t("salvar")}
           </button>
         </form>
       ))}

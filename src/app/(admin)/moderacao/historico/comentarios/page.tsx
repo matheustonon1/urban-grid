@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import { Paginacao } from "@/components/paginacao";
@@ -12,14 +13,13 @@ const DECISAO_ESTILO: Record<string, string> = {
   REPROVAR: "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400",
 };
 
-const DECISAO_LABEL: Record<string, string> = {
-  APROVAR: "Aprovado",
-  REPROVAR: "Reprovado",
-};
-
 export default async function HistoricoModeracaoComentariosPage({
   searchParams,
 }: PageProps<"/moderacao/historico/comentarios">) {
+  const t = await getTranslations("HistoricoComentarios");
+  const tHist = await getTranslations("HistoricoModeracao");
+  const tDecisao = await getTranslations("Decisao");
+  const locale = await getLocale();
   await exigirModerador();
 
   const { page } = await searchParams;
@@ -50,21 +50,19 @@ export default async function HistoricoModeracaoComentariosPage({
     <main className={`${containerPagina} max-w-3xl`}>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-          Histórico de moderação de comentários
+          {t("titulo")}
         </h1>
         <Link href="/moderacao/comentarios" className="text-sm text-primary underline">
-          Pendentes de revisão
+          {t("pendentesDeRevisao")}
         </Link>
       </div>
       <p className="text-sm text-slate-500 dark:text-slate-400">
-        Decisões automáticas e humanas, mais recentes primeiro
+        {tHist("decisoesDesc")}
         {totalLogs > 0 && ` (${totalLogs})`}.
       </p>
 
       {logs.length === 0 && (
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Nenhuma decisão de moderação registrada ainda.
-        </p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">{tHist("nenhumaDecisao")}</p>
       )}
 
       {logs.map((log) => {
@@ -85,25 +83,25 @@ export default async function HistoricoModeracaoComentariosPage({
                   </Link>
                 ) : (
                   <p className="font-medium text-slate-400 dark:text-slate-500">
-                    (comentário removido — {log.alvoId})
+                    {t("comentarioRemovido", { id: log.alvoId })}
                   </p>
                 )}
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {comentario && `em "${comentario.reclamacao.titulo}" · `}
-                  {log.createdAt.toLocaleString("pt-BR")} · v{log.versaoPrompt}
+                  {comentario && t("emReclamacao", { titulo: comentario.reclamacao.titulo }) + " · "}
+                  {log.createdAt.toLocaleString(locale)} · v{log.versaoPrompt}
                   {log.latenciaMs != null && ` · ${log.latenciaMs}ms`}
                 </p>
               </div>
               <span
                 className={`inline-block shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${DECISAO_ESTILO[log.decisao]}`}
               >
-                {DECISAO_LABEL[log.decisao]} (IA)
+                {tDecisao(log.decisao)} ({tHist("ia")})
               </span>
             </div>
 
             <p className="text-sm text-slate-700 dark:text-slate-300">
-              Geral: {log.scoreGeral.toFixed(2)} · Ofensivo: {log.scoreOfensivo?.toFixed(2)} ·{" "}
-              Spam: {log.scoreSpam?.toFixed(2)} · Dados pessoais:{" "}
+              {tHist("geral")} {log.scoreGeral.toFixed(2)} · {tHist("ofensivo")}: {log.scoreOfensivo?.toFixed(2)} ·{" "}
+              {tHist("spam")}: {log.scoreSpam?.toFixed(2)} · {tHist("dadosPessoais")}:{" "}
               {log.scoreDadosPessoais?.toFixed(2)}
             </p>
 
@@ -115,9 +113,9 @@ export default async function HistoricoModeracaoComentariosPage({
 
             {log.decisaoFinal && (
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Revisado por {log.revisadoPor?.name ?? log.revisadoPor?.email ?? "—"} em{" "}
-                {log.revisadoEm?.toLocaleString("pt-BR")} → decisão final:{" "}
-                <span className="font-medium">{DECISAO_LABEL[log.decisaoFinal]}</span>
+                {tHist("revisadoPor")} {log.revisadoPor?.name ?? log.revisadoPor?.email ?? "—"} {tHist("em")}{" "}
+                {log.revisadoEm?.toLocaleString(locale)} → {tHist("decisaoFinal")}:{" "}
+                <span className="font-medium">{tDecisao(log.decisaoFinal)}</span>
               </p>
             )}
           </div>

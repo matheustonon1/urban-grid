@@ -1,9 +1,8 @@
 import * as z from "zod";
+import type { getTranslations } from "next-intl/server";
 
-export const RejeitarSchema = z.object({
-  motivo: z
-    .string()
-    .trim()
-    .min(10, { error: "Informe um motivo com pelo menos 10 caracteres." })
-    .max(500),
-});
+export function criarRejeitarSchema(t: Awaited<ReturnType<typeof getTranslations>>) {
+  return z.object({
+    motivo: z.string().trim().min(10, { error: t("erroMotivoCurto") }).max(500),
+  });
+}

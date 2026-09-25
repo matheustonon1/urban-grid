@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import {
@@ -9,7 +10,7 @@ import {
   enviarEmailSolicitacaoRejeitada,
 } from "@/lib/email";
 
-import { RejeitarSolicitacaoSchema } from "./definitions";
+import { criarRejeitarSolicitacaoSchema } from "./definitions";
 import { exigirAdmin } from "./exigir-admin";
 
 export async function aprovarSolicitacao(solicitacaoId: string) {
@@ -78,7 +79,7 @@ export async function aprovarSolicitacao(solicitacaoId: string) {
 export async function rejeitarSolicitacao(solicitacaoId: string, formData: FormData) {
   const session = await exigirAdmin();
 
-  const validado = RejeitarSolicitacaoSchema.safeParse({
+  const validado = criarRejeitarSolicitacaoSchema(await getTranslations("Moderacao")).safeParse({
     motivo: formData.get("motivo"),
   });
   if (!validado.success) {

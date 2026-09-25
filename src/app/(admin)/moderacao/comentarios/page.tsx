@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import { Paginacao } from "@/components/paginacao";
@@ -11,6 +12,8 @@ import { exigirModerador } from "../exigir-moderador";
 export default async function ModeracaoComentariosPage({
   searchParams,
 }: PageProps<"/moderacao/comentarios">) {
+  const t = await getTranslations("ModeracaoComentarios");
+  const tMod = await getTranslations("Moderacao");
   await exigirModerador();
 
   const { page } = await searchParams;
@@ -40,21 +43,16 @@ export default async function ModeracaoComentariosPage({
     <main className={`${containerPagina} max-w-3xl`}>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-          Comentários reprovados pela IA
+          {t("titulo")}
         </h1>
         <Link href="/moderacao/historico/comentarios" className="text-sm text-primary underline">
-          Ver histórico completo
+          {tMod("verHistorico")}
         </Link>
       </div>
-      <p className="text-sm text-slate-500 dark:text-slate-400">
-        Comentário reprovado é ocultado na hora - esta fila é pra corrigir
-        casos em que a IA errou, revisando depois do fato.
-      </p>
+      <p className="text-sm text-slate-500 dark:text-slate-400">{t("descricao")}</p>
 
       {logsPendentes.length === 0 && (
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Nenhum comentário reprovado pendente de revisão.
-        </p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumPendente")}</p>
       )}
 
       {logsPendentes.map((log) => {
@@ -64,27 +62,29 @@ export default async function ModeracaoComentariosPage({
         return (
           <div key={log.id} className={`flex flex-col gap-2 ${cartao}`}>
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              {comentario.autor.name ?? comentario.autor.email} · em{" "}
+              {comentario.autor.name ?? comentario.autor.email} {t("em")}{" "}
               <Link
                 href={`/reclamacoes/${comentario.reclamacao.protocolo}`}
                 className="text-primary underline"
               >
                 {comentario.reclamacao.titulo}
               </Link>
-              {comentario.paiId && " · resposta a outro comentário"}
+              {comentario.paiId && ` · ${t("respostaAOutroComentario")}`}
             </p>
             <p className="text-slate-800 dark:text-slate-200">{comentario.texto}</p>
 
             <div className="rounded-lg bg-amber-50 p-3 text-sm dark:bg-amber-950/40">
-              <p className="font-medium text-amber-800 dark:text-amber-300">Análise da IA</p>
-              <p className="text-amber-900 dark:text-amber-200">
-                Ofensivo: {log.scoreOfensivo?.toFixed(2)}
+              <p className="font-medium text-amber-800 dark:text-amber-300">
+                {tMod("analiseIA")}
               </p>
               <p className="text-amber-900 dark:text-amber-200">
-                Spam: {log.scoreSpam?.toFixed(2)}
+                {tMod("ofensivo")} {log.scoreOfensivo?.toFixed(2)}
               </p>
               <p className="text-amber-900 dark:text-amber-200">
-                Dados pessoais: {log.scoreDadosPessoais?.toFixed(2)}
+                {tMod("spam")} {log.scoreSpam?.toFixed(2)}
+              </p>
+              <p className="text-amber-900 dark:text-amber-200">
+                {tMod("dadosPessoais")} {log.scoreDadosPessoais?.toFixed(2)}
               </p>
               {log.justificativa && (
                 <p className="mt-1 italic text-amber-900 dark:text-amber-200">
@@ -96,12 +96,12 @@ export default async function ModeracaoComentariosPage({
             <div className="flex gap-2">
               <form action={aprovarComentarioReprovado.bind(null, comentario.id)}>
                 <button type="submit" className={botaoPrimario}>
-                  Aprovar mesmo assim
+                  {t("aprovarMesmoAssim")}
                 </button>
               </form>
               <form action={confirmarRejeicaoComentario.bind(null, comentario.id)}>
                 <button type="submit" className={botaoSecundario}>
-                  Confirmar rejeição
+                  {t("confirmarRejeicao")}
                 </button>
               </form>
             </div>

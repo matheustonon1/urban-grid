@@ -1,15 +1,11 @@
+import { getTranslations } from "next-intl/server";
+
 import { prisma } from "@/lib/prisma";
 import { cartao, containerPagina } from "@/lib/estilos";
 
 import { exigirModerador } from "../exigir-moderador";
 
 const DIAS_VOLUME = 14;
-
-const DECISAO_LABEL: Record<string, string> = {
-  APROVAR: "Aprovado",
-  REPROVAR: "Reprovado",
-  ENCAMINHAR_REVISAO: "Revisão humana",
-};
 
 const DECISAO_COR: Record<string, string> = {
   APROVAR: "text-green-700 dark:text-green-400",
@@ -54,6 +50,8 @@ function formatarDiaCurto(chave: string) {
 }
 
 export default async function EstatisticasModeracaoPage() {
+  const t = await getTranslations("Estatisticas");
+  const tDecisao = await getTranslations("Decisao");
   await exigirModerador();
 
   const agora = new Date();
@@ -141,49 +139,45 @@ export default async function EstatisticasModeracaoPage() {
   return (
     <main className={`${containerPagina} max-w-3xl`}>
       <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-        Estatísticas de moderação
+        {t("titulo")}
       </h1>
 
       {totalAnalises === 0 ? (
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Nenhuma análise de moderação registrada ainda.
-        </p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumaAnalise")}</p>
       ) : (
         <>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <Estatistica label="Análises no total" valor={String(totalAnalises)} />
+            <Estatistica label={t("analisesNoTotal")} valor={String(totalAnalises)} />
             <Estatistica
-              label="Taxa de aprovação"
+              label={t("taxaAprovacao")}
               valor={taxaAprovacao !== null ? `${taxaAprovacao}%` : "—"}
             />
             <Estatistica
-              label="Tempo médio de resposta"
+              label={t("tempoMedioResposta")}
               valor={latenciaMediaMs != null ? `${(latenciaMediaMs / 1000).toFixed(1)}s` : "—"}
             />
             <Estatistica
-              label="Concordância humana"
-              valor={
-                concordanciaHumana !== null
-                  ? `${concordanciaHumana}%`
-                  : "sem revisão ainda"
-              }
+              label={t("concordanciaHumana")}
+              valor={concordanciaHumana !== null ? `${concordanciaHumana}%` : t("semRevisaoAinda")}
             />
           </div>
 
           <div className={`flex flex-col gap-3 ${cartao}`}>
-            <h2 className="font-semibold text-slate-900 dark:text-slate-100">Decisões por tipo</h2>
+            <h2 className="font-semibold text-slate-900 dark:text-slate-100">
+              {t("decisoesPorTipo")}
+            </h2>
             {linhasPorTipo.map(({ tipo, decisoes }) => {
               const total = decisoes.reduce((soma, item) => soma + item._count._all, 0);
               if (total === 0) return null;
               return (
                 <div key={tipo} className="flex flex-col gap-1">
                   <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    {tipo === "RECLAMACAO" ? "Reclamações" : "Comentários"} ({total})
+                    {tipo === "RECLAMACAO" ? t("reclamacoes") : t("comentarios")} ({total})
                   </p>
                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
                     {decisoes.map((item) => (
                       <span key={item.decisao} className={DECISAO_COR[item.decisao]}>
-                        {DECISAO_LABEL[item.decisao]}: {item._count._all} (
+                        {tDecisao(item.decisao)}: {item._count._all} (
                         {Math.round((item._count._all / total) * 100)}%)
                       </span>
                     ))}
@@ -196,15 +190,24 @@ export default async function EstatisticasModeracaoPage() {
           {agregadoReclamacao._count._all > 0 && (
             <div className={`flex flex-col gap-3 ${cartao}`}>
               <h2 className="font-semibold text-slate-900 dark:text-slate-100">
-                Score médio — reclamações
+                {t("scoreMedioReclamacoes")}
               </h2>
-              <BarraScore rotulo="Ofensivo" valor={agregadoReclamacao._avg.scoreOfensivo} />
-              <BarraScore rotulo="Spam" valor={agregadoReclamacao._avg.scoreSpam} />
-              <BarraScore rotulo="Dados pessoais" valor={agregadoReclamacao._avg.scoreDadosPessoais} />
-              <BarraScore rotulo="Fora de escopo" valor={agregadoReclamacao._avg.scoreForaEscopo} />
-              <BarraScore rotulo="Desinformação" valor={agregadoReclamacao._avg.scoreDesinformacao} />
+              <BarraScore rotulo={t("ofensivo")} valor={agregadoReclamacao._avg.scoreOfensivo} />
+              <BarraScore rotulo={t("spam")} valor={agregadoReclamacao._avg.scoreSpam} />
               <BarraScore
-                rotulo="Coerência texto/imagem"
+                rotulo={t("dadosPessoais")}
+                valor={agregadoReclamacao._avg.scoreDadosPessoais}
+              />
+              <BarraScore
+                rotulo={t("foraDeEscopo")}
+                valor={agregadoReclamacao._avg.scoreForaEscopo}
+              />
+              <BarraScore
+                rotulo={t("desinformacao")}
+                valor={agregadoReclamacao._avg.scoreDesinformacao}
+              />
+              <BarraScore
+                rotulo={t("coerenciaTextoImagem")}
                 valor={agregadoReclamacao._avg.coerenciaTextoImagem}
               />
             </div>
@@ -213,30 +216,33 @@ export default async function EstatisticasModeracaoPage() {
           {agregadoComentario._count._all > 0 && (
             <div className={`flex flex-col gap-3 ${cartao}`}>
               <h2 className="font-semibold text-slate-900 dark:text-slate-100">
-                Score médio — comentários
+                {t("scoreMedioComentarios")}
               </h2>
-              <BarraScore rotulo="Ofensivo" valor={agregadoComentario._avg.scoreOfensivo} />
-              <BarraScore rotulo="Spam" valor={agregadoComentario._avg.scoreSpam} />
-              <BarraScore rotulo="Dados pessoais" valor={agregadoComentario._avg.scoreDadosPessoais} />
+              <BarraScore rotulo={t("ofensivo")} valor={agregadoComentario._avg.scoreOfensivo} />
+              <BarraScore rotulo={t("spam")} valor={agregadoComentario._avg.scoreSpam} />
+              <BarraScore
+                rotulo={t("dadosPessoais")}
+                valor={agregadoComentario._avg.scoreDadosPessoais}
+              />
             </div>
           )}
 
           <div className={`flex flex-col gap-3 ${cartao}`}>
             <div>
               <h2 className="font-semibold text-slate-900 dark:text-slate-100">
-                Volume nos últimos {DIAS_VOLUME} dias
+                {t("volumeUltimosDias", { dias: DIAS_VOLUME })}
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                {totalVolumePeriodo} análise(s) no período
+                {t("analisesNoPeriodo", { analises: t("analises", { count: totalVolumePeriodo }) })}
                 {diaPico.total > 0 &&
-                  ` · pico de ${diaPico.total} em ${formatarDiaCurto(diaPico.chave)}`}
+                  ` · ${t("picoDe", { total: diaPico.total, data: formatarDiaCurto(diaPico.chave) })}`}
               </p>
             </div>
             <div className="flex h-32 gap-1">
               {volumeDiario.map((dia) => (
                 <div
                   key={dia.chave}
-                  title={`${formatarDiaCurto(dia.chave)}: ${dia.total} análise(s)`}
+                  title={`${formatarDiaCurto(dia.chave)}: ${t("analises", { count: dia.total })}`}
                   className="flex flex-1 flex-col items-center justify-end gap-0.5"
                 >
                   {dia.total > 0 && (

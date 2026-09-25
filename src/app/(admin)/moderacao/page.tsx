@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import { Paginacao } from "@/components/paginacao";
@@ -9,6 +10,7 @@ import { aprovarReclamacao, rejeitarReclamacao } from "./actions";
 import { exigirModerador } from "./exigir-moderador";
 
 export default async function ModeracaoPage({ searchParams }: PageProps<"/moderacao">) {
+  const t = await getTranslations("Moderacao");
   await exigirModerador();
 
   const { page } = await searchParams;
@@ -49,17 +51,15 @@ export default async function ModeracaoPage({ searchParams }: PageProps<"/modera
     <main className={`${containerPagina} max-w-3xl`}>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-          Fila de moderação
+          {t("titulo")}
         </h1>
         <Link href="/moderacao/historico" className="text-sm text-primary underline">
-          Ver histórico completo
+          {t("verHistorico")}
         </Link>
       </div>
 
       {pendentes.length === 0 && (
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Nenhuma reclamação aguardando revisão.
-        </p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumaPendente")}</p>
       )}
 
       {pendentes.map((reclamacao) => {
@@ -77,23 +77,23 @@ export default async function ModeracaoPage({ searchParams }: PageProps<"/modera
               {reclamacao.endereco}
             </p>
             <p className="text-sm text-slate-500 dark:text-slate-400">
-              Autor: {reclamacao.autor.name ?? reclamacao.autor.email}
+              {t("autor")} {reclamacao.autor.name ?? reclamacao.autor.email}
             </p>
             <p className="text-slate-800 dark:text-slate-200">{reclamacao.descricao}</p>
 
             {reclamacao.emRecurso && (
               <div className="rounded-lg bg-blue-50 p-3 text-sm dark:bg-blue-950/40">
                 <p className="font-medium text-blue-800 dark:text-blue-300">
-                  Recurso do cidadão contra rejeição
+                  {t("recursoContraRejeicao")}
                 </p>
                 {reclamacao.motivoRejeicao && (
                   <p className="text-blue-900 dark:text-blue-200">
-                    Motivo original da rejeição: {reclamacao.motivoRejeicao}
+                    {t("motivoOriginalRejeicao")} {reclamacao.motivoRejeicao}
                   </p>
                 )}
                 {reclamacao.textoRecurso && (
                   <p className="mt-1 italic text-blue-900 dark:text-blue-200">
-                    Argumento do autor: “{reclamacao.textoRecurso}”
+                    {t("argumentoAutor")} “{reclamacao.textoRecurso}”
                   </p>
                 )}
               </div>
@@ -115,25 +115,27 @@ export default async function ModeracaoPage({ searchParams }: PageProps<"/modera
 
             {log && (
               <div className="rounded-lg bg-amber-50 p-3 text-sm dark:bg-amber-950/40">
-                <p className="font-medium text-amber-800 dark:text-amber-300">Análise da IA</p>
-                <p className="text-amber-900 dark:text-amber-200">
-                  Ofensivo: {log.scoreOfensivo?.toFixed(2)}
+                <p className="font-medium text-amber-800 dark:text-amber-300">
+                  {t("analiseIA")}
                 </p>
                 <p className="text-amber-900 dark:text-amber-200">
-                  Spam: {log.scoreSpam?.toFixed(2)}
+                  {t("ofensivo")} {log.scoreOfensivo?.toFixed(2)}
                 </p>
                 <p className="text-amber-900 dark:text-amber-200">
-                  Dados pessoais: {log.scoreDadosPessoais?.toFixed(2)}
+                  {t("spam")} {log.scoreSpam?.toFixed(2)}
                 </p>
                 <p className="text-amber-900 dark:text-amber-200">
-                  Fora de escopo: {log.scoreForaEscopo?.toFixed(2)}
+                  {t("dadosPessoais")} {log.scoreDadosPessoais?.toFixed(2)}
                 </p>
                 <p className="text-amber-900 dark:text-amber-200">
-                  Desinformação: {log.scoreDesinformacao?.toFixed(2)}
+                  {t("foraDeEscopo")} {log.scoreForaEscopo?.toFixed(2)}
+                </p>
+                <p className="text-amber-900 dark:text-amber-200">
+                  {t("desinformacao")} {log.scoreDesinformacao?.toFixed(2)}
                 </p>
                 {log.coerenciaTextoImagem !== null && (
                   <p className="text-amber-900 dark:text-amber-200">
-                    Coerência texto/imagem: {log.coerenciaTextoImagem?.toFixed(2)}
+                    {t("coerenciaTextoImagem")} {log.coerenciaTextoImagem?.toFixed(2)}
                   </p>
                 )}
                 {log.justificativa && (
@@ -145,12 +147,7 @@ export default async function ModeracaoPage({ searchParams }: PageProps<"/modera
             )}
 
             {blurPendente && (
-              <p className="text-sm text-red-700 dark:text-red-400">
-                O desfoque automático falhou em pelo menos uma foto desta
-                reclamação (rosto ou placa detectados). Aprovar está
-                bloqueado até isso ser resolvido — rejeite se não puder
-                corrigir a imagem.
-              </p>
+              <p className="text-sm text-red-700 dark:text-red-400">{t("desfoquePendenteDesc")}</p>
             )}
 
             <div className="flex items-start gap-2">
@@ -158,10 +155,10 @@ export default async function ModeracaoPage({ searchParams }: PageProps<"/modera
                 <button
                   type="submit"
                   disabled={blurPendente}
-                  title={blurPendente ? "Desfoque pendente nesta reclamação" : undefined}
+                  title={blurPendente ? t("desfoquePendenteTitulo") : undefined}
                   className={botaoPrimario}
                 >
-                  Aprovar
+                  {t("aprovar")}
                 </button>
               </form>
 
@@ -173,12 +170,12 @@ export default async function ModeracaoPage({ searchParams }: PageProps<"/modera
                   name="motivo"
                   required
                   minLength={10}
-                  placeholder="Motivo da rejeição"
+                  placeholder={t("motivoRejeicaoPlaceholder")}
                   rows={1}
                   className={`flex-1 ${campoInput}`}
                 />
                 <button type="submit" className={botaoSecundario}>
-                  Rejeitar
+                  {t("rejeitar")}
                 </button>
               </form>
             </div>

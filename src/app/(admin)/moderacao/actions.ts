@@ -1,11 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import { criarNotificacao } from "@/lib/notificacoes";
 
-import { RejeitarSchema } from "./definitions";
+import { criarRejeitarSchema } from "./definitions";
 import { exigirModerador } from "./exigir-moderador";
 
 async function buscarLogPendente(reclamacaoId: string) {
@@ -84,7 +85,7 @@ export async function rejeitarReclamacao(
 ) {
   const session = await exigirModerador();
 
-  const validado = RejeitarSchema.safeParse({
+  const validado = criarRejeitarSchema(await getTranslations("Moderacao")).safeParse({
     motivo: formData.get("motivo"),
   });
   if (!validado.success) {
