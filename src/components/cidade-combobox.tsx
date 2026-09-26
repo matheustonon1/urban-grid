@@ -39,6 +39,37 @@ export function SeletorCidade({
   const [aberto, setAberto] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const listboxId = useId();
+  const [indiceAtivo, setIndiceAtivo] = useState(-1);
+
+  function selecionar(cidade: CidadeResultado) {
+    setSelecionada(cidade);
+    setQuery(formatar(cidade));
+    setResultados([]);
+    setAberto(false);
+    setIndiceAtivo(-1);
+    onSelecionar?.(cidade);
+  }
+
+  function aoTeclar(evento: React.KeyboardEvent<HTMLInputElement>) {
+    if (evento.key === "Escape") {
+      setAberto(false);
+      return;
+    }
+    if (!aberto || resultados.length === 0) return;
+
+    if (evento.key === "ArrowDown") {
+      evento.preventDefault();
+      setIndiceAtivo((atual) => (atual + 1) % resultados.length);
+    } else if (evento.key === "ArrowUp") {
+      evento.preventDefault();
+      setIndiceAtivo((atual) =>
+        atual <= 0 ? resultados.length - 1 : atual - 1
+      );
+    } else if (evento.key === "Enter" && indiceAtivo >= 0) {
+      evento.preventDefault();
+      selecionar(resultados[indiceAtivo]);
+    }
+  }
 
   useEffect(() => {
     function aoClicarFora(evento: MouseEvent) {
@@ -69,6 +100,7 @@ export function SeletorCidade({
         );
         const dados: CidadeResultado[] = await resposta.json();
         setResultados(dados);
+        setIndiceAtivo(-1);
       } catch (erro) {
         if ((erro as Error).name !== "AbortError") {
           setResultados([]);
@@ -90,6 +122,13 @@ export function SeletorCidade({
         aria-expanded={aberto}
         aria-autocomplete="list"
         aria-controls={listboxId}
+        aria-label={placeholder}
+        aria-activedescendant={
+          aberto && indiceAtivo >= 0
+            ? `${listboxId}-${resultados[indiceAtivo]?.id}`
+            : undefined
+        }
+        onKeyDown={aoTeclar}
         value={query}
         placeholder={required ? `${placeholder} *` : placeholder}
         onChange={(evento) => {
@@ -124,15 +163,13 @@ export function SeletorCidade({
                 <button
                   type="button"
                   role="option"
+                  id={`${listboxId}-${cidade.id}`}
+                  tabIndex={-1}
                   aria-selected={selecionada?.id === cidade.id}
-                  onClick={() => {
-                    setSelecionada(cidade);
-                    setQuery(formatar(cidade));
-                    setResultados([]);
-                    setAberto(false);
-                    onSelecionar?.(cidade);
-                  }}
-                  className="block w-full px-3 py-2 text-left text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                  onClick={() => selecionar(cidade)}
+                  className={`block w-full px-3 py-2 text-left text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 ${
+                    indice === indiceAtivo ? "bg-slate-100 dark:bg-slate-800" : ""
+                  }`}
                 >
                   {formatar(cidade)}
                 </button>

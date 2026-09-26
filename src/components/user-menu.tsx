@@ -75,8 +75,15 @@ export function UserMenu({
         setAberto(false);
       }
     }
+    function aoTeclar(evento: KeyboardEvent) {
+      if (evento.key === "Escape") setAberto(false);
+    }
     document.addEventListener("mousedown", aoClicarFora);
-    return () => document.removeEventListener("mousedown", aoClicarFora);
+    document.addEventListener("keydown", aoTeclar);
+    return () => {
+      document.removeEventListener("mousedown", aoClicarFora);
+      document.removeEventListener("keydown", aoTeclar);
+    };
   }, []);
 
   const iniciais = iniciaisDoNome(nome);

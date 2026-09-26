@@ -25,8 +25,15 @@ export function SeletorIdioma() {
         setAberto(false);
       }
     }
+    function aoTeclar(evento: KeyboardEvent) {
+      if (evento.key === "Escape") setAberto(false);
+    }
     document.addEventListener("mousedown", aoClicarFora);
-    return () => document.removeEventListener("mousedown", aoClicarFora);
+    document.addEventListener("keydown", aoTeclar);
+    return () => {
+      document.removeEventListener("mousedown", aoClicarFora);
+      document.removeEventListener("keydown", aoTeclar);
+    };
   }, []);
 
   function escolher(idioma: Idioma) {
@@ -45,6 +52,7 @@ export function SeletorIdioma() {
         onClick={() => setAberto((valor) => !valor)}
         disabled={pending}
         aria-expanded={aberto}
+        aria-haspopup="true"
         aria-label={t("rotulo")}
         className="flex items-center gap-1 rounded-lg p-2 text-xs font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-50 dark:text-slate-300 dark:hover:bg-slate-800"
       >

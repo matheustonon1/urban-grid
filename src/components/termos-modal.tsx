@@ -25,6 +25,7 @@ export function TermosModal() {
 
       <dialog
         ref={dialogRef}
+        aria-labelledby="termos-modal-titulo"
         onClick={(evento) => {
           if (evento.target === dialogRef.current) {
             dialogRef.current?.close();
@@ -34,7 +35,7 @@ export function TermosModal() {
       >
         <div className="flex max-h-[80vh] flex-col">
           <div className="flex items-center justify-between border-b border-slate-200 p-4 dark:border-slate-800">
-            <h2 className="font-semibold text-slate-900 dark:text-slate-100">
+            <h2 id="termos-modal-titulo" className="font-semibold text-slate-900 dark:text-slate-100">
               {tFooter("termos")}
             </h2>
             <button
