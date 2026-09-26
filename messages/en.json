@@ -364,7 +364,8 @@
   },
   "Footer": {
     "tcc": "Urban Grid — Capstone Project",
-    "termos": "Terms of Use and Privacy Policy"
+    "termos": "Terms of Use and Privacy Policy",
+    "transparencia": "Transparency"
   },
   "Home": {
     "badge": "AI-assisted content moderation",
@@ -603,5 +604,21 @@
     "erroContaSuspensa": "This account is suspended.",
     "erroMuitasTentativas": "Too many incorrect login attempts. Wait a few minutes and try again.",
     "erroCredenciaisOuCodigoInvalidos": "Invalid email/national ID, password, or code."
+  },
+  "Transparencia": {
+    "titulo": "Transparency",
+    "subtitulo": "Public data on complaints and the performance of the responsible agencies.",
+    "publicas": "Public complaints",
+    "resolvidas": "Resolved",
+    "indiceGeral": "Overall resolution rate",
+    "respondidasPorOrgaos": "Answered by agencies",
+    "rankingTitulo": "Agency ranking",
+    "rankingNota": "Only counts complaints the agency answered. Agencies with fewer than 3 answers show as “not enough data”.",
+    "semDados": "No agency has answered complaints yet.",
+    "colOrgao": "Agency",
+    "colRespondidas": "Answered",
+    "colResolucao": "Resolution",
+    "colTempo": "Avg. time",
+    "colNota": "Rating"
   }
 }

@@ -364,7 +364,8 @@
   },
   "Footer": {
     "tcc": "Urban Grid — Trabalho de Conclusão de Curso",
-    "termos": "Termos de Uso e Política de Privacidade"
+    "termos": "Termos de Uso e Política de Privacidade",
+    "transparencia": "Transparência"
   },
   "Home": {
     "badge": "Moderação de conteúdo assistida por IA",
@@ -603,5 +604,21 @@
     "erroContaSuspensa": "Esta conta está suspensa.",
     "erroMuitasTentativas": "Muitas tentativas de login incorretas. Aguarde alguns minutos e tente novamente.",
     "erroCredenciaisOuCodigoInvalidos": "E-mail/CPF, senha ou código inválidos."
+  },
+  "Transparencia": {
+    "titulo": "Transparência",
+    "subtitulo": "Dados públicos sobre reclamações e a atuação dos órgãos responsáveis.",
+    "publicas": "Reclamações públicas",
+    "resolvidas": "Resolvidas",
+    "indiceGeral": "Índice geral de resolução",
+    "respondidasPorOrgaos": "Respondidas por órgãos",
+    "rankingTitulo": "Ranking de órgãos",
+    "rankingNota": "Considera apenas reclamações que o órgão respondeu. Órgãos com menos de 3 respostas aparecem como “poucos dados”.",
+    "semDados": "Nenhum órgão respondeu reclamações ainda.",
+    "colOrgao": "Órgão",
+    "colRespondidas": "Respondidas",
+    "colResolucao": "Resolução",
+    "colTempo": "Tempo médio",
+    "colNota": "Nota"
   }
 }
