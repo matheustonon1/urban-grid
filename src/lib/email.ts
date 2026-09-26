@@ -5,6 +5,20 @@ import { Resend } from "resend";
 import { prisma } from "@/lib/prisma";
 import { montarUrl } from "@/lib/url";
 
+// Todo texto que veio de usuário (título de reclamação, motivo de
+// rejeição, nome de órgão, resposta oficial...) e entra num template HTML
+// precisa passar por aqui - sem isso, quem controla o texto injeta HTML/
+// links dentro de um e-mail que sai do remetente oficial do sistema
+// (phishing com aparência legítima).
+function esc(texto: string): string {
+  return texto
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 const VALIDADE_TOKEN_MS = 24 * 60 * 60 * 1000;
 // Mais curto que o de verificação/convite de órgão - redefinir senha é uma
 // ação sensível, então o link fica valido por menos tempo.
@@ -153,7 +167,7 @@ function montarHtmlAcessoOrgao(url: string, nomeOrgao: string) {
     <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
       <h1 style="color: #1d4ed8; font-size: 20px;">Urban Grid</h1>
       <p style="color: #334155; font-size: 14px; line-height: 1.5;">
-        Sua solicitação de acesso como <strong>${nomeOrgao}</strong> foi aprovada.
+        Sua solicitação de acesso como <strong>${esc(nomeOrgao)}</strong> foi aprovada.
         Defina sua senha para começar a responder oficialmente às reclamações da sua cidade.
       </p>
       <a
@@ -257,7 +271,7 @@ function montarHtmlConfirmarTrocaEmail(url: string, emailAtual: string) {
       <h1 style="color: #1d4ed8; font-size: 20px;">Urban Grid</h1>
       <p style="color: #334155; font-size: 14px; line-height: 1.5;">
         Recebemos um pedido para trocar o e-mail de acesso da conta
-        <strong>${emailAtual}</strong> para este endereço.
+        <strong>${esc(emailAtual)}</strong> para este endereço.
       </p>
       <a
         href="${url}"
@@ -296,7 +310,7 @@ function montarHtmlTrocaEmailSolicitada(novoEmail: string) {
       <h1 style="color: #1d4ed8; font-size: 20px;">Urban Grid</h1>
       <p style="color: #334155; font-size: 14px; line-height: 1.5;">
         Pediram a troca do e-mail de acesso da sua conta para
-        <strong>${novoEmail}</strong>. A troca só passa a valer depois de
+        <strong>${esc(novoEmail)}</strong>. A troca só passa a valer depois de
         confirmada pelo novo endereço.
       </p>
       <p style="color: #b91c1c; font-size: 14px; line-height: 1.5; font-weight: 600;">
@@ -332,7 +346,7 @@ function montarHtmlSolicitacaoRejeitada(motivo: string) {
         Sua solicitação de acesso como órgão não foi aprovada.
       </p>
       <p style="color: #334155; font-size: 14px; line-height: 1.5;">
-        <strong>Motivo:</strong> ${motivo}
+        <strong>Motivo:</strong> ${esc(motivo)}
       </p>
     </div>
   `;
@@ -356,8 +370,8 @@ function montarHtmlNotificacao(titulo: string, mensagem: string, url?: string) {
   return `
     <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
       <h1 style="color: #1d4ed8; font-size: 20px;">Urban Grid</h1>
-      <p style="color: #0f172a; font-size: 16px; font-weight: 600; margin-bottom: 4px;">${titulo}</p>
-      <p style="color: #334155; font-size: 14px; line-height: 1.5;">${mensagem}</p>
+      <p style="color: #0f172a; font-size: 16px; font-weight: 600; margin-bottom: 4px;">${esc(titulo)}</p>
+      <p style="color: #334155; font-size: 14px; line-height: 1.5;">${esc(mensagem)}</p>
       ${
         url
           ? `<a

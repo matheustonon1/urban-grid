@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import { getTranslations } from "next-intl/server";
 
 import { signIn } from "@/auth";
+import { gastarTempoDeComparacao } from "@/lib/hashFalso";
 import { buscarUsuarioPorIdentificador } from "@/lib/identificador";
 import { usuarioBloqueadoPorLogin } from "@/lib/loginSeguranca";
 
@@ -46,6 +47,9 @@ export async function login(
   // isso depois de confirmar a senha - senão dá pra descobrir se uma
   // conta existe e tem 2FA ativado testando identificadores com senha
   // errada, sem nunca precisar acertá-la (enumeração de conta).
+  if (!usuario?.senhaHash) {
+    await gastarTempoDeComparacao(senha);
+  }
   const senhaValida =
     !!usuario?.senhaHash && (await bcrypt.compare(senha, usuario.senhaHash));
   const precisaTotp = senhaValida && !!usuario?.totpConfirmadoEm;

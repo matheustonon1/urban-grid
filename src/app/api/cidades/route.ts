@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
+import { excedeuLimitePorIp } from "@/lib/rateLimitMemoria";
 
 const LIMITE = 20;
+const LIMITE_CONSULTAS_POR_IP_MINUTO = 120;
 
 const SELECT = {
   id: true,
@@ -30,8 +32,16 @@ function formatar(cidade: {
 
 export async function GET(request: NextRequest) {
   const termo = request.nextUrl.searchParams.get("q")?.trim() ?? "";
-  if (termo.length < 2) {
+  if (termo.length < 2 || termo.length > 80) {
     return NextResponse.json([]);
+  }
+
+  // Autocomplete dispara uma consulta por tecla (com debounce de 300ms no
+  // cliente) - o limite é folgado pra uso normal, mas impede martelar o
+  // banco com LIKE '%...%' em loop.
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
+  if (excedeuLimitePorIp("cidades", ip, LIMITE_CONSULTAS_POR_IP_MINUTO, 60_000)) {
+    return NextResponse.json([], { status: 429 });
   }
 
   const partes = termo.split(/\s+-\s+/);

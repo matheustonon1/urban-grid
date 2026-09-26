@@ -70,6 +70,19 @@ export async function criarReclamacao(
     if (arquivo.size > MAX_TAMANHO_BYTES) {
       return { mensagem: t("erroTamanhoImagem") };
     }
+
+    // arquivo.type vem do cliente e é falsificável - o formato real é o
+    // que o sharp detecta pelo conteúdo. Sem isso, um SVG/GIF/TIFF (que o
+    // sharp também sabe ler) passaria como "image/png" e iria pro storage
+    // público com um tipo que não é o real.
+    try {
+      const formato = (await sharp(Buffer.from(await arquivo.arrayBuffer())).metadata()).format;
+      if (formato !== "jpeg" && formato !== "png" && formato !== "webp") {
+        return { mensagem: t("erroTipoImagem") };
+      }
+    } catch {
+      return { mensagem: t("erroTipoImagem") };
+    }
   }
 
   const { titulo, descricao, categoriaId, cidadeId, endereco, bairro, referencia, cep } =

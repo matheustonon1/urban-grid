@@ -4,6 +4,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 
 import { prisma } from "@/lib/prisma";
+import { gastarTempoDeComparacao } from "@/lib/hashFalso";
 import { buscarUsuarioPorIdentificador } from "@/lib/identificador";
 import {
   registrarFalhaLogin,
@@ -43,6 +44,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const usuario = await buscarUsuarioPorIdentificador(identificador);
 
         if (!usuario?.senhaHash) {
+          await gastarTempoDeComparacao(senha);
           return null;
         }
 
@@ -114,10 +116,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token.sub) {
         const usuario = await prisma.user.findUnique({
           where: { id: token.sub },
-          select: { senhaAlteradaEm: true, banidoAte: true },
+          select: { senhaAlteradaEm: true, banidoAte: true, ativo: true },
         });
 
-        if (!usuario) {
+        // ativo=false é o que excluirConta() grava - sem isso, uma sessão
+        // aberta em outro dispositivo continuava valendo (e agindo como
+        // "Usuário removido") depois da exclusão da conta.
+        if (!usuario || !usuario.ativo) {
           return null;
         }
         if (usuario.banidoAte && usuario.banidoAte > new Date()) {
