@@ -352,7 +352,8 @@
     "cadastrar": "Cadastrar",
     "buscarCidade": "Buscar cidade...",
     "buscarCidadeAbrir": "Buscar cidade",
-    "buscarCidadeFechar": "Fechar busca de cidade"
+    "buscarCidadeFechar": "Fechar busca de cidade",
+    "transparencia": "Transparência"
   },
   "Notificacoes": {
     "titulo": "Notificações",
@@ -364,8 +365,7 @@
   },
   "Footer": {
     "tcc": "Urban Grid — Trabalho de Conclusão de Curso",
-    "termos": "Termos de Uso e Política de Privacidade",
-    "transparencia": "Transparência"
+    "termos": "Termos de Uso e Política de Privacidade"
   },
   "Home": {
     "badge": "Moderação de conteúdo assistida por IA",

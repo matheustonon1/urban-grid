@@ -352,7 +352,8 @@
     "cadastrar": "Sign up",
     "buscarCidade": "Search city...",
     "buscarCidadeAbrir": "Search city",
-    "buscarCidadeFechar": "Close city search"
+    "buscarCidadeFechar": "Close city search",
+    "transparencia": "Transparency"
   },
   "Notificacoes": {
     "titulo": "Notifications",
@@ -364,8 +365,7 @@
   },
   "Footer": {
     "tcc": "Urban Grid — Capstone Project",
-    "termos": "Terms of Use and Privacy Policy",
-    "transparencia": "Transparency"
+    "termos": "Terms of Use and Privacy Policy"
   },
   "Home": {
     "badge": "AI-assisted content moderation",

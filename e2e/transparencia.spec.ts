@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("página pública de transparência abre sem login e o rodapé leva até ela", async ({ page }) => {
+test("página pública de transparência abre sem login e o menu leva até ela", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("link", { name: "Transparência" }).click();
 

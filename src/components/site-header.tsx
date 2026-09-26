@@ -57,6 +57,12 @@ export async function SiteHeader() {
           >
             {t("reclamacoes")}
           </Link>
+          <Link
+            href="/transparencia"
+            className="hidden text-slate-600 hover:text-slate-900 md:inline dark:text-slate-400 dark:hover:text-slate-100"
+          >
+            {t("transparencia")}
+          </Link>
 
           <BuscaCidadeMobile />
 

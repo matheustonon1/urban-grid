@@ -61,9 +61,6 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           {children}
           <footer className="flex flex-col items-center gap-1 border-t border-slate-200 py-4 text-center text-xs text-slate-400 dark:border-slate-800 dark:text-slate-500">
             <span>{t("tcc")}</span>
-            <Link href="/transparencia" className="underline hover:text-slate-600 dark:hover:text-slate-300">
-              {t("transparencia")}
-            </Link>
             <Link href="/termos" className="underline hover:text-slate-600 dark:hover:text-slate-300">
               {t("termos")}
             </Link>
