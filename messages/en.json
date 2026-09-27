@@ -357,11 +357,13 @@
   },
   "Notificacoes": {
     "titulo": "Notifications",
+    "botaoAria": "{count, plural, =0 {Notifications} one {Notifications, # unread} other {Notifications, # unread}}",
     "marcarTodasLidas": "Mark all as read",
     "nenhuma": "No notifications yet.",
     "verTodas": "View all notifications",
     "verReclamacao": "View complaint",
-    "marcarComoLida": "Mark as read"
+    "marcarComoLida": "Mark as read",
+    "naoLida": "(unread)"
   },
   "Footer": {
     "tcc": "Urban Grid — Capstone Project",

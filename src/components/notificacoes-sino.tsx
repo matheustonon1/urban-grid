@@ -53,12 +53,15 @@ export function NotificacoesSino({
         type="button"
         onClick={() => setAberto((valor) => !valor)}
         aria-expanded={aberto}
-        aria-label={t("titulo")}
+        aria-label={t("botaoAria", { count: totalNaoLidas })}
         className="relative rounded-lg p-2 text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
       >
         <Bell className="h-5 w-5" aria-hidden />
         {totalNaoLidas > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-medium text-white">
+          <span
+            aria-hidden
+            className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-medium text-white"
+          >
             {totalNaoLidas > 9 ? "9+" : totalNaoLidas}
           </span>
         )}
@@ -95,6 +98,7 @@ export function NotificacoesSino({
                 <>
                   <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
                     {notificacao.titulo}
+                    {!notificacao.lida && <span className="sr-only"> {t("naoLida")}</span>}
                   </p>
                   <p className="mt-0.5 line-clamp-2 text-xs text-slate-500 dark:text-slate-400">
                     {notificacao.mensagem}

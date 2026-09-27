@@ -357,11 +357,13 @@
   },
   "Notificacoes": {
     "titulo": "Notificações",
+    "botaoAria": "{count, plural, =0 {Notificações} one {Notificações, # não lida} other {Notificações, # não lidas}}",
     "marcarTodasLidas": "Marcar todas como lidas",
     "nenhuma": "Nenhuma notificação ainda.",
     "verTodas": "Ver todas as notificações",
     "verReclamacao": "Ver reclamação",
-    "marcarComoLida": "Marcar como lida"
+    "marcarComoLida": "Marcar como lida",
+    "naoLida": "(não lida)"
   },
   "Footer": {
     "tcc": "Urban Grid — Trabalho de Conclusão de Curso",
