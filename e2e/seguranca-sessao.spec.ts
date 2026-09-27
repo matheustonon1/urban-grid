@@ -3,7 +3,15 @@ import { expect, test } from "@playwright/test";
 import { criarCidadaoTeste, limparDadosTeste } from "./helpers";
 import { prisma } from "@/lib/prisma";
 
+// Conta excluída troca de e-mail pra "removido-<id>@..." (ver excluirConta()
+// em painel/conta/actions.ts) e deixa de bater no filtro por prefixo que
+// limparDadosTeste() usa - sem isso, ficaria órfã pra sempre no banco.
+let usuarioExcluidoId: string | undefined;
+
 test.afterAll(async () => {
+  if (usuarioExcluidoId) {
+    await prisma.user.deleteMany({ where: { id: usuarioExcluidoId } });
+  }
   await limparDadosTeste();
 });
 
@@ -102,4 +110,37 @@ test("banimento aplicado com a sessão já ativa derruba o usuário na próxima 
 
   await page.goto("/painel");
   await expect(page).toHaveURL(/\/login/);
+});
+
+test("excluir a conta num dispositivo derruba a sessão já aberta em outro", async ({ browser }) => {
+  const { usuario, email, senha } = await criarCidadaoTeste();
+  usuarioExcluidoId = usuario.id;
+
+  // Contexto A: sessão aberta antes da exclusão (ex.: celular esquecido logado).
+  const contextoAntigo = await browser.newContext();
+  const paginaAntiga = await contextoAntigo.newPage();
+  await login(paginaAntiga, email, senha);
+  await paginaAntiga.goto("/painel");
+  await expect(paginaAntiga).toHaveURL(/\/painel$/);
+
+  // Contexto B: exclui a conta, sem tocar nos cookies do A.
+  const contextoNovo = await browser.newContext();
+  const paginaNova = await contextoNovo.newPage();
+  await login(paginaNova, email, senha);
+  await paginaNova.goto("/painel/conta");
+  await paginaNova.fill("#exclusao-senha", senha);
+  await paginaNova.click('button:has-text("Excluir minha conta")');
+  await paginaNova.waitForURL(/^http:\/\/localhost:3000\/$/);
+
+  const usuarioFinal = await prisma.user.findUniqueOrThrow({ where: { id: usuario.id } });
+  expect(usuarioFinal.ativo).toBe(false);
+
+  // callback jwt() de auth.ts derruba o token na próxima leitura de sessão -
+  // sem essa checagem de ativo=false, o contexto A continuaria logado até o
+  // cookie expirar sozinho, mesmo com a conta já excluída.
+  await paginaAntiga.goto("/painel");
+  await expect(paginaAntiga).toHaveURL(/\/login/);
+
+  await contextoAntigo.close();
+  await contextoNovo.close();
 });
