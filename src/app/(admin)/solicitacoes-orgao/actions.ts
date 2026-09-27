@@ -9,6 +9,7 @@ import {
   enviarEmailAcessoOrgao,
   enviarEmailSolicitacaoRejeitada,
 } from "@/lib/email";
+import { idiomaOuPadrao } from "@/i18n/config";
 
 import { criarRejeitarSolicitacaoSchema } from "./definitions";
 import { exigirAdmin } from "./exigir-admin";
@@ -57,6 +58,7 @@ export async function aprovarSolicitacao(solicitacaoId: string) {
         cidadeId: solicitacao.cidadeId,
         emailVerified: agora,
         nivelVerificacao: "EMAIL",
+        idioma: solicitacao.idioma,
       },
     });
 
@@ -71,6 +73,7 @@ export async function aprovarSolicitacao(solicitacaoId: string) {
     email: solicitacao.email,
     token,
     nomeOrgao: solicitacao.nomeOrgao,
+    locale: idiomaOuPadrao(solicitacao.idioma),
   });
 
   revalidatePath("/solicitacoes-orgao");
@@ -106,6 +109,7 @@ export async function rejeitarSolicitacao(solicitacaoId: string, formData: FormD
   await enviarEmailSolicitacaoRejeitada({
     email: solicitacao.email,
     motivo: validado.data.motivo,
+    locale: idiomaOuPadrao(solicitacao.idioma),
   });
 
   revalidatePath("/solicitacoes-orgao");

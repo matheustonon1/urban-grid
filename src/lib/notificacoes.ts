@@ -6,6 +6,7 @@ import {
   enviarEmailSenhaAlterada,
   enviarEmailTrocaEmailSolicitada,
 } from "@/lib/email";
+import { idiomaOuPadrao } from "@/i18n/config";
 
 // Só os eventos que fazem sentido o cidadão saber mesmo sem estar com o
 // app aberto. NOVO_COMENTARIO fica de fora (pode ser frequente demais,
@@ -48,7 +49,7 @@ export async function criarNotificacao({
   try {
     const usuario = await prisma.user.findUnique({
       where: { id: userId },
-      select: { email: true, emailVerified: true },
+      select: { email: true, emailVerified: true, idioma: true },
     });
     if (!usuario?.emailVerified) {
       return;
@@ -59,6 +60,7 @@ export async function criarNotificacao({
       titulo,
       mensagem,
       protocolo,
+      locale: idiomaOuPadrao(usuario.idioma),
     });
   } catch (erro) {
     console.error("Falha ao enviar e-mail de notificação:", erro);
@@ -72,7 +74,7 @@ export async function criarNotificacao({
 export async function alertarSenhaAlterada(userId: string) {
   const usuario = await prisma.user.findUnique({
     where: { id: userId },
-    select: { email: true },
+    select: { email: true, idioma: true },
   });
   if (!usuario) {
     return;
@@ -87,7 +89,7 @@ export async function alertarSenhaAlterada(userId: string) {
     },
   });
 
-  await enviarEmailSenhaAlterada({ email: usuario.email });
+  await enviarEmailSenhaAlterada({ email: usuario.email, locale: idiomaOuPadrao(usuario.idioma) });
 }
 
 // Mesmo espírito de alertarSenhaAlterada: avisa o e-mail ATUAL assim que
@@ -96,7 +98,7 @@ export async function alertarSenhaAlterada(userId: string) {
 export async function alertarTrocaEmailSolicitada(userId: string, novoEmail: string) {
   const usuario = await prisma.user.findUnique({
     where: { id: userId },
-    select: { email: true },
+    select: { email: true, idioma: true },
   });
   if (!usuario) {
     return;
@@ -111,5 +113,9 @@ export async function alertarTrocaEmailSolicitada(userId: string, novoEmail: str
     },
   });
 
-  await enviarEmailTrocaEmailSolicitada({ email: usuario.email, novoEmail });
+  await enviarEmailTrocaEmailSolicitada({
+    email: usuario.email,
+    novoEmail,
+    locale: idiomaOuPadrao(usuario.idioma),
+  });
 }

@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
+import { obterIdiomaAtual } from "@/i18n/atual";
 
 import { criarSolicitarOrgaoSchema, type SolicitarOrgaoFormState } from "./definitions";
 
@@ -66,6 +67,7 @@ export async function solicitarOrgao(
       email,
       telefone: telefone || null,
       criadoDeIp: ip,
+      idioma: await obterIdiomaAtual(),
     },
   });
 

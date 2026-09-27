@@ -9,6 +9,7 @@ import { auth, signOut } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { alertarSenhaAlterada, alertarTrocaEmailSolicitada } from "@/lib/notificacoes";
 import { criarTokenTrocaEmail, enviarEmailConfirmarTrocaEmail } from "@/lib/email";
+import { idiomaOuPadrao } from "@/i18n/config";
 
 import {
   criarExclusaoSchema,
@@ -89,7 +90,12 @@ export async function solicitarTrocaEmail(
   }
 
   const token = await criarTokenTrocaEmail(usuario.id, novoEmail);
-  await enviarEmailConfirmarTrocaEmail({ email: novoEmail, token, emailAtual: usuario.email });
+  await enviarEmailConfirmarTrocaEmail({
+    email: novoEmail,
+    token,
+    emailAtual: usuario.email,
+    locale: idiomaOuPadrao(usuario.idioma),
+  });
   // Aviso pro e-mail atual sai mesmo se falhar o envio acima (enviarEmail
   // nunca lança) - dono da conta precisa saber que uma troca foi pedida,
   // independente do e-mail novo ter recebido o link ou não.

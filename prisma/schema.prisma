@@ -109,6 +109,12 @@ model User {
   email         String    @unique
   emailVerified DateTime?
   image         String?
+  // Idioma dos e-mails transacionais (não da navegação - isso é só cookie,
+  // ver src/i18n). Gravado no cadastro e atualizado sempre que a pessoa
+  // troca de idioma logada (definirIdioma() em i18n/actions.ts), porque um
+  // e-mail disparado por outra pessoa (moderação, resposta oficial) não
+  // tem o cookie de quem vai ler - precisa vir de algum lugar persistido.
+  idioma        String    @default("pt-BR") @db.VarChar(5)
 
   senhaHash       String? // login por credenciais
   senhaAlteradaEm DateTime? // usado pra invalidar sessões JWT emitidas antes da troca (ver callback jwt em auth.ts)
@@ -325,6 +331,10 @@ model SolicitacaoOrgao {
   email           String
   telefone        String?
   criadoDeIp      String? // usado só pra limite de solicitações por IP
+  // Idioma de quem preencheu o formulário (cookie no momento do envio) -
+  // ainda não existe User pra guardar isso; usado no e-mail de aprovação/
+  // rejeição e copiado pro User criado quando a solicitação é aprovada.
+  idioma          String  @default("pt-BR") @db.VarChar(5)
 
   status         StatusSolicitacaoOrgao @default(PENDENTE)
   motivoRejeicao String?                @db.Text

@@ -10,6 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { signIn } from "@/auth";
 import { hashCpf } from "@/lib/cpf";
 import { criarTokenVerificacao, enviarEmailVerificacao } from "@/lib/email";
+import { obterIdiomaAtual } from "@/i18n/atual";
 import { verificarTurnstile } from "@/lib/turnstile";
 
 import { criarCadastroSchema, type CadastroFormState } from "./definitions";
@@ -57,6 +58,7 @@ export async function cadastrar(
   const { nome, email, cpf, senha } = validado.data;
   const senhaHash = await bcrypt.hash(senha, 10);
   const cpfHash = hashCpf(cpf);
+  const idioma = await obterIdiomaAtual();
 
   try {
     await prisma.user.create({
@@ -68,6 +70,7 @@ export async function cadastrar(
         papel: "CIDADAO",
         termosAceitosEm: new Date(),
         criadoDeIp: ip,
+        idioma,
       },
     });
   } catch (erro) {
@@ -92,7 +95,7 @@ export async function cadastrar(
   }
 
   const token = await criarTokenVerificacao(email);
-  await enviarEmailVerificacao({ email, token });
+  await enviarEmailVerificacao({ email, token, locale: idioma });
 
   try {
     await signIn("credentials", {

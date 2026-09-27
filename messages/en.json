@@ -621,5 +621,50 @@
     "colResolucao": "Resolution",
     "colTempo": "Avg. time",
     "colNota": "Rating"
+  },
+  "Email": {
+    "verificacao": {
+      "assunto": "Confirm your e-mail — Urban Grid",
+      "corpo": "Confirm your e-mail to activate your account and be able to confirm or report complaints.",
+      "botao": "Verify e-mail",
+      "rodape": "If you didn't create an Urban Grid account, ignore this e-mail."
+    },
+    "acessoOrgao": {
+      "assunto": "Agency access approved — Urban Grid",
+      "corpo": "Your access request as {nomeOrgao} was approved. Set your password to start officially responding to complaints in your city.",
+      "botao": "Set my password",
+      "rodape": "This link expires in 24 hours. If you don't recognize this request, ignore this e-mail."
+    },
+    "redefinicaoSenha": {
+      "assunto": "Reset your password — Urban Grid",
+      "corpo": "We received a request to reset your account's password.",
+      "botao": "Create new password",
+      "rodape": "This link expires in 1 hour and can only be used once. If you didn't request this reset, ignore this e-mail - your password stays the same."
+    },
+    "senhaAlterada": {
+      "assunto": "Your password was changed — Urban Grid",
+      "corpo": "Your account's password was just changed.",
+      "aviso": "If this wasn't you, your account may be compromised — change your password immediately and contact support."
+    },
+    "confirmarTrocaEmail": {
+      "assunto": "Confirm your new e-mail — Urban Grid",
+      "corpo": "We received a request to change the login e-mail of account {emailAtual} to this address.",
+      "botao": "Confirm new e-mail",
+      "rodape": "This link expires in 1 hour. If you didn't request this change, ignore this e-mail - your login e-mail stays the same."
+    },
+    "trocaEmailSolicitada": {
+      "assunto": "E-mail change requested — Urban Grid",
+      "corpo": "Someone requested changing your account's login e-mail to {novoEmail}. The change only takes effect once confirmed from the new address.",
+      "aviso": "If this wasn't you, your account may be compromised - change your password immediately."
+    },
+    "solicitacaoRejeitada": {
+      "assunto": "Agency access request — Urban Grid",
+      "corpo": "Your access request as an agency was not approved.",
+      "motivoRotulo": "Reason:"
+    },
+    "notificacao": {
+      "botao": "View complaint",
+      "rodape": "You received this e-mail because you have an Urban Grid account."
+    }
   }
 }

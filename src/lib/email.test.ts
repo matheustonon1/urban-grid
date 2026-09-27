@@ -1,6 +1,26 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { esc } from "./email";
+// Evita bater no provedor de e-mail de verdade - o ambiente de teste carrega
+// o .env real (RESEND_API_KEY incluída), então sem este mock os testes de
+// envio fariam requisições HTTP de verdade pro Resend.
+const enviosCapturados: Array<{ to: string; subject: string; html: string }> = [];
+
+vi.mock("resend", () => ({
+  Resend: vi.fn().mockImplementation(() => ({
+    emails: {
+      send: vi.fn(async (parametros: { to: string; subject: string; html: string }) => {
+        enviosCapturados.push(parametros);
+        return { data: { id: "teste" }, error: null };
+      }),
+    },
+  })),
+}));
+
+import { esc, enviarEmailVerificacao } from "./email";
+
+beforeEach(() => {
+  enviosCapturados.length = 0;
+});
 
 describe("esc", () => {
   it("escapa os caracteres especiais de HTML", () => {
@@ -19,5 +39,24 @@ describe("esc", () => {
     expect(escapado).not.toContain("<a ");
     expect(escapado).not.toContain("</p>");
     expect(escapado).toContain("&lt;a href=&quot;https://phishing.exemplo&quot;&gt;");
+  });
+});
+
+describe("enviarEmailVerificacao (idioma)", () => {
+  it("sai em português quando locale não é informado (padrão)", async () => {
+    await enviarEmailVerificacao({ email: "pessoa@exemplo.com", token: "abc" });
+
+    expect(enviosCapturados).toHaveLength(1);
+    expect(enviosCapturados[0].subject).toBe("Confirme seu e-mail — Urban Grid");
+    expect(enviosCapturados[0].html).toContain("Verificar e-mail");
+  });
+
+  it("sai em inglês quando locale é 'en'", async () => {
+    await enviarEmailVerificacao({ email: "pessoa@exemplo.com", token: "abc", locale: "en" });
+
+    expect(enviosCapturados).toHaveLength(1);
+    expect(enviosCapturados[0].subject).toBe("Confirm your e-mail — Urban Grid");
+    expect(enviosCapturados[0].html).toContain("Verify e-mail");
+    expect(enviosCapturados[0].html).not.toContain("Confirme seu e-mail");
   });
 });

@@ -1,9 +1,23 @@
 import { randomBytes } from "crypto";
 
 import { Resend } from "resend";
+import { createTranslator } from "use-intl";
 
 import { prisma } from "@/lib/prisma";
 import { montarUrl } from "@/lib/url";
+import { IDIOMA_PADRAO, type Idioma } from "@/i18n/config";
+
+// E-mail não tem cookie de navegação de quem vai ler (quem dispara nem
+// sempre é o destinatário - moderação, resposta oficial, aprovação de
+// órgão) - o idioma vem de onde foi persistido (User.idioma ou
+// SolicitacaoOrgao.idioma), passado explicitamente por quem chama. Usa o
+// mesmo messages/*.json do resto do site (namespace "Email"), só que via
+// createTranslator (use-intl) em vez de next-intl/server, que depende de
+// request scope.
+async function tradutor(locale: Idioma) {
+  const mensagens = (await import(`../../messages/${locale}.json`)).default;
+  return createTranslator({ locale, messages: mensagens, namespace: "Email" });
+}
 
 // Todo texto que veio de usuário (título de reclamação, motivo de
 // rejeição, nome de órgão, resposta oficial...) e entra num template HTML
@@ -127,21 +141,51 @@ async function enviarEmail({ to, subject, html }: { to: string; subject: string;
   }
 }
 
-function montarHtmlVerificacao(url: string) {
+function montarHtmlSimples(
+  corpo: string | string[],
+  rodape?: string,
+  botao?: { url: string; texto: string }
+) {
+  const paragrafos = Array.isArray(corpo) ? corpo : [corpo];
+  return `
+    <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
+      <h1 style="color: #1d4ed8; font-size: 20px;">Urban Grid</h1>
+      ${paragrafos
+        .map(
+          (paragrafo) =>
+            `<p style="color: #334155; font-size: 14px; line-height: 1.5;">${paragrafo}</p>`
+        )
+        .join("\n")}
+      ${
+        botao
+          ? `<a
+              href="${botao.url}"
+              style="display: inline-block; background: #1d4ed8; color: #ffffff; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; margin: 8px 0;"
+            >
+              ${botao.texto}
+            </a>`
+          : ""
+      }
+      ${
+        rodape
+          ? `<p style="color: #94a3b8; font-size: 12px; margin-top: 24px;">${rodape}</p>`
+          : ""
+      }
+    </div>
+  `;
+}
+
+// Alerta de segurança (senha alterada, troca de e-mail pedida) - corpo em
+// vermelho/negrito em vez do rodapé cinza padrão, pra chamar mais atenção.
+function montarHtmlAlerta(corpo: string, aviso: string) {
   return `
     <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
       <h1 style="color: #1d4ed8; font-size: 20px;">Urban Grid</h1>
       <p style="color: #334155; font-size: 14px; line-height: 1.5;">
-        Confirme seu e-mail para ativar sua conta e poder confirmar ou denunciar reclamações.
+        ${corpo}
       </p>
-      <a
-        href="${url}"
-        style="display: inline-block; background: #1d4ed8; color: #ffffff; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; margin: 8px 0;"
-      >
-        Verificar e-mail
-      </a>
-      <p style="color: #94a3b8; font-size: 12px; margin-top: 24px;">
-        Se você não criou uma conta no Urban Grid, ignore este e-mail.
+      <p style="color: #b91c1c; font-size: 14px; line-height: 1.5; font-weight: 600;">
+        ${aviso}
       </p>
     </div>
   `;
@@ -150,106 +194,67 @@ function montarHtmlVerificacao(url: string) {
 export async function enviarEmailVerificacao({
   email,
   token,
+  locale = IDIOMA_PADRAO,
 }: {
   email: string;
   token: string;
+  locale?: Idioma;
 }) {
+  const t = await tradutor(locale);
   const url = montarUrl(`/verificar-email/${token}`);
   await enviarEmail({
     to: email,
-    subject: "Confirme seu e-mail — Urban Grid",
-    html: montarHtmlVerificacao(url),
+    subject: t("verificacao.assunto"),
+    html: montarHtmlSimples(t("verificacao.corpo"), t("verificacao.rodape"), {
+      url,
+      texto: t("verificacao.botao"),
+    }),
   });
-}
-
-function montarHtmlAcessoOrgao(url: string, nomeOrgao: string) {
-  return `
-    <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
-      <h1 style="color: #1d4ed8; font-size: 20px;">Urban Grid</h1>
-      <p style="color: #334155; font-size: 14px; line-height: 1.5;">
-        Sua solicitação de acesso como <strong>${esc(nomeOrgao)}</strong> foi aprovada.
-        Defina sua senha para começar a responder oficialmente às reclamações da sua cidade.
-      </p>
-      <a
-        href="${url}"
-        style="display: inline-block; background: #1d4ed8; color: #ffffff; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; margin: 8px 0;"
-      >
-        Definir minha senha
-      </a>
-      <p style="color: #94a3b8; font-size: 12px; margin-top: 24px;">
-        Este link expira em 24 horas. Se você não reconhece esta solicitação, ignore este e-mail.
-      </p>
-    </div>
-  `;
 }
 
 export async function enviarEmailAcessoOrgao({
   email,
   token,
   nomeOrgao,
+  locale = IDIOMA_PADRAO,
 }: {
   email: string;
   token: string;
   nomeOrgao: string;
+  locale?: Idioma;
 }) {
+  const t = await tradutor(locale);
   const url = montarUrl(`/orgao/definir-senha/${token}`);
   await enviarEmail({
     to: email,
-    subject: "Acesso de órgão aprovado — Urban Grid",
-    html: montarHtmlAcessoOrgao(url, nomeOrgao),
+    subject: t("acessoOrgao.assunto"),
+    html: montarHtmlSimples(
+      t("acessoOrgao.corpo", { nomeOrgao: `<strong>${esc(nomeOrgao)}</strong>` }),
+      t("acessoOrgao.rodape"),
+      { url, texto: t("acessoOrgao.botao") }
+    ),
   });
-}
-
-function montarHtmlRedefinicaoSenha(url: string) {
-  return `
-    <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
-      <h1 style="color: #1d4ed8; font-size: 20px;">Urban Grid</h1>
-      <p style="color: #334155; font-size: 14px; line-height: 1.5;">
-        Recebemos um pedido para redefinir a senha da sua conta.
-      </p>
-      <a
-        href="${url}"
-        style="display: inline-block; background: #1d4ed8; color: #ffffff; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; margin: 8px 0;"
-      >
-        Criar nova senha
-      </a>
-      <p style="color: #94a3b8; font-size: 12px; margin-top: 24px;">
-        Este link expira em 1 hora e só pode ser usado uma vez. Se você não
-        pediu essa redefinição, ignore este e-mail - sua senha continua a
-        mesma.
-      </p>
-    </div>
-  `;
 }
 
 export async function enviarEmailRedefinicaoSenha({
   email,
   token,
+  locale = IDIOMA_PADRAO,
 }: {
   email: string;
   token: string;
+  locale?: Idioma;
 }) {
+  const t = await tradutor(locale);
   const url = montarUrl(`/redefinir-senha/${token}`);
   await enviarEmail({
     to: email,
-    subject: "Redefinir sua senha — Urban Grid",
-    html: montarHtmlRedefinicaoSenha(url),
+    subject: t("redefinicaoSenha.assunto"),
+    html: montarHtmlSimples(t("redefinicaoSenha.corpo"), t("redefinicaoSenha.rodape"), {
+      url,
+      texto: t("redefinicaoSenha.botao"),
+    }),
   });
-}
-
-function montarHtmlSenhaAlterada() {
-  return `
-    <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
-      <h1 style="color: #1d4ed8; font-size: 20px;">Urban Grid</h1>
-      <p style="color: #334155; font-size: 14px; line-height: 1.5;">
-        A senha da sua conta foi alterada agora.
-      </p>
-      <p style="color: #b91c1c; font-size: 14px; line-height: 1.5; font-weight: 600;">
-        Se não foi você, sua conta pode estar comprometida — troque a
-        senha imediatamente e entre em contato com o suporte.
-      </p>
-    </div>
-  `;
 }
 
 // Alerta de segurança - diferente das outras funções de e-mail deste
@@ -257,68 +262,43 @@ function montarHtmlSenhaAlterada() {
 // porque não deve depender de e-mail verificado: quem troca a senha pelo
 // link de redefinição já provou controlar essa caixa de entrada ao
 // clicar nele, então o alerta tem que sair mesmo assim.
-export async function enviarEmailSenhaAlterada({ email }: { email: string }) {
+export async function enviarEmailSenhaAlterada({
+  email,
+  locale = IDIOMA_PADRAO,
+}: {
+  email: string;
+  locale?: Idioma;
+}) {
+  const t = await tradutor(locale);
   await enviarEmail({
     to: email,
-    subject: "Sua senha foi alterada — Urban Grid",
-    html: montarHtmlSenhaAlterada(),
+    subject: t("senhaAlterada.assunto"),
+    html: montarHtmlAlerta(t("senhaAlterada.corpo"), t("senhaAlterada.aviso")),
   });
-}
-
-function montarHtmlConfirmarTrocaEmail(url: string, emailAtual: string) {
-  return `
-    <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
-      <h1 style="color: #1d4ed8; font-size: 20px;">Urban Grid</h1>
-      <p style="color: #334155; font-size: 14px; line-height: 1.5;">
-        Recebemos um pedido para trocar o e-mail de acesso da conta
-        <strong>${esc(emailAtual)}</strong> para este endereço.
-      </p>
-      <a
-        href="${url}"
-        style="display: inline-block; background: #1d4ed8; color: #ffffff; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; margin: 8px 0;"
-      >
-        Confirmar novo e-mail
-      </a>
-      <p style="color: #94a3b8; font-size: 12px; margin-top: 24px;">
-        Este link expira em 1 hora. Se você não pediu essa troca, ignore
-        este e-mail - seu e-mail de acesso continua o mesmo.
-      </p>
-    </div>
-  `;
 }
 
 export async function enviarEmailConfirmarTrocaEmail({
   email,
   token,
   emailAtual,
+  locale = IDIOMA_PADRAO,
 }: {
   email: string;
   token: string;
   emailAtual: string;
+  locale?: Idioma;
 }) {
+  const t = await tradutor(locale);
   const url = montarUrl(`/confirmar-email/${token}`);
   await enviarEmail({
     to: email,
-    subject: "Confirme seu novo e-mail — Urban Grid",
-    html: montarHtmlConfirmarTrocaEmail(url, emailAtual),
+    subject: t("confirmarTrocaEmail.assunto"),
+    html: montarHtmlSimples(
+      t("confirmarTrocaEmail.corpo", { emailAtual: `<strong>${esc(emailAtual)}</strong>` }),
+      t("confirmarTrocaEmail.rodape"),
+      { url, texto: t("confirmarTrocaEmail.botao") }
+    ),
   });
-}
-
-function montarHtmlTrocaEmailSolicitada(novoEmail: string) {
-  return `
-    <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
-      <h1 style="color: #1d4ed8; font-size: 20px;">Urban Grid</h1>
-      <p style="color: #334155; font-size: 14px; line-height: 1.5;">
-        Pediram a troca do e-mail de acesso da sua conta para
-        <strong>${esc(novoEmail)}</strong>. A troca só passa a valer depois de
-        confirmada pelo novo endereço.
-      </p>
-      <p style="color: #b91c1c; font-size: 14px; line-height: 1.5; font-weight: 600;">
-        Se não foi você, sua conta pode estar comprometida - troque sua
-        senha imediatamente.
-      </p>
-    </div>
-  `;
 }
 
 // Avisa o e-mail ANTIGO assim que a troca é pedida (não só quando é
@@ -327,63 +307,61 @@ function montarHtmlTrocaEmailSolicitada(novoEmail: string) {
 export async function enviarEmailTrocaEmailSolicitada({
   email,
   novoEmail,
+  locale = IDIOMA_PADRAO,
 }: {
   email: string;
   novoEmail: string;
+  locale?: Idioma;
 }) {
+  const t = await tradutor(locale);
   await enviarEmail({
     to: email,
-    subject: "Troca de e-mail solicitada — Urban Grid",
-    html: montarHtmlTrocaEmailSolicitada(novoEmail),
+    subject: t("trocaEmailSolicitada.assunto"),
+    html: montarHtmlAlerta(
+      t("trocaEmailSolicitada.corpo", { novoEmail: `<strong>${esc(novoEmail)}</strong>` }),
+      t("trocaEmailSolicitada.aviso")
+    ),
   });
-}
-
-function montarHtmlSolicitacaoRejeitada(motivo: string) {
-  return `
-    <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
-      <h1 style="color: #1d4ed8; font-size: 20px;">Urban Grid</h1>
-      <p style="color: #334155; font-size: 14px; line-height: 1.5;">
-        Sua solicitação de acesso como órgão não foi aprovada.
-      </p>
-      <p style="color: #334155; font-size: 14px; line-height: 1.5;">
-        <strong>Motivo:</strong> ${esc(motivo)}
-      </p>
-    </div>
-  `;
 }
 
 export async function enviarEmailSolicitacaoRejeitada({
   email,
   motivo,
+  locale = IDIOMA_PADRAO,
 }: {
   email: string;
   motivo: string;
+  locale?: Idioma;
 }) {
+  const t = await tradutor(locale);
   await enviarEmail({
     to: email,
-    subject: "Solicitação de acesso como órgão — Urban Grid",
-    html: montarHtmlSolicitacaoRejeitada(motivo),
+    subject: t("solicitacaoRejeitada.assunto"),
+    html: montarHtmlSimples([
+      t("solicitacaoRejeitada.corpo"),
+      `<strong>${t("solicitacaoRejeitada.motivoRotulo")}</strong> ${esc(motivo)}`,
+    ]),
   });
 }
 
-function montarHtmlNotificacao(titulo: string, mensagem: string, url?: string) {
+function montarHtmlNotificacao(titulo: string, mensagem: string, rodape: string, botao?: { url: string; texto: string }) {
   return `
     <div style="font-family: -apple-system, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
       <h1 style="color: #1d4ed8; font-size: 20px;">Urban Grid</h1>
       <p style="color: #0f172a; font-size: 16px; font-weight: 600; margin-bottom: 4px;">${esc(titulo)}</p>
       <p style="color: #334155; font-size: 14px; line-height: 1.5;">${esc(mensagem)}</p>
       ${
-        url
+        botao
           ? `<a
-              href="${url}"
+              href="${botao.url}"
               style="display: inline-block; background: #1d4ed8; color: #ffffff; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; margin: 8px 0;"
             >
-              Ver reclamação
+              ${botao.texto}
             </a>`
           : ""
       }
       <p style="color: #94a3b8; font-size: 12px; margin-top: 24px;">
-        Você recebeu este e-mail porque tem uma conta no Urban Grid.
+        ${rodape}
       </p>
     </div>
   `;
@@ -393,21 +371,36 @@ function montarHtmlNotificacao(titulo: string, mensagem: string, url?: string) {
 // resposta oficial, mudança de status, pedido de avaliação) - reusa o
 // mesmo template pros diferentes tipos em vez de um HTML por evento.
 // Chamada por criarNotificacao(), nunca diretamente pelas actions.
+//
+// titulo/mensagem NÃO são traduzidos aqui - já chegam prontos em
+// português (criarNotificacao() grava o texto final no banco, pra
+// também aparecer no sininho do app). Só a moldura do e-mail (botão,
+// rodapé, assunto) respeita o idioma de quem recebe; o conteúdo em si
+// exigiria guardar tipo+parâmetros em vez de texto pronto - fica pra uma
+// revisão maior do sistema de notificações, não só do e-mail.
 export async function enviarEmailNotificacao({
   email,
   titulo,
   mensagem,
   protocolo,
+  locale = IDIOMA_PADRAO,
 }: {
   email: string;
   titulo: string;
   mensagem: string;
   protocolo?: string;
+  locale?: Idioma;
 }) {
+  const t = await tradutor(locale);
   const url = protocolo ? montarUrl(`/reclamacoes/${protocolo}`) : undefined;
   await enviarEmail({
     to: email,
     subject: `${titulo} — Urban Grid`,
-    html: montarHtmlNotificacao(titulo, mensagem, url),
+    html: montarHtmlNotificacao(
+      titulo,
+      mensagem,
+      t("notificacao.rodape"),
+      url ? { url, texto: t("notificacao.botao") } : undefined
+    ),
   });
 }

@@ -6,6 +6,7 @@ import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { criarTokenRedefinicaoSenha, enviarEmailRedefinicaoSenha } from "@/lib/email";
 import { excedeuLimitePorIp } from "@/lib/rateLimitMemoria";
+import { idiomaOuPadrao } from "@/i18n/config";
 
 import { criarEsqueciSenhaSchema, type EsqueciSenhaFormState } from "./definitions";
 
@@ -45,7 +46,7 @@ export async function solicitarRedefinicaoSenha(
   // não este fluxo.
   if (usuario?.senhaHash) {
     const token = await criarTokenRedefinicaoSenha(email);
-    await enviarEmailRedefinicaoSenha({ email, token });
+    await enviarEmailRedefinicaoSenha({ email, token, locale: idiomaOuPadrao(usuario.idioma) });
   }
 
   return { mensagem: mensagemGenerica };
