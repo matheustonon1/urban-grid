@@ -19,13 +19,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { Revelar } from "@/components/revelar";
 import { botaoPrimario, botaoSecundario, cartao } from "@/lib/estilos";
 import { calcularMetricasOrgao, classificarIndice } from "@/lib/reputacaoOrgao";
-
-const STATUS_PUBLICOS = [
-  "PUBLICADA",
-  "EM_ANDAMENTO",
-  "RESOLVIDA",
-  "ARQUIVADA",
-] as const;
+import { STATUS_PUBLICOS } from "@/lib/statusPublicos";
 
 export default async function Home() {
   const t = await getTranslations("Home");

@@ -583,10 +583,9 @@
     "buscarCidadeEstado": "Search by city or state...",
     "todasCategorias": "All categories",
     "filtrar": "Filter",
-    "mostrandoResultados": "Showing results",
-    "para": "for",
-    "em": "in",
-    "limpar": "clear",
+    "filtrosAtivos": "Active filters:",
+    "removerFiltro": "Remove filter \"{filtro}\"",
+    "limpar": "clear all",
     "nenhumaPublicada": "No complaints published yet.",
     "confirmacoes": "{count, plural, one {# confirmation} other {# confirmations}}"
   },

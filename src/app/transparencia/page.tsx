@@ -5,8 +5,8 @@ import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { cartao } from "@/lib/estilos";
 import { calcularMetricasOrgao, classificarIndice } from "@/lib/reputacaoOrgao";
+import { STATUS_PUBLICOS } from "@/lib/statusPublicos";
 
-const STATUS_PUBLICOS = ["PUBLICADA", "EM_ANDAMENTO", "RESOLVIDA", "ARQUIVADA"] as const;
 const LIMITE_ORGAOS = 100;
 
 export async function generateMetadata(): Promise<Metadata> {

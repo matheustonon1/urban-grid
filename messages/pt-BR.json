@@ -583,10 +583,9 @@
     "buscarCidadeEstado": "Buscar por cidade ou estado...",
     "todasCategorias": "Todas as categorias",
     "filtrar": "Filtrar",
-    "mostrandoResultados": "Mostrando resultados",
-    "para": "para",
-    "em": "em",
-    "limpar": "limpar",
+    "filtrosAtivos": "Filtros ativos:",
+    "removerFiltro": "Remover filtro \"{filtro}\"",
+    "limpar": "limpar tudo",
     "nenhumaPublicada": "Nenhuma reclamação publicada ainda.",
     "confirmacoes": "{count, plural, one {# confirmação} other {# confirmações}}"
   },

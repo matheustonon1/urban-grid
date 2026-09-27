@@ -2,13 +2,15 @@ import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
-import { SeletorCidade } from "@/components/cidade-combobox";
 import { StatusBadge } from "@/components/status-badge";
 import { CategoriaIcon } from "@/components/categoria-icon";
 import { Paginacao } from "@/components/paginacao";
 import { formatarTempoRelativo } from "@/lib/tempo-relativo";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
-import { botaoPrimario, campoInput, cartao, containerPagina } from "@/lib/estilos";
+import { cartao, containerPagina } from "@/lib/estilos";
+import { STATUS_PUBLICOS } from "@/lib/statusPublicos";
+
+import { FiltroReclamacoes } from "./filtro";
 
 export default async function ReclamacoesPublicasPage({
   searchParams,
@@ -24,7 +26,7 @@ export default async function ReclamacoesPublicasPage({
   const paginaAtual = lerPaginaAtual(page);
 
   const filtro = {
-    status: "PUBLICADA" as const,
+    status: { in: [...STATUS_PUBLICOS] },
     ...(cidadeIdFiltro ? { cidadeId: cidadeIdFiltro } : {}),
     ...(categoriaIdFiltro ? { categoriaId: categoriaIdFiltro } : {}),
     ...(buscaFiltro
@@ -60,9 +62,6 @@ export default async function ReclamacoesPublicasPage({
     prisma.categoria.findMany({ where: { ativa: true }, orderBy: { ordem: "asc" } }),
   ]);
   const totalPaginas = calcularTotalPaginas(totalReclamacoes);
-  const categoriaFiltro = categoriaIdFiltro
-    ? categoriasAtivas.find((categoria) => categoria.id === categoriaIdFiltro)
-    : undefined;
 
   return (
     <main className={containerPagina}>
@@ -70,77 +69,21 @@ export default async function ReclamacoesPublicasPage({
         {t("titulo")}
       </h1>
 
-      <form className="flex flex-wrap gap-2">
-        <input
-          type="text"
-          name="q"
-          defaultValue={buscaFiltro ?? ""}
-          placeholder={t("buscarPalavraChave")}
-          className={`min-w-48 flex-1 ${campoInput}`}
-        />
-        <div className="min-w-48 flex-1">
-          <SeletorCidade
-            placeholder={t("buscarCidadeEstado")}
-            defaultValue={
-              cidadeFiltro
-                ? {
-                    id: cidadeFiltro.id,
-                    nome: cidadeFiltro.nome,
-                    uf: cidadeFiltro.estado.uf,
-                  }
-                : null
-            }
-          />
-        </div>
-        <select
-          name="categoriaId"
-          defaultValue={categoriaIdFiltro ?? ""}
-          className={`min-w-48 flex-1 ${campoInput}`}
-        >
-          <option value="">{t("todasCategorias")}</option>
-          {categoriasAtivas.map((categoria) => (
-            <option key={categoria.id} value={categoria.id}>
-              {categoria.nome}
-            </option>
-          ))}
-        </select>
-        <button type="submit" className={botaoPrimario}>
-          {t("filtrar")}
-        </button>
-      </form>
-
-      {(cidadeFiltro || categoriaFiltro || buscaFiltro) && (
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          {t("mostrandoResultados")}
-          {buscaFiltro && (
-            <>
-              {" "}
-              {t("para")} <strong>&quot;{buscaFiltro}&quot;</strong>
-            </>
-          )}
-          {categoriaFiltro && (
-            <>
-              {" "}
-              {t("em")} <strong>{categoriaFiltro.nome}</strong>
-            </>
-          )}
-          {cidadeFiltro && (
-            <>
-              {" "}
-              {t("em")}{" "}
-              <Link href={`/cidades/${cidadeFiltro.slug}`} className="text-primary underline">
-                <strong>
-                  {cidadeFiltro.nome} - {cidadeFiltro.estado.uf}
-                </strong>
-              </Link>
-            </>
-          )}{" "}
-          ·{" "}
-          <Link href="/reclamacoes" className="text-primary underline">
-            {t("limpar")}
-          </Link>
-        </p>
-      )}
+      <FiltroReclamacoes
+        categorias={categoriasAtivas}
+        categoriaIdFiltro={categoriaIdFiltro}
+        cidadeFiltro={
+          cidadeFiltro
+            ? {
+                id: cidadeFiltro.id,
+                nome: cidadeFiltro.nome,
+                slug: cidadeFiltro.slug,
+                estado: { uf: cidadeFiltro.estado.uf },
+              }
+            : null
+        }
+        buscaFiltro={buscaFiltro}
+      />
 
       {reclamacoes.length === 0 && (
         <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumaPublicada")}</p>
