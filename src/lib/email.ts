@@ -10,7 +10,7 @@ import { montarUrl } from "@/lib/url";
 // precisa passar por aqui - sem isso, quem controla o texto injeta HTML/
 // links dentro de um e-mail que sai do remetente oficial do sistema
 // (phishing com aparência legítima).
-function esc(texto: string): string {
+export function esc(texto: string): string {
   return texto
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
