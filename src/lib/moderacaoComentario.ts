@@ -3,7 +3,7 @@ import * as z from "zod";
 
 import { prisma } from "@/lib/prisma";
 
-import { gerarConteudoComRetry } from "./moderacao";
+import { gerarAnaliseModeracao } from "./moderacao";
 
 const MODELO = "gemini-3.6-flash";
 const VERSAO_PROMPT = "v1";
@@ -66,31 +66,22 @@ export async function moderarComentario(
   let tokensSaida: number | undefined;
 
   try {
-    const resposta = await gerarConteudoComRetry({
-      model: MODELO,
-      contents: montarPrompt(texto),
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: RESPONSE_SCHEMA,
+    const resultado = await gerarAnaliseModeracao(
+      {
+        model: MODELO,
+        contents: montarPrompt(texto),
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: RESPONSE_SCHEMA,
+        },
       },
-    });
-
-    latenciaMs = Date.now() - inicio;
-    if (!resposta.text) {
-      throw new Error("Resposta vazia do modelo de moderação.");
-    }
-
-    const bruto: unknown = JSON.parse(resposta.text);
-    const validado = ResultadoAnaliseSchema.safeParse(bruto);
-    if (!validado.success) {
-      throw new Error(
-        `Resposta do modelo de moderação fora do formato esperado: ${validado.error.message}`
-      );
-    }
-    analise = validado.data;
-    resultadoJson = resposta.text;
-    tokensEntrada = resposta.usageMetadata?.promptTokenCount;
-    tokensSaida = resposta.usageMetadata?.candidatesTokenCount;
+      ResultadoAnaliseSchema
+    );
+    analise = resultado.analise;
+    resultadoJson = resultado.resultadoJson;
+    latenciaMs = resultado.latenciaMs;
+    tokensEntrada = resultado.tokensEntrada;
+    tokensSaida = resultado.tokensSaida;
   } catch (erro) {
     // Falha na IA mesmo depois do retry erra pro lado de REPROVAR, não
     // aprovar - fica oculto até um moderador revisar em

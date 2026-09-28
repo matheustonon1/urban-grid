@@ -157,6 +157,51 @@ export async function gerarConteudoComRetry(
   throw new Error("Falha inesperada ao chamar o modelo de moderação.");
 }
 
+// Chama o Gemini (com retry) e faz o parse/validação da resposta - parte
+// mecânica idêntica entre moderarReclamacao() e moderarComentario()
+// (moderacaoComentario.ts): JSON.parse, revalidação com zod (o
+// responseSchema do Gemini não garante limites como score entre 0 e 1),
+// e extração dos metadados de uso. Erra sempre lançando (nunca retorna
+// um resultado parcial) - cada chamador decide sozinho o fallback
+// seguro pro próprio fluxo (revisão humana vs. reprovar direto) e como
+// registrar a falha em LogModeracao, que também difere entre os dois.
+export async function gerarAnaliseModeracao<T>(
+  parametros: Parameters<
+    ReturnType<typeof getGeminiClient>["models"]["generateContent"]
+  >[0],
+  schema: z.ZodType<T>
+): Promise<{
+  analise: T;
+  resultadoJson: string;
+  latenciaMs: number;
+  tokensEntrada?: number;
+  tokensSaida?: number;
+}> {
+  const inicio = Date.now();
+  const resposta = await gerarConteudoComRetry(parametros);
+  const latenciaMs = Date.now() - inicio;
+
+  if (!resposta.text) {
+    throw new Error("Resposta vazia do modelo de moderação.");
+  }
+
+  const bruto: unknown = JSON.parse(resposta.text);
+  const validado = schema.safeParse(bruto);
+  if (!validado.success) {
+    throw new Error(
+      `Resposta do modelo de moderação fora do formato esperado: ${validado.error.message}`
+    );
+  }
+
+  return {
+    analise: validado.data,
+    resultadoJson: resposta.text,
+    latenciaMs,
+    tokensEntrada: resposta.usageMetadata?.promptTokenCount,
+    tokensSaida: resposta.usageMetadata?.candidatesTokenCount,
+  };
+}
+
 export async function moderarReclamacao(
   reclamacaoId: string,
   imagens: { buffer: Buffer; mimeType: string }[] = [],
@@ -191,28 +236,17 @@ export async function moderarReclamacao(
   let tokensSaida: number | undefined;
 
   try {
-    const resposta = await gerarConteudoComRetry({
-      model: MODELO,
-      contents,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: criarResponseSchema(imagens.length > 0),
+    const resultado = await gerarAnaliseModeracao(
+      {
+        model: MODELO,
+        contents,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: criarResponseSchema(imagens.length > 0),
+        },
       },
-    });
-
-    latenciaMs = Date.now() - inicio;
-
-    if (!resposta.text) {
-      throw new Error("Resposta vazia do modelo de moderação.");
-    }
-
-    const bruto: unknown = JSON.parse(resposta.text);
-    const validado = ResultadoAnaliseSchema.safeParse(bruto);
-    if (!validado.success) {
-      throw new Error(
-        `Resposta do modelo de moderação fora do formato esperado: ${validado.error.message}`
-      );
-    }
+      ResultadoAnaliseSchema
+    );
 
     // Defesa em profundidade além do responseSchema acima (que já pede os
     // 3 campos como obrigatórios quando há imagem) - um responseSchema
@@ -221,19 +255,20 @@ export async function moderarReclamacao(
     // aprovariam imagem nunca avaliada de verdade.
     if (
       imagens.length > 0 &&
-      (validado.data.scoreImagemImpropria === undefined ||
-        validado.data.coerenciaTextoImagem === undefined ||
-        validado.data.regioesSensiveis === undefined)
+      (resultado.analise.scoreImagemImpropria === undefined ||
+        resultado.analise.coerenciaTextoImagem === undefined ||
+        resultado.analise.regioesSensiveis === undefined)
     ) {
       throw new Error(
         "Resposta do modelo de moderação não avaliou a(s) imagem(ns) anexada(s)."
       );
     }
 
-    analise = validado.data;
-    resultadoJson = resposta.text;
-    tokensEntrada = resposta.usageMetadata?.promptTokenCount;
-    tokensSaida = resposta.usageMetadata?.candidatesTokenCount;
+    analise = resultado.analise;
+    resultadoJson = resultado.resultadoJson;
+    latenciaMs = resultado.latenciaMs;
+    tokensEntrada = resultado.tokensEntrada;
+    tokensSaida = resultado.tokensSaida;
   } catch (erro) {
     // IA indisponível, resposta não é JSON válido ou fora do formato/
     // limites esperados (ex.: score fora de 0-1, o que viraria NaN e
