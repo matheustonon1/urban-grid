@@ -57,7 +57,9 @@ export function SeletorIdioma() {
         className="flex items-center gap-1 rounded-lg p-2 text-xs font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-50 dark:text-slate-300 dark:hover:bg-slate-800"
       >
         <Languages className="h-5 w-5" aria-hidden />
-        <span aria-hidden>{locale === "pt-BR" ? "PT" : "EN"}</span>
+        <span aria-hidden className="hidden sm:inline">
+          {locale === "pt-BR" ? "PT" : "EN"}
+        </span>
       </button>
 
       {aberto && (

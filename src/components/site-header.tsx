@@ -43,14 +43,17 @@ export async function SiteHeader() {
 
   return (
     <header className="relative border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-      <div className="mx-auto flex max-w-4xl items-center gap-4 px-6 py-3 sm:px-8">
-        <Link href="/" className="text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100">
+      <div className="mx-auto flex max-w-4xl items-center gap-4 px-4 py-3 sm:px-8">
+        <Link
+          href="/"
+          className="shrink-0 whitespace-nowrap text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100"
+        >
           Urban <span className="text-primary">Grid</span>
         </Link>
 
         <BuscaCidadeHeader />
 
-        <nav className="ml-auto flex items-center gap-4 text-sm">
+        <nav className="ml-auto flex items-center gap-2 text-sm sm:gap-4">
           <Link
             href="/reclamacoes"
             className="hidden text-slate-600 hover:text-slate-900 sm:inline dark:text-slate-400 dark:hover:text-slate-100"
@@ -91,7 +94,7 @@ export async function SiteHeader() {
             <>
               <Link
                 href="/login"
-                className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100"
+                className="hidden text-slate-600 hover:text-slate-900 sm:inline dark:text-slate-400 dark:hover:text-slate-100"
               >
                 {t("entrar")}
               </Link>
