@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import QRCode from "qrcode";
 
 import { prisma } from "@/lib/prisma";
+import { criarContadorDeFalhas } from "@/lib/contadorFalhas";
 
 const NOME_EMISSOR = "Urban Grid";
 const QUANTIDADE_CODIGOS_BACKUP = 8;
@@ -130,31 +131,23 @@ export async function consumirCodigoBackup(
 // Aplicado só durante o login (authorize) - a verificação em si (código
 // certo/errado) fica ali; aqui é só o contador de tentativas e o
 // bloqueio temporário, no mesmo padrão de banidoAte já usado no User.
+// Mesma técnica de contador usada em loginSeguranca.ts pro login por
+// senha (ver criarContadorDeFalhas) - limite/janela diferentes, mas o
+// algoritmo (incremento atômico, checa limite, bloqueia) é o mesmo.
+const contador = criarContadorDeFalhas({
+  campoTentativas: "totpTentativasFalhas",
+  campoBloqueio: "totpBloqueadoAte",
+  limiteTentativas: LIMITE_TENTATIVAS,
+  bloqueioMs: BLOQUEIO_MS,
+});
+
 export async function usuarioBloqueadoPorTotp(usuario: {
   totpBloqueadoAte: Date | null;
 }): Promise<boolean> {
-  return !!usuario.totpBloqueadoAte && usuario.totpBloqueadoAte > new Date();
+  return contador.estaBloqueado(usuario);
 }
 
-// Incremento atômico no banco (Prisma `increment`), não leitura-depois-
-// escrita a partir de um valor lido antes pelo chamador - senão
-// tentativas concorrentes leem o mesmo contador desatualizado e todas
-// escrevem "valor lido + 1", deixando o contador bem menor que o número
-// real de tentativas e o bloqueio nunca dispara sob força bruta paralela.
-export async function registrarFalhaTotp(userId: string) {
-  const usuario = await prisma.user.update({
-    where: { id: userId },
-    data: { totpTentativasFalhas: { increment: 1 } },
-    select: { totpTentativasFalhas: true },
-  });
-
-  if (usuario.totpTentativasFalhas >= LIMITE_TENTATIVAS) {
-    await prisma.user.update({
-      where: { id: userId },
-      data: { totpTentativasFalhas: 0, totpBloqueadoAte: new Date(Date.now() + BLOQUEIO_MS) },
-    });
-  }
-}
+export const registrarFalhaTotp = contador.registrarFalha;
 
 // novoTimeStep vem de um login por TOTP de verdade (não por código de
 // backup, que tem sua própria proteção de uso único) - persistido na
