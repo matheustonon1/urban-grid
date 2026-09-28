@@ -84,7 +84,11 @@ describe("enviarResumosSemanaisPendentes", () => {
 
   it("filtra reclamações por categoria quando a assinatura tem uma", async () => {
     vi.mocked(prisma.assinaturaCidade.findMany).mockResolvedValue([
-      { ...assinaturaBase, categoriaId: "categoria-1", categoria: { nome: "Buracos" } },
+      {
+        ...assinaturaBase,
+        categoriaId: "categoria-1",
+        categoria: { nome: "Buracos e pavimentação", slug: "buracos-e-pavimentacao" },
+      },
     ] as never);
     vi.mocked(prisma.reclamacao.count).mockResolvedValue(1);
 
@@ -93,6 +97,41 @@ describe("enviarResumosSemanaisPendentes", () => {
     expect(prisma.reclamacao.count).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({ categoriaId: "categoria-1" }),
+      })
+    );
+  });
+
+  it("traduz o nome da categoria pro idioma do destinatário", async () => {
+    vi.mocked(prisma.assinaturaCidade.findMany).mockResolvedValue([
+      {
+        ...assinaturaBase,
+        user: { email: "pessoa@exemplo.com", idioma: "en" },
+        categoriaId: "categoria-1",
+        categoria: { nome: "Buracos e pavimentação", slug: "buracos-e-pavimentacao" },
+      },
+    ] as never);
+    vi.mocked(prisma.reclamacao.count).mockResolvedValue(2);
+
+    await enviarResumosSemanaisPendentes();
+
+    expect(enviosCapturados).toHaveLength(1);
+    expect(enviosCapturados[0].html).toContain("Potholes and paving");
+    expect(enviosCapturados[0].html).not.toContain("Buracos");
+  });
+
+  it("não inclui usuário banido no momento na consulta de assinaturas elegíveis", async () => {
+    vi.mocked(prisma.assinaturaCidade.findMany).mockResolvedValue([]);
+
+    await enviarResumosSemanaisPendentes();
+
+    expect(prisma.assinaturaCidade.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          user: expect.objectContaining({
+            ativo: true,
+            OR: [{ banidoAte: null }, { banidoAte: { lte: expect.any(Date) } }],
+          }),
+        }),
       })
     );
   });

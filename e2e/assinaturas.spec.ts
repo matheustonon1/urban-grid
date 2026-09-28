@@ -2,7 +2,12 @@ import { expect, test } from "@playwright/test";
 
 import { prisma } from "@/lib/prisma";
 
-import { criarCidadaoTeste, limparDadosTeste } from "./helpers";
+import {
+  apagarLogsDeModeracao,
+  criarCidadaoTeste,
+  criarReclamacaoTeste,
+  limparDadosTeste,
+} from "./helpers";
 
 test.afterAll(async () => {
   await limparDadosTeste();
@@ -65,17 +70,34 @@ test("cron de resumo semanal exige o segredo certo e processa assinaturas elegí
     data: { userId: usuario.id, cidadeId: cidade.id },
   });
 
+  // Reclamação publicada DEPOIS da assinatura - é isto que faz o job achar
+  // conteúdo novo pra contar (desde = assinatura.createdAt, quando nunca
+  // houve envio ainda). Sem isso o teste só provaria o caminho "sem nada
+  // novo", que já não é o mais importante de garantir.
+  const reclamacao = await criarReclamacaoTeste(usuario.id, { cidadeId: cidade.id });
+
   const resposta = await request.get("/api/cron/resumo-semanal", {
     headers: { authorization: `Bearer ${process.env.CRON_SECRET}` },
   });
   expect(resposta.status()).toBe(200);
   const corpo = await resposta.json();
   expect(corpo.processadas).toBeGreaterThanOrEqual(1);
+  expect(corpo.comConteudo).toBeGreaterThanOrEqual(1);
 
   const assinaturaAtualizada = await prisma.assinaturaCidade.findUniqueOrThrow({
     where: { id: assinatura.id },
   });
   expect(assinaturaAtualizada.ultimoEnvioEm).not.toBeNull();
 
+  // Rodar de novo imediatamente não reprocessa a mesma assinatura - ela
+  // acabou de ser marcada, e o próximo envio só é elegível em 7 dias.
+  const segundaExecucao = await request.get("/api/cron/resumo-semanal", {
+    headers: { authorization: `Bearer ${process.env.CRON_SECRET}` },
+  });
+  const corpoSegunda = await segundaExecucao.json();
+  expect(corpoSegunda.processadas).toBe(0);
+
+  await apagarLogsDeModeracao({ id: reclamacao.id });
+  await prisma.reclamacao.delete({ where: { id: reclamacao.id } });
   await prisma.assinaturaCidade.deleteMany({ where: { userId: usuario.id } });
 });

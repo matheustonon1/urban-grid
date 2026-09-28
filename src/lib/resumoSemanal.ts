@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { enviarEmailResumoSemanal } from "@/lib/email";
 import { montarUrl } from "@/lib/url";
 import { idiomaOuPadrao } from "@/i18n/config";
+import { nomeCategoriaTraduzido } from "@/lib/categoriaI18n";
 import { STATUS_PUBLICOS } from "@/lib/statusPublicos";
 
 export const INTERVALO_RESUMO_MS = 7 * 24 * 60 * 60 * 1000;
@@ -28,17 +29,25 @@ export async function enviarResumosSemanaisPendentes(): Promise<{
   const assinaturas = await prisma.assinaturaCidade.findMany({
     where: {
       OR: [{ ultimoEnvioEm: null }, { ultimoEnvioEm: { lte: limiteUltimoEnvio } }],
-      // Conta anonimizada (excluirConta) ou banida não deve receber e-mail -
-      // fica com o endereço fake removido-<id>@urbangrid.local, ou banida
-      // não devia continuar recebendo. Mesmo critério de
-      // criarNotificacao(): exige e-mail verificado.
-      user: { ativo: true, emailVerified: { not: null } },
+      user: {
+        // Conta excluída/anonimizada (ativo=false) fica com o endereço
+        // fake removido-<id>@urbangrid.local - excluirConta() já apaga a
+        // própria assinatura nesse caso (ver painel/conta/actions.ts),
+        // então isto é defesa em profundidade. Banimento é temporário
+        // (banidoAte no futuro ou nulo) - suspende o envio enquanto durar,
+        // sem cancelar a assinatura, e volta sozinho quando o banimento
+        // expirar. Mesmo critério de criarNotificacao(): exige e-mail
+        // verificado.
+        ativo: true,
+        emailVerified: { not: null },
+        OR: [{ banidoAte: null }, { banidoAte: { lte: agora } }],
+      },
     },
     take: LIMITE_POR_EXECUCAO,
     include: {
       user: { select: { email: true, idioma: true } },
       cidade: { select: { nome: true, slug: true } },
-      categoria: { select: { nome: true } },
+      categoria: { select: { nome: true, slug: true } },
     },
   });
 
@@ -59,13 +68,16 @@ export async function enviarResumosSemanaisPendentes(): Promise<{
     if (total > 0) {
       comConteudo++;
       try {
+        const locale = idiomaOuPadrao(assinatura.user.idioma);
         await enviarEmailResumoSemanal({
           email: assinatura.user.email,
-          nomeCidade: `${assinatura.cidade.nome}`,
-          nomeCategoria: assinatura.categoria?.nome ?? null,
+          nomeCidade: assinatura.cidade.nome,
+          nomeCategoria: assinatura.categoria
+            ? nomeCategoriaTraduzido(assinatura.categoria.slug, assinatura.categoria.nome, locale)
+            : null,
           total,
           url: montarUrl(`/cidades/${assinatura.cidade.slug}`),
-          locale: idiomaOuPadrao(assinatura.user.idioma),
+          locale,
         });
       } catch (erro) {
         // Mesmo padrão de criarNotificacao(): uma falha de envio não pode

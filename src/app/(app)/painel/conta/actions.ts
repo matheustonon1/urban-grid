@@ -203,6 +203,11 @@ export async function excluirConta(
         ativo: false,
       },
     }),
+    // ativo=false já impede o cron de resumo semanal de mandar e-mail pra
+    // cá (ver filtro em resumoSemanal.ts), mas a assinatura em si ficaria
+    // órfã no banco pra sempre sem isso - ninguém nunca mais vai cancelá-la
+    // pela tela, já que a conta não loga mais.
+    prisma.assinaturaCidade.deleteMany({ where: { userId: usuario.id } }),
     prisma.reclamacao.updateMany({
       where: { autorId: usuario.id },
       data: { anonima: true },
