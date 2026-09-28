@@ -2,11 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { criarNotificacao } from "@/lib/notificacoes";
 
 import { exigirModerador } from "../moderacao/exigir-moderador";
+import { exigirAdmin } from "../solicitacoes-orgao/exigir-admin";
 
 async function buscarDenunciaAberta(denunciaId: string) {
   return prisma.denuncia.findFirst({
@@ -34,27 +34,26 @@ export async function marcarImprocedente(denunciaId: string) {
   revalidatePath("/denuncias");
 }
 
-export async function marcarProcedente(denunciaId: string) {
-  const session = await exigirModerador();
-
-  const denuncia = await buscarDenunciaAberta(denunciaId);
-  if (!denuncia || denuncia.alvoTipo !== "RECLAMACAO") {
-    return;
-  }
-
+// Compartilhado por marcarProcedente() e banirAutor() - banir o autor é,
+// no mínimo, concordar que a denúncia procede (e normalmente mais grave
+// que isso), então fecha a denúncia do mesmo jeito: arquiva a reclamação
+// e avisa o autor. Sem isto, banirAutor() deixava a denúncia em ABERTA
+// pra sempre, reaparecendo na fila mesmo com o problema já resolvido.
+async function resolverComoProcedente(
+  denuncia: { id: string; alvoId: string },
+  moderadorId: string
+) {
   const reclamacao = await prisma.reclamacao.findUnique({
     where: { id: denuncia.alvoId },
   });
   if (!reclamacao) {
-    return;
+    return null;
   }
-
-  const agora = new Date();
 
   await prisma.$transaction([
     prisma.denuncia.update({
       where: { id: denuncia.id },
-      data: { status: "PROCEDENTE", analisadoPorId: session.user.id, analisadoEm: agora },
+      data: { status: "PROCEDENTE", analisadoPorId: moderadorId, analisadoEm: new Date() },
     }),
     prisma.reclamacao.update({
       where: { id: reclamacao.id },
@@ -71,9 +70,23 @@ export async function marcarProcedente(denunciaId: string) {
     protocolo: reclamacao.protocolo,
   });
 
-  revalidatePath("/denuncias");
   revalidatePath("/reclamacoes");
   revalidatePath(`/reclamacoes/${reclamacao.protocolo}`);
+
+  return reclamacao;
+}
+
+export async function marcarProcedente(denunciaId: string) {
+  const session = await exigirModerador();
+
+  const denuncia = await buscarDenunciaAberta(denunciaId);
+  if (!denuncia || denuncia.alvoTipo !== "RECLAMACAO") {
+    return;
+  }
+
+  await resolverComoProcedente(denuncia, session.user.id);
+
+  revalidatePath("/denuncias");
 }
 
 const DIAS_BANIMENTO: Record<string, number> = {
@@ -83,26 +96,21 @@ const DIAS_BANIMENTO: Record<string, number> = {
 };
 
 export async function banirAutor(denunciaId: string, formData: FormData) {
-  const session = await auth();
-  if (session?.user?.papel !== "ADMIN") {
-    return;
-  }
+  const session = await exigirAdmin();
 
-  const denuncia = await prisma.denuncia.findUnique({ where: { id: denunciaId } });
+  const denuncia = await buscarDenunciaAberta(denunciaId);
   if (!denuncia || denuncia.alvoTipo !== "RECLAMACAO") {
-    return;
-  }
-
-  const reclamacao = await prisma.reclamacao.findUnique({
-    where: { id: denuncia.alvoId },
-  });
-  if (!reclamacao) {
     return;
   }
 
   const duracao = String(formData.get("duracao"));
   const dias = DIAS_BANIMENTO[duracao];
   if (!dias) {
+    return;
+  }
+
+  const reclamacao = await resolverComoProcedente(denuncia, session.user.id);
+  if (!reclamacao) {
     return;
   }
 
