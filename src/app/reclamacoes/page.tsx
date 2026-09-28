@@ -39,29 +39,41 @@ export default async function ReclamacoesPublicasPage({
       : {}),
   };
 
-  const [reclamacoes, totalReclamacoes, cidadeFiltro, categoriasAtivas] = await Promise.all([
-    prisma.reclamacao.findMany({
-      where: filtro,
-      orderBy: { publicadaEm: "desc" },
-      include: {
-        categoria: true,
-        cidade: true,
-        _count: { select: { confirmacoes: true } },
-        midias: { orderBy: { ordem: "asc" }, take: 1 },
-      },
-      skip: calcularSkip(paginaAtual),
-      take: ITENS_POR_PAGINA,
-    }),
-    prisma.reclamacao.count({ where: filtro }),
-    cidadeIdFiltro
-      ? prisma.cidade.findUnique({
-          where: { id: cidadeIdFiltro },
-          select: { id: true, nome: true, slug: true, estado: { select: { uf: true } } },
-        })
-      : null,
-    prisma.categoria.findMany({ where: { ativa: true }, orderBy: { ordem: "asc" } }),
-  ]);
+  const [reclamacoes, totalReclamacoes, cidadeFiltro, categoriasAtivas, categoriaFiltroInativa] =
+    await Promise.all([
+      prisma.reclamacao.findMany({
+        where: filtro,
+        orderBy: { publicadaEm: "desc" },
+        include: {
+          categoria: true,
+          cidade: true,
+          _count: { select: { confirmacoes: true } },
+          midias: { orderBy: { ordem: "asc" }, take: 1 },
+        },
+        skip: calcularSkip(paginaAtual),
+        take: ITENS_POR_PAGINA,
+      }),
+      prisma.reclamacao.count({ where: filtro }),
+      cidadeIdFiltro
+        ? prisma.cidade.findUnique({
+            where: { id: cidadeIdFiltro },
+            select: { id: true, nome: true, slug: true, estado: { select: { uf: true } } },
+          })
+        : null,
+      prisma.categoria.findMany({ where: { ativa: true }, orderBy: { ordem: "asc" } }),
+      // Um link salvo/compartilhado pode apontar pra uma categoria
+      // desativada depois - o filtro em si continua valendo (aplicado
+      // acima em `filtro`), então o chip/seletor precisam conseguir
+      // mostrá-la mesmo fora da lista de categorias ativas, ou a pessoa
+      // vê uma lista filtrada sem nenhuma indicação visível do porquê.
+      categoriaIdFiltro
+        ? prisma.categoria.findFirst({ where: { id: categoriaIdFiltro, ativa: false } })
+        : null,
+    ]);
   const totalPaginas = calcularTotalPaginas(totalReclamacoes);
+  const categoriasParaFiltro = categoriaFiltroInativa
+    ? [...categoriasAtivas, categoriaFiltroInativa]
+    : categoriasAtivas;
 
   return (
     <main className={containerPagina}>
@@ -70,7 +82,7 @@ export default async function ReclamacoesPublicasPage({
       </h1>
 
       <FiltroReclamacoes
-        categorias={categoriasAtivas}
+        categorias={categoriasParaFiltro}
         categoriaIdFiltro={categoriaIdFiltro}
         cidadeFiltro={
           cidadeFiltro

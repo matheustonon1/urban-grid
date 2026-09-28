@@ -73,3 +73,35 @@ test("categoria e cidade filtram na hora, busca exige o botão, chips removem in
   await expect(page.getByRole("link", { name: reclamacaoA.titulo })).toBeVisible();
   await expect(page.getByText(reclamacaoB.titulo)).not.toBeVisible();
 });
+
+test("categoria desativada continua indicada no filtro (link salvo/compartilhado antes da desativação)", async ({
+  page,
+}) => {
+  const categoriaInativa = await prisma.categoria.create({
+    data: {
+      nome: `Categoria E2E inativa ${Date.now()}`,
+      slug: `categoria-e2e-inativa-${Date.now()}`,
+      ativa: false,
+      ordem: 999,
+    },
+  });
+
+  try {
+    await page.goto(`/reclamacoes?categoriaId=${categoriaInativa.id}`);
+
+    // Bug corrigido: o filtro continuava valendo no servidor (a listagem
+    // já vinha vazia/filtrada), mas nem o botão do seletor nem o chip
+    // mostravam qual categoria estava filtrando, nem davam como limpar.
+    await expect(
+      page.getByRole("button", { name: categoriaInativa.nome, exact: true })
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: new RegExp(`Remover filtro.*${categoriaInativa.nome}`) })
+    ).toBeVisible();
+
+    await page.getByRole("link", { name: "limpar tudo" }).click();
+    await expect(page).not.toHaveURL(/categoriaId=/);
+  } finally {
+    await prisma.categoria.delete({ where: { id: categoriaInativa.id } });
+  }
+});
