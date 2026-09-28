@@ -9,17 +9,11 @@ import { prisma } from "@/lib/prisma";
 import { criarNotificacao } from "@/lib/notificacoes";
 import { precisaVerificarEmail } from "@/lib/verificacao";
 import { moderarComentario } from "@/lib/moderacaoComentario";
+import { STATUS_PUBLICOS } from "@/lib/statusPublicos";
 
 import { criarComentarioSchema } from "./definitions";
 
 const LIMITE_COMENTARIOS_DIA = 20;
-
-const STATUS_PUBLICOS = [
-  "PUBLICADA",
-  "EM_ANDAMENTO",
-  "RESOLVIDA",
-  "ARQUIVADA",
-] as const;
 
 export async function criarComentario(
   reclamacaoId: string,

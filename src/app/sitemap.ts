@@ -2,8 +2,7 @@ import type { MetadataRoute } from "next";
 
 import { prisma } from "@/lib/prisma";
 import { urlBase } from "@/lib/url";
-
-const STATUS_PUBLICOS = ["PUBLICADA", "EM_ANDAMENTO", "RESOLVIDA", "ARQUIVADA"] as const;
+import { STATUS_PUBLICOS } from "@/lib/statusPublicos";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = urlBase();

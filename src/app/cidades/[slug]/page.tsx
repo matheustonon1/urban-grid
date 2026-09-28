@@ -9,15 +9,9 @@ import { StatusBadge } from "@/components/status-badge";
 import { CategoriaIcon } from "@/components/categoria-icon";
 import { botaoPrimario, campoInput, cartao, containerPagina } from "@/lib/estilos";
 import { calcularMetricasOrgao, classificarIndice } from "@/lib/reputacaoOrgao";
+import { STATUS_PUBLICOS } from "@/lib/statusPublicos";
 
 import { SeguirCidade } from "./seguir-cidade";
-
-const STATUS_PUBLICOS = [
-  "PUBLICADA",
-  "EM_ANDAMENTO",
-  "RESOLVIDA",
-  "ARQUIVADA",
-] as const;
 
 const TAMANHO_PAGINA = 10;
 
