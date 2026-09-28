@@ -35,9 +35,20 @@ export async function criarNotificacao({
   reclamacaoId?: string;
   protocolo?: string;
 }) {
-  await prisma.notificacao.create({
-    data: { userId, tipo, titulo, mensagem, reclamacaoId },
-  });
+  // Quem chama (aprovar/rejeitar reclamação ou comentário, resposta
+  // oficial, denúncia, etc.) já commitou a própria mudança de estado
+  // antes de chegar aqui - uma falha nesta escrita (blip de banco, FK)
+  // não pode propagar e virar um erro pro moderador/usuário depois que a
+  // ação principal já teve efeito. Mesmo espírito do try/catch já
+  // existente logo abaixo pro envio de e-mail.
+  try {
+    await prisma.notificacao.create({
+      data: { userId, tipo, titulo, mensagem, reclamacaoId },
+    });
+  } catch (erro) {
+    console.error("Falha ao criar notificação:", erro);
+    return;
+  }
 
   if (!TIPOS_COM_EMAIL.includes(tipo)) {
     return;
