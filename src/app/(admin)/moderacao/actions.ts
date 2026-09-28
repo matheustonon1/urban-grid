@@ -46,24 +46,33 @@ export async function aprovarReclamacao(reclamacaoId: string) {
   const agora = new Date();
   const log = await buscarLogPendente(reclamacaoId);
 
-  await prisma.$transaction([
-    prisma.reclamacao.update({
-      where: { id: reclamacaoId },
+  // updateMany com o status na condição (não update por id sozinho) faz
+  // da leitura+escrita um passo atômico de verdade: se outra decisão
+  // (aprovar ou rejeitar) já mudou o status entre o findUnique acima e
+  // aqui, count vem 0 e nada mais acontece - sem isso, dois moderadores
+  // clicando quase ao mesmo tempo (ou duplo clique) podiam aprovar E
+  // rejeitar a mesma reclamação, cada write vencendo por último, com o
+  // autor recebendo as duas notificações.
+  const aplicado = await prisma.$transaction(async (tx) => {
+    const atualizacao = await tx.reclamacao.updateMany({
+      where: { id: reclamacaoId, status: "AGUARDANDO_REVISAO" },
       data: { status: "PUBLICADA", publicadaEm: agora },
-    }),
-    ...(log
-      ? [
-          prisma.logModeracao.update({
-            where: { id: log.id },
-            data: {
-              revisadoPorId: session.user.id,
-              decisaoFinal: "APROVAR",
-              revisadoEm: agora,
-            },
-          }),
-        ]
-      : []),
-  ]);
+    });
+    if (atualizacao.count === 0) {
+      return false;
+    }
+    if (log) {
+      await tx.logModeracao.update({
+        where: { id: log.id },
+        data: { revisadoPorId: session.user.id, decisaoFinal: "APROVAR", revisadoEm: agora },
+      });
+    }
+    return true;
+  });
+
+  if (!aplicado) {
+    return;
+  }
 
   await criarNotificacao({
     userId: reclamacao.autorId,
@@ -102,24 +111,27 @@ export async function rejeitarReclamacao(
   const agora = new Date();
   const log = await buscarLogPendente(reclamacaoId);
 
-  await prisma.$transaction([
-    prisma.reclamacao.update({
-      where: { id: reclamacaoId },
+  // Mesma guarda atômica de aprovarReclamacao() - ver comentário lá.
+  const aplicado = await prisma.$transaction(async (tx) => {
+    const atualizacao = await tx.reclamacao.updateMany({
+      where: { id: reclamacaoId, status: "AGUARDANDO_REVISAO" },
       data: { status: "REJEITADA", motivoRejeicao: validado.data.motivo },
-    }),
-    ...(log
-      ? [
-          prisma.logModeracao.update({
-            where: { id: log.id },
-            data: {
-              revisadoPorId: session.user.id,
-              decisaoFinal: "REPROVAR",
-              revisadoEm: agora,
-            },
-          }),
-        ]
-      : []),
-  ]);
+    });
+    if (atualizacao.count === 0) {
+      return false;
+    }
+    if (log) {
+      await tx.logModeracao.update({
+        where: { id: log.id },
+        data: { revisadoPorId: session.user.id, decisaoFinal: "REPROVAR", revisadoEm: agora },
+      });
+    }
+    return true;
+  });
+
+  if (!aplicado) {
+    return;
+  }
 
   await criarNotificacao({
     userId: reclamacao.autorId,
