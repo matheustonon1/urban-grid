@@ -9,11 +9,12 @@ export function criarRespostaOficialSchema(t: T) {
     novoStatus: z
       .union([z.literal(""), z.enum(["EM_ANDAMENTO", "RESOLVIDA"])])
       .transform((valor) => (valor === "" ? undefined : valor)),
+    // z.iso.date() valida a data de verdade (rejeita "2024-13-40" ou
+    // "2024-02-30"), não só o formato - a regex antiga aceitava qualquer
+    // dígito nas posições certas, e um valor assim virava Invalid Date
+    // mais adiante em actions.ts, sem try/catch, quebrando a request.
     prazoEstimado: z
-      .union([
-        z.literal(""),
-        z.string().regex(/^\d{4}-\d{2}-\d{2}$/, { error: t("erroDataInvalida") }),
-      ])
+      .union([z.literal(""), z.iso.date({ error: t("erroDataInvalida") })])
       .transform((valor) => (valor === "" ? undefined : valor)),
   });
 }

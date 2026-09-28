@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { criarNotificacao } from "@/lib/notificacoes";
 import { orgaoAtendeCategoria } from "@/lib/orgaoCategoria";
 import { precisaVerificarEmail } from "@/lib/verificacao";
+import { STATUS_PUBLICOS } from "@/lib/statusPublicos";
 
 import {
   criarAvaliacaoSchema,
@@ -21,13 +22,6 @@ import { exigirOrgao } from "./exigir-orgao";
 const LIMITE_DENUNCIAS_DIA = 10;
 const JANELA_RAJADA_MINUTOS = 30;
 const LIMITE_CONFIRMACOES_RAJADA = 15;
-
-const STATUS_PUBLICOS = [
-  "PUBLICADA",
-  "EM_ANDAMENTO",
-  "RESOLVIDA",
-  "ARQUIVADA",
-] as const;
 
 export async function alternarConfirmacao(
   reclamacaoId: string,
