@@ -224,7 +224,8 @@
     "denuncias": "Denúncias",
     "estatisticas": "Estatísticas",
     "solicitacoes": "Solicitações",
-    "categorias": "Categorias"
+    "categorias": "Categorias",
+    "banimentos": "Banimentos"
   },
   "Moderacao": {
     "titulo": "Fila de moderação",
@@ -696,5 +697,13 @@
       "botao": "Ver reclamações",
       "rodape": "Você recebeu este e-mail porque assina o resumo semanal desta cidade. Cancele quando quiser em Minha conta > Assinaturas."
     }
+  },
+  "Banimentos": {
+    "titulo": "Banimentos ativos",
+    "descricao": "Contas com acesso suspenso no momento. Reverter libera o login imediatamente.",
+    "nenhumBanido": "Nenhuma conta banida no momento.",
+    "banidoAte": "Banido até {data}",
+    "banidoPermanente": "Banimento permanente",
+    "reverter": "Reverter banimento"
   }
 }

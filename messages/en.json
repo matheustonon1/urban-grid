@@ -224,7 +224,8 @@
     "denuncias": "Reports",
     "estatisticas": "Statistics",
     "solicitacoes": "Requests",
-    "categorias": "Categories"
+    "categorias": "Categories",
+    "banimentos": "Bans"
   },
   "Moderacao": {
     "titulo": "Moderation queue",
@@ -696,5 +697,13 @@
       "botao": "View complaints",
       "rodape": "You received this e-mail because you subscribed to this city's weekly summary. Cancel anytime in My Account > Subscriptions."
     }
+  },
+  "Banimentos": {
+    "titulo": "Active bans",
+    "descricao": "Accounts currently suspended. Reverting restores access immediately.",
+    "nenhumBanido": "No banned accounts at the moment.",
+    "banidoAte": "Banned until {data}",
+    "banidoPermanente": "Permanent ban",
+    "reverter": "Revert ban"
   }
 }

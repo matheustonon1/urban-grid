@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import {
   BarChart3,
+  Ban,
   ClipboardList,
   Flag,
   ListChecks,
@@ -30,6 +31,7 @@ const ITENS_MODERADOR: ItemNav[] = [
 const ITENS_ADMIN: ItemNav[] = [
   { href: "/solicitacoes-orgao", chave: "solicitacoes", icone: ShieldCheck },
   { href: "/orgaos-categorias", chave: "categorias", icone: ListChecks },
+  { href: "/banimentos", chave: "banimentos", icone: Ban },
 ];
 
 export function AdminNav({ ehAdmin }: { ehAdmin: boolean }) {
