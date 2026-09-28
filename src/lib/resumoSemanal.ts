@@ -1,3 +1,5 @@
+import type { AssinaturaCidade, Categoria, Cidade, User } from "@prisma/client";
+
 import { prisma } from "@/lib/prisma";
 import { enviarEmailResumoSemanal } from "@/lib/email";
 import { montarUrl } from "@/lib/url";
@@ -12,6 +14,64 @@ export const INTERVALO_RESUMO_MS = 7 * 24 * 60 * 60 * 1000;
 // que uma execução manual/reexecução acidental tente mandar milhares de
 // e-mails de uma vez.
 const LIMITE_POR_EXECUCAO = 500;
+
+// Quantas assinaturas processar em paralelo por vez. Cada uma faz uma
+// consulta ao banco e potencialmente uma chamada ao Resend - totalmente
+// sequencial (uma de cada vez) fazia a fila inteira esperar a latência de
+// rede de cada e-mail somada, arriscando estourar o limite de duração de
+// função da Vercel conforme a base de assinantes cresce. Um número
+// pequeno é suficiente aqui (não é CPU-bound) e evita abrir conexões
+// demais de uma vez com o banco/provedor de e-mail.
+const TAMANHO_DO_LOTE = 10;
+
+type AssinaturaComRelacoes = AssinaturaCidade & {
+  user: Pick<User, "email" | "idioma">;
+  cidade: Pick<Cidade, "nome" | "slug">;
+  categoria: Pick<Categoria, "nome" | "slug"> | null;
+};
+
+async function processarAssinatura(
+  assinatura: AssinaturaComRelacoes,
+  agora: Date
+): Promise<{ teveConteudo: boolean }> {
+  const desde = assinatura.ultimoEnvioEm ?? assinatura.createdAt;
+
+  const total = await prisma.reclamacao.count({
+    where: {
+      cidadeId: assinatura.cidadeId,
+      ...(assinatura.categoriaId ? { categoriaId: assinatura.categoriaId } : {}),
+      status: { in: [...STATUS_PUBLICOS] },
+      publicadaEm: { gt: desde },
+    },
+  });
+
+  if (total > 0) {
+    try {
+      const locale = idiomaOuPadrao(assinatura.user.idioma);
+      await enviarEmailResumoSemanal({
+        email: assinatura.user.email,
+        nomeCidade: assinatura.cidade.nome,
+        nomeCategoria: assinatura.categoria
+          ? nomeCategoriaTraduzido(assinatura.categoria.slug, assinatura.categoria.nome, locale)
+          : null,
+        total,
+        url: montarUrl(`/cidades/${assinatura.cidade.slug}`),
+        locale,
+      });
+    } catch (erro) {
+      // Mesmo padrão de criarNotificacao(): uma falha de envio não pode
+      // travar o processamento das outras assinaturas da fila.
+      console.error("Falha ao enviar resumo semanal:", erro);
+    }
+  }
+
+  await prisma.assinaturaCidade.update({
+    where: { id: assinatura.id },
+    data: { ultimoEnvioEm: agora },
+  });
+
+  return { teveConteudo: total > 0 };
+}
 
 // Dispara o resumo semanal de cada assinatura elegível (nunca enviado, ou
 // enviado há 7 dias ou mais) e sempre marca ultimoEnvioEm = agora ao
@@ -53,43 +113,12 @@ export async function enviarResumosSemanaisPendentes(): Promise<{
 
   let comConteudo = 0;
 
-  for (const assinatura of assinaturas) {
-    const desde = assinatura.ultimoEnvioEm ?? assinatura.createdAt;
-
-    const total = await prisma.reclamacao.count({
-      where: {
-        cidadeId: assinatura.cidadeId,
-        ...(assinatura.categoriaId ? { categoriaId: assinatura.categoriaId } : {}),
-        status: { in: [...STATUS_PUBLICOS] },
-        publicadaEm: { gt: desde },
-      },
-    });
-
-    if (total > 0) {
-      comConteudo++;
-      try {
-        const locale = idiomaOuPadrao(assinatura.user.idioma);
-        await enviarEmailResumoSemanal({
-          email: assinatura.user.email,
-          nomeCidade: assinatura.cidade.nome,
-          nomeCategoria: assinatura.categoria
-            ? nomeCategoriaTraduzido(assinatura.categoria.slug, assinatura.categoria.nome, locale)
-            : null,
-          total,
-          url: montarUrl(`/cidades/${assinatura.cidade.slug}`),
-          locale,
-        });
-      } catch (erro) {
-        // Mesmo padrão de criarNotificacao(): uma falha de envio não pode
-        // travar o processamento das outras assinaturas da fila.
-        console.error("Falha ao enviar resumo semanal:", erro);
-      }
-    }
-
-    await prisma.assinaturaCidade.update({
-      where: { id: assinatura.id },
-      data: { ultimoEnvioEm: agora },
-    });
+  for (let inicio = 0; inicio < assinaturas.length; inicio += TAMANHO_DO_LOTE) {
+    const lote = assinaturas.slice(inicio, inicio + TAMANHO_DO_LOTE);
+    const resultados = await Promise.all(
+      lote.map((assinatura) => processarAssinatura(assinatura, agora))
+    );
+    comConteudo += resultados.filter((resultado) => resultado.teveConteudo).length;
   }
 
   return { processadas: assinaturas.length, comConteudo };

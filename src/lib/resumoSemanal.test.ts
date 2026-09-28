@@ -136,6 +136,34 @@ describe("enviarResumosSemanaisPendentes", () => {
     );
   });
 
+  it("processa todas as assinaturas mesmo atravessando mais de um lote (loteamento não perde nem duplica)", async () => {
+    // TAMANHO_DO_LOTE em resumoSemanal.ts é 10 - 12 assinaturas cobre
+    // um lote cheio mais um lote parcial, o ponto mais provável de um
+    // off-by-one na divisão em fatias.
+    const total = 12;
+    const assinaturas = Array.from({ length: total }, (_, indice) => ({
+      ...assinaturaBase,
+      id: `assinatura-${indice}`,
+      user: { email: `pessoa-${indice}@exemplo.com`, idioma: "pt-BR" },
+    }));
+    vi.mocked(prisma.assinaturaCidade.findMany).mockResolvedValue(assinaturas as never);
+    vi.mocked(prisma.reclamacao.count).mockResolvedValue(1);
+
+    const resultado = await enviarResumosSemanaisPendentes();
+
+    expect(resultado).toEqual({ processadas: total, comConteudo: total });
+    expect(enviosCapturados).toHaveLength(total);
+    expect(prisma.assinaturaCidade.update).toHaveBeenCalledTimes(total);
+    // Cada assinatura foi atualizada individualmente (id certo), não só
+    // "algumas vezes com algum id" - confere que nenhuma ficou de fora.
+    for (const assinatura of assinaturas) {
+      expect(prisma.assinaturaCidade.update).toHaveBeenCalledWith({
+        where: { id: assinatura.id },
+        data: { ultimoEnvioEm: expect.any(Date) },
+      });
+    }
+  });
+
   it("sem assinaturas elegíveis, não processa nada", async () => {
     vi.mocked(prisma.assinaturaCidade.findMany).mockResolvedValue([]);
 
