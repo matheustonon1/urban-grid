@@ -9,41 +9,57 @@ import { getGeminiClient } from "./gemini";
 const MODELO = "gemini-3.6-flash";
 const VERSAO_PROMPT = "v2";
 
-const RESPONSE_SCHEMA = {
-  type: Type.OBJECT,
-  properties: {
-    scoreOfensivo: { type: Type.NUMBER },
-    scoreSpam: { type: Type.NUMBER },
-    scoreDadosPessoais: { type: Type.NUMBER },
-    scoreForaEscopo: { type: Type.NUMBER },
-    scoreDesinformacao: { type: Type.NUMBER },
-    scoreImagemImpropria: { type: Type.NUMBER },
-    coerenciaTextoImagem: { type: Type.NUMBER },
-    regioesSensiveis: {
-      type: Type.ARRAY,
-      items: {
-        type: Type.OBJECT,
-        properties: {
-          midiaIndice: { type: Type.INTEGER },
-          ymin: { type: Type.NUMBER },
-          xmin: { type: Type.NUMBER },
-          ymax: { type: Type.NUMBER },
-          xmax: { type: Type.NUMBER },
+const CAMPOS_OBRIGATORIOS_BASE = [
+  "scoreOfensivo",
+  "scoreSpam",
+  "scoreDadosPessoais",
+  "scoreForaEscopo",
+  "scoreDesinformacao",
+  "justificativa",
+];
+
+// Com imagem(ns) anexada(s), os 3 campos de avaliação de imagem viram
+// obrigatórios no schema - sem isso, nada impedia o modelo de preencher
+// só os campos de texto e omitir os de imagem (o JSON schema do Gemini
+// permite qualquer campo não listado em `required` faltar). O código mais
+// abaixo trata campo de imagem ausente com o valor mais permissivo
+// (scoreImagemImpropria 0, coerenciaTextoImagem 1, regioesSensiveis []) -
+// pensado pro caso legítimo de "sem imagem nenhuma" (a própria instrução
+// no prompt pede isso), não pra mascarar uma resposta incompleta do
+// modelo quando havia imagem pra analisar e publicar a reclamação com
+// foto imprópria ou rosto/placa sem desfoque.
+function criarResponseSchema(temImagens: boolean) {
+  return {
+    type: Type.OBJECT,
+    properties: {
+      scoreOfensivo: { type: Type.NUMBER },
+      scoreSpam: { type: Type.NUMBER },
+      scoreDadosPessoais: { type: Type.NUMBER },
+      scoreForaEscopo: { type: Type.NUMBER },
+      scoreDesinformacao: { type: Type.NUMBER },
+      scoreImagemImpropria: { type: Type.NUMBER },
+      coerenciaTextoImagem: { type: Type.NUMBER },
+      regioesSensiveis: {
+        type: Type.ARRAY,
+        items: {
+          type: Type.OBJECT,
+          properties: {
+            midiaIndice: { type: Type.INTEGER },
+            ymin: { type: Type.NUMBER },
+            xmin: { type: Type.NUMBER },
+            ymax: { type: Type.NUMBER },
+            xmax: { type: Type.NUMBER },
+          },
+          required: ["midiaIndice", "ymin", "xmin", "ymax", "xmax"],
         },
-        required: ["midiaIndice", "ymin", "xmin", "ymax", "xmax"],
       },
+      justificativa: { type: Type.STRING },
     },
-    justificativa: { type: Type.STRING },
-  },
-  required: [
-    "scoreOfensivo",
-    "scoreSpam",
-    "scoreDadosPessoais",
-    "scoreForaEscopo",
-    "scoreDesinformacao",
-    "justificativa",
-  ],
-};
+    required: temImagens
+      ? [...CAMPOS_OBRIGATORIOS_BASE, "scoreImagemImpropria", "coerenciaTextoImagem", "regioesSensiveis"]
+      : CAMPOS_OBRIGATORIOS_BASE,
+  };
+}
 
 // Revalidação em cima do que a IA devolveu - o responseSchema do Gemini
 // já obriga o formato/tipos, mas não garante os LIMITES (ex.: nada
@@ -180,7 +196,7 @@ export async function moderarReclamacao(
       contents,
       config: {
         responseMimeType: "application/json",
-        responseSchema: RESPONSE_SCHEMA,
+        responseSchema: criarResponseSchema(imagens.length > 0),
       },
     });
 
@@ -195,6 +211,22 @@ export async function moderarReclamacao(
     if (!validado.success) {
       throw new Error(
         `Resposta do modelo de moderação fora do formato esperado: ${validado.error.message}`
+      );
+    }
+
+    // Defesa em profundidade além do responseSchema acima (que já pede os
+    // 3 campos como obrigatórios quando há imagem) - um responseSchema
+    // ignorado ou um provedor diferente no futuro não deixa esta checagem
+    // de valer. Sem isto, os valores permissivos de fallback abaixo
+    // aprovariam imagem nunca avaliada de verdade.
+    if (
+      imagens.length > 0 &&
+      (validado.data.scoreImagemImpropria === undefined ||
+        validado.data.coerenciaTextoImagem === undefined ||
+        validado.data.regioesSensiveis === undefined)
+    ) {
+      throw new Error(
+        "Resposta do modelo de moderação não avaliou a(s) imagem(ns) anexada(s)."
       );
     }
 
