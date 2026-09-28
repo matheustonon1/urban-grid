@@ -77,7 +77,8 @@ export async function confirmarTotp(
   }
 
   const segredo = decifrarSegredoTotp(usuario.totpSecret);
-  if (!(await codigoTotpValido(segredo, validado.data.codigo))) {
+  const resultado = await codigoTotpValido(segredo, validado.data.codigo);
+  if (!resultado.valido) {
     return { erros: { codigo: [t("erroCodigoInvalido")] } };
   }
 
@@ -86,11 +87,13 @@ export async function confirmarTotp(
 
   // As três escritas precisam ser atômicas: se a criação dos códigos de
   // backup falhasse fora dessa transação, uma conta poderia ficar com
-  // 2FA ativado e nenhum código de recuperação salvo.
+  // 2FA ativado e nenhum código de recuperação salvo. totpUltimoTimeStep
+  // já sai gravado com o código de confirmação, pra ele não poder ser
+  // reaproveitado no primeiro login (ver comentário em codigoTotpValido).
   await prisma.$transaction([
     prisma.user.update({
       where: { id: usuario.id },
-      data: { totpConfirmadoEm: new Date() },
+      data: { totpConfirmadoEm: new Date(), totpUltimoTimeStep: resultado.timeStep },
     }),
     prisma.totpBackupCode.deleteMany({ where: { userId: usuario.id } }),
     prisma.totpBackupCode.createMany({ data: dadosCodigosBackup }),

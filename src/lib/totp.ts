@@ -53,16 +53,33 @@ export function gerarQrCodeTotp(uri: string): Promise<string> {
   return QRCode.toDataURL(uri);
 }
 
-export async function codigoTotpValido(segredo: string, codigo: string): Promise<boolean> {
+// afterTimeStep (suporte nativo do otplib) rejeita qualquer código de uma
+// janela de 30s já usada ou anterior - sem isso, o mesmo código de 6
+// dígitos podia ser reaproveitado por qualquer um que o tivesse visto uma
+// vez (print de tela, log, malware no autenticador) durante toda a janela
+// de tolerância (~90s), já que só validar "é um código correto pra este
+// instante" não distingue "código já gasto" de "código novo". Quem chama
+// (auth.ts) precisa persistir o timeStep retornado em
+// User.totpUltimoTimeStep pra a proteção valer na tentativa seguinte.
+export async function codigoTotpValido(
+  segredo: string,
+  codigo: string,
+  ultimoTimeStepUsado?: number
+): Promise<{ valido: boolean; timeStep?: number }> {
   try {
     const resultado = await verify({
       secret: segredo,
       token: codigo.replace(/\s/g, ""),
       epochTolerance: TOLERANCIA_RELOGIO_SEGUNDOS,
+      afterTimeStep: ultimoTimeStepUsado,
     });
-    return resultado.valid;
+    if (!resultado.valid) {
+      return { valido: false };
+    }
+    const timeStep = "timeStep" in resultado ? resultado.timeStep : undefined;
+    return { valido: true, timeStep };
   } catch {
-    return false;
+    return { valido: false };
   }
 }
 
@@ -139,9 +156,17 @@ export async function registrarFalhaTotp(userId: string) {
   }
 }
 
-export async function resetarFalhasTotp(userId: string) {
+// novoTimeStep vem de um login por TOTP de verdade (não por código de
+// backup, que tem sua própria proteção de uso único) - persistido na
+// mesma escrita pra a próxima verificação já rejeitar esse timeStep (e
+// qualquer um anterior) via afterTimeStep em codigoTotpValido().
+export async function resetarFalhasTotp(userId: string, novoTimeStep?: number) {
   await prisma.user.update({
     where: { id: userId },
-    data: { totpTentativasFalhas: 0, totpBloqueadoAte: null },
+    data: {
+      totpTentativasFalhas: 0,
+      totpBloqueadoAte: null,
+      ...(novoTimeStep !== undefined ? { totpUltimoTimeStep: novoTimeStep } : {}),
+    },
   });
 }

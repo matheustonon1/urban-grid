@@ -72,18 +72,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
           const codigo = credentials?.codigoTotp;
           const segredo = decifrarSegredoTotp(usuario.totpSecret!);
-          const valido =
-            typeof codigo === "string" &&
-            codigo.length > 0 &&
-            ((await codigoTotpValido(segredo, codigo)) ||
-              (await consumirCodigoBackup(usuario.id, codigo)));
+
+          let valido = false;
+          let novoTimeStep: number | undefined;
+          if (typeof codigo === "string" && codigo.length > 0) {
+            const resultado = await codigoTotpValido(
+              segredo,
+              codigo,
+              usuario.totpUltimoTimeStep ?? undefined
+            );
+            if (resultado.valido) {
+              valido = true;
+              novoTimeStep = resultado.timeStep;
+            } else {
+              valido = await consumirCodigoBackup(usuario.id, codigo);
+            }
+          }
 
           if (!valido) {
             await registrarFalhaTotp(usuario.id);
             return null;
           }
 
-          await resetarFalhasTotp(usuario.id);
+          await resetarFalhasTotp(usuario.id, novoTimeStep);
         }
 
         return {

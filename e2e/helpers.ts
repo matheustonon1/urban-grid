@@ -113,9 +113,23 @@ export async function criarOrgaoTeste(
   return { orgao, usuario, email, senha };
 }
 
-export async function gerarCodigoTotpAtual(totpSecretCifrado: string): Promise<string> {
+// segundosNoFuturo desloca o epoch usado pra gerar o código - útil quando
+// o mesmo teste precisa de dois códigos em sequência rápida (ex.: ativa o
+// TOTP e loga com ele logo em seguida): sem isso, os dois podem cair na
+// mesma janela de 30s por coincidência de tempo real e gerar o MESMO
+// código, que codigoTotpValido() (proteção contra reuso) rejeitaria como
+// replay na segunda vez - correto em produção, só flakiness aqui no
+// teste. +30s garante uma janela seguinte sem depender de quão rápido o
+// teste roda, e ainda passa na tolerância de relógio do servidor.
+export async function gerarCodigoTotpAtual(
+  totpSecretCifrado: string,
+  opcoes?: { segundosNoFuturo?: number }
+): Promise<string> {
   const segredo = decifrarSegredoTotp(totpSecretCifrado);
-  return generate({ secret: segredo });
+  const epoch = opcoes?.segundosNoFuturo
+    ? Math.floor(Date.now() / 1000) + opcoes.segundosNoFuturo
+    : undefined;
+  return generate({ secret: segredo, epoch });
 }
 
 export async function criarReclamacaoTeste(

@@ -32,10 +32,12 @@ describe("gerarUriTotp", () => {
 });
 
 describe("codigoTotpValido", () => {
-  it("aceita um código gerado com o segredo correto", async () => {
+  it("aceita um código gerado com o segredo correto e retorna o timeStep", async () => {
     const segredo = gerarSegredoTotp();
     const codigo = await generate({ secret: segredo });
-    expect(await codigoTotpValido(segredo, codigo)).toBe(true);
+    const resultado = await codigoTotpValido(segredo, codigo);
+    expect(resultado.valido).toBe(true);
+    expect(resultado.timeStep).toEqual(expect.any(Number));
   });
 
   it("rejeita um código incorreto", async () => {
@@ -45,7 +47,7 @@ describe("codigoTotpValido", () => {
       .toString()
       .padStart(6, "0");
 
-    expect(await codigoTotpValido(segredo, codigoErrado)).toBe(false);
+    expect((await codigoTotpValido(segredo, codigoErrado)).valido).toBe(false);
   });
 
   it("rejeita um código gerado com outro segredo", async () => {
@@ -53,7 +55,33 @@ describe("codigoTotpValido", () => {
     const segredoB = gerarSegredoTotp();
     const codigoDeB = await generate({ secret: segredoB });
 
-    expect(await codigoTotpValido(segredoA, codigoDeB)).toBe(false);
+    expect((await codigoTotpValido(segredoA, codigoDeB)).valido).toBe(false);
+  });
+
+  // Cenário do bug corrigido: sem afterTimeStep, o mesmo código continuava
+  // valendo durante toda a janela de tolerância - qualquer um que o
+  // tivesse visto uma vez (print, log, malware no autenticador) podia
+  // reusá-lo pra logar de novo.
+  it("rejeita um código já usado (mesmo timeStep) quando o último usado é informado", async () => {
+    const segredo = gerarSegredoTotp();
+    const codigo = await generate({ secret: segredo });
+
+    const primeiraVez = await codigoTotpValido(segredo, codigo);
+    expect(primeiraVez.valido).toBe(true);
+
+    const reuso = await codigoTotpValido(segredo, codigo, primeiraVez.timeStep);
+    expect(reuso.valido).toBe(false);
+  });
+
+  it("aceita um código novo mesmo com um timeStep anterior já registrado", async () => {
+    const segredo = gerarSegredoTotp();
+    const codigo = await generate({ secret: segredo });
+    const primeiraVez = await codigoTotpValido(segredo, codigo);
+
+    // Um timeStep bem anterior ao atual não deveria bloquear o código de
+    // agora - só o mesmo timeStep (ou um posterior a ele) é que é rejeitado.
+    const resultado = await codigoTotpValido(segredo, codigo, primeiraVez.timeStep! - 100);
+    expect(resultado.valido).toBe(true);
   });
 });
 

@@ -131,6 +131,12 @@ model User {
   totpConfirmadoEm     DateTime?
   totpTentativasFalhas Int       @default(0)
   totpBloqueadoAte     DateTime?
+  // Contador de tempo (janela de 30s) do último código TOTP aceito -
+  // sem isso, o mesmo código de 6 dígitos podia ser reaproveitado durante
+  // toda a janela de tolerância (~90s) por qualquer um que o tivesse visto
+  // uma vez (print, log, malware no autenticador). otplib rejeita direto
+  // (afterTimeStep) qualquer código de uma janela já usada ou anterior.
+  totpUltimoTimeStep   Int?
 
   // Contador de força bruta de SENHA (independente do de TOTP acima) -
   // sem isso, uma conta sem 2FA ativo podia ter a senha adivinhada por

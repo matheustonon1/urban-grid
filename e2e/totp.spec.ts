@@ -42,12 +42,30 @@ test("ativa, exige no login e desativa a autenticação em duas etapas", async (
     where: { email },
     select: { totpSecret: true },
   });
-  const codigoLogin = await gerarCodigoTotpAtual(usuarioAtivo.totpSecret!);
+  // +30s de propósito - o código de ativação logo acima já consumiu a
+  // janela atual (ver comentário em gerarCodigoTotpAtual em helpers.ts).
+  const codigoLogin = await gerarCodigoTotpAtual(usuarioAtivo.totpSecret!, {
+    segundosNoFuturo: 30,
+  });
 
   await page.fill('input[name="senha"]', senha);
   await page.fill('input[name="codigoTotp"]', codigoLogin);
   await page.click('button[type="submit"]');
   await page.waitForURL(/\/painel$/);
+
+  // Sair e tentar logar de novo com o MESMO código (reuso) tem que falhar
+  // - é a proteção contra replay de codigoTotpValido() em ação de ponta a
+  // ponta, não só em unit test com prisma/otplib mockados.
+  await page.goto("/login");
+  await page.fill('input[name="identificador"]', email);
+  await page.fill('input[name="senha"]', senha);
+  await page.click('button[type="submit"]');
+  await expect(page.locator('input[name="codigoTotp"]')).toBeVisible();
+  await page.fill('input[name="senha"]', senha);
+  await page.fill('input[name="codigoTotp"]', codigoLogin);
+  await page.click('button[type="submit"]');
+  await expect(page.getByText("E-mail/CPF, senha ou código inválidos.")).toBeVisible();
+  await expect(page).not.toHaveURL(/\/painel$/);
 
   // Desativa - precisa do campo de senha específico dessa seção, não o
   // de "Alterar senha" (os dois formulários usam name="senhaAtual").
