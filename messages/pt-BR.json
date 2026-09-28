@@ -327,8 +327,11 @@
   "OrgaosCategorias": {
     "titulo": "Categorias por órgão",
     "descricao": "Define quais categorias de reclamação cada órgão vê e pode responder. Um órgão sem nenhuma categoria marcada continua atendendo qualquer reclamação da sua cidade (comportamento padrão).",
-    "nenhumOrgaoAtivo": "Nenhum órgão ativo cadastrado ainda.",
-    "salvar": "Salvar"
+    "salvar": "Salvar",
+    "nenhumOrgao": "Nenhum órgão cadastrado ainda.",
+    "inativo": "Inativo",
+    "desativar": "Desativar",
+    "reativar": "Reativar"
   },
   "SolicitacoesOrgao": {
     "titulo": "Solicitações de acesso como órgão",

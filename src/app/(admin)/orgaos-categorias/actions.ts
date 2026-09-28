@@ -36,3 +36,19 @@ export async function atualizarCategoriasOrgao(orgaoId: string, formData: FormDa
 
   revalidatePath("/orgaos-categorias");
 }
+
+// Único jeito de desligar Orgao.ativo hoje - sem isto, o campo era
+// checado em vários lugares (bloqueia resposta oficial de órgão inativo,
+// filtra listagens públicas em cidades/orgaos) mas nada na aplicação
+// nunca escrevia nele: um órgão extinto ou cadastrado por engano não
+// tinha como ser desativado sem mexer direto no banco.
+export async function alternarAtivoOrgao(orgaoId: string, novoAtivo: boolean) {
+  await exigirAdmin();
+
+  await prisma.orgao.update({
+    where: { id: orgaoId },
+    data: { ativo: novoAtivo },
+  });
+
+  revalidatePath("/orgaos-categorias");
+}

@@ -327,8 +327,11 @@
   "OrgaosCategorias": {
     "titulo": "Categories by department",
     "descricao": "Sets which complaint categories each department sees and can respond to. A department with no category marked still handles any complaint in its city (default behavior).",
-    "nenhumOrgaoAtivo": "No active departments registered yet.",
-    "salvar": "Save"
+    "salvar": "Save",
+    "nenhumOrgao": "No agencies registered yet.",
+    "inativo": "Inactive",
+    "desativar": "Deactivate",
+    "reativar": "Reactivate"
   },
   "SolicitacoesOrgao": {
     "titulo": "Department access requests",

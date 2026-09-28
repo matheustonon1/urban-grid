@@ -3,10 +3,10 @@ import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { Paginacao } from "@/components/paginacao";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
-import { botaoPrimario, cartao, containerPagina } from "@/lib/estilos";
+import { botaoPrimario, botaoSecundario, cartao, containerPagina } from "@/lib/estilos";
 
 import { exigirAdmin } from "../solicitacoes-orgao/exigir-admin";
-import { atualizarCategoriasOrgao } from "./actions";
+import { alternarAtivoOrgao, atualizarCategoriasOrgao } from "./actions";
 
 export default async function OrgaosCategoriasPage({
   searchParams,
@@ -16,17 +16,18 @@ export default async function OrgaosCategoriasPage({
 
   const { page } = await searchParams;
   const paginaAtual = lerPaginaAtual(page);
-  const filtro = { ativo: true };
 
+  // Sem filtro por ativo aqui de propósito - esta é a única tela admin
+  // que lista órgãos, então também precisa ser onde um órgão inativo
+  // aparece pra poder ser reativado (ver alternarAtivoOrgao em ./actions).
   const [orgaos, totalOrgaos, categorias] = await Promise.all([
     prisma.orgao.findMany({
-      where: filtro,
-      orderBy: { nome: "asc" },
+      orderBy: [{ ativo: "desc" }, { nome: "asc" }],
       include: { cidade: true, categorias: { select: { id: true } } },
       skip: calcularSkip(paginaAtual),
       take: ITENS_POR_PAGINA,
     }),
-    prisma.orgao.count({ where: filtro }),
+    prisma.orgao.count(),
     prisma.categoria.findMany({ where: { ativa: true }, orderBy: { ordem: "asc" } }),
   ]);
   const totalPaginas = calcularTotalPaginas(totalOrgaos);
@@ -41,44 +42,68 @@ export default async function OrgaosCategoriasPage({
       </div>
 
       {orgaos.length === 0 && (
-        <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumOrgaoAtivo")}</p>
+        <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumOrgao")}</p>
       )}
 
       {orgaos.map((orgao) => (
-        <form
+        <div
           key={orgao.id}
-          action={atualizarCategoriasOrgao.bind(null, orgao.id)}
-          className={`flex flex-col gap-3 ${cartao}`}
+          className={`flex flex-col gap-3 ${cartao} ${!orgao.ativo ? "opacity-60" : ""}`}
         >
-          <div>
-            <p className="font-medium text-slate-900 dark:text-slate-100">
-              {orgao.nome}
-              {orgao.sigla && ` (${orgao.sigla})`}
-            </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">{orgao.cidade.nome}</p>
-          </div>
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <p className="flex items-center gap-2 font-medium text-slate-900 dark:text-slate-100">
+                {orgao.nome}
+                {orgao.sigla && ` (${orgao.sigla})`}
+                {!orgao.ativo && (
+                  <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-normal text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                    {t("inativo")}
+                  </span>
+                )}
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">{orgao.cidade.nome}</p>
+            </div>
 
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {categorias.map((categoria) => (
-              <label
-                key={categoria.id}
-                className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300"
+            <form action={alternarAtivoOrgao.bind(null, orgao.id, !orgao.ativo)}>
+              <button
+                type="submit"
+                className={
+                  orgao.ativo
+                    ? "rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-700 transition hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/40"
+                    : botaoSecundario
+                }
               >
-                <input
-                  type="checkbox"
-                  name="categoriaIds"
-                  value={categoria.id}
-                  defaultChecked={orgao.categorias.some((c) => c.id === categoria.id)}
-                />
-                {categoria.nome}
-              </label>
-            ))}
+                {orgao.ativo ? t("desativar") : t("reativar")}
+              </button>
+            </form>
           </div>
 
-          <button type="submit" className={`${botaoPrimario} w-fit`}>
-            {t("salvar")}
-          </button>
-        </form>
+          <form
+            action={atualizarCategoriasOrgao.bind(null, orgao.id)}
+            className="flex flex-col gap-3"
+          >
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {categorias.map((categoria) => (
+                <label
+                  key={categoria.id}
+                  className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300"
+                >
+                  <input
+                    type="checkbox"
+                    name="categoriaIds"
+                    value={categoria.id}
+                    defaultChecked={orgao.categorias.some((c) => c.id === categoria.id)}
+                  />
+                  {categoria.nome}
+                </label>
+              ))}
+            </div>
+
+            <button type="submit" className={`${botaoPrimario} w-fit`}>
+              {t("salvar")}
+            </button>
+          </form>
+        </div>
       ))}
 
       <Paginacao
