@@ -1,18 +1,14 @@
-import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { containerPagina } from "@/lib/estilos";
+import { exigirSessao } from "@/lib/sessao";
 
 import { NovaReclamacaoForm } from "./form";
 
 export default async function NovaReclamacaoPage() {
   const t = await getTranslations("NovaReclamacao");
-  const session = await auth();
-  if (!session?.user) {
-    redirect("/login");
-  }
+  await exigirSessao();
 
   const categorias = await prisma.categoria.findMany({
     where: { ativa: true },

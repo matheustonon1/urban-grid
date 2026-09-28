@@ -4,13 +4,13 @@ import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
 import { getTranslations } from "next-intl/server";
 
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { finalizarPublicacaoAprovada, moderarReclamacao } from "@/lib/moderacao";
 import { gerarProtocolo } from "@/lib/protocolo";
 import { uploadImagem } from "@/lib/storage";
 import { aplicarBlur, calcularPhash, distanciaHamming, extrairExif } from "@/lib/imagem";
 import { analisarImagemReal, mimeTypeDoFormato, type ImagemAnalisada } from "@/lib/validarImagem";
+import { exigirSessao } from "@/lib/sessao";
 
 import { criarNovaReclamacaoSchema, type NovaReclamacaoFormState } from "./definitions";
 
@@ -26,10 +26,7 @@ export async function criarReclamacao(
   formData: FormData
 ): Promise<NovaReclamacaoFormState> {
   const t = await getTranslations("NovaReclamacao");
-  const session = await auth();
-  if (!session?.user) {
-    redirect("/login");
-  }
+  const session = await exigirSessao();
 
   const validado = criarNovaReclamacaoSchema(t).safeParse({
     titulo: formData.get("titulo"),

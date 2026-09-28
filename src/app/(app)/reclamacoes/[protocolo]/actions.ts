@@ -4,12 +4,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { criarNotificacao } from "@/lib/notificacoes";
 import { orgaoAtendeCategoria } from "@/lib/orgaoCategoria";
 import { precisaVerificarEmail } from "@/lib/verificacao";
 import { STATUS_PUBLICOS } from "@/lib/statusPublicos";
+import { exigirSessao } from "@/lib/sessao";
 
 import {
   criarAvaliacaoSchema,
@@ -27,10 +27,7 @@ export async function alternarConfirmacao(
   reclamacaoId: string,
   protocolo: string
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    redirect("/login");
-  }
+  const session = await exigirSessao();
 
   const [usuario, reclamacao] = await Promise.all([
     prisma.user.findUnique({ where: { id: session.user.id } }),
@@ -108,10 +105,7 @@ export async function criarDenuncia(
   protocolo: string,
   formData: FormData
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    redirect("/login");
-  }
+  const session = await exigirSessao();
 
   const validado = criarDenunciaSchema(await getTranslations("ReclamacaoDetalhe")).safeParse({
     motivo: formData.get("motivo"),
@@ -270,10 +264,7 @@ export async function avaliarReclamacao(
   protocolo: string,
   formData: FormData
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    redirect("/login");
-  }
+  const session = await exigirSessao();
 
   const validado = criarAvaliacaoSchema().safeParse({
     nota: formData.get("nota"),
@@ -325,10 +316,7 @@ export async function contestarRejeicao(
   protocolo: string,
   formData: FormData
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    redirect("/login");
-  }
+  const session = await exigirSessao();
 
   const validado = criarRecursoSchema(await getTranslations("ReclamacaoDetalhe")).safeParse({
     texto: formData.get("texto"),

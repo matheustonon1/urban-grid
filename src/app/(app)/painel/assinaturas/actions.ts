@@ -1,12 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
 import { getTranslations } from "next-intl/server";
 
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { exigirSessao } from "@/lib/sessao";
 
 // Sentinel de categoriaChave pra "todas as categorias" - precisa bater com
 // o default da coluna no schema.prisma (AssinaturaCidade.categoriaChave).
@@ -19,10 +18,7 @@ export async function criarAssinatura(
   formData: FormData
 ): Promise<AssinaturaFormState> {
   const t = await getTranslations("Assinaturas");
-  const session = await auth();
-  if (!session?.user) {
-    redirect("/login");
-  }
+  const session = await exigirSessao();
 
   const cidadeId = formData.get("cidadeId");
   const categoriaIdBruto = formData.get("categoriaId");
@@ -72,10 +68,7 @@ export async function criarAssinatura(
 }
 
 export async function cancelarAssinatura(assinaturaId: string) {
-  const session = await auth();
-  if (!session?.user) {
-    redirect("/login");
-  }
+  const session = await exigirSessao();
 
   // deleteMany (não delete) pra checar dono e existência numa query só,
   // sem lançar quando o id não pertence a este usuário (evita um usuário

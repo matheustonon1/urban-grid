@@ -1,15 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 import { getTranslations } from "next-intl/server";
 
-import { auth, signOut } from "@/auth";
+import { signOut } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { alertarSenhaAlterada, alertarTrocaEmailSolicitada } from "@/lib/notificacoes";
 import { criarTokenTrocaEmail, enviarEmailConfirmarTrocaEmail } from "@/lib/email";
 import { idiomaOuPadrao } from "@/i18n/config";
+import { exigirSessao } from "@/lib/sessao";
 
 import {
   criarExclusaoSchema,
@@ -27,10 +27,7 @@ export async function atualizarPerfil(
   formData: FormData
 ): Promise<PerfilFormState> {
   const t = await getTranslations("Conta");
-  const session = await auth();
-  if (!session?.user) {
-    redirect("/login");
-  }
+  const session = await exigirSessao();
 
   const validado = criarPerfilSchema().safeParse({
     telefone: formData.get("telefone"),
@@ -55,10 +52,7 @@ export async function solicitarTrocaEmail(
   formData: FormData
 ): Promise<TrocaEmailFormState> {
   const t = await getTranslations("Conta");
-  const session = await auth();
-  if (!session?.user) {
-    redirect("/login");
-  }
+  const session = await exigirSessao();
 
   const validado = criarTrocaEmailSchema(t).safeParse({
     novoEmail: formData.get("novoEmail"),
@@ -109,10 +103,7 @@ export async function alterarSenha(
   formData: FormData
 ): Promise<SenhaFormState> {
   const t = await getTranslations("Conta");
-  const session = await auth();
-  if (!session?.user) {
-    redirect("/login");
-  }
+  const session = await exigirSessao();
 
   const validado = criarSenhaSchema(t).safeParse({
     senhaAtual: formData.get("senhaAtual"),
@@ -163,10 +154,7 @@ export async function excluirConta(
   formData: FormData
 ): Promise<ExclusaoFormState> {
   const t = await getTranslations("Conta");
-  const session = await auth();
-  if (!session?.user) {
-    redirect("/login");
-  }
+  const session = await exigirSessao();
 
   const validado = criarExclusaoSchema(t).safeParse({
     senhaAtual: formData.get("senhaAtual"),

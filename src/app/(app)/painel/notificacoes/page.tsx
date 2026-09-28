@@ -1,24 +1,20 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Paginacao } from "@/components/paginacao";
 import { marcarNotificacaoLida, marcarTodasLidas } from "@/components/notificacoes-actions";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
 import { formatarTempoRelativo } from "@/lib/tempo-relativo";
 import { botaoSecundario, cartao, containerPagina } from "@/lib/estilos";
+import { exigirSessao } from "@/lib/sessao";
 
 export default async function NotificacoesPage({
   searchParams,
 }: PageProps<"/painel/notificacoes">) {
   const t = await getTranslations("Notificacoes");
   const locale = await getLocale();
-  const session = await auth();
-  if (!session?.user) {
-    redirect("/login");
-  }
+  const session = await exigirSessao();
 
   const { page } = await searchParams;
   const paginaAtual = lerPaginaAtual(page);

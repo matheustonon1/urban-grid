@@ -4,12 +4,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { criarNotificacao } from "@/lib/notificacoes";
 import { precisaVerificarEmail } from "@/lib/verificacao";
 import { moderarComentario } from "@/lib/moderacaoComentario";
 import { STATUS_PUBLICOS } from "@/lib/statusPublicos";
+import { exigirSessao } from "@/lib/sessao";
 
 import { criarComentarioSchema } from "./definitions";
 
@@ -20,10 +20,7 @@ export async function criarComentario(
   protocolo: string,
   formData: FormData
 ) {
-  const session = await auth();
-  if (!session?.user) {
-    redirect("/login");
-  }
+  const session = await exigirSessao();
 
   const validado = criarComentarioSchema(await getTranslations("ReclamacaoDetalhe")).safeParse({
     texto: formData.get("texto"),

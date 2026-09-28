@@ -1,19 +1,15 @@
-import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { cartao, containerPagina } from "@/lib/estilos";
+import { exigirSessao } from "@/lib/sessao";
 
 import { cancelarAssinatura } from "./actions";
 import { FormularioNovaAssinatura } from "./formulario";
 
 export default async function AssinaturasPage() {
   const t = await getTranslations("Assinaturas");
-  const session = await auth();
-  if (!session?.user) {
-    redirect("/login");
-  }
+  const session = await exigirSessao();
 
   const [assinaturas, categoriasAtivas] = await Promise.all([
     prisma.assinaturaCidade.findMany({

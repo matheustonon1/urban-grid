@@ -1,9 +1,8 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { exigirSessao } from "@/lib/sessao";
 import { StatusBadge } from "@/components/status-badge";
 import { Paginacao } from "@/components/paginacao";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
@@ -14,11 +13,7 @@ import { reenviarVerificacao } from "./actions";
 export default async function PainelPage({ searchParams }: PageProps<"/painel">) {
   const t = await getTranslations("Painel");
   const tPapel = await getTranslations("Papel");
-  const session = await auth();
-
-  if (!session?.user) {
-    redirect("/login");
-  }
+  const session = await exigirSessao();
 
   const { page } = await searchParams;
   const paginaAtual = lerPaginaAtual(page);

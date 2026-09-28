@@ -1,11 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 import { getTranslations } from "next-intl/server";
 
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import {
   cifrarSegredoTotp,
@@ -15,6 +13,7 @@ import {
   gerarSegredoTotp,
   prepararCodigosBackup,
 } from "@/lib/totp";
+import { exigirSessao } from "@/lib/sessao";
 
 import {
   criarConfirmarTotpSchema,
@@ -24,10 +23,7 @@ import {
 } from "./definitions";
 
 export async function iniciarConfiguracaoTotp() {
-  const session = await auth();
-  if (!session?.user) {
-    redirect("/login");
-  }
+  const session = await exigirSessao();
 
   const usuario = await prisma.user.findUniqueOrThrow({ where: { id: session.user.id } });
   if (usuario.totpConfirmadoEm) {
@@ -43,10 +39,7 @@ export async function iniciarConfiguracaoTotp() {
 }
 
 export async function cancelarConfiguracaoTotp() {
-  const session = await auth();
-  if (!session?.user) {
-    redirect("/login");
-  }
+  const session = await exigirSessao();
 
   await prisma.user.updateMany({
     where: { id: session.user.id, totpConfirmadoEm: null },
@@ -60,10 +53,7 @@ export async function confirmarTotp(
   _state: ConfirmarTotpFormState,
   formData: FormData
 ): Promise<ConfirmarTotpFormState> {
-  const session = await auth();
-  if (!session?.user) {
-    redirect("/login");
-  }
+  const session = await exigirSessao();
 
   const t = await getTranslations("Totp");
   const validado = criarConfirmarTotpSchema(t).safeParse({ codigo: formData.get("codigo") });
@@ -111,10 +101,7 @@ export async function desativarTotp(
   _state: DesativarTotpFormState,
   formData: FormData
 ): Promise<DesativarTotpFormState> {
-  const session = await auth();
-  if (!session?.user) {
-    redirect("/login");
-  }
+  const session = await exigirSessao();
 
   const t = await getTranslations("Totp");
   const validado = criarDesativarTotpSchema(t).safeParse({

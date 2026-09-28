@@ -1,11 +1,10 @@
-import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { containerPagina } from "@/lib/estilos";
 import { decifrarSegredoTotp, gerarQrCodeTotp, gerarUriTotp } from "@/lib/totp";
 import { iniciaisDoNome } from "@/lib/texto";
+import { exigirSessao } from "@/lib/sessao";
 
 import {
   FormularioExclusao,
@@ -18,10 +17,7 @@ import { FormularioTotp } from "./totp-formulario";
 export default async function ContaPage() {
   const t = await getTranslations("Conta");
   const tPapel = await getTranslations("Papel");
-  const session = await auth();
-  if (!session?.user) {
-    redirect("/login");
-  }
+  const session = await exigirSessao();
 
   const usuario = await prisma.user.findUniqueOrThrow({
     where: { id: session.user.id },
