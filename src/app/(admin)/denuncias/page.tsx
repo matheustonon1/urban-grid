@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
 
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { Paginacao } from "@/components/paginacao";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
@@ -14,9 +13,8 @@ export default async function DenunciasPage({ searchParams }: PageProps<"/denunc
   const t = await getTranslations("Denuncias");
   const tMotivo = await getTranslations("MotivoDenuncia");
   const locale = await getLocale();
-  await exigirModerador();
-  const session = await auth();
-  const ehAdmin = session?.user?.papel === "ADMIN";
+  const session = await exigirModerador();
+  const ehAdmin = session.user.papel === "ADMIN";
 
   const { page } = await searchParams;
   const paginaAtual = lerPaginaAtual(page);
