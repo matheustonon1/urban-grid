@@ -20,7 +20,7 @@ vi.mock("resend", () => ({
   })),
 }));
 
-import { esc, enviarEmailVerificacao } from "./email";
+import { esc, enviarEmailResumoSemanal, enviarEmailVerificacao } from "./email";
 
 beforeEach(() => {
   enviosCapturados.length = 0;
@@ -66,5 +66,25 @@ describe("enviarEmailVerificacao (idioma)", () => {
     expect(enviosCapturados[0].subject).toBe("Confirm your e-mail — Urban Grid");
     expect(enviosCapturados[0].html).toContain("Verify e-mail");
     expect(enviosCapturados[0].html).not.toContain("Confirme seu e-mail");
+  });
+});
+
+describe("enviarEmailResumoSemanal (assunto vs. corpo)", () => {
+  it("não escapa o assunto (cabeçalho texto puro), mas escapa o corpo HTML", async () => {
+    await enviarEmailResumoSemanal({
+      email: "pessoa@exemplo.com",
+      nomeCidade: "Santa Isabel D'Oeste",
+      nomeCategoria: null,
+      total: 2,
+      url: "http://localhost:3000/cidades/santa-isabel-doeste-pr",
+    });
+
+    expect(enviosCapturados).toHaveLength(1);
+    // Assunto é cabeçalho de e-mail em texto puro, não HTML - escapar
+    // entregaria "D&#39;Oeste" literal na caixa de entrada.
+    expect(enviosCapturados[0].subject).toContain("Santa Isabel D'Oeste");
+    expect(enviosCapturados[0].subject).not.toContain("&#39;");
+    // No corpo (HTML de verdade), o mesmo nome precisa vir escapado.
+    expect(enviosCapturados[0].html).toContain("Santa Isabel D&#39;Oeste");
   });
 });

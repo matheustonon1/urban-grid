@@ -436,7 +436,10 @@ export async function enviarEmailResumoSemanal({
 
   await enviarEmail({
     to: email,
-    subject: t("resumoSemanal.assunto", { cidade: esc(nomeCidade) }),
+    // Sem esc() aqui de propósito - Subject é cabeçalho de e-mail em texto
+    // puro, não HTML. Escapar entregaria "D&#39;Oeste" literal na caixa de
+    // entrada pra uma cidade como "Santa Isabel D'Oeste".
+    subject: t("resumoSemanal.assunto", { cidade: nomeCidade }),
     html: montarHtmlSimples(corpo, t("resumoSemanal.rodape"), {
       url,
       texto: t("resumoSemanal.botao"),
