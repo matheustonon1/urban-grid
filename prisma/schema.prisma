@@ -298,9 +298,7 @@ model Categoria {
 // Assinatura de "resumo semanal por e-mail" de uma cidade (com categoria
 // opcional) - ver src/lib/resumoSemanal.ts, disparado pelo cron em
 // api/cron/resumo-semanal. categoriaId nulo = todas as categorias da
-// cidade. A unique abaixo não pega duplicata com categoriaId nulo (MySQL
-// trata NULL como distinto em índice único) - a checagem de duplicata de
-// verdade é feita em código, na action que cria a assinatura.
+// cidade.
 model AssinaturaCidade {
   id     String @id @default(cuid())
   userId String
@@ -312,13 +310,23 @@ model AssinaturaCidade {
   categoriaId String?
   categoria   Categoria? @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
 
+  // Só pra unicidade de verdade no banco - MySQL trata NULL como distinto
+  // num índice único, então duas assinaturas "toda a cidade" (categoriaId
+  // nulo) não seriam pegas só pela constraint em (userId, cidadeId,
+  // categoriaId). categoriaChave é sempre não-nula: reflete categoriaId
+  // quando presente, ou o sentinel abaixo quando é "todas as categorias".
+  // Mantida em sincronia com categoriaId só pela action que cria a
+  // assinatura (criarAssinatura, em painel/assinaturas/actions.ts) - não
+  // há trigger/generated column garantindo isso no schema.
+  categoriaChave String @default("__todas__")
+
   // Nulo = nunca enviado ainda; usado tanto pra saber a partir de quando
   // procurar reclamações novas quanto pra não dar próximo envio antes de
   // 7 dias (ver INTERVALO_RESUMO_MS).
   ultimoEnvioEm DateTime?
   createdAt     DateTime  @default(now())
 
-  @@unique([userId, cidadeId, categoriaId])
+  @@unique([userId, cidadeId, categoriaChave])
   @@index([cidadeId])
   @@index([ultimoEnvioEm])
 }

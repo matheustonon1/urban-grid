@@ -52,6 +52,44 @@ test("acompanhar uma cidade, ver na lista, bloquear duplicata e cancelar", async
   await expect(page.getByRole("button", { name: /Acompanhar esta cidade/ })).toBeVisible();
 });
 
+test("duplo clique/duas abas assinando a mesma cidade ao mesmo tempo não cria duas assinaturas", async ({
+  browser,
+}) => {
+  const { usuario, email, senha } = await criarCidadaoTeste();
+  const cidade = await prisma.cidade.findFirstOrThrow();
+
+  // Duas páginas no MESMO contexto (mesma sessão/cookies) simulam duas
+  // abas abertas da mesma conta - o cenário real de duplo clique/duas
+  // abas que a correção de corrida em criarAssinatura() precisa cobrir.
+  const contexto = await browser.newContext();
+  const paginaA = await contexto.newPage();
+  const paginaB = await contexto.newPage();
+  await login(paginaA, email, senha);
+
+  await paginaA.goto(`/cidades/${cidade.slug}`);
+  await paginaB.goto(`/cidades/${cidade.slug}`);
+
+  const botaoA = paginaA.getByRole("button", { name: /Acompanhar esta cidade/ });
+  const botaoB = paginaB.getByRole("button", { name: /Acompanhar esta cidade/ });
+  await expect(botaoA).toBeVisible();
+  await expect(botaoB).toBeVisible();
+
+  // Dispara os dois cliques sem esperar um terminar antes do outro - é
+  // isso que cria a janela de corrida entre a checagem e o create() no
+  // servidor (a correção usa a unique constraint do banco pra fechar essa
+  // janela, não uma checagem prévia em código).
+  await Promise.all([botaoA.click(), botaoB.click()]);
+  await paginaA.waitForTimeout(1500);
+
+  const total = await prisma.assinaturaCidade.count({
+    where: { userId: usuario.id, cidadeId: cidade.id, categoriaId: null },
+  });
+  expect(total).toBe(1);
+
+  await contexto.close();
+  await prisma.assinaturaCidade.deleteMany({ where: { userId: usuario.id } });
+});
+
 test("cron de resumo semanal exige o segredo certo e processa assinaturas elegíveis", async ({
   request,
 }) => {

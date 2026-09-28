@@ -2,10 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { Prisma } from "@prisma/client";
 import { getTranslations } from "next-intl/server";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+
+// Sentinel de categoriaChave pra "todas as categorias" - precisa bater com
+// o default da coluna no schema.prisma (AssinaturaCidade.categoriaChave).
+const CATEGORIA_CHAVE_TODAS = "__todas__";
 
 export type AssinaturaFormState = { erro?: string } | undefined;
 
@@ -40,20 +45,27 @@ export async function criarAssinatura(
     }
   }
 
-  // A unique de (userId, cidadeId, categoriaId) no banco não pega
-  // duplicata quando categoriaId é nulo (MySQL trata NULL como distinto
-  // em índice único) - por isso a checagem aqui cobre os dois casos, em
-  // vez de confiar só na constraint.
-  const existente = await prisma.assinaturaCidade.findFirst({
-    where: { userId: session.user.id, cidadeId, categoriaId },
-  });
-  if (existente) {
-    return { erro: t("erroJaAssina") };
-  }
+  // categoriaChave nunca é nula (ao contrário de categoriaId) - é o que a
+  // unique constraint do banco usa de verdade pra impedir duplicata,
+  // porque MySQL trata NULL como distinto num índice único e deixaria
+  // passar duas assinaturas "toda a cidade" pra mesma pessoa/cidade.
+  const categoriaChave = categoriaId ?? CATEGORIA_CHAVE_TODAS;
 
-  await prisma.assinaturaCidade.create({
-    data: { userId: session.user.id, cidadeId, categoriaId },
-  });
+  try {
+    await prisma.assinaturaCidade.create({
+      data: { userId: session.user.id, cidadeId, categoriaId, categoriaChave },
+    });
+  } catch (erro) {
+    // P2002 = violou a unique constraint - alguém (ou a mesma pessoa em
+    // duas abas/cliques) já criou esta assinatura entre a checagem acima
+    // e este create(). Sem capturar isso, duplo-clique/duas abas abertas
+    // conseguiam criar duas linhas idênticas antes de qualquer uma
+    // terminar de gravar.
+    if (erro instanceof Prisma.PrismaClientKnownRequestError && erro.code === "P2002") {
+      return { erro: t("erroJaAssina") };
+    }
+    throw erro;
+  }
 
   revalidatePath("/painel/assinaturas");
   revalidatePath(`/cidades/${cidade.slug}`);
