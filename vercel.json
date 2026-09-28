@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/resumo-semanal",
+      "schedule": "0 9 * * 1"
+    }
+  ]
+}

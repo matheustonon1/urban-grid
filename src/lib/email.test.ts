@@ -1,8 +1,12 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-// Evita bater no provedor de e-mail de verdade - o ambiente de teste carrega
-// o .env real (RESEND_API_KEY incluída), então sem este mock os testes de
-// envio fariam requisições HTTP de verdade pro Resend.
+// Evita bater no provedor de e-mail de verdade. enviarEmail() (em email.ts)
+// só entra no caminho de rede quando RESEND_API_KEY está setada - o valor
+// real varia se o .env é carregado ou não pelo runner de teste (vitest não
+// carrega .env por padrão), então fixa aqui em vez de depender do ambiente:
+// sem isso, o teste passa ou falha de acordo com o que estiver fora dele.
+vi.stubEnv("RESEND_API_KEY", "re_teste_fake");
+
 const enviosCapturados: Array<{ to: string; subject: string; html: string }> = [];
 
 vi.mock("resend", () => ({
@@ -20,6 +24,10 @@ import { esc, enviarEmailVerificacao } from "./email";
 
 beforeEach(() => {
   enviosCapturados.length = 0;
+});
+
+afterAll(() => {
+  vi.unstubAllEnvs();
 });
 
 describe("esc", () => {

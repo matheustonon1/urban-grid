@@ -2,6 +2,7 @@
   "UserMenu": {
     "painel": "Dashboard",
     "minhaConta": "My account",
+    "assinaturas": "Subscriptions",
     "painelOrgao": "Department dashboard",
     "moderacao": "Moderation",
     "filaModeracao": "Moderation queue",
@@ -122,7 +123,11 @@
     "pessoasConfirmaram": "{count, plural, one {# person confirmed} other {# people confirmed}}",
     "anterior": "Previous",
     "proxima": "Next",
-    "paginaXDeY": "Page {atual} of {total}"
+    "paginaXDeY": "Page {atual} of {total}",
+    "acompanharCidade": "Follow this city by e-mail",
+    "jaAcompanha": "You already follow this city by e-mail.",
+    "gerenciarAssinaturas": "Manage subscriptions",
+    "entrarParaAcompanhar": "Log in to follow this city by e-mail"
   },
   "OrgaoDetalhe": {
     "orgaoInativo": "Inactive department",
@@ -133,6 +138,21 @@
     "avaliacoesRecebidas": "Ratings received",
     "respostasRecentes": "Recent responses",
     "nenhumaResposta": "This department hasn't publicly responded to any complaint yet."
+  },
+  "Assinaturas": {
+    "titulo": "Subscriptions",
+    "subtitulo": "Get an e-mail summary whenever new complaints show up in the cities you follow.",
+    "nova": "Follow a city",
+    "novaDescricao": "Pick the city and, if you want, a specific category. The summary arrives by e-mail, at most once a week.",
+    "cidade": "City",
+    "todasCategorias": "All categories",
+    "assinar": "Subscribe",
+    "suasAssinaturas": "Your subscriptions",
+    "nenhumaAssinatura": "You don't follow any city yet.",
+    "cancelar": "Unsubscribe",
+    "erroCidadeObrigatoria": "Choose a valid city.",
+    "erroCategoriaInvalida": "Invalid category.",
+    "erroJaAssina": "You already follow this city/category combination."
   },
   "PainelOrgao": {
     "titulo": "Department dashboard",
@@ -665,6 +685,13 @@
     "notificacao": {
       "botao": "View complaint",
       "rodape": "You received this e-mail because you have an Urban Grid account."
+    },
+    "resumoSemanal": {
+      "assunto": "This week's summary for {cidade} — Urban Grid",
+      "corpoSemCategoria": "{total, plural, one {# new complaint was} other {# new complaints were}} published in {cidade} in the last few days.",
+      "corpoComCategoria": "{total, plural, one {# new complaint was} other {# new complaints were}} published about {categoria} in {cidade} in the last few days.",
+      "botao": "View complaints",
+      "rodape": "You received this e-mail because you subscribed to this city's weekly summary. Cancel anytime in My Account > Subscriptions."
     }
   }
 }

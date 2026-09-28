@@ -404,3 +404,42 @@ export async function enviarEmailNotificacao({
     ),
   });
 }
+
+// Resumo semanal de uma assinatura (cidade + categoria opcional) - ver
+// src/lib/resumoSemanal.ts. total já vem calculado por quem chama; aqui só
+// escolhe a mensagem certa (singular/plural, com/sem categoria) e monta o
+// e-mail. nomeCategoria vem de fora já traduzido pelo idioma de destino
+// (nome de categoria não é conteúdo bilíngue - ver comentário lá).
+export async function enviarEmailResumoSemanal({
+  email,
+  nomeCidade,
+  nomeCategoria,
+  total,
+  url,
+  locale = IDIOMA_PADRAO,
+}: {
+  email: string;
+  nomeCidade: string;
+  nomeCategoria: string | null;
+  total: number;
+  url: string;
+  locale?: Idioma;
+}) {
+  const t = await tradutor(locale);
+  const corpo = nomeCategoria
+    ? t("resumoSemanal.corpoComCategoria", {
+        total,
+        cidade: esc(nomeCidade),
+        categoria: esc(nomeCategoria),
+      })
+    : t("resumoSemanal.corpoSemCategoria", { total, cidade: esc(nomeCidade) });
+
+  await enviarEmail({
+    to: email,
+    subject: t("resumoSemanal.assunto", { cidade: esc(nomeCidade) }),
+    html: montarHtmlSimples(corpo, t("resumoSemanal.rodape"), {
+      url,
+      texto: t("resumoSemanal.botao"),
+    }),
+  });
+}

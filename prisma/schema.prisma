@@ -171,6 +171,7 @@ model User {
   notificacoes        Notificacao[]
   codigosBackupTotp   TotpBackupCode[]
   solicitacoesOrgaoAnalisadas SolicitacaoOrgao[]
+  assinaturas         AssinaturaCidade[]
 
   @@index([cidadeId])
   @@index([papel])
@@ -257,6 +258,7 @@ model Cidade {
   reclamacoes        Reclamacao[]
   orgaos             Orgao[]
   solicitacoesOrgao  SolicitacaoOrgao[]
+  assinaturas        AssinaturaCidade[]
 
   @@index([estadoId])
   @@index([nome])
@@ -290,6 +292,35 @@ model Categoria {
 
   reclamacoes Reclamacao[]
   orgaos      Orgao[]
+  assinaturas AssinaturaCidade[]
+}
+
+// Assinatura de "resumo semanal por e-mail" de uma cidade (com categoria
+// opcional) - ver src/lib/resumoSemanal.ts, disparado pelo cron em
+// api/cron/resumo-semanal. categoriaId nulo = todas as categorias da
+// cidade. A unique abaixo não pega duplicata com categoriaId nulo (MySQL
+// trata NULL como distinto em índice único) - a checagem de duplicata de
+// verdade é feita em código, na action que cria a assinatura.
+model AssinaturaCidade {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  cidadeId String
+  cidade   Cidade @relation(fields: [cidadeId], references: [id], onDelete: Cascade)
+
+  categoriaId String?
+  categoria   Categoria? @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
+
+  // Nulo = nunca enviado ainda; usado tanto pra saber a partir de quando
+  // procurar reclamações novas quanto pra não dar próximo envio antes de
+  // 7 dias (ver INTERVALO_RESUMO_MS).
+  ultimoEnvioEm DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@unique([userId, cidadeId, categoriaId])
+  @@index([cidadeId])
+  @@index([ultimoEnvioEm])
 }
 
 model Orgao {

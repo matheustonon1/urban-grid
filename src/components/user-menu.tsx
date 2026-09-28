@@ -13,6 +13,7 @@ import {
   ListChecks,
   LogOut,
   MessageSquareOff,
+  Rss,
   User,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -113,6 +114,9 @@ export function UserMenu({
           </ItemMenu>
           <ItemMenu href="/painel/conta" icone={User} onClick={fechar}>
             {t("minhaConta")}
+          </ItemMenu>
+          <ItemMenu href="/painel/assinaturas" icone={Rss} onClick={fechar}>
+            {t("assinaturas")}
           </ItemMenu>
           {ehOrgao && (
             <ItemMenu href="/orgao" icone={Building2} onClick={fechar}>

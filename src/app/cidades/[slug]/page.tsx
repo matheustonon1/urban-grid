@@ -3,11 +3,14 @@ import { notFound } from "next/navigation";
 import { ListFilter } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { StatusBadge } from "@/components/status-badge";
 import { CategoriaIcon } from "@/components/categoria-icon";
 import { botaoPrimario, campoInput, cartao, containerPagina } from "@/lib/estilos";
 import { calcularMetricasOrgao, classificarIndice } from "@/lib/reputacaoOrgao";
+
+import { SeguirCidade } from "./seguir-cidade";
 
 const STATUS_PUBLICOS = [
   "PUBLICADA",
@@ -61,6 +64,16 @@ export default async function CidadePage({
   if (!cidade) {
     notFound();
   }
+
+  const session = await auth();
+  const jaAssinaCidade = session?.user
+    ? Boolean(
+        await prisma.assinaturaCidade.findFirst({
+          where: { userId: session.user.id, cidadeId: cidade.id, categoriaId: null },
+          select: { id: true },
+        })
+      )
+    : false;
 
   const categoriaId = valorUnico(query.categoriaId) || undefined;
   const statusBruto = valorUnico(query.status);
@@ -159,6 +172,8 @@ export default async function CidadePage({
       <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
         {cidade.nome} - {cidade.estado.uf}
       </h1>
+
+      <SeguirCidade cidadeId={cidade.id} logado={!!session?.user} jaAssina={jaAssinaCidade} />
 
       <div className={`flex flex-col gap-2 ${cartao}`}>
         <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">

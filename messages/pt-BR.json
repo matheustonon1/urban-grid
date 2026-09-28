@@ -2,6 +2,7 @@
   "UserMenu": {
     "painel": "Painel",
     "minhaConta": "Minha conta",
+    "assinaturas": "Assinaturas",
     "painelOrgao": "Painel do órgão",
     "moderacao": "Moderação",
     "filaModeracao": "Fila de moderação",
@@ -122,7 +123,11 @@
     "pessoasConfirmaram": "{count, plural, one {# pessoa confirmou} other {# pessoas confirmaram}}",
     "anterior": "Anterior",
     "proxima": "Próxima",
-    "paginaXDeY": "Página {atual} de {total}"
+    "paginaXDeY": "Página {atual} de {total}",
+    "acompanharCidade": "Acompanhar esta cidade por e-mail",
+    "jaAcompanha": "Você já acompanha esta cidade por e-mail.",
+    "gerenciarAssinaturas": "Gerenciar assinaturas",
+    "entrarParaAcompanhar": "Entre para acompanhar esta cidade por e-mail"
   },
   "OrgaoDetalhe": {
     "orgaoInativo": "Órgão inativo",
@@ -133,6 +138,21 @@
     "avaliacoesRecebidas": "Avaliações recebidas",
     "respostasRecentes": "Respostas recentes",
     "nenhumaResposta": "Este órgão ainda não respondeu nenhuma reclamação publicamente."
+  },
+  "Assinaturas": {
+    "titulo": "Assinaturas",
+    "subtitulo": "Receba um resumo por e-mail quando surgirem reclamações novas nas cidades que você acompanha.",
+    "nova": "Acompanhar uma cidade",
+    "novaDescricao": "Escolha a cidade e, se quiser, uma categoria específica. O resumo chega por e-mail, no máximo uma vez por semana.",
+    "cidade": "Cidade",
+    "todasCategorias": "Todas as categorias",
+    "assinar": "Assinar",
+    "suasAssinaturas": "Suas assinaturas",
+    "nenhumaAssinatura": "Você ainda não assina nenhuma cidade.",
+    "cancelar": "Cancelar",
+    "erroCidadeObrigatoria": "Escolha uma cidade válida.",
+    "erroCategoriaInvalida": "Categoria inválida.",
+    "erroJaAssina": "Você já assina esta combinação de cidade e categoria."
   },
   "PainelOrgao": {
     "titulo": "Painel do órgão",
@@ -665,6 +685,13 @@
     "notificacao": {
       "botao": "Ver reclamação",
       "rodape": "Você recebeu este e-mail porque tem uma conta no Urban Grid."
+    },
+    "resumoSemanal": {
+      "assunto": "Resumo da semana em {cidade} — Urban Grid",
+      "corpoSemCategoria": "{total, plural, one {Foi publicada # reclamação nova} other {Foram publicadas # reclamações novas}} em {cidade} nos últimos dias.",
+      "corpoComCategoria": "{total, plural, one {Foi publicada # reclamação nova} other {Foram publicadas # reclamações novas}} de {categoria} em {cidade} nos últimos dias.",
+      "botao": "Ver reclamações",
+      "rodape": "Você recebeu este e-mail porque assina o resumo semanal desta cidade. Cancele quando quiser em Minha conta > Assinaturas."
     }
   }
 }
