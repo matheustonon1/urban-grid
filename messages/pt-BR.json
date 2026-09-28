@@ -225,7 +225,8 @@
     "estatisticas": "Estatísticas",
     "solicitacoes": "Solicitações",
     "categorias": "Categorias",
-    "banimentos": "Banimentos"
+    "banimentos": "Banimentos",
+    "solicitacoesCidade": "Cidades"
   },
   "Moderacao": {
     "titulo": "Fila de moderação",
@@ -696,6 +697,16 @@
       "corpoComCategoria": "{total, plural, one {Foi publicada # reclamação nova} other {Foram publicadas # reclamações novas}} de {categoria} em {cidade} nos últimos dias.",
       "botao": "Ver reclamações",
       "rodape": "Você recebeu este e-mail porque assina o resumo semanal desta cidade. Cancele quando quiser em Minha conta > Assinaturas."
+    },
+    "cidadeAprovada": {
+      "assunto": "{cidade} já está disponível no Urban Grid",
+      "corpo": "Boa notícia: {cidade} foi cadastrada e já pode receber reclamações. Obrigado por ajudar a expandir o Urban Grid.",
+      "botao": "Acessar o Urban Grid"
+    },
+    "solicitacaoCidadeRejeitada": {
+      "assunto": "Solicitação de nova cidade — Urban Grid",
+      "corpo": "Sua solicitação para incluir uma nova cidade não foi aprovada.",
+      "motivoRotulo": "Motivo:"
     }
   },
   "Banimentos": {
@@ -705,5 +716,43 @@
     "banidoAte": "Banido até {data}",
     "banidoPermanente": "Banimento permanente",
     "reverter": "Reverter banimento"
+  },
+  "SolicitarCidade": {
+    "titulo": "Sua cidade não está na lista?",
+    "subtitulo": "Peça a inclusão da sua cidade no Urban Grid. Um administrador analisa o pedido e avisa por e-mail quando ela estiver disponível.",
+    "voltarInicio": "Voltar para o início",
+    "nomeCidadePlaceholder": "Nome da cidade",
+    "ufPlaceholder": "Estado (UF)",
+    "seuNomeCompleto": "Seu nome completo",
+    "emailPlaceholder": "Seu e-mail",
+    "enviarSolicitacao": "Enviar solicitação",
+    "solicitacaoEnviadaTitulo": "Solicitação enviada!",
+    "solicitacaoEnviada": "Vamos avisar por e-mail assim que sua cidade estiver disponível.",
+    "erroNomeCidade": "Informe o nome da cidade.",
+    "erroUf": "Selecione um estado válido.",
+    "erroNomeSolicitante": "Informe seu nome completo.",
+    "erroEmailInvalido": "E-mail inválido.",
+    "erroLimiteSolicitacoes": "Muitas solicitações vindas deste endereço. Tente novamente mais tarde.",
+    "erroCidadeJaExiste": "Esta cidade já está cadastrada - procure por ela na busca.",
+    "erroSolicitacaoPendente": "Já existe uma solicitação pendente com este e-mail.",
+    "naoEncontrou": "Não encontrou sua cidade?",
+    "solicitarAqui": "Solicite aqui"
+  },
+  "SolicitacoesCidade": {
+    "titulo": "Solicitações de novas cidades",
+    "nenhumaPendente": "Nenhuma solicitação pendente.",
+    "solicitadoPor": "Solicitado por",
+    "enviadoEm": "Enviado em",
+    "codigoIbgePlaceholder": "Código IBGE (7 dígitos)",
+    "codigoIbgeAjuda": "Código de 7 dígitos do município no IBGE.",
+    "erroCodigoIbge": "Informe o código IBGE do município (7 dígitos).",
+    "aprovar": "Aprovar e criar cidade",
+    "motivoRejeicaoPlaceholder": "Motivo da rejeição",
+    "rejeitar": "Rejeitar",
+    "decididasRecentemente": "Decididas recentemente",
+    "aprovada": "Aprovada",
+    "rejeitada": "Rejeitada",
+    "por": "por",
+    "em": "em"
   }
 }

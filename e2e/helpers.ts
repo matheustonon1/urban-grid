@@ -240,6 +240,9 @@ export async function limparDadosTeste() {
     await prisma.solicitacaoOrgao.deleteMany({
       where: { email: { contains: PREFIXO_TESTE } },
     });
+    await prisma.solicitacaoCidade.deleteMany({
+      where: { email: { contains: PREFIXO_TESTE } },
+    });
   } catch (erro) {
     console.error("Falha ao limpar dados de teste E2E (ignorado):", erro);
   }

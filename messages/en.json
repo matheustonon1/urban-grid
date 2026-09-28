@@ -225,7 +225,8 @@
     "estatisticas": "Statistics",
     "solicitacoes": "Requests",
     "categorias": "Categories",
-    "banimentos": "Bans"
+    "banimentos": "Bans",
+    "solicitacoesCidade": "Cities"
   },
   "Moderacao": {
     "titulo": "Moderation queue",
@@ -696,6 +697,16 @@
       "corpoComCategoria": "{total, plural, one {# new complaint was} other {# new complaints were}} published about {categoria} in {cidade} in the last few days.",
       "botao": "View complaints",
       "rodape": "You received this e-mail because you subscribed to this city's weekly summary. Cancel anytime in My Account > Subscriptions."
+    },
+    "cidadeAprovada": {
+      "assunto": "{cidade} is now available on Urban Grid",
+      "corpo": "Good news: {cidade} has been registered and can now receive complaints. Thanks for helping expand Urban Grid.",
+      "botao": "Open Urban Grid"
+    },
+    "solicitacaoCidadeRejeitada": {
+      "assunto": "New city request — Urban Grid",
+      "corpo": "Your request to add a new city was not approved.",
+      "motivoRotulo": "Reason:"
     }
   },
   "Banimentos": {
@@ -705,5 +716,43 @@
     "banidoAte": "Banned until {data}",
     "banidoPermanente": "Permanent ban",
     "reverter": "Revert ban"
+  },
+  "SolicitarCidade": {
+    "titulo": "Can't find your city?",
+    "subtitulo": "Ask to have your city added to Urban Grid. An administrator reviews the request and emails you once it is available.",
+    "voltarInicio": "Back to home",
+    "nomeCidadePlaceholder": "City name",
+    "ufPlaceholder": "State",
+    "seuNomeCompleto": "Your full name",
+    "emailPlaceholder": "Your email",
+    "enviarSolicitacao": "Send request",
+    "solicitacaoEnviadaTitulo": "Request sent!",
+    "solicitacaoEnviada": "We'll email you as soon as your city is available.",
+    "erroNomeCidade": "Enter the city name.",
+    "erroUf": "Select a valid state.",
+    "erroNomeSolicitante": "Enter your full name.",
+    "erroEmailInvalido": "Invalid email.",
+    "erroLimiteSolicitacoes": "Too many requests from this address. Try again later.",
+    "erroCidadeJaExiste": "This city is already registered - search for it above.",
+    "erroSolicitacaoPendente": "There is already a pending request with this email.",
+    "naoEncontrou": "Can't find your city?",
+    "solicitarAqui": "Request it here"
+  },
+  "SolicitacoesCidade": {
+    "titulo": "New city requests",
+    "nenhumaPendente": "No pending requests.",
+    "solicitadoPor": "Requested by",
+    "enviadoEm": "Sent on",
+    "codigoIbgePlaceholder": "IBGE code (7 digits)",
+    "codigoIbgeAjuda": "The municipality's 7-digit IBGE code.",
+    "erroCodigoIbge": "Enter the IBGE code for the municipality (7 digits).",
+    "aprovar": "Approve and create city",
+    "motivoRejeicaoPlaceholder": "Rejection reason",
+    "rejeitar": "Reject",
+    "decididasRecentemente": "Recently decided",
+    "aprovada": "Approved",
+    "rejeitada": "Rejected",
+    "por": "by",
+    "em": "on"
   }
 }

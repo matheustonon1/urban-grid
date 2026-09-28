@@ -324,6 +324,48 @@ export async function enviarEmailTrocaEmailSolicitada({
   });
 }
 
+export async function enviarEmailCidadeAprovada({
+  email,
+  nomeCidade,
+  locale = IDIOMA_PADRAO,
+}: {
+  email: string;
+  nomeCidade: string;
+  locale?: Idioma;
+}) {
+  const t = await tradutor(locale);
+  const url = montarUrl("/");
+  await enviarEmail({
+    to: email,
+    subject: t("cidadeAprovada.assunto", { cidade: nomeCidade }),
+    html: montarHtmlSimples(
+      t("cidadeAprovada.corpo", { cidade: `<strong>${esc(nomeCidade)}</strong>` }),
+      undefined,
+      { url, texto: t("cidadeAprovada.botao") }
+    ),
+  });
+}
+
+export async function enviarEmailSolicitacaoCidadeRejeitada({
+  email,
+  motivo,
+  locale = IDIOMA_PADRAO,
+}: {
+  email: string;
+  motivo: string;
+  locale?: Idioma;
+}) {
+  const t = await tradutor(locale);
+  await enviarEmail({
+    to: email,
+    subject: t("solicitacaoCidadeRejeitada.assunto"),
+    html: montarHtmlSimples([
+      t("solicitacaoCidadeRejeitada.corpo"),
+      `<strong>${t("solicitacaoCidadeRejeitada.motivoRotulo")}</strong> ${esc(motivo)}`,
+    ]),
+  });
+}
+
 export async function enviarEmailSolicitacaoRejeitada({
   email,
   motivo,

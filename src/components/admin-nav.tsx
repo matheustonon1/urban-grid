@@ -9,6 +9,7 @@ import {
   ClipboardList,
   Flag,
   ListChecks,
+  MapPinPlus,
   MessageSquareOff,
   ShieldCheck,
 } from "lucide-react";
@@ -30,6 +31,7 @@ const ITENS_MODERADOR: ItemNav[] = [
 
 const ITENS_ADMIN: ItemNav[] = [
   { href: "/solicitacoes-orgao", chave: "solicitacoes", icone: ShieldCheck },
+  { href: "/solicitacoes-cidade", chave: "solicitacoesCidade", icone: MapPinPlus },
   { href: "/orgaos-categorias", chave: "categorias", icone: ListChecks },
   { href: "/banimentos", chave: "banimentos", icone: Ban },
 ];

@@ -118,7 +118,7 @@ model User {
 
   senhaHash       String? // login por credenciais
   senhaAlteradaEm DateTime? // usado pra invalidar sessões JWT emitidas antes da troca (ver callback jwt em auth.ts)
-  cpfHash         String? @unique // apenas hash, nunca o CPF em texto
+  cpfHash         String?   @unique // apenas hash, nunca o CPF em texto
   telefone        String?
 
   // 2FA por aplicativo autenticador (TOTP). totpSecret fica cifrado
@@ -164,20 +164,21 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  accounts            Account[]
-  sessions            Session[]
-  reclamacoes         Reclamacao[]
-  comentarios         Comentario[]
-  confirmacoes        Confirmacao[]
-  avaliacoes          Avaliacao[]
-  respostasOficiais   RespostaOficial[]
-  denunciasFeitas     Denuncia[]        @relation("DenunciasFeitas")
-  denunciasAnalisadas Denuncia[]        @relation("DenunciasAnalisadas")
-  moderacoesRevisadas LogModeracao[]    @relation("ModeracoesRevisadas")
-  notificacoes        Notificacao[]
-  codigosBackupTotp   TotpBackupCode[]
-  solicitacoesOrgaoAnalisadas SolicitacaoOrgao[]
-  assinaturas         AssinaturaCidade[]
+  accounts                     Account[]
+  sessions                     Session[]
+  reclamacoes                  Reclamacao[]
+  comentarios                  Comentario[]
+  confirmacoes                 Confirmacao[]
+  avaliacoes                   Avaliacao[]
+  respostasOficiais            RespostaOficial[]
+  denunciasFeitas              Denuncia[]          @relation("DenunciasFeitas")
+  denunciasAnalisadas          Denuncia[]          @relation("DenunciasAnalisadas")
+  moderacoesRevisadas          LogModeracao[]      @relation("ModeracoesRevisadas")
+  notificacoes                 Notificacao[]
+  codigosBackupTotp            TotpBackupCode[]
+  solicitacoesOrgaoAnalisadas  SolicitacaoOrgao[]
+  solicitacoesCidadeAnalisadas SolicitacaoCidade[]
+  assinaturas                  AssinaturaCidade[]
 
   @@index([cidadeId])
   @@index([papel])
@@ -259,12 +260,12 @@ model Cidade {
   estadoId   String
   estado     Estado @relation(fields: [estadoId], references: [id])
 
-  bairros            Bairro[]
-  usuarios           User[]
-  reclamacoes        Reclamacao[]
-  orgaos             Orgao[]
-  solicitacoesOrgao  SolicitacaoOrgao[]
-  assinaturas        AssinaturaCidade[]
+  bairros           Bairro[]
+  usuarios          User[]
+  reclamacoes       Reclamacao[]
+  orgaos            Orgao[]
+  solicitacoesOrgao SolicitacaoOrgao[]
+  assinaturas       AssinaturaCidade[]
 
   @@index([estadoId])
   @@index([nome])
@@ -391,6 +392,41 @@ model SolicitacaoOrgao {
   createdAt DateTime @default(now())
 
   @@index([cidadeId])
+  @@index([status])
+}
+
+enum StatusSolicitacaoCidade {
+  PENDENTE
+  APROVADA
+  REJEITADA
+}
+
+// Pedido de inclusão de uma cidade nova na plataforma - diferente de
+// SolicitacaoOrgao, não referencia Cidade porque é justamente o pedido de
+// criar uma que ainda não existe. codigoIbge não é preenchido por quem
+// solicita (a maioria não sabe o código de cabeça) - é digitado pelo admin
+// na hora de aprovar, junto com a criação de fato do registro em Cidade
+// (ver aprovarSolicitacaoCidade em app/(admin)/solicitacoes-cidade/actions.ts).
+model SolicitacaoCidade {
+  id String @id @default(cuid())
+
+  nomeCidade String
+  uf         String @db.VarChar(2)
+
+  nomeSolicitante String
+  email           String
+  criadoDeIp      String? // usado só pra limite de solicitações por IP
+  idioma          String  @default("pt-BR") @db.VarChar(5)
+
+  status         StatusSolicitacaoCidade @default(PENDENTE)
+  motivoRejeicao String?                 @db.Text
+
+  analisadoPorId String?
+  analisadoPor   User?     @relation(fields: [analisadoPorId], references: [id])
+  analisadoEm    DateTime?
+
+  createdAt DateTime @default(now())
+
   @@index([status])
 }
 

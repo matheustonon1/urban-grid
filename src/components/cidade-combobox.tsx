@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useId, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { useFecharAoInteragirFora } from "@/hooks/useFecharAoInteragirFora";
 import { campoInput } from "@/lib/estilos";
@@ -37,10 +39,12 @@ export function SeletorCidade({
     defaultValue
   );
   const [resultados, setResultados] = useState<CidadeResultado[]>([]);
+  const [buscando, setBuscando] = useState(false);
   const [aberto, setAberto] = useState(false);
   const containerRef = useFecharAoInteragirFora<HTMLDivElement>(aberto, () => setAberto(false));
   const listboxId = useId();
   const [indiceAtivo, setIndiceAtivo] = useState(-1);
+  const t = useTranslations("SolicitarCidade");
 
   function selecionar(cidade: CidadeResultado) {
     setSelecionada(cidade);
@@ -84,6 +88,7 @@ export function SeletorCidade({
         return;
       }
 
+      setBuscando(true);
       try {
         const resposta = await fetch(
           `/api/cidades?q=${encodeURIComponent(query)}`,
@@ -96,6 +101,8 @@ export function SeletorCidade({
         if ((erro as Error).name !== "AbortError") {
           setResultados([]);
         }
+      } finally {
+        setBuscando(false);
       }
     }, 300);
 
@@ -168,6 +175,15 @@ export function SeletorCidade({
             );
           })}
         </ul>
+      )}
+
+      {aberto && !buscando && !selecionada && query.trim().length >= 2 && resultados.length === 0 && (
+        <div className="animate-pop-in absolute z-10 mt-1 w-full origin-top rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-500 shadow-md dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
+          {t("naoEncontrou")}{" "}
+          <Link href="/cidades/solicitar" className="text-primary underline">
+            {t("solicitarAqui")}
+          </Link>
+        </div>
       )}
     </div>
   );
