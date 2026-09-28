@@ -83,8 +83,19 @@ export async function aplicarBlur(
     composicoes.push({ input: recorte, left, top });
   }
 
+  // Quem chama só invoca aplicarBlur() quando regioes.length > 0 (rosto/
+  // placa detectado) - se mesmo assim nenhuma composição sobrou (ex.:
+  // larguraPx/alturaPx vieram 0 ou undefined da análise da imagem, o que
+  // zera a área de recorte de toda região), isso é uma FALHA de desfoque,
+  // não "nada pra fazer". Devolver o buffer original aqui fazia o
+  // chamador (criarReclamacao) achar que o blur deu certo e publicar a
+  // foto crua com rosto/placa visível - lançar aciona o mesmo fallback
+  // seguro que uma falha de verdade do sharp já aciona (marca a mídia
+  // pra revisão humana e não publica).
   if (composicoes.length === 0) {
-    return buffer;
+    throw new Error(
+      "Nenhuma região válida pra desfocar - dimensões da imagem inconsistentes com as regiões detectadas."
+    );
   }
 
   return sharp(buffer).composite(composicoes).toBuffer();
