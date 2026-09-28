@@ -11,6 +11,7 @@ import { finalizarPublicacaoAprovada, moderarReclamacao } from "@/lib/moderacao"
 import { gerarProtocolo } from "@/lib/protocolo";
 import { uploadImagem } from "@/lib/storage";
 import { aplicarBlur, calcularPhash, distanciaHamming, extrairExif } from "@/lib/imagem";
+import { formatoImagemReal, mimeTypeDoFormato, type FormatoImagemAceito } from "@/lib/validarImagem";
 
 import { criarNovaReclamacaoSchema, type NovaReclamacaoFormState } from "./definitions";
 
@@ -63,6 +64,12 @@ export async function criarReclamacao(
   if (arquivos.length > MAX_IMAGENS) {
     return { mensagem: t("erroMaxImagens", { max: MAX_IMAGENS }) };
   }
+
+  // Formato de verdade de cada arquivo, na mesma ordem de `arquivos` -
+  // usado depois (mimeTypeReal) em vez de arquivo.type, que vem do
+  // cliente e é falsificável.
+  const formatosValidados: FormatoImagemAceito[] = [];
+
   for (const arquivo of arquivos) {
     if (!TIPOS_ACEITOS.includes(arquivo.type)) {
       return { mensagem: t("erroTipoImagem") };
@@ -71,18 +78,21 @@ export async function criarReclamacao(
       return { mensagem: t("erroTamanhoImagem") };
     }
 
-    // arquivo.type vem do cliente e é falsificável - o formato real é o
-    // que o sharp detecta pelo conteúdo. Sem isso, um SVG/GIF/TIFF (que o
-    // sharp também sabe ler) passaria como "image/png" e iria pro storage
-    // público com um tipo que não é o real.
-    try {
-      const formato = (await sharp(Buffer.from(await arquivo.arrayBuffer())).metadata()).format;
-      if (formato !== "jpeg" && formato !== "png" && formato !== "webp") {
-        return { mensagem: t("erroTipoImagem") };
-      }
-    } catch {
+    const formato = await formatoImagemReal(Buffer.from(await arquivo.arrayBuffer()));
+    if (!formato) {
       return { mensagem: t("erroTipoImagem") };
     }
+    formatosValidados.push(formato);
+  }
+
+  // Content-Type salvo no Blob público (ver uploadImagem em lib/storage.ts)
+  // e no registro de Midia - construído a partir do formato detectado acima
+  // (ver lib/validarImagem.ts), não do arquivo.type que o navegador mandou.
+  // Sem isso, a validação de formato de cima não tinha efeito nenhum no que
+  // realmente fica servido: um JPEG de verdade com arquivo.type adulterado
+  // pra "image/webp" ainda saía do storage como webp.
+  function mimeTypeReal(indice: number): string {
+    return mimeTypeDoFormato(formatosValidados[indice]);
   }
 
   const { titulo, descricao, categoriaId, cidadeId, endereco, bairro, referencia, cep } =
@@ -181,7 +191,7 @@ export async function criarReclamacao(
       const url = await uploadImagem(buffer, {
         reclamacaoId: reclamacao.id,
         nomeArquivo: arquivo.name,
-        mimeType: arquivo.type,
+        mimeType: mimeTypeReal(ordem),
       });
 
       const midia = await prisma.midia.create({
@@ -190,7 +200,7 @@ export async function criarReclamacao(
           url,
           tipo: "IMAGEM",
           nomeArquivo: arquivo.name,
-          mimeType: arquivo.type,
+          mimeType: mimeTypeReal(ordem),
           tamanhoBytes: arquivo.size,
           larguraPx: metadados.width,
           alturaPx: metadados.height,
@@ -219,7 +229,7 @@ export async function criarReclamacao(
       reclamacao.id,
       midiasCriadas.map((midia, indice) => ({
         buffer: midia.buffer,
-        mimeType: arquivos[indice].type,
+        mimeType: mimeTypeReal(indice),
       })),
       { possivelReposicao }
     );
@@ -254,7 +264,7 @@ export async function criarReclamacao(
       const urlTratada = await uploadImagem(bufferTratado, {
         reclamacaoId: reclamacao.id,
         nomeArquivo: `tratada-${arquivos[indice].name}`,
-        mimeType: arquivos[indice].type,
+        mimeType: mimeTypeReal(indice),
       });
 
       await prisma.midia.update({
