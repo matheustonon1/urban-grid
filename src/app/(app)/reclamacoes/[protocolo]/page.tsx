@@ -66,24 +66,54 @@ export default async function ReclamacaoPage({
     notFound();
   }
 
-  const jaConfirmou =
-    !!session?.user &&
-    (await prisma.confirmacao.findUnique({
-      where: {
-        userId_reclamacaoId: {
-          userId: session.user.id,
-          reclamacaoId: reclamacao.id,
+  // Nenhuma das 4 consultas abaixo depende do resultado de outra - rodam
+  // em paralelo em vez de uma esperar a outra, o que só somava latência à
+  // toa numa rota de alto tráfego e acessível por qualquer visitante.
+  const [confirmacaoDoUsuario, orgaoDoUsuario, denunciaDoUsuario, comentarios] =
+    await Promise.all([
+      session?.user
+        ? prisma.confirmacao.findUnique({
+            where: {
+              userId_reclamacaoId: {
+                userId: session.user.id,
+                reclamacaoId: reclamacao.id,
+              },
+            },
+          })
+        : Promise.resolve(null),
+      session?.user?.papel === "ORGAO" && session.user.orgaoId
+        ? prisma.orgao.findUnique({
+            where: { id: session.user.orgaoId },
+            include: { categorias: { select: { id: true } } },
+          })
+        : Promise.resolve(null),
+      session?.user && !ehAutor
+        ? prisma.denuncia.findFirst({
+            where: {
+              denuncianteId: session.user.id,
+              alvoTipo: "RECLAMACAO",
+              alvoId: reclamacao.id,
+              status: "ABERTA",
+            },
+          })
+        : Promise.resolve(null),
+      prisma.comentario.findMany({
+        where: { reclamacaoId: reclamacao.id, paiId: null, statusModeracao: "APROVADO" },
+        orderBy: { createdAt: "asc" },
+        include: {
+          autor: true,
+          respostas: {
+            where: { statusModeracao: "APROVADO" },
+            orderBy: { createdAt: "asc" },
+            include: { autor: true },
+          },
         },
-      },
-    })) !== null;
+      }),
+    ]);
 
-  const orgaoDoUsuario =
-    session?.user?.papel === "ORGAO" && session.user.orgaoId
-      ? await prisma.orgao.findUnique({
-          where: { id: session.user.orgaoId },
-          include: { categorias: { select: { id: true } } },
-        })
-      : null;
+  const jaConfirmou = confirmacaoDoUsuario !== null;
+  const denunciaAberta = denunciaDoUsuario !== null;
+
   const podeResponder =
     !!orgaoDoUsuario?.ativo &&
     orgaoDoUsuario.cidadeId === reclamacao.cidadeId &&
@@ -93,18 +123,6 @@ export default async function ReclamacaoPage({
   const podeAvaliar =
     ehAutor && reclamacao.status === "RESOLVIDA" && !reclamacao.avaliacao;
 
-  const denunciaAberta =
-    !!session?.user &&
-    !ehAutor &&
-    (await prisma.denuncia.findFirst({
-      where: {
-        denuncianteId: session.user.id,
-        alvoTipo: "RECLAMACAO",
-        alvoId: reclamacao.id,
-        status: "ABERTA",
-      },
-    })) !== null;
-
   const linhaDoTempo = construirLinhaDoTempo(
     reclamacao,
     reclamacao.respostas,
@@ -112,19 +130,6 @@ export default async function ReclamacaoPage({
     t,
     await getTranslations("Status")
   );
-
-  const comentarios = await prisma.comentario.findMany({
-    where: { reclamacaoId: reclamacao.id, paiId: null, statusModeracao: "APROVADO" },
-    orderBy: { createdAt: "asc" },
-    include: {
-      autor: true,
-      respostas: {
-        where: { statusModeracao: "APROVADO" },
-        orderBy: { createdAt: "asc" },
-        include: { autor: true },
-      },
-    },
-  });
 
   return (
     <main className={containerPagina}>
