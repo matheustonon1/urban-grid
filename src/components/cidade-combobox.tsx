@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useState } from "react";
 
+import { useFecharAoInteragirFora } from "@/hooks/useFecharAoInteragirFora";
 import { campoInput } from "@/lib/estilos";
 
 interface CidadeResultado {
@@ -37,7 +38,7 @@ export function SeletorCidade({
   );
   const [resultados, setResultados] = useState<CidadeResultado[]>([]);
   const [aberto, setAberto] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useFecharAoInteragirFora<HTMLDivElement>(aberto, () => setAberto(false));
   const listboxId = useId();
   const [indiceAtivo, setIndiceAtivo] = useState(-1);
 
@@ -70,16 +71,6 @@ export function SeletorCidade({
       selecionar(resultados[indiceAtivo]);
     }
   }
-
-  useEffect(() => {
-    function aoClicarFora(evento: MouseEvent) {
-      if (!containerRef.current?.contains(evento.target as Node)) {
-        setAberto(false);
-      }
-    }
-    document.addEventListener("mousedown", aoClicarFora);
-    return () => document.removeEventListener("mousedown", aoClicarFora);
-  }, []);
 
   useEffect(() => {
     if (selecionada && query === formatar(selecionada)) {

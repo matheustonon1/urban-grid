@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Languages } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
+import { useFecharAoInteragirFora } from "@/hooks/useFecharAoInteragirFora";
 import { definirIdioma } from "@/i18n/actions";
 import { IDIOMAS, type Idioma } from "@/i18n/config";
 
@@ -17,24 +18,7 @@ export function SeletorIdioma() {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [aberto, setAberto] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function aoClicarFora(evento: MouseEvent) {
-      if (!containerRef.current?.contains(evento.target as Node)) {
-        setAberto(false);
-      }
-    }
-    function aoTeclar(evento: KeyboardEvent) {
-      if (evento.key === "Escape") setAberto(false);
-    }
-    document.addEventListener("mousedown", aoClicarFora);
-    document.addEventListener("keydown", aoTeclar);
-    return () => {
-      document.removeEventListener("mousedown", aoClicarFora);
-      document.removeEventListener("keydown", aoTeclar);
-    };
-  }, []);
+  const containerRef = useFecharAoInteragirFora<HTMLDivElement>(aberto, () => setAberto(false));
 
   function escolher(idioma: Idioma) {
     setAberto(false);

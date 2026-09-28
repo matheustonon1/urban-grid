@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { Bell } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
+import { useFecharAoInteragirFora } from "@/hooks/useFecharAoInteragirFora";
 import { formatarTempoRelativo } from "@/lib/tempo-relativo";
 
 import { marcarNotificacaoLida, marcarTodasLidas } from "./notificacoes-actions";
@@ -28,24 +29,7 @@ export function NotificacoesSino({
   const t = useTranslations("Notificacoes");
   const locale = useLocale();
   const [aberto, setAberto] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function aoClicarFora(evento: MouseEvent) {
-      if (!containerRef.current?.contains(evento.target as Node)) {
-        setAberto(false);
-      }
-    }
-    function aoTeclar(evento: KeyboardEvent) {
-      if (evento.key === "Escape") setAberto(false);
-    }
-    document.addEventListener("mousedown", aoClicarFora);
-    document.addEventListener("keydown", aoTeclar);
-    return () => {
-      document.removeEventListener("mousedown", aoClicarFora);
-      document.removeEventListener("keydown", aoTeclar);
-    };
-  }, []);
+  const containerRef = useFecharAoInteragirFora<HTMLDivElement>(aberto, () => setAberto(false));
 
   return (
     <div ref={containerRef} className="relative">

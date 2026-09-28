@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Check, ChevronDown } from "lucide-react";
 
+import { useFecharAoInteragirFora } from "@/hooks/useFecharAoInteragirFora";
 import { campoInput } from "@/lib/estilos";
 
 import { CategoriaIcon } from "./categoria-icon";
@@ -30,24 +31,7 @@ export function SeletorCategoria({
   onSelecionar?: (id: string | null) => void;
 }) {
   const [aberto, setAberto] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function aoClicarFora(evento: MouseEvent) {
-      if (!containerRef.current?.contains(evento.target as Node)) {
-        setAberto(false);
-      }
-    }
-    function aoTeclar(evento: KeyboardEvent) {
-      if (evento.key === "Escape") setAberto(false);
-    }
-    document.addEventListener("mousedown", aoClicarFora);
-    document.addEventListener("keydown", aoTeclar);
-    return () => {
-      document.removeEventListener("mousedown", aoClicarFora);
-      document.removeEventListener("keydown", aoTeclar);
-    };
-  }, []);
+  const containerRef = useFecharAoInteragirFora<HTMLDivElement>(aberto, () => setAberto(false));
 
   const selecionada = categorias.find((categoria) => categoria.id === selecionadaId) ?? null;
 

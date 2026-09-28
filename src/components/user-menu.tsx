@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import {
   BarChart3,
@@ -20,6 +20,7 @@ import type { LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { sair } from "@/app/(app)/painel/actions";
+import { useFecharAoInteragirFora } from "@/hooks/useFecharAoInteragirFora";
 import { iniciaisDoNome } from "@/lib/texto";
 
 function ItemMenu({
@@ -68,24 +69,7 @@ export function UserMenu({
 }) {
   const t = useTranslations("UserMenu");
   const [aberto, setAberto] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function aoClicarFora(evento: MouseEvent) {
-      if (!containerRef.current?.contains(evento.target as Node)) {
-        setAberto(false);
-      }
-    }
-    function aoTeclar(evento: KeyboardEvent) {
-      if (evento.key === "Escape") setAberto(false);
-    }
-    document.addEventListener("mousedown", aoClicarFora);
-    document.addEventListener("keydown", aoTeclar);
-    return () => {
-      document.removeEventListener("mousedown", aoClicarFora);
-      document.removeEventListener("keydown", aoTeclar);
-    };
-  }, []);
+  const containerRef = useFecharAoInteragirFora<HTMLDivElement>(aberto, () => setAberto(false));
 
   const iniciais = iniciaisDoNome(nome);
   const fechar = () => setAberto(false);
