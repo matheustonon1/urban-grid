@@ -1,7 +1,6 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import sharp from "sharp";
 import { Prisma } from "@prisma/client";
 import { getTranslations } from "next-intl/server";
 
@@ -11,7 +10,7 @@ import { finalizarPublicacaoAprovada, moderarReclamacao } from "@/lib/moderacao"
 import { gerarProtocolo } from "@/lib/protocolo";
 import { uploadImagem } from "@/lib/storage";
 import { aplicarBlur, calcularPhash, distanciaHamming, extrairExif } from "@/lib/imagem";
-import { formatoImagemReal, mimeTypeDoFormato, type FormatoImagemAceito } from "@/lib/validarImagem";
+import { analisarImagemReal, mimeTypeDoFormato, type ImagemAnalisada } from "@/lib/validarImagem";
 
 import { criarNovaReclamacaoSchema, type NovaReclamacaoFormState } from "./definitions";
 
@@ -65,10 +64,11 @@ export async function criarReclamacao(
     return { mensagem: t("erroMaxImagens", { max: MAX_IMAGENS }) };
   }
 
-  // Formato de verdade de cada arquivo, na mesma ordem de `arquivos` -
-  // usado depois (mimeTypeReal) em vez de arquivo.type, que vem do
-  // cliente e é falsificável.
-  const formatosValidados: FormatoImagemAceito[] = [];
+  // Buffer + análise (formato/dimensões) de cada arquivo, na mesma ordem
+  // de `arquivos` - lido e decodificado aqui uma única vez. O loop de
+  // processamento mais abaixo reusa isto em vez de ler arrayBuffer() e
+  // rodar o sharp de novo só pra redescobrir o que já se sabia aqui.
+  const arquivosValidados: { buffer: Buffer; analise: ImagemAnalisada }[] = [];
 
   for (const arquivo of arquivos) {
     if (!TIPOS_ACEITOS.includes(arquivo.type)) {
@@ -78,11 +78,12 @@ export async function criarReclamacao(
       return { mensagem: t("erroTamanhoImagem") };
     }
 
-    const formato = await formatoImagemReal(Buffer.from(await arquivo.arrayBuffer()));
-    if (!formato) {
+    const buffer = Buffer.from(await arquivo.arrayBuffer());
+    const analise = await analisarImagemReal(buffer);
+    if (!analise) {
       return { mensagem: t("erroTipoImagem") };
     }
-    formatosValidados.push(formato);
+    arquivosValidados.push({ buffer, analise });
   }
 
   // Content-Type salvo no Blob público (ver uploadImagem em lib/storage.ts)
@@ -92,7 +93,7 @@ export async function criarReclamacao(
   // realmente fica servido: um JPEG de verdade com arquivo.type adulterado
   // pra "image/webp" ainda saía do storage como webp.
   function mimeTypeReal(indice: number): string {
-    return mimeTypeDoFormato(formatosValidados[indice]);
+    return mimeTypeDoFormato(arquivosValidados[indice].analise.formato);
   }
 
   const { titulo, descricao, categoriaId, cidadeId, endereco, bairro, referencia, cep } =
@@ -173,8 +174,7 @@ export async function criarReclamacao(
         : [];
 
     for (const [ordem, arquivo] of arquivos.entries()) {
-      const buffer = Buffer.from(await arquivo.arrayBuffer());
-      const metadados = await sharp(buffer).metadata();
+      const { buffer, analise } = arquivosValidados[ordem];
       const [phash, exif] = await Promise.all([
         calcularPhash(buffer),
         extrairExif(buffer),
@@ -202,8 +202,8 @@ export async function criarReclamacao(
           nomeArquivo: arquivo.name,
           mimeType: mimeTypeReal(ordem),
           tamanhoBytes: arquivo.size,
-          larguraPx: metadados.width,
-          alturaPx: metadados.height,
+          larguraPx: analise.largura,
+          alturaPx: analise.altura,
           phash,
           exifJson: exif.exifJson,
           capturadaEm: exif.capturadaEm,
@@ -214,8 +214,8 @@ export async function criarReclamacao(
       midiasCriadas.push({
         id: midia.id,
         buffer,
-        larguraPx: metadados.width ?? 0,
-        alturaPx: metadados.height ?? 0,
+        larguraPx: analise.largura ?? 0,
+        alturaPx: analise.altura ?? 0,
       });
     }
   } catch (erro) {

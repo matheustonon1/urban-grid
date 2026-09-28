@@ -1,30 +1,35 @@
 import { describe, expect, it } from "vitest";
 import sharp from "sharp";
 
-import { formatoImagemReal, mimeTypeDoFormato } from "./validarImagem";
+import { analisarImagemReal, mimeTypeDoFormato } from "./validarImagem";
 
-async function gerarImagem(formato: "jpeg" | "png" | "webp"): Promise<Buffer> {
+async function gerarImagem(
+  formato: "jpeg" | "png" | "webp",
+  largura = 2,
+  altura = 2
+): Promise<Buffer> {
   const imagem = sharp({
-    create: { width: 2, height: 2, channels: 3, background: { r: 255, g: 0, b: 0 } },
+    create: { width: largura, height: altura, channels: 3, background: { r: 255, g: 0, b: 0 } },
   });
   return formato === "jpeg" ? imagem.jpeg().toBuffer() : imagem[formato]().toBuffer();
 }
 
-describe("formatoImagemReal", () => {
-  it("detecta jpeg pelo conteúdo", async () => {
-    expect(await formatoImagemReal(await gerarImagem("jpeg"))).toBe("jpeg");
+describe("analisarImagemReal", () => {
+  it("detecta jpeg e as dimensões pelo conteúdo", async () => {
+    const analise = await analisarImagemReal(await gerarImagem("jpeg", 10, 20));
+    expect(analise).toEqual({ formato: "jpeg", largura: 10, altura: 20 });
   });
 
   it("detecta png pelo conteúdo", async () => {
-    expect(await formatoImagemReal(await gerarImagem("png"))).toBe("png");
+    expect((await analisarImagemReal(await gerarImagem("png")))?.formato).toBe("png");
   });
 
   it("detecta webp pelo conteúdo", async () => {
-    expect(await formatoImagemReal(await gerarImagem("webp"))).toBe("webp");
+    expect((await analisarImagemReal(await gerarImagem("webp")))?.formato).toBe("webp");
   });
 
   it("retorna null pra bytes que não são imagem nenhuma", async () => {
-    expect(await formatoImagemReal(Buffer.from("isto não é uma imagem"))).toBeNull();
+    expect(await analisarImagemReal(Buffer.from("isto não é uma imagem"))).toBeNull();
   });
 
   // Este é o cenário do bug corrigido: o navegador manda um File.type que
@@ -33,11 +38,10 @@ describe("formatoImagemReal", () => {
   // actions.ts) usa só o retorno daqui pra decidir o Content-Type salvo,
   // nunca arquivo.type.
   it("um JPEG de verdade continua detectado como jpeg mesmo que o chamador tenha recebido um File.type mentiroso", async () => {
-    const bufferJpegReal = await gerarImagem("jpeg");
-    const formato = await formatoImagemReal(bufferJpegReal);
-    expect(formato).toBe("jpeg");
-    expect(mimeTypeDoFormato(formato!)).toBe("image/jpeg");
-    expect(mimeTypeDoFormato(formato!)).not.toBe("image/webp");
+    const analise = await analisarImagemReal(await gerarImagem("jpeg"));
+    expect(analise?.formato).toBe("jpeg");
+    expect(mimeTypeDoFormato(analise!.formato)).toBe("image/jpeg");
+    expect(mimeTypeDoFormato(analise!.formato)).not.toBe("image/webp");
   });
 });
 
