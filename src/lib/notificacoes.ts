@@ -91,14 +91,25 @@ export async function alertarSenhaAlterada(userId: string) {
     return;
   }
 
-  await prisma.notificacao.create({
-    data: {
-      userId,
-      tipo: "CONTA_SEGURANCA",
-      titulo: "Sua senha foi alterada",
-      mensagem: "Se não foi você, entre em contato com o suporte imediatamente.",
-    },
-  });
+  // Mesmo motivo do try/catch em criarNotificacao(): a troca de senha em
+  // si já foi commitada antes de chegar aqui - uma falha nesta escrita
+  // (blip de banco, FK) não pode propagar e virar um erro pro usuário
+  // depois que a ação principal já teve efeito. O e-mail de alerta abaixo
+  // é o aviso que realmente importa neste fluxo (chega mesmo sem conta
+  // verificada - ver comentário em enviarEmailSenhaAlterada), então sai
+  // de qualquer forma mesmo se o registro no sininho falhar.
+  try {
+    await prisma.notificacao.create({
+      data: {
+        userId,
+        tipo: "CONTA_SEGURANCA",
+        titulo: "Sua senha foi alterada",
+        mensagem: "Se não foi você, entre em contato com o suporte imediatamente.",
+      },
+    });
+  } catch (erro) {
+    console.error("Falha ao criar notificação de senha alterada:", erro);
+  }
 
   await enviarEmailSenhaAlterada({ email: usuario.email, locale: idiomaOuPadrao(usuario.idioma) });
 }
@@ -115,14 +126,21 @@ export async function alertarTrocaEmailSolicitada(userId: string, novoEmail: str
     return;
   }
 
-  await prisma.notificacao.create({
-    data: {
-      userId,
-      tipo: "CONTA_SEGURANCA",
-      titulo: "Troca de e-mail solicitada",
-      mensagem: `Pediram a troca do e-mail de acesso para ${novoEmail}. Se não foi você, troque sua senha imediatamente.`,
-    },
-  });
+  // Ver comentário equivalente em alertarSenhaAlterada() - mesma rede de
+  // segurança que criarNotificacao() já tem, faltando aqui porque esta
+  // função monta o registro à mão em vez de reusá-la.
+  try {
+    await prisma.notificacao.create({
+      data: {
+        userId,
+        tipo: "CONTA_SEGURANCA",
+        titulo: "Troca de e-mail solicitada",
+        mensagem: `Pediram a troca do e-mail de acesso para ${novoEmail}. Se não foi você, troque sua senha imediatamente.`,
+      },
+    });
+  } catch (erro) {
+    console.error("Falha ao criar notificação de troca de e-mail solicitada:", erro);
+  }
 
   await enviarEmailTrocaEmailSolicitada({
     email: usuario.email,
