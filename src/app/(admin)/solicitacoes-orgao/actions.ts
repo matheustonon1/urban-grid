@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { Prisma } from "@prisma/client";
 import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
@@ -36,37 +37,64 @@ export async function aprovarSolicitacao(solicitacaoId: string) {
 
   const agora = new Date();
 
-  await prisma.$transaction(async (tx) => {
-    const orgao = await tx.orgao.upsert({
-      where: { cidadeId_nome: { cidadeId: solicitacao.cidadeId, nome: solicitacao.nomeOrgao } },
-      update: {},
-      create: {
-        nome: solicitacao.nomeOrgao,
-        sigla: solicitacao.sigla,
-        cidadeId: solicitacao.cidadeId,
-        email: solicitacao.email,
-      },
+  // Duas guardas contra corrida, uma pra cada janela de tempo possível:
+  // 1) updateMany com status:PENDENTE na condição - se outra aprovação/
+  //    rejeição já mudou o status entre o findUnique acima e aqui, count
+  //    vem 0 e a transação inteira é desfeita antes de criar nada.
+  // 2) P2002 no e-mail do User - cobre alguém virar conta por outro
+  //    caminho, ou duas solicitações com o mesmo e-mail sendo aprovadas
+  //    quase ao mesmo tempo, DEPOIS da checagem usuarioExistente acima
+  //    (que só pega o caso óbvio, não o raro). Sem isto, o segundo
+  //    tx.user.create lançava um erro não tratado (500) em vez da
+  //    situação já prevista logo acima ("fica pendente pra um admin
+  //    resolver manualmente").
+  const resultado = await prisma
+    .$transaction(async (tx) => {
+      const atualizacaoSolicitacao = await tx.solicitacaoOrgao.updateMany({
+        where: { id: solicitacaoId, status: "PENDENTE" },
+        data: { status: "APROVADA", analisadoPorId: session.user.id, analisadoEm: agora },
+      });
+      if (atualizacaoSolicitacao.count === 0) {
+        return { ok: false as const };
+      }
+
+      const orgao = await tx.orgao.upsert({
+        where: { cidadeId_nome: { cidadeId: solicitacao.cidadeId, nome: solicitacao.nomeOrgao } },
+        update: {},
+        create: {
+          nome: solicitacao.nomeOrgao,
+          sigla: solicitacao.sigla,
+          cidadeId: solicitacao.cidadeId,
+          email: solicitacao.email,
+        },
+      });
+
+      await tx.user.create({
+        data: {
+          name: solicitacao.nomeResponsavel,
+          email: solicitacao.email,
+          telefone: solicitacao.telefone,
+          papel: "ORGAO",
+          orgaoId: orgao.id,
+          cidadeId: solicitacao.cidadeId,
+          emailVerified: agora,
+          nivelVerificacao: "EMAIL",
+          idioma: solicitacao.idioma,
+        },
+      });
+
+      return { ok: true as const };
+    })
+    .catch((erro) => {
+      if (erro instanceof Prisma.PrismaClientKnownRequestError && erro.code === "P2002") {
+        return { ok: false as const };
+      }
+      throw erro;
     });
 
-    await tx.user.create({
-      data: {
-        name: solicitacao.nomeResponsavel,
-        email: solicitacao.email,
-        telefone: solicitacao.telefone,
-        papel: "ORGAO",
-        orgaoId: orgao.id,
-        cidadeId: solicitacao.cidadeId,
-        emailVerified: agora,
-        nivelVerificacao: "EMAIL",
-        idioma: solicitacao.idioma,
-      },
-    });
-
-    await tx.solicitacaoOrgao.update({
-      where: { id: solicitacaoId },
-      data: { status: "APROVADA", analisadoPorId: session.user.id, analisadoEm: agora },
-    });
-  });
+  if (!resultado.ok) {
+    return;
+  }
 
   const token = await criarTokenVerificacao(solicitacao.email);
   await enviarEmailAcessoOrgao({
@@ -96,8 +124,11 @@ export async function rejeitarSolicitacao(solicitacaoId: string, formData: FormD
     return;
   }
 
-  await prisma.solicitacaoOrgao.update({
-    where: { id: solicitacaoId },
+  // updateMany com status:PENDENTE na condição - mesma guarda atômica de
+  // aprovarSolicitacao() (ver comentário lá), evitando rejeitar (e
+  // mandar e-mail) uma solicitação que outro admin já aprovou/rejeitou.
+  const atualizacao = await prisma.solicitacaoOrgao.updateMany({
+    where: { id: solicitacaoId, status: "PENDENTE" },
     data: {
       status: "REJEITADA",
       motivoRejeicao: validado.data.motivo,
@@ -105,6 +136,9 @@ export async function rejeitarSolicitacao(solicitacaoId: string, formData: FormD
       analisadoEm: new Date(),
     },
   });
+  if (atualizacao.count === 0) {
+    return;
+  }
 
   await enviarEmailSolicitacaoRejeitada({
     email: solicitacao.email,
