@@ -320,12 +320,15 @@
     "motivo": "Motivo:",
     "denunciadoPor": "Denunciado por",
     "em": "em",
-    "procedente": "Procedente (arquivar reclamação)",
     "improcedente": "Improcedente",
     "seteDias": "7 dias",
     "trintaDias": "30 dias",
     "permanente": "Permanente",
-    "banirAutor": "Banir autor"
+    "banirAutor": "Banir autor",
+    "procedenteReclamacao": "Procedente (arquivar reclamação)",
+    "procedenteComentario": "Procedente (remover comentário)",
+    "comentarioEm": "Comentário em \"{titulo}\"",
+    "comentarioDe": "Comentário de {autor}:"
   },
   "OrgaosCategorias": {
     "titulo": "Categorias por órgão",

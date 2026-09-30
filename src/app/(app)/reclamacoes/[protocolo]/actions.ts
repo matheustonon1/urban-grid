@@ -100,6 +100,30 @@ async function alertarSeRajadaSuspeita(reclamacaoId: string) {
   );
 }
 
+// Compartilhado por criarDenuncia (reclamação) e criarDenunciaComentario -
+// a regra de "só uma denúncia aberta por alvo" e o limite diário não
+// dependem do tipo de alvo, então ficam num só lugar em vez de duas
+// cópias que podiam divergir silenciosamente.
+async function podeCriarDenuncia(
+  denuncianteId: string,
+  alvoTipo: "RECLAMACAO" | "COMENTARIO",
+  alvoId: string
+): Promise<boolean> {
+  const denunciaAberta = await prisma.denuncia.findFirst({
+    where: { denuncianteId, alvoTipo, alvoId, status: "ABERTA" },
+  });
+  if (denunciaAberta) {
+    return false;
+  }
+
+  const inicioDoDia = new Date();
+  inicioDoDia.setHours(0, 0, 0, 0);
+  const denunciasHoje = await prisma.denuncia.count({
+    where: { denuncianteId, createdAt: { gte: inicioDoDia } },
+  });
+  return denunciasHoje < LIMITE_DENUNCIAS_DIA;
+}
+
 export async function criarDenuncia(
   reclamacaoId: string,
   protocolo: string,
@@ -132,24 +156,7 @@ export async function criarDenuncia(
     redirect(`/reclamacoes/${protocolo}?erro=email-nao-verificado`);
   }
 
-  const denunciaAberta = await prisma.denuncia.findFirst({
-    where: {
-      denuncianteId: session.user.id,
-      alvoTipo: "RECLAMACAO",
-      alvoId: reclamacaoId,
-      status: "ABERTA",
-    },
-  });
-  if (denunciaAberta) {
-    return;
-  }
-
-  const inicioDoDia = new Date();
-  inicioDoDia.setHours(0, 0, 0, 0);
-  const denunciasHoje = await prisma.denuncia.count({
-    where: { denuncianteId: session.user.id, createdAt: { gte: inicioDoDia } },
-  });
-  if (denunciasHoje >= LIMITE_DENUNCIAS_DIA) {
+  if (!(await podeCriarDenuncia(session.user.id, "RECLAMACAO", reclamacaoId))) {
     return;
   }
 
@@ -157,6 +164,59 @@ export async function criarDenuncia(
     data: {
       alvoTipo: "RECLAMACAO",
       alvoId: reclamacaoId,
+      denuncianteId: session.user.id,
+      motivo: validado.data.motivo,
+      descricao: validado.data.descricao,
+    },
+  });
+
+  revalidatePath(`/reclamacoes/${protocolo}`);
+}
+
+// Mesmo formulário/motivos de criarDenuncia, mas mirando um Comentario em
+// vez da Reclamacao inteira - antes desta função, TipoAlvo.COMENTARIO
+// existia no schema mas nada no app nunca criava uma Denuncia com esse
+// valor (só dava pra denunciar a reclamação como um todo).
+export async function criarDenunciaComentario(
+  comentarioId: string,
+  protocolo: string,
+  formData: FormData
+) {
+  const session = await exigirSessao();
+
+  const validado = criarDenunciaSchema(await getTranslations("ReclamacaoDetalhe")).safeParse({
+    motivo: formData.get("motivo"),
+    descricao: formData.get("descricao"),
+    declaracaoVeracidade: formData.get("declaracaoVeracidade"),
+  });
+  if (!validado.success) {
+    return;
+  }
+
+  const [usuario, comentario] = await Promise.all([
+    prisma.user.findUnique({ where: { id: session.user.id } }),
+    prisma.comentario.findUnique({ where: { id: comentarioId } }),
+  ]);
+
+  if (
+    !comentario ||
+    comentario.autorId === session.user.id ||
+    comentario.statusModeracao !== "APROVADO"
+  ) {
+    return;
+  }
+  if (usuario && precisaVerificarEmail(usuario)) {
+    redirect(`/reclamacoes/${protocolo}?erro=email-nao-verificado`);
+  }
+
+  if (!(await podeCriarDenuncia(session.user.id, "COMENTARIO", comentarioId))) {
+    return;
+  }
+
+  await prisma.denuncia.create({
+    data: {
+      alvoTipo: "COMENTARIO",
+      alvoId: comentarioId,
       denuncianteId: session.user.id,
       motivo: validado.data.motivo,
       descricao: validado.data.descricao,

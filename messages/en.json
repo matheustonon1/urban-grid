@@ -320,12 +320,15 @@
     "motivo": "Reason:",
     "denunciadoPor": "Reported by",
     "em": "on",
-    "procedente": "Valid (archive complaint)",
     "improcedente": "Invalid",
     "seteDias": "7 days",
     "trintaDias": "30 days",
     "permanente": "Permanent",
-    "banirAutor": "Ban author"
+    "banirAutor": "Ban author",
+    "procedenteReclamacao": "Uphold (archive complaint)",
+    "procedenteComentario": "Uphold (remove comment)",
+    "comentarioEm": "Comment on \"{titulo}\"",
+    "comentarioDe": "Comment by {autor}:"
   },
   "OrgaosCategorias": {
     "titulo": "Categories by department",

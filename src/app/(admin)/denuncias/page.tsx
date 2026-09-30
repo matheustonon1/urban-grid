@@ -32,13 +32,32 @@ export default async function DenunciasPage({ searchParams }: PageProps<"/denunc
   ]);
   const totalPaginas = calcularTotalPaginas(totalDenuncias);
 
-  const reclamacoes = denuncias.length
-    ? await prisma.reclamacao.findMany({
-        where: { id: { in: denuncias.map((d) => d.alvoId) } },
-        select: { id: true, protocolo: true, titulo: true, descricao: true },
-      })
-    : [];
+  const idsReclamacao = denuncias.filter((d) => d.alvoTipo === "RECLAMACAO").map((d) => d.alvoId);
+  const idsComentario = denuncias.filter((d) => d.alvoTipo === "COMENTARIO").map((d) => d.alvoId);
+
+  const [reclamacoes, comentarios] = await Promise.all([
+    idsReclamacao.length
+      ? prisma.reclamacao.findMany({
+          where: { id: { in: idsReclamacao } },
+          select: { id: true, protocolo: true, titulo: true, descricao: true },
+        })
+      : Promise.resolve([]),
+    // MIDIA fica de fora por enquanto - nada no app cria denúncia com esse
+    // alvoTipo ainda, então não há o que buscar aqui.
+    idsComentario.length
+      ? prisma.comentario.findMany({
+          where: { id: { in: idsComentario } },
+          select: {
+            id: true,
+            texto: true,
+            autor: { select: { name: true, email: true } },
+            reclamacao: { select: { protocolo: true, titulo: true } },
+          },
+        })
+      : Promise.resolve([]),
+  ]);
   const reclamacaoPorId = new Map(reclamacoes.map((r) => [r.id, r]));
+  const comentarioPorId = new Map(comentarios.map((c) => [c.id, c]));
 
   return (
     <main className={`${containerPagina} max-w-3xl`}>
@@ -51,24 +70,47 @@ export default async function DenunciasPage({ searchParams }: PageProps<"/denunc
       )}
 
       {denuncias.map((denuncia) => {
-        const reclamacao = reclamacaoPorId.get(denuncia.alvoId);
+        const reclamacao =
+          denuncia.alvoTipo === "RECLAMACAO" ? reclamacaoPorId.get(denuncia.alvoId) : undefined;
+        const comentario =
+          denuncia.alvoTipo === "COMENTARIO" ? comentarioPorId.get(denuncia.alvoId) : undefined;
+        const alvoExiste = Boolean(reclamacao ?? comentario);
 
         return (
           <div key={denuncia.id} className={`flex flex-col gap-2 ${cartao}`}>
-            {reclamacao ? (
+            {reclamacao && (
               <Link
                 href={`/reclamacoes/${reclamacao.protocolo}`}
                 className="font-medium text-slate-900 hover:underline dark:text-slate-100"
               >
                 {reclamacao.titulo}
               </Link>
-            ) : (
-              <p className="font-medium text-slate-400 dark:text-slate-500">
-                {t("conteudoRemovido")}
-              </p>
             )}
             {reclamacao && (
               <p className="text-sm text-slate-600 dark:text-slate-400">{reclamacao.descricao}</p>
+            )}
+
+            {comentario && (
+              <>
+                <Link
+                  href={`/reclamacoes/${comentario.reclamacao.protocolo}`}
+                  className="font-medium text-slate-900 hover:underline dark:text-slate-100"
+                >
+                  {t("comentarioEm", { titulo: comentario.reclamacao.titulo })}
+                </Link>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  {t("comentarioDe", {
+                    autor: comentario.autor.name ?? comentario.autor.email,
+                  })}{" "}
+                  “{comentario.texto}”
+                </p>
+              </>
+            )}
+
+            {!alvoExiste && (
+              <p className="font-medium text-slate-400 dark:text-slate-500">
+                {t("conteudoRemovido")}
+              </p>
             )}
 
             <p className="text-sm text-slate-500 dark:text-slate-400">
@@ -85,7 +127,9 @@ export default async function DenunciasPage({ searchParams }: PageProps<"/denunc
             <div className="flex flex-wrap items-center gap-2">
               <form action={marcarProcedente.bind(null, denuncia.id)}>
                 <button type="submit" className={botaoPrimario}>
-                  {t("procedente")}
+                  {denuncia.alvoTipo === "COMENTARIO"
+                    ? t("procedenteComentario")
+                    : t("procedenteReclamacao")}
                 </button>
               </form>
               <form action={marcarImprocedente.bind(null, denuncia.id)}>

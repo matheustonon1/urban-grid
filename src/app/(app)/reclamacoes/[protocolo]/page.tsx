@@ -5,6 +5,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { StatusBadge } from "@/components/status-badge";
+import { FormularioDenuncia } from "@/components/formulario-denuncia";
 import { botaoPrimario, botaoSecundario, campoInput, cartao, containerPagina } from "@/lib/estilos";
 import { orgaoAtendeCategoria } from "@/lib/orgaoCategoria";
 
@@ -13,27 +14,17 @@ import {
   avaliarReclamacao,
   contestarRejeicao,
   criarDenuncia,
+  criarDenunciaComentario,
   responderReclamacao,
 } from "./actions";
 import { criarComentario } from "./comentarios";
 import { construirLinhaDoTempo } from "./linha-do-tempo";
-
-const MOTIVOS_DENUNCIA = [
-  "OFENSIVO",
-  "SPAM",
-  "DESINFORMACAO",
-  "FORA_DE_ESCOPO",
-  "DADOS_PESSOAIS",
-  "DUPLICADA",
-  "OUTRO",
-] as const;
 
 export default async function ReclamacaoPage({
   params,
   searchParams,
 }: PageProps<"/reclamacoes/[protocolo]">) {
   const t = await getTranslations("ReclamacaoDetalhe");
-  const tMotivo = await getTranslations("MotivoDenuncia");
   const locale = await getLocale();
   const { protocolo } = await params;
   const { erro } = await searchParams;
@@ -213,46 +204,10 @@ export default async function ReclamacaoPage({
               </button>
             </form>
             {!denunciaAberta && (
-              <details className="w-fit">
-                <summary
-                  className={`${botaoSecundario} inline-flex w-fit cursor-pointer list-none text-red-700 dark:text-red-400`}
-                >
-                  {t("denunciar")}
-                </summary>
-                <form
-                  action={criarDenuncia.bind(null, reclamacao.id, protocolo)}
-                  className={`animate-fade-in mt-2 flex w-72 flex-col gap-2 ${cartao}`}
-                >
-                  <select name="motivo" required defaultValue="" className={campoInput}>
-                    <option value="" disabled>
-                      {t("motivo")}
-                    </option>
-                    {MOTIVOS_DENUNCIA.map((valor) => (
-                      <option key={valor} value={valor}>
-                        {tMotivo(valor)}
-                      </option>
-                    ))}
-                  </select>
-                  <textarea
-                    name="descricao"
-                    placeholder={t("descricaoOpcional")}
-                    rows={2}
-                    className={campoInput}
-                  />
-                  <label className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-400">
-                    <input
-                      type="checkbox"
-                      name="declaracaoVeracidade"
-                      required
-                      className="mt-0.5"
-                    />
-                    <span>{t("declaracaoBoaFe")}</span>
-                  </label>
-                  <button type="submit" className={`${botaoPrimario} w-fit`}>
-                    {t("enviarDenuncia")}
-                  </button>
-                </form>
-              </details>
+              <FormularioDenuncia
+                action={criarDenuncia.bind(null, reclamacao.id, protocolo)}
+                estilo="pill"
+              />
             )}
           </div>
         )}
@@ -392,29 +347,38 @@ export default async function ReclamacaoPage({
             <p className="text-sm text-slate-700 dark:text-slate-300">{comentario.texto}</p>
 
             {session?.user && (
-              <details>
-                <summary className="w-fit cursor-pointer text-xs text-primary">
-                  {t("responder")}
-                </summary>
-                <form
-                  action={criarComentario.bind(null, reclamacao.id, protocolo)}
-                  className="animate-fade-in mt-2 flex flex-col gap-2"
-                >
-                  <input type="hidden" name="paiId" value={comentario.id} />
-                  <textarea
-                    name="texto"
-                    required
-                    minLength={3}
-                    maxLength={1000}
-                    placeholder={t("escrevaResposta")}
-                    rows={2}
-                    className={campoInput}
-                  />
-                  <button type="submit" className={`${botaoSecundario} w-fit`}>
+              <div className="flex flex-wrap items-center gap-3">
+                <details>
+                  <summary className="w-fit cursor-pointer text-xs text-primary">
                     {t("responder")}
-                  </button>
-                </form>
-              </details>
+                  </summary>
+                  <form
+                    action={criarComentario.bind(null, reclamacao.id, protocolo)}
+                    className="animate-fade-in mt-2 flex flex-col gap-2"
+                  >
+                    <input type="hidden" name="paiId" value={comentario.id} />
+                    <textarea
+                      name="texto"
+                      required
+                      minLength={3}
+                      maxLength={1000}
+                      placeholder={t("escrevaResposta")}
+                      rows={2}
+                      className={campoInput}
+                    />
+                    <button type="submit" className={`${botaoSecundario} w-fit`}>
+                      {t("responder")}
+                    </button>
+                  </form>
+                </details>
+
+                {comentario.autor.id !== session.user.id && (
+                  <FormularioDenuncia
+                    action={criarDenunciaComentario.bind(null, comentario.id, protocolo)}
+                    largura="w-64"
+                  />
+                )}
+              </div>
             )}
 
             {comentario.respostas.length > 0 && (
@@ -428,6 +392,12 @@ export default async function ReclamacaoPage({
                       </span>
                     </p>
                     <p className="text-sm text-slate-700 dark:text-slate-300">{resposta.texto}</p>
+                    {session?.user && resposta.autor.id !== session.user.id && (
+                      <FormularioDenuncia
+                        action={criarDenunciaComentario.bind(null, resposta.id, protocolo)}
+                        largura="w-64"
+                      />
+                    )}
                   </div>
                 ))}
               </div>
