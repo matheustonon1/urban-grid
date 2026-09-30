@@ -226,7 +226,8 @@
     "solicitacoes": "Requests",
     "categorias": "Categories",
     "banimentos": "Bans",
-    "solicitacoesCidade": "Cities"
+    "solicitacoesCidade": "Cities",
+    "usuarios": "Users"
   },
   "Moderacao": {
     "titulo": "Moderation queue",
@@ -754,5 +755,16 @@
     "rejeitada": "Rejected",
     "por": "by",
     "em": "on"
+  },
+  "Usuarios": {
+    "titulo": "Users",
+    "descricao": "Search by email or name to promote to moderator/admin, or demote back to citizen. Agency accounts do not show up here.",
+    "buscarPlaceholder": "Search by email or name...",
+    "buscar": "Search",
+    "digiteMais": "Type at least 2 characters.",
+    "nenhumEncontrado": "No users found.",
+    "vocêMesmo": "You can't change your own role - ask another admin.",
+    "salvar": "Save",
+    "erroPapelInvalido": "Invalid role."
   }
 }

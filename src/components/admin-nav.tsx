@@ -12,6 +12,7 @@ import {
   MapPinPlus,
   MessageSquareOff,
   ShieldCheck,
+  Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -34,6 +35,7 @@ const ITENS_ADMIN: ItemNav[] = [
   { href: "/solicitacoes-cidade", chave: "solicitacoesCidade", icone: MapPinPlus },
   { href: "/orgaos-categorias", chave: "categorias", icone: ListChecks },
   { href: "/banimentos", chave: "banimentos", icone: Ban },
+  { href: "/usuarios", chave: "usuarios", icone: Users },
 ];
 
 export function AdminNav({ ehAdmin }: { ehAdmin: boolean }) {

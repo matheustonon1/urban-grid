@@ -226,7 +226,8 @@
     "solicitacoes": "Solicitações",
     "categorias": "Categorias",
     "banimentos": "Banimentos",
-    "solicitacoesCidade": "Cidades"
+    "solicitacoesCidade": "Cidades",
+    "usuarios": "Usuários"
   },
   "Moderacao": {
     "titulo": "Fila de moderação",
@@ -754,5 +755,16 @@
     "rejeitada": "Rejeitada",
     "por": "por",
     "em": "em"
+  },
+  "Usuarios": {
+    "titulo": "Usuários",
+    "descricao": "Busque por e-mail ou nome pra promover a moderador/admin, ou rebaixar de volta a cidadão. Contas de órgão não aparecem aqui.",
+    "buscarPlaceholder": "Buscar por e-mail ou nome...",
+    "buscar": "Buscar",
+    "digiteMais": "Digite pelo menos 2 caracteres.",
+    "nenhumEncontrado": "Nenhum usuário encontrado.",
+    "vocêMesmo": "Você não pode alterar seu próprio papel - peça a outro admin.",
+    "salvar": "Salvar",
+    "erroPapelInvalido": "Papel inválido."
   }
 }
