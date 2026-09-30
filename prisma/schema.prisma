@@ -158,6 +158,14 @@ model User {
   ativo     Boolean   @default(true)
   banidoAte DateTime?
 
+  // Desliga só os e-mails de "status mudou" (ver TIPOS_COM_EMAIL em
+  // lib/notificacoes.ts) - a notificação no sininho continua sendo
+  // criada de qualquer forma. Não afeta alertas de segurança (senha
+  // alterada, troca de e-mail solicitada), que sempre saem por e-mail
+  // independente disto - nem o resumo semanal, que já é opt-in por si só
+  // via AssinaturaCidade.
+  notificarPorEmail Boolean @default(true)
+
   termosAceitosEm DateTime? // consentimento de termos/LGPD no cadastro
   criadoDeIp      String? // usado só pra limite de contas por IP
 

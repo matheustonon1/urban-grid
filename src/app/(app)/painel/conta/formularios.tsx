@@ -1,12 +1,18 @@
 "use client";
 
 import { useActionState } from "react";
-import { Lock, Mail, Trash2, User } from "lucide-react";
+import { Bell, Lock, Mail, Trash2, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { botaoPrimario, campoInput, cartao } from "@/lib/estilos";
 
-import { alterarSenha, atualizarPerfil, excluirConta, solicitarTrocaEmail } from "./actions";
+import {
+  alterarSenha,
+  atualizarPerfil,
+  atualizarPreferenciasNotificacao,
+  excluirConta,
+  solicitarTrocaEmail,
+} from "./actions";
 
 function Rotulo({ children, htmlFor }: { children: string; htmlFor: string }) {
   return (
@@ -44,6 +50,40 @@ export function FormularioPerfil({ telefone }: { telefone: string }) {
           <p className="text-sm text-red-600 dark:text-red-400">{state.erros.telefone[0]}</p>
         )}
       </div>
+
+      {state?.mensagem && (
+        <p className="text-sm text-slate-600 dark:text-slate-400">{state.mensagem}</p>
+      )}
+
+      <button type="submit" disabled={pending} className={`${botaoPrimario} w-fit`}>
+        {t("salvarDados")}
+      </button>
+    </form>
+  );
+}
+
+export function FormularioPreferenciasNotificacao({ notificarPorEmail }: { notificarPorEmail: boolean }) {
+  const t = useTranslations("Conta");
+  const [state, action, pending] = useActionState(atualizarPreferenciasNotificacao, undefined);
+
+  return (
+    <form action={action} className={`flex flex-col gap-3 ${cartao}`}>
+      <div className="flex items-center gap-2">
+        <Bell className="h-5 w-5 text-slate-400 dark:text-slate-500" aria-hidden />
+        <h2 className="font-semibold text-slate-900 dark:text-slate-100">
+          {t("preferenciasNotificacao")}
+        </h2>
+      </div>
+
+      <label className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
+        <input
+          type="checkbox"
+          name="notificarPorEmail"
+          defaultChecked={notificarPorEmail}
+          className="mt-0.5"
+        />
+        <span>{t("notificarPorEmailDesc")}</span>
+      </label>
 
       {state?.mensagem && (
         <p className="text-sm text-slate-600 dark:text-slate-400">{state.mensagem}</p>

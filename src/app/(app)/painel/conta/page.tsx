@@ -9,6 +9,7 @@ import { exigirSessao } from "@/lib/sessao";
 import {
   FormularioExclusao,
   FormularioPerfil,
+  FormularioPreferenciasNotificacao,
   FormularioSenha,
   FormularioTrocaEmail,
 } from "./formularios";
@@ -27,6 +28,7 @@ export default async function ContaPage() {
       telefone: true,
       totpSecret: true,
       totpConfirmadoEm: true,
+      notificarPorEmail: true,
     },
   });
 
@@ -60,6 +62,7 @@ export default async function ContaPage() {
       </div>
 
       <FormularioPerfil telefone={usuario.telefone ?? ""} />
+      <FormularioPreferenciasNotificacao notificarPorEmail={usuario.notificarPorEmail} />
       <FormularioSenha />
       <FormularioTrocaEmail emailAtual={usuario.email} />
       <FormularioTotp

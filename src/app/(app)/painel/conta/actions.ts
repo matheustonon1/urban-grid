@@ -47,6 +47,28 @@ export async function atualizarPerfil(
   return { mensagem: t("dadosAtualizados") };
 }
 
+// Só afeta os e-mails de "status mudou" (ver TIPOS_COM_EMAIL em
+// lib/notificacoes.ts) - alertas de segurança (senha alterada, troca de
+// e-mail solicitada) continuam saindo sempre, e a notificação no sininho
+// nunca para de ser criada. Antes desta ação, não existia nenhum jeito de
+// desligar esses e-mails além de nunca verificar o e-mail da conta.
+export async function atualizarPreferenciasNotificacao(
+  _state: { mensagem?: string } | undefined,
+  formData: FormData
+): Promise<{ mensagem?: string }> {
+  const t = await getTranslations("Conta");
+  const session = await exigirSessao();
+
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: { notificarPorEmail: formData.get("notificarPorEmail") === "on" },
+  });
+
+  revalidatePath("/painel/conta");
+
+  return { mensagem: t("preferenciasAtualizadas") };
+}
+
 export async function solicitarTrocaEmail(
   _state: TrocaEmailFormState,
   formData: FormData

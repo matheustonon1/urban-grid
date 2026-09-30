@@ -60,9 +60,9 @@ export async function criarNotificacao({
   try {
     const usuario = await prisma.user.findUnique({
       where: { id: userId },
-      select: { email: true, emailVerified: true, idioma: true },
+      select: { email: true, emailVerified: true, idioma: true, notificarPorEmail: true },
     });
-    if (!usuario?.emailVerified) {
+    if (!usuario?.emailVerified || !usuario.notificarPorEmail) {
       return;
     }
 

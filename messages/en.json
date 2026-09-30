@@ -53,7 +53,10 @@
     "linkConfirmacaoEnviado": "We've sent a confirmation link to {email}. Your access email only changes after you confirm it there.",
     "erroAlterarSenha": "Couldn't change the password.",
     "erroSenhaAtualIncorreta": "Incorrect current password.",
-    "erroExcluirConta": "Couldn't delete the account."
+    "erroExcluirConta": "Couldn't delete the account.",
+    "preferenciasNotificacao": "Notification preferences",
+    "notificarPorEmailDesc": "Receive an email when a complaint's status changes (official response, publication, rejection, review request). The in-app bell notification always stays on.",
+    "preferenciasAtualizadas": "Preferences updated."
   },
   "Totp": {
     "copiado": "Copied",

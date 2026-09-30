@@ -53,7 +53,10 @@
     "linkConfirmacaoEnviado": "Enviamos um link de confirmação para {email}. O e-mail de acesso só muda depois que você confirmar por lá.",
     "erroAlterarSenha": "Não foi possível alterar a senha.",
     "erroSenhaAtualIncorreta": "Senha atual incorreta.",
-    "erroExcluirConta": "Não foi possível excluir a conta."
+    "erroExcluirConta": "Não foi possível excluir a conta.",
+    "preferenciasNotificacao": "Preferências de notificação",
+    "notificarPorEmailDesc": "Receber e-mail quando o status de uma reclamação mudar (resposta oficial, publicação, rejeição, pedido de avaliação). A notificação no sininho continua sempre ativa.",
+    "preferenciasAtualizadas": "Preferências atualizadas."
   },
   "Totp": {
     "copiado": "Copiado",
