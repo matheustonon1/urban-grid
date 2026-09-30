@@ -334,7 +334,14 @@
     "nenhumOrgao": "Nenhum órgão cadastrado ainda.",
     "inativo": "Inativo",
     "desativar": "Desativar",
-    "reativar": "Reativar"
+    "reativar": "Reativar",
+    "editarDados": "Editar dados",
+    "nome": "Nome do órgão",
+    "sigla": "Sigla",
+    "email": "E-mail",
+    "salvarDados": "Salvar dados",
+    "erroNomeOrgao": "Informe o nome do órgão.",
+    "erroEmailInvalido": "E-mail inválido."
   },
   "SolicitacoesOrgao": {
     "titulo": "Solicitações de acesso como órgão",

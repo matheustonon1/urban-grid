@@ -3,10 +3,10 @@ import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { Paginacao } from "@/components/paginacao";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
-import { botaoPrimario, botaoSecundario, cartao, containerPagina } from "@/lib/estilos";
+import { botaoPrimario, botaoSecundario, campoInput, cartao, containerPagina } from "@/lib/estilos";
 
 import { exigirAdmin } from "../solicitacoes-orgao/exigir-admin";
-import { alternarAtivoOrgao, atualizarCategoriasOrgao } from "./actions";
+import { alternarAtivoOrgao, atualizarCategoriasOrgao, atualizarDadosOrgao } from "./actions";
 
 export default async function OrgaosCategoriasPage({
   searchParams,
@@ -77,6 +77,40 @@ export default async function OrgaosCategoriasPage({
               </button>
             </form>
           </div>
+
+          <details className="text-sm">
+            <summary className="w-fit cursor-pointer text-primary">{t("editarDados")}</summary>
+            <form
+              action={atualizarDadosOrgao.bind(null, orgao.id)}
+              className="animate-fade-in mt-2 flex flex-wrap gap-2"
+            >
+              <input
+                type="text"
+                name="nome"
+                required
+                defaultValue={orgao.nome}
+                placeholder={t("nome")}
+                className={`min-w-40 flex-1 ${campoInput}`}
+              />
+              <input
+                type="text"
+                name="sigla"
+                defaultValue={orgao.sigla ?? ""}
+                placeholder={t("sigla")}
+                className={`w-24 ${campoInput}`}
+              />
+              <input
+                type="email"
+                name="email"
+                defaultValue={orgao.email ?? ""}
+                placeholder={t("email")}
+                className={`min-w-48 flex-1 ${campoInput}`}
+              />
+              <button type="submit" className={botaoSecundario}>
+                {t("salvarDados")}
+              </button>
+            </form>
+          </details>
 
           <form
             action={atualizarCategoriasOrgao.bind(null, orgao.id)}

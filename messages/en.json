@@ -334,7 +334,14 @@
     "nenhumOrgao": "No agencies registered yet.",
     "inativo": "Inactive",
     "desativar": "Deactivate",
-    "reativar": "Reactivate"
+    "reativar": "Reactivate",
+    "editarDados": "Edit details",
+    "nome": "Agency name",
+    "sigla": "Acronym",
+    "email": "Email",
+    "salvarDados": "Save details",
+    "erroNomeOrgao": "Enter the agency name.",
+    "erroEmailInvalido": "Invalid email."
   },
   "SolicitacoesOrgao": {
     "titulo": "Department access requests",
