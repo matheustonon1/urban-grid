@@ -6,7 +6,12 @@ import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } 
 import { botaoPrimario, botaoSecundario, campoInput, cartao, containerPagina } from "@/lib/estilos";
 
 import { exigirAdmin } from "../solicitacoes-orgao/exigir-admin";
-import { alternarAtivoOrgao, atualizarCategoriasOrgao, atualizarDadosOrgao } from "./actions";
+import {
+  alternarAtivoOrgao,
+  atualizarCategoriasOrgao,
+  atualizarDadosOrgao,
+  reenviarConviteOrgao,
+} from "./actions";
 
 export default async function OrgaosCategoriasPage({
   searchParams,
@@ -23,7 +28,17 @@ export default async function OrgaosCategoriasPage({
   const [orgaos, totalOrgaos, categorias] = await Promise.all([
     prisma.orgao.findMany({
       orderBy: [{ ativo: "desc" }, { nome: "asc" }],
-      include: { cidade: true, categorias: { select: { id: true } } },
+      include: {
+        cidade: true,
+        categorias: { select: { id: true } },
+        // senhaHash nulo = convite ainda não aceito (ver reenviarConviteOrgao
+        // em ./actions) - precisa saber quem está nesse estado pra mostrar o
+        // botão de reenviar só onde faz sentido.
+        responsaveis: {
+          where: { papel: "ORGAO", senhaHash: null },
+          select: { id: true, email: true },
+        },
+      },
       skip: calcularSkip(paginaAtual),
       take: ITENS_POR_PAGINA,
     }),
@@ -60,8 +75,20 @@ export default async function OrgaosCategoriasPage({
                     {t("inativo")}
                   </span>
                 )}
+                {orgao.responsaveis.length > 0 && (
+                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-normal text-amber-700 dark:bg-amber-950/40 dark:text-amber-400">
+                    {t("convitePendente")}
+                  </span>
+                )}
               </p>
               <p className="text-xs text-slate-500 dark:text-slate-400">{orgao.cidade.nome}</p>
+              {orgao.responsaveis.map((responsavel) => (
+                <form key={responsavel.id} action={reenviarConviteOrgao.bind(null, responsavel.id)}>
+                  <button type="submit" className="mt-1 text-xs text-primary hover:underline">
+                    {t("reenviarConvite", { email: responsavel.email })}
+                  </button>
+                </form>
+              ))}
             </div>
 
             <form action={alternarAtivoOrgao.bind(null, orgao.id, !orgao.ativo)}>

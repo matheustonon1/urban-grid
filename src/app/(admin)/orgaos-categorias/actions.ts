@@ -5,6 +5,8 @@ import { Prisma } from "@prisma/client";
 import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
+import { criarTokenVerificacao, enviarEmailAcessoOrgao } from "@/lib/email";
+import { idiomaOuPadrao } from "@/i18n/config";
 
 import { criarAtualizarDadosOrgaoSchema } from "./definitions";
 import { exigirAdmin } from "../solicitacoes-orgao/exigir-admin";
@@ -81,6 +83,35 @@ export async function atualizarCategoriasOrgao(orgaoId: string, formData: FormDa
   });
 
   revalidatePath("/orgaos-categorias");
+}
+
+// O token do convite original (enviado na aprovação da solicitação, ver
+// aprovarSolicitacao em solicitacoes-orgao/actions.ts) expira em 24h - se
+// a pessoa perder o e-mail ou demorar mais que isso pra clicar, a conta
+// fica com senhaHash nulo pra sempre: diferente do cidadão comum (que tem
+// "reenviar verificação" em /painel), ninguém consegue disparar um novo
+// convite, porque quem precisaria dele é justamente quem não consegue
+// logar ainda. criarTokenVerificacao() já invalida o token antigo ao
+// criar um novo, então reenviar não deixa dois links válidos ao mesmo
+// tempo.
+export async function reenviarConviteOrgao(userId: string) {
+  await exigirAdmin();
+
+  const usuario = await prisma.user.findUnique({
+    where: { id: userId },
+    include: { orgao: true },
+  });
+  if (!usuario || usuario.papel !== "ORGAO" || usuario.senhaHash || !usuario.orgao) {
+    return;
+  }
+
+  const token = await criarTokenVerificacao(usuario.email);
+  await enviarEmailAcessoOrgao({
+    email: usuario.email,
+    token,
+    nomeOrgao: usuario.orgao.nome,
+    locale: idiomaOuPadrao(usuario.idioma),
+  });
 }
 
 // Único jeito de desligar Orgao.ativo hoje - sem isto, o campo era

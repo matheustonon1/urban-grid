@@ -347,7 +347,9 @@
     "email": "E-mail",
     "salvarDados": "Salvar dados",
     "erroNomeOrgao": "Informe o nome do órgão.",
-    "erroEmailInvalido": "E-mail inválido."
+    "erroEmailInvalido": "E-mail inválido.",
+    "convitePendente": "Convite pendente",
+    "reenviarConvite": "Reenviar convite para {email}"
   },
   "SolicitacoesOrgao": {
     "titulo": "Solicitações de acesso como órgão",

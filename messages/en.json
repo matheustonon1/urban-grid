@@ -347,7 +347,9 @@
     "email": "Email",
     "salvarDados": "Save details",
     "erroNomeOrgao": "Enter the agency name.",
-    "erroEmailInvalido": "Invalid email."
+    "erroEmailInvalido": "Invalid email.",
+    "convitePendente": "Invite pending",
+    "reenviarConvite": "Resend invite to {email}"
   },
   "SolicitacoesOrgao": {
     "titulo": "Department access requests",
