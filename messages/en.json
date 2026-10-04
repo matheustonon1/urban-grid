@@ -558,7 +558,11 @@
     "erroLimiteDiario": "You've reached the daily complaint limit. Try again tomorrow.",
     "erroMaxImagens": "Submit at most {max} images.",
     "erroTipoImagem": "Images must be JPEG, PNG, or WebP.",
-    "erroTamanhoImagem": "Each image must be at most 5MB."
+    "erroTamanhoImagem": "Each image must be at most 5MB.",
+    "adicionarFotos": "Add photos",
+    "fotosSelecionadas": "{count, plural, one {# photo selected} other {# photos selected}}",
+    "removerFoto": "Remove photo",
+    "fecharImagem": "Close image"
   },
   "MotivoDenuncia": {
     "OFENSIVO": "Offensive content",

@@ -558,7 +558,11 @@
     "erroLimiteDiario": "Você atingiu o limite de reclamações por dia. Tente novamente amanhã.",
     "erroMaxImagens": "Envie no máximo {max} imagens.",
     "erroTipoImagem": "As imagens devem ser JPEG, PNG ou WebP.",
-    "erroTamanhoImagem": "Cada imagem deve ter no máximo 5MB."
+    "erroTamanhoImagem": "Cada imagem deve ter no máximo 5MB.",
+    "adicionarFotos": "Adicionar fotos",
+    "fotosSelecionadas": "{count, plural, one {# foto selecionada} other {# fotos selecionadas}}",
+    "removerFoto": "Remover foto",
+    "fecharImagem": "Fechar imagem"
   },
   "MotivoDenuncia": {
     "OFENSIVO": "Conteúdo ofensivo",
