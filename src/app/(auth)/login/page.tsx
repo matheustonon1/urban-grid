@@ -41,6 +41,7 @@ export default function LoginPage() {
             type="password"
             name="senha"
             placeholder={t("senha")}
+            defaultValue={state?.senha ?? ""}
             required
             className={campoInput}
           />

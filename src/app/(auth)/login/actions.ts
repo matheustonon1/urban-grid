@@ -14,6 +14,12 @@ export type LoginFormState =
       erro?: string;
       etapaTotp?: boolean;
       identificador?: string;
+      // Ecoada de volta só pra pré-preencher o campo na etapa de código
+      // TOTP (ver comentário mais abaixo) - sem isto, a senha validada
+      // nesta mesma submissão se perdia e a pessoa tinha que digitá-la de
+      // novo pra completar o login, apesar do comentário já dizer que a
+      // intenção sempre foi não exigir isso.
+      senha?: string;
     }
   | undefined;
 
@@ -54,7 +60,7 @@ export async function login(
     !!usuario?.senhaHash && (await bcrypt.compare(senha, usuario.senhaHash));
   const precisaTotp = senhaValida && !!usuario?.totpConfirmadoEm;
   if (precisaTotp && (typeof codigoTotp !== "string" || codigoTotp.trim() === "")) {
-    return { identificador, etapaTotp: true };
+    return { identificador, senha, etapaTotp: true };
   }
 
   try {
@@ -71,6 +77,10 @@ export async function login(
           ? t("erroCredenciaisOuCodigoInvalidos")
           : t("erroCredenciaisInvalidas"),
         identificador,
+        // Só reaproveita a senha quando o próximo passo ainda vai pedir o
+        // código de novo (precisaTotp) - se a senha em si estava errada,
+        // não faz sentido ecoar de volta o que a pessoa digitou.
+        senha: precisaTotp ? senha : undefined,
         etapaTotp: precisaTotp,
       };
     }

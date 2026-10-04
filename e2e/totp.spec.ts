@@ -37,6 +37,11 @@ test("ativa, exige no login e desativa a autenticação em duas etapas", async (
   await page.fill('input[name="senha"]', senha);
   await page.click('button[type="submit"]');
   await expect(page.locator('input[name="codigoTotp"]')).toBeVisible();
+  // A senha já validada nesta mesma submissão volta pré-preenchida - sem
+  // isto, a pessoa tinha que redigitá-la só pra completar o segundo
+  // fator, apesar do comentário em login/actions.ts sempre ter dito que
+  // essa nunca foi a intenção.
+  await expect(page.locator('input[name="senha"]')).toHaveValue(senha);
 
   const usuarioAtivo = await prisma.user.findUniqueOrThrow({
     where: { email },
@@ -48,7 +53,8 @@ test("ativa, exige no login e desativa a autenticação em duas etapas", async (
     segundosNoFuturo: 30,
   });
 
-  await page.fill('input[name="senha"]', senha);
+  // Não redigita a senha de propósito - é exatamente o comportamento que
+  // a asserção acima comprova.
   await page.fill('input[name="codigoTotp"]', codigoLogin);
   await page.click('button[type="submit"]');
   await page.waitForURL(/\/painel$/);
@@ -61,7 +67,6 @@ test("ativa, exige no login e desativa a autenticação em duas etapas", async (
   await page.fill('input[name="senha"]', senha);
   await page.click('button[type="submit"]');
   await expect(page.locator('input[name="codigoTotp"]')).toBeVisible();
-  await page.fill('input[name="senha"]', senha);
   await page.fill('input[name="codigoTotp"]', codigoLogin);
   await page.click('button[type="submit"]');
   await expect(page.getByText("E-mail/CPF, senha ou código inválidos.")).toBeVisible();
