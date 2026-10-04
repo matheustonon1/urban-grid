@@ -562,7 +562,9 @@
     "adicionarFotos": "Adicionar fotos",
     "fotosSelecionadas": "{count, plural, one {# foto selecionada} other {# fotos selecionadas}}",
     "removerFoto": "Remover foto",
-    "fecharImagem": "Fechar imagem"
+    "fecharImagem": "Fechar imagem",
+    "avisoTamanhoExcedido": "{nome} tem {tamanho}MB — o limite é 5MB por foto.",
+    "avisoTipoInvalido": "{nome}: formato não aceito (use JPEG, PNG ou WebP)."
   },
   "MotivoDenuncia": {
     "OFENSIVO": "Conteúdo ofensivo",

@@ -10,13 +10,11 @@ import { gerarProtocolo } from "@/lib/protocolo";
 import { uploadImagem } from "@/lib/storage";
 import { aplicarBlur, calcularPhash, distanciaHamming, extrairExif } from "@/lib/imagem";
 import { analisarImagemReal, mimeTypeDoFormato, type ImagemAnalisada } from "@/lib/validarImagem";
+import { MAX_IMAGENS, MAX_TAMANHO_BYTES, TIPOS_ACEITOS } from "@/lib/limitesImagemReclamacao";
 import { exigirSessao } from "@/lib/sessao";
 
 import { criarNovaReclamacaoSchema, type NovaReclamacaoFormState } from "./definitions";
 
-const MAX_IMAGENS = 5;
-const MAX_TAMANHO_BYTES = 5 * 1024 * 1024;
-const TIPOS_ACEITOS = ["image/jpeg", "image/png", "image/webp"];
 const DISTANCIA_REPOSTAGEM = 8;
 const LIMITE_RECLAMACOES_DIA = 5;
 const JANELA_REPOSTAGEM_DIAS = 180;

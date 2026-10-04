@@ -8,6 +8,7 @@ import { SeletorCidade } from "@/components/cidade-combobox";
 import { SeletorCategoria } from "@/components/categoria-select";
 import { useFecharAoInteragirFora } from "@/hooks/useFecharAoInteragirFora";
 import { botaoPrimario, campoInput, cartao } from "@/lib/estilos";
+import { MAX_IMAGENS, MAX_TAMANHO_BYTES, TIPOS_ACEITOS } from "@/lib/limitesImagemReclamacao";
 
 import { criarReclamacao } from "./actions";
 
@@ -39,6 +40,7 @@ export function NovaReclamacaoForm({
   >("idle");
   const [arquivos, setArquivos] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
+  const [avisoArquivos, setAvisoArquivos] = useState<string | null>(null);
   const [categoriaId, setCategoriaId] = useState<string | null>(null);
   const [imagemAmpliada, setImagemAmpliada] = useState<string | null>(null);
   const imagensInputRef = useRef<HTMLInputElement>(null);
@@ -63,11 +65,43 @@ export function NovaReclamacaoForm({
     }
   }
 
+  // Mesmos limites do servidor (reclamacoes/nova/actions.ts), avisados
+  // na hora de escolher o arquivo em vez de só depois de enviar o
+  // formulário inteiro e descobrir o problema no retorno do servidor.
+  // A validação de verdade continua no servidor - isto é só feedback
+  // mais cedo, não substitui a checagem real.
   function selecionarImagens(lista: FileList | null) {
-    atualizarArquivos(lista ? Array.from(lista) : []);
+    const selecionados = lista ? Array.from(lista) : [];
+
+    if (selecionados.length > MAX_IMAGENS) {
+      setAvisoArquivos(t("erroMaxImagens", { max: MAX_IMAGENS }));
+      return;
+    }
+
+    const avisos: string[] = [];
+    const validos = selecionados.filter((arquivo) => {
+      if (!TIPOS_ACEITOS.includes(arquivo.type)) {
+        avisos.push(t("avisoTipoInvalido", { nome: arquivo.name }));
+        return false;
+      }
+      if (arquivo.size > MAX_TAMANHO_BYTES) {
+        avisos.push(
+          t("avisoTamanhoExcedido", {
+            nome: arquivo.name,
+            tamanho: (arquivo.size / (1024 * 1024)).toFixed(1),
+          })
+        );
+        return false;
+      }
+      return true;
+    });
+
+    setAvisoArquivos(avisos.length > 0 ? avisos.join(" ") : null);
+    atualizarArquivos(validos);
   }
 
   function removerImagem(indice: number) {
+    setAvisoArquivos(null);
     atualizarArquivos(arquivos.filter((_, i) => i !== indice));
   }
 
@@ -247,6 +281,9 @@ export function NovaReclamacaoForm({
             className="sr-only"
           />
         </label>
+        {avisoArquivos && (
+          <p className="text-sm text-amber-600 dark:text-amber-400">{avisoArquivos}</p>
+        )}
 
         {previews.length > 0 && (
           <div className="flex flex-wrap gap-2">
