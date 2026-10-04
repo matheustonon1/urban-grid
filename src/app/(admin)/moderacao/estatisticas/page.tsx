@@ -13,10 +13,17 @@ const DECISAO_COR: Record<string, string> = {
   ENCAMINHAR_REVISAO: "text-amber-700 dark:text-amber-400",
 };
 
+// Número em mono/tabular, mesmo vocabulário do painel de estatísticas
+// da home (ver app/page.tsx) - lembra um painel técnico, não um stat
+// card isolado. Sem cartao próprio aqui de propósito: cada Estatistica
+// é um item dentro do painel único montado onde é usada, não um bloco
+// solto.
 function Estatistica({ label, valor }: { label: string; valor: string }) {
   return (
-    <div className={`flex flex-col gap-1 ${cartao}`}>
-      <span className="text-2xl font-bold text-slate-900 dark:text-slate-100">{valor}</span>
+    <div className="flex min-w-30 flex-1 flex-col gap-0.5 px-4 py-3">
+      <span className="font-mono text-2xl font-bold tabular-nums text-slate-900 dark:text-slate-100">
+        {valor}
+      </span>
       <span className="text-xs text-slate-500 dark:text-slate-400">{label}</span>
     </div>
   );
@@ -146,7 +153,7 @@ export default async function EstatisticasModeracaoPage() {
         <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumaAnalise")}</p>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div className="flex w-full flex-wrap divide-x divide-slate-300 border border-slate-300 bg-white/70 dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-900/50">
             <Estatistica label={t("analisesNoTotal")} valor={String(totalAnalises)} />
             <Estatistica
               label={t("taxaAprovacao")}
