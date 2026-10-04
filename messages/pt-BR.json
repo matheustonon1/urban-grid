@@ -454,7 +454,8 @@
     "criarContaGratuita": "Criar conta gratuita",
     "souOrgao": "Sou órgão público",
     "souOrgaoDesc": "Solicite acesso para responder oficialmente às reclamações da sua cidade. Um administrador analisa cada pedido.",
-    "solicitarAcesso": "Solicitar acesso"
+    "solicitarAcesso": "Solicitar acesso",
+    "aoVivo": "Ao vivo"
   },
   "Cadastro": {
     "tituloOrgao": "Solicitar acesso como órgão",

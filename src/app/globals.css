@@ -206,6 +206,43 @@ body {
     linear-gradient(90deg, rgba(96, 165, 250, 0.07) 1px, transparent 1px);
 }
 
+/* Régua de medição no lugar de uma borda lisa entre seções - reforça o
+   tema de "grade urbana"/planta baixa como dispositivo estrutural, não só
+   textura de fundo no hero. As marcações a cada 24px ecoam o quarteirão
+   pequeno de .bg-city-grid. */
+.regua-divisoria {
+  height: 7px;
+  width: 100%;
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      rgba(100, 116, 139, 0.45) 0px,
+      rgba(100, 116, 139, 0.45) 1px,
+      transparent 1px,
+      transparent 24px
+    ),
+    linear-gradient(rgba(100, 116, 139, 0.25), rgba(100, 116, 139, 0.25));
+  background-repeat: repeat-x, no-repeat;
+  background-size:
+    24px 7px,
+    100% 1px;
+  background-position:
+    top left,
+    bottom;
+}
+
+.dark .regua-divisoria {
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      rgba(148, 163, 184, 0.35) 0px,
+      rgba(148, 163, 184, 0.35) 1px,
+      transparent 1px,
+      transparent 24px
+    ),
+    linear-gradient(rgba(148, 163, 184, 0.2), rgba(148, 163, 184, 0.2));
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in,
   .animate-pop-in,

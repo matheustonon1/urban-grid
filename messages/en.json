@@ -454,7 +454,8 @@
     "criarContaGratuita": "Create free account",
     "souOrgao": "I'm a public department",
     "souOrgaoDesc": "Request access to officially respond to complaints in your city. An administrator reviews every request.",
-    "solicitarAcesso": "Request access"
+    "solicitarAcesso": "Request access",
+    "aoVivo": "Live"
   },
   "Cadastro": {
     "tituloOrgao": "Request access as a department",

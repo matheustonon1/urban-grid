@@ -103,7 +103,7 @@ export default async function Home() {
 
   return (
     <main className="flex flex-1 flex-col items-center overflow-hidden">
-      <section className="relative flex w-full flex-col items-center gap-10 border-b border-slate-200 px-6 py-20 sm:px-8 sm:py-28 dark:border-slate-800">
+      <section className="relative flex w-full flex-col items-center gap-10 px-6 py-20 sm:px-8 sm:py-28">
         <div
           aria-hidden
           className="bg-city-grid animate-city-grid-drift pointer-events-none absolute inset-0 -z-10"
@@ -137,14 +137,17 @@ export default async function Home() {
         </div>
 
         {totalReclamacoes > 0 && (
-          <div className="grid w-full max-w-3xl grid-cols-2 gap-4 sm:grid-cols-4">
-            {ESTATISTICAS.map((item, indice) => (
+          // Painel único com divisórias internas, números em mono/tabular -
+          // lembra um placar/painel técnico (ligado à fonte Plex Mono que o
+          // projeto já tinha e mal usava), não quatro cartões de stat
+          // genéricos repetindo o mesmo visual do resto da página.
+          <div className="animate-fade-in flex w-full max-w-3xl flex-wrap justify-center divide-x divide-slate-300 border border-slate-300 bg-white/70 backdrop-blur-sm dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-900/50">
+            {ESTATISTICAS.map((item) => (
               <div
                 key={item.rotulo}
-                style={{ animationDelay: `${indice * 80}ms` }}
-                className="animate-fade-in flex flex-col items-center gap-1 rounded-lg border border-slate-200 bg-white p-4 text-center shadow-sm dark:border-slate-800 dark:bg-slate-900"
+                className="flex min-w-30 flex-1 flex-col items-center gap-0.5 px-4 py-4 text-center"
               >
-                <span className="font-display text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                <span className="font-mono text-2xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
                   {item.valor}
                 </span>
                 <span className="text-xs text-slate-500 dark:text-slate-400">{item.rotulo}</span>
@@ -153,6 +156,8 @@ export default async function Home() {
           </div>
         )}
       </section>
+
+      <div aria-hidden className="regua-divisoria" />
 
       <section className="flex w-full flex-col items-center gap-8 px-6 py-16 sm:px-8">
         <Revelar className="flex flex-col items-center gap-2 text-center">
@@ -185,56 +190,68 @@ export default async function Home() {
       </section>
 
       {reclamacoesRecentes.length > 0 && (
-        <section className="flex w-full flex-col items-center gap-8 border-t border-slate-200 bg-slate-50 px-6 py-16 sm:px-8 dark:border-slate-800 dark:bg-slate-950/50">
-          <Revelar className="flex flex-col items-center gap-2 text-center">
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-              {t("acontecendoAgora")}
-            </h2>
-            <p className="max-w-md text-sm text-slate-500 dark:text-slate-400">
-              {t("acontecendoAgoraSub")}
-            </p>
-          </Revelar>
+        <>
+          <div aria-hidden className="regua-divisoria" />
+          <section className="flex w-full flex-col items-center gap-8 bg-slate-50 px-6 py-16 sm:px-8 dark:bg-slate-950/50">
+            <Revelar className="flex flex-col items-center gap-2 text-center">
+              <span className="flex items-center gap-1.5 text-xs font-semibold tracking-wide text-accent-dark uppercase dark:text-accent">
+                <span className="relative flex h-2 w-2" aria-hidden>
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75 motion-reduce:hidden" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
+                </span>
+                {t("aoVivo")}
+              </span>
+              <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+                {t("acontecendoAgora")}
+              </h2>
+              <p className="max-w-md text-sm text-slate-500 dark:text-slate-400">
+                {t("acontecendoAgoraSub")}
+              </p>
+            </Revelar>
 
-          <Revelar atraso={120} className="grid w-full max-w-4xl gap-4 sm:grid-cols-3">
-            {reclamacoesRecentes.map((reclamacao, indice) => (
-              <Link
-                key={reclamacao.id}
-                href={`/reclamacoes/${reclamacao.protocolo}`}
-                style={{ animationDelay: `${indice * 80}ms` }}
-                className={`animate-fade-in flex flex-col gap-2 transition hover:-translate-y-0.5 hover:border-primary hover:shadow-md ${cartao}`}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
-                    <CategoriaIcon
-                      icone={reclamacao.categoria.icone}
-                      className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500"
-                    />
-                    {reclamacao.categoria.nome}
-                  </span>
-                  <StatusBadge status={reclamacao.status} />
-                </div>
-                <p className="line-clamp-2 font-semibold text-slate-900 dark:text-slate-100">
-                  {reclamacao.titulo}
-                </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {reclamacao.cidade.nome} - {reclamacao.cidade.estado.uf} ·{" "}
-                  {t("confirmacoes", { count: reclamacao._count.confirmacoes })}
-                </p>
-              </Link>
-            ))}
-          </Revelar>
+            <Revelar atraso={120} className="grid w-full max-w-4xl gap-4 sm:grid-cols-3">
+              {reclamacoesRecentes.map((reclamacao, indice) => (
+                <Link
+                  key={reclamacao.id}
+                  href={`/reclamacoes/${reclamacao.protocolo}`}
+                  style={{ animationDelay: `${indice * 80}ms` }}
+                  className={`animate-fade-in flex flex-col gap-2 transition hover:-translate-y-0.5 hover:border-primary hover:shadow-md ${cartao}`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+                      <CategoriaIcon
+                        icone={reclamacao.categoria.icone}
+                        className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500"
+                      />
+                      {reclamacao.categoria.nome}
+                    </span>
+                    <StatusBadge status={reclamacao.status} />
+                  </div>
+                  <p className="line-clamp-2 font-semibold text-slate-900 dark:text-slate-100">
+                    {reclamacao.titulo}
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {reclamacao.cidade.nome} - {reclamacao.cidade.estado.uf} ·{" "}
+                    {t("confirmacoes", { count: reclamacao._count.confirmacoes })}
+                  </p>
+                </Link>
+              ))}
+            </Revelar>
 
-          <Link
-            href="/reclamacoes"
-            className="flex items-center gap-1 text-sm font-medium text-primary underline"
-          >
-            {t("verTodasReclamacoes")}
-            <ArrowRight className="h-4 w-4" aria-hidden />
-          </Link>
-        </section>
+            <Link
+              href="/reclamacoes"
+              className="flex items-center gap-1 text-sm font-medium text-primary underline"
+            >
+              {t("verTodasReclamacoes")}
+              <ArrowRight className="h-4 w-4" aria-hidden />
+            </Link>
+          </section>
+        </>
       )}
 
-      <section className="flex w-full flex-col items-center gap-8 border-t border-slate-200 px-6 py-16 sm:px-8 dark:border-slate-800">
+      <div aria-hidden className="regua-divisoria" />
+
+      <section className="flex w-full flex-col items-center gap-8 px-6 py-16 sm:px-8">
         <Revelar className="flex flex-col items-center gap-2 text-center">
           <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
             {t("diferente")}
@@ -262,58 +279,63 @@ export default async function Home() {
       </section>
 
       {rankingOrgaos.length > 0 && (
-        <section className="flex w-full flex-col items-center gap-8 border-t border-slate-200 bg-slate-50 px-6 py-16 sm:px-8 dark:border-slate-800 dark:bg-slate-950/50">
-          <Revelar className="flex flex-col items-center gap-2 text-center">
-            <span className="inline-flex items-center gap-1.5 text-primary dark:text-blue-400">
-              <TrendingUp className="h-5 w-5" aria-hidden />
-            </span>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-              {t("melhorAvaliados")}
-            </h2>
-            <p className="max-w-md text-sm text-slate-500 dark:text-slate-400">
-              {t("melhorAvaliadosSub")}
-            </p>
-          </Revelar>
+        <>
+          <div aria-hidden className="regua-divisoria" />
+          <section className="flex w-full flex-col items-center gap-8 bg-slate-50 px-6 py-16 sm:px-8 dark:bg-slate-950/50">
+            <Revelar className="flex flex-col items-center gap-2 text-center">
+              <span className="inline-flex items-center gap-1.5 text-primary dark:text-blue-400">
+                <TrendingUp className="h-5 w-5" aria-hidden />
+              </span>
+              <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+                {t("melhorAvaliados")}
+              </h2>
+              <p className="max-w-md text-sm text-slate-500 dark:text-slate-400">
+                {t("melhorAvaliadosSub")}
+              </p>
+            </Revelar>
 
-          <Revelar atraso={120} className="grid w-full max-w-3xl gap-4 sm:grid-cols-3">
-            {rankingOrgaos.map(({ orgao, metricas }, indice) => {
-              const classificacao = classificarIndice(
-                metricas.indiceResolucao,
-                metricas.totalRespondidas
-              );
-              return (
-                <Link
-                  key={orgao.id}
-                  href={`/orgaos/${orgao.id}`}
-                  style={{ animationDelay: `${indice * 80}ms` }}
-                  className={`animate-fade-in flex flex-col gap-2 transition hover:-translate-y-0.5 hover:border-primary hover:shadow-md ${cartao}`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span
-                      className={`inline-block shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${classificacao.className}`}
-                    >
-                      {tSelo(classificacao.chave)}
-                    </span>
-                    <span className="text-xs font-semibold text-slate-400 dark:text-slate-600">
-                      #{indice + 1}
-                    </span>
-                  </div>
-                  <p className="font-semibold text-slate-900 dark:text-slate-100">
-                    {orgao.nome}
-                    {orgao.sigla && ` (${orgao.sigla})`}
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {orgao.cidade.nome} ·{" "}
-                    {t("reclamacoesRespondidas", { count: metricas.totalRespondidas })}
-                  </p>
-                </Link>
-              );
-            })}
-          </Revelar>
-        </section>
+            <Revelar atraso={120} className="grid w-full max-w-3xl gap-4 sm:grid-cols-3">
+              {rankingOrgaos.map(({ orgao, metricas }, indice) => {
+                const classificacao = classificarIndice(
+                  metricas.indiceResolucao,
+                  metricas.totalRespondidas
+                );
+                return (
+                  <Link
+                    key={orgao.id}
+                    href={`/orgaos/${orgao.id}`}
+                    style={{ animationDelay: `${indice * 80}ms` }}
+                    className={`animate-fade-in flex flex-col gap-2 transition hover:-translate-y-0.5 hover:border-primary hover:shadow-md ${cartao}`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span
+                        className={`inline-block shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${classificacao.className}`}
+                      >
+                        {tSelo(classificacao.chave)}
+                      </span>
+                      <span className="text-xs font-semibold text-slate-400 dark:text-slate-600">
+                        #{indice + 1}
+                      </span>
+                    </div>
+                    <p className="font-semibold text-slate-900 dark:text-slate-100">
+                      {orgao.nome}
+                      {orgao.sigla && ` (${orgao.sigla})`}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {orgao.cidade.nome} ·{" "}
+                      {t("reclamacoesRespondidas", { count: metricas.totalRespondidas })}
+                    </p>
+                  </Link>
+                );
+              })}
+            </Revelar>
+          </section>
+        </>
       )}
 
-      <section className="flex w-full flex-col items-center gap-4 border-t border-slate-200 px-6 py-16 text-center sm:px-8 dark:border-slate-800">
+      <div aria-hidden className="regua-divisoria" />
+
+      <section className="flex w-full flex-col items-center gap-4 px-6 py-16 text-center sm:px-8">
         <Revelar className="flex flex-col items-center gap-4">
           <MapPin className="h-8 w-8 text-primary" aria-hidden />
           <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
