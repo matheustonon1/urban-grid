@@ -85,8 +85,9 @@ export default async function HistoricoModeracaoPage({
                   </p>
                 )}
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {reclamacao?.protocolo} · {log.createdAt.toLocaleString(locale)} ·
-                  {" "}v{log.versaoPrompt}
+                  <span className="font-mono">{reclamacao?.protocolo}</span> ·{" "}
+                  {log.createdAt.toLocaleString(locale)} ·{" "}
+                  v{log.versaoPrompt}
                   {log.latenciaMs != null && ` · ${log.latenciaMs}ms`}
                 </p>
               </div>

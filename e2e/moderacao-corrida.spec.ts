@@ -45,8 +45,10 @@ test("aprovar e rejeitar a mesma reclamação ao mesmo tempo não deixa os dois 
   await paginaA.goto("/moderacao");
   await paginaB.goto("/moderacao");
 
-  const cartaoA = paginaA.locator(`text=${reclamacao.protocolo}`).locator("..");
-  const cartaoB = paginaB.locator(`text=${reclamacao.protocolo}`).locator("..");
+  // Dois níveis acima, não um - o protocolo está num <span> próprio (ver
+  // moderacao/page.tsx) dentro do <p>, que é filho direto do card.
+  const cartaoA = paginaA.locator(`text=${reclamacao.protocolo}`).locator("..").locator("..");
+  const cartaoB = paginaB.locator(`text=${reclamacao.protocolo}`).locator("..").locator("..");
   await cartaoB.locator('textarea[name="motivo"]').fill("Motivo de teste com mais de dez letras");
 
   // Dispara os dois cliques sem esperar um terminar antes do outro - é

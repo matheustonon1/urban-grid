@@ -128,8 +128,17 @@ export default async function ReclamacaoPage({
         <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
           {reclamacao.titulo}
         </h1>
-        <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-          <span>{t("protocolo")} {reclamacao.protocolo}</span>
+        <div className="flex flex-wrap items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+          {/* Borda tracejada + mono, tipo canhoto de ticket - separa
+              visualmente "isto é um código de registro" de "isto é um
+              estado" (StatusBadge, ao lado), em vez dos dois competirem
+              pelo mesmo tratamento de pílula arredondada. */}
+          <span className="inline-flex items-center gap-1.5 rounded border border-dashed border-slate-300 px-2 py-0.5 dark:border-slate-700">
+            <span className="text-xs text-slate-400 dark:text-slate-500">{t("protocolo")}</span>
+            <span className="font-mono text-xs tracking-tight text-slate-600 dark:text-slate-400">
+              {reclamacao.protocolo}
+            </span>
+          </span>
           <StatusBadge status={reclamacao.status} />
         </div>
         <p className="text-sm text-slate-500 dark:text-slate-400">
