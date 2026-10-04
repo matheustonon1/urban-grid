@@ -47,8 +47,16 @@ next-env.d.ts
 
 /src/generated/prisma
 
-# claude code - permissões e config local da ferramenta, não é código do projeto
-.claude/
+# claude code - permissões e config local da ferramenta, não é código do projeto.
+# Exceção: a skill de design do front-end fica versionada de propósito,
+# pra sobreviver a um clone novo do repo e documentar o processo. Git não
+# deixa reincluir um arquivo cujo diretório pai esteja ignorado - por isso
+# cada nível abaixo de .claude/ precisa da própria negação em vez de só
+# negar o arquivo final.
+.claude/*
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/frontend-design/
 
 # starter baixado do TiDB Cloud pra pegar a string de conexão - não é
 # parte do projeto, tem seu próprio repositório git
