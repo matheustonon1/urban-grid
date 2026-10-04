@@ -58,11 +58,16 @@ export default async function TransparenciaPage() {
         <p className="text-sm text-slate-500 dark:text-slate-400">{t("subtitulo")}</p>
       </div>
 
-      <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {/* Painel único com divisórias internas, números em mono/tabular -
+          mesmo vocabulário do painel de estatísticas da home (ver
+          app/page.tsx), não quatro cartões de stat soltos. */}
+      <dl className="flex w-full flex-wrap divide-x divide-slate-300 border border-slate-300 bg-white/70 dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-900/50">
         {resumo.map(([rotulo, valor]) => (
-          <div key={rotulo} className={`flex flex-col-reverse ${cartao}`}>
+          <div key={rotulo} className="flex min-w-30 flex-1 flex-col gap-0.5 px-4 py-3">
             <dt className="text-xs text-slate-500 dark:text-slate-400">{rotulo}</dt>
-            <dd className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{valor}</dd>
+            <dd className="font-mono text-2xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+              {valor}
+            </dd>
           </div>
         ))}
       </dl>

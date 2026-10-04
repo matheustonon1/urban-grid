@@ -5,21 +5,13 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { StatusBadge } from "@/components/status-badge";
 import { Paginacao } from "@/components/paginacao";
+import { Metrica } from "@/components/metrica";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
 import { botaoPrimario, campoInput, cartao, containerPagina } from "@/lib/estilos";
 import { calcularMetricasOrgao, classificarIndice } from "@/lib/reputacaoOrgao";
 
 import { responderReclamacao } from "../reclamacoes/[protocolo]/actions";
 import { exigirOrgao } from "../reclamacoes/[protocolo]/exigir-orgao";
-
-function Metrica({ label, valor }: { label: string; valor: string }) {
-  return (
-    <div className="flex flex-col">
-      <span className="text-lg font-semibold text-slate-900 dark:text-slate-100">{valor}</span>
-      <span className="text-xs text-slate-500 dark:text-slate-400">{label}</span>
-    </div>
-  );
-}
 
 export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orgao">) {
   const t = await getTranslations("PainelOrgao");

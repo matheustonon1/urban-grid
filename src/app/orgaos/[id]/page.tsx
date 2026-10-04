@@ -4,17 +4,9 @@ import { getLocale, getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import { StatusBadge } from "@/components/status-badge";
+import { Metrica } from "@/components/metrica";
 import { cartao, containerPagina } from "@/lib/estilos";
 import { calcularMetricasOrgao, classificarIndice } from "@/lib/reputacaoOrgao";
-
-function Metrica({ label, valor }: { label: string; valor: string }) {
-  return (
-    <div className="flex flex-col">
-      <span className="text-lg font-semibold text-slate-900 dark:text-slate-100">{valor}</span>
-      <span className="text-xs text-slate-500 dark:text-slate-400">{label}</span>
-    </div>
-  );
-}
 
 export default async function OrgaoPage({ params }: PageProps<"/orgaos/[id]">) {
   const t = await getTranslations("OrgaoDetalhe");
