@@ -164,13 +164,19 @@ export default async function Home() {
           </p>
         </Revelar>
 
-        <Revelar atraso={120} className="grid w-full max-w-4xl gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Revelar atraso={120} className="grid w-full max-w-4xl gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {PASSOS.map((passo, indice) => (
+            // Sequência numerada com régua no topo, não cartão - os passos não
+            // são clicáveis, e a ordem aqui carrega informação de verdade (é
+            // literalmente um passo a passo), diferente de um cartão genérico.
             <div
               key={passo.titulo}
               style={{ animationDelay: `${indice * 80}ms` }}
-              className="animate-fade-in flex flex-col gap-2 rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+              className="animate-fade-in group flex flex-col gap-2 border-t-2 border-primary/30 pt-4 transition-colors hover:border-primary dark:border-blue-400/30 dark:hover:border-blue-400"
             >
+              <span className="font-display inline-block text-xs font-bold tracking-wide text-primary transition-transform group-hover:translate-x-1 dark:text-blue-400">
+                {String(indice + 1).padStart(2, "0")}
+              </span>
               <p className="font-semibold text-slate-900 dark:text-slate-100">{passo.titulo}</p>
               <p className="text-sm text-slate-600 dark:text-slate-400">{passo.descricao}</p>
             </div>
@@ -238,18 +244,18 @@ export default async function Home() {
 
         <Revelar atraso={120} className="grid w-full max-w-4xl gap-4 sm:grid-cols-2">
           {DIFERENCIAIS.map((item, indice) => (
+            // Sem o chip quadrado colorido atrás do ícone (clichê de "feature
+            // de SaaS") e sem shadow/hover-lift - estes cards são só
+            // informativos, não levam a lugar nenhum, então não devem parecer
+            // tão "clicáveis" quanto os de reclamação/ranking logo acima.
             <div
               key={item.titulo}
               style={{ animationDelay: `${indice * 80}ms` }}
-              className="animate-fade-in group flex gap-4 rounded-lg border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md dark:border-slate-800 dark:bg-slate-900"
+              className="animate-fade-in flex flex-col gap-2 rounded-lg border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900"
             >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 transition-transform group-hover:scale-110 dark:bg-blue-500/10">
-                <item.icone className="h-5 w-5 text-primary" aria-hidden />
-              </div>
-              <div className="flex flex-col gap-1">
-                <p className="font-semibold text-slate-900 dark:text-slate-100">{item.titulo}</p>
-                <p className="text-sm text-slate-600 dark:text-slate-400">{item.descricao}</p>
-              </div>
+              <item.icone className="h-6 w-6 text-primary dark:text-blue-400" aria-hidden />
+              <p className="font-semibold text-slate-900 dark:text-slate-100">{item.titulo}</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400">{item.descricao}</p>
             </div>
           ))}
         </Revelar>
@@ -318,10 +324,8 @@ export default async function Home() {
           </p>
 
           <div className="mt-4 grid w-full max-w-3xl gap-4 sm:grid-cols-2">
-            <div className={`group flex flex-col items-center gap-3 text-center ${cartao}`}>
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 transition-transform group-hover:scale-110 dark:bg-blue-500/10">
-                <IdCard className="h-5 w-5 text-primary" aria-hidden />
-              </div>
+            <div className={`flex flex-col items-center gap-3 text-center ${cartao}`}>
+              <IdCard className="h-7 w-7 text-primary dark:text-blue-400" aria-hidden />
               <p className="font-semibold text-slate-900 dark:text-slate-100">
                 {t("souCidadao")}
               </p>
@@ -331,10 +335,8 @@ export default async function Home() {
               </Link>
             </div>
 
-            <div className={`group flex flex-col items-center gap-3 text-center ${cartao}`}>
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 transition-transform group-hover:scale-110 dark:bg-blue-500/10">
-                <Landmark className="h-5 w-5 text-primary" aria-hidden />
-              </div>
+            <div className={`flex flex-col items-center gap-3 text-center ${cartao}`}>
+              <Landmark className="h-7 w-7 text-primary dark:text-blue-400" aria-hidden />
               <p className="font-semibold text-slate-900 dark:text-slate-100">{t("souOrgao")}</p>
               <p className="text-sm text-slate-600 dark:text-slate-400">{t("souOrgaoDesc")}</p>
               <Link href="/cadastro?tipo=orgao" className={`${botaoSecundario} mt-1`}>
