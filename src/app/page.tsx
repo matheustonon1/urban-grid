@@ -169,13 +169,13 @@ export default async function Home() {
 
         <Revelar atraso={120} className="grid w-full max-w-4xl gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {PASSOS.map((passo, indice) => (
-            // Sequência numerada, não cartão - os passos não são clicáveis, e
-            // a ordem aqui carrega informação de verdade (é literalmente um
-            // passo a passo), diferente de um cartão genérico.
+            // Sequência numerada com régua no topo, não cartão - os passos não
+            // são clicáveis, e a ordem aqui carrega informação de verdade (é
+            // literalmente um passo a passo), diferente de um cartão genérico.
             <div
               key={passo.titulo}
               style={{ animationDelay: `${indice * 80}ms` }}
-              className="animate-fade-in group flex flex-col gap-2"
+              className="animate-fade-in group flex flex-col gap-2 border-t-2 border-primary/30 pt-4 transition-colors hover:border-primary dark:border-blue-400/30 dark:hover:border-blue-400"
             >
               <span className="font-display inline-block text-xs font-bold tracking-wide text-primary transition-transform group-hover:translate-x-1 dark:text-blue-400">
                 {String(indice + 1).padStart(2, "0")}
