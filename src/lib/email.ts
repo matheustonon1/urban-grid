@@ -95,6 +95,23 @@ export async function criarTokenTrocaEmail(userId: string, novoEmail: string): P
   return criarToken(`${PREFIXO_TROCA_EMAIL}${userId}:${novoEmail}`, VALIDADE_TOKEN_TROCA_EMAIL_MS);
 }
 
+// Apaga todo token pendente de uma conta: verificação/convite (o identifier
+// é o próprio e-mail), redefinição de senha e troca de e-mail. Usado na
+// exclusão da conta - sem isto, um link pedido antes (válido por até 1h)
+// continuava resolvendo pra uma conta já anonimizada. Devolve a operação
+// sem executá-la (PrismaPromise) pra caber dentro de um $transaction.
+export function apagarTokensPendentes(userId: string, email: string) {
+  return prisma.verificationToken.deleteMany({
+    where: {
+      OR: [
+        { identifier: email },
+        { identifier: `${PREFIXO_REDEFINICAO}${email}` },
+        { identifier: { startsWith: `${PREFIXO_TROCA_EMAIL}${userId}:` } },
+      ],
+    },
+  });
+}
+
 // userId não tem ":" (é um cuid), então o primeiro ":" depois do prefixo
 // separa ele do e-mail novo - retorna null se o token for de outro propósito.
 export function dadosDoTokenTrocaEmail(

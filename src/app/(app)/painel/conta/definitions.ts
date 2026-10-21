@@ -61,13 +61,16 @@ export type SenhaFormState =
     }
   | undefined;
 
-export function criarExclusaoSchema(t: T) {
+// Ações que só pedem a senha atual como confirmação (excluir conta,
+// desativar 2FA, gerar códigos de backup). `t` precisa ser o tradutor de
+// "Conta", que é onde mora erroSenhaAtual.
+export function criarSenhaAtualSchema(t: T) {
   return z.object({
     senhaAtual: z.string().min(1, { error: t("erroSenhaAtual") }).max(100),
   });
 }
 
-export type ExclusaoFormState =
+export type SenhaAtualFormState =
   | {
       erros?: { senhaAtual?: string[] };
       mensagem?: string;
@@ -88,29 +91,6 @@ export type ConfirmarTotpFormState =
     }
   | undefined;
 
-export function criarDesativarTotpSchema(t: T) {
-  return z.object({
-    senhaAtual: z.string().min(1, { error: t("erroSenhaAtual") }).max(100),
-  });
-}
-
-export type DesativarTotpFormState =
-  | {
-      erros?: { senhaAtual?: string[] };
-      mensagem?: string;
-    }
-  | undefined;
-
-export function criarRegenerarCodigosSchema(t: T) {
-  return z.object({
-    senhaAtual: z.string().min(1, { error: t("erroSenhaAtual") }).max(100),
-  });
-}
-
 export type RegenerarCodigosFormState =
-  | {
-      erros?: { senhaAtual?: string[] };
-      mensagem?: string;
-      codigosBackup?: string[];
-    }
+  | (NonNullable<SenhaAtualFormState> & { codigosBackup?: string[] })
   | undefined;

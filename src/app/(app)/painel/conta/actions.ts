@@ -8,6 +8,7 @@ import { signOut } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { alertarSenhaAlterada, alertarTrocaEmailSolicitada } from "@/lib/notificacoes";
 import {
+  apagarTokensPendentes,
   criarTokenTrocaEmail,
   criarTokenVerificacao,
   enviarEmailConfirmarTrocaEmail,
@@ -15,14 +16,17 @@ import {
 } from "@/lib/email";
 import { idiomaOuPadrao } from "@/i18n/config";
 import { exigirSessao } from "@/lib/sessao";
+import { excedeuLimitePorIp } from "@/lib/rateLimitMemoria";
+import { verificarSenhaAtual } from "@/lib/senhaAtual";
+import { ESCOPO_REENVIO_VERIFICACAO } from "@/lib/verificacao";
 
 import {
-  criarExclusaoSchema,
   criarPerfilSchema,
+  criarSenhaAtualSchema,
   criarSenhaSchema,
   criarTrocaEmailSchema,
-  type ExclusaoFormState,
   type PerfilFormState,
+  type SenhaAtualFormState,
   type SenhaFormState,
   type TrocaEmailFormState,
 } from "./definitions";
@@ -97,6 +101,12 @@ export async function reenviarVerificacaoEmail(): Promise<{ mensagem?: string }>
   if (usuario.emailVerified) {
     return { mensagem: t("emailJaVerificado") };
   }
+  // Cada clique manda um e-mail de verdade (cota do provedor) - sem limite,
+  // o botão podia ser martelado. Escopo compartilhado com o reenvio do
+  // painel (painel/actions.ts), pra um não burlar o outro.
+  if (excedeuLimitePorIp(ESCOPO_REENVIO_VERIFICACAO, session.user.id, 3, 10 * 60 * 1000)) {
+    return { mensagem: t("erroMuitosEnvios") };
+  }
 
   const token = await criarTokenVerificacao(usuario.email);
   await enviarEmailVerificacao({
@@ -141,14 +151,16 @@ export async function solicitarTrocaEmail(
 
   const { novoEmail, senhaAtual } = validado.data;
 
-  const usuario = await prisma.user.findUnique({ where: { id: session.user.id } });
-  if (!usuario?.senhaHash) {
-    return { mensagem: t("erroTrocarEmail") };
+  const resultadoSenha = await verificarSenhaAtual(session.user.id, senhaAtual);
+  if (resultadoSenha === "bloqueada") {
+    return { mensagem: t("erroMuitasTentativas") };
   }
-
-  const senhaValida = await bcrypt.compare(senhaAtual, usuario.senhaHash);
-  if (!senhaValida) {
+  if (resultadoSenha === "incorreta") {
     return { erros: { senhaAtual: [t("erroSenhaIncorreta")] } };
+  }
+  const usuario = await prisma.user.findUnique({ where: { id: session.user.id } });
+  if (resultadoSenha !== "ok" || !usuario) {
+    return { mensagem: t("erroTrocarEmail") };
   }
 
   if (novoEmail === usuario.email) {
@@ -158,6 +170,14 @@ export async function solicitarTrocaEmail(
   const emailEmUso = await prisma.user.findUnique({ where: { email: novoEmail } });
   if (emailEmUso) {
     return { erros: { novoEmail: [t("erroEmailDuplicado")] } };
+  }
+
+  // Manda e-mail pra QUALQUER endereço digitado - sem limite, uma sessão
+  // (mesmo com a senha certa) podia usar isto pra encher a caixa de um
+  // terceiro e queimar a cota do provedor. Fica depois das checagens acima
+  // pra só contar pedidos que de fato enviariam algo.
+  if (excedeuLimitePorIp("troca-email", usuario.id, 5, 60 * 60 * 1000)) {
+    return { mensagem: t("erroMuitosEnvios") };
   }
 
   const token = await criarTokenTrocaEmail(usuario.id, novoEmail);
@@ -191,19 +211,15 @@ export async function alterarSenha(
     return { erros: validado.error.flatten().fieldErrors };
   }
 
-  const usuario = await prisma.user.findUnique({
-    where: { id: session.user.id },
-  });
-  if (!usuario?.senhaHash) {
-    return { mensagem: t("erroAlterarSenha") };
+  const resultadoSenha = await verificarSenhaAtual(session.user.id, validado.data.senhaAtual);
+  if (resultadoSenha === "bloqueada") {
+    return { mensagem: t("erroMuitasTentativas") };
   }
-
-  const senhaAtualValida = await bcrypt.compare(
-    validado.data.senhaAtual,
-    usuario.senhaHash
-  );
-  if (!senhaAtualValida) {
+  if (resultadoSenha === "incorreta") {
     return { erros: { senhaAtual: [t("erroSenhaAtualIncorreta")] } };
+  }
+  if (resultadoSenha !== "ok") {
+    return { mensagem: t("erroAlterarSenha") };
   }
 
   const novaSenhaHash = await bcrypt.hash(validado.data.novaSenha, 10);
@@ -227,29 +243,29 @@ export async function alterarSenha(
 }
 
 export async function excluirConta(
-  _state: ExclusaoFormState,
+  _state: SenhaAtualFormState,
   formData: FormData
-): Promise<ExclusaoFormState> {
+): Promise<SenhaAtualFormState> {
   const t = await getTranslations("Conta");
   const session = await exigirSessao();
 
-  const validado = criarExclusaoSchema(t).safeParse({
+  const validado = criarSenhaAtualSchema(t).safeParse({
     senhaAtual: formData.get("senhaAtual"),
   });
   if (!validado.success) {
     return { erros: validado.error.flatten().fieldErrors };
   }
 
-  const usuario = await prisma.user.findUnique({
-    where: { id: session.user.id },
-  });
-  if (!usuario?.senhaHash) {
-    return { mensagem: t("erroExcluirConta") };
+  const resultadoSenha = await verificarSenhaAtual(session.user.id, validado.data.senhaAtual);
+  if (resultadoSenha === "bloqueada") {
+    return { mensagem: t("erroMuitasTentativas") };
   }
-
-  const senhaValida = await bcrypt.compare(validado.data.senhaAtual, usuario.senhaHash);
-  if (!senhaValida) {
+  if (resultadoSenha === "incorreta") {
     return { erros: { senhaAtual: [t("erroSenhaIncorreta")] } };
+  }
+  const usuario = await prisma.user.findUnique({ where: { id: session.user.id } });
+  if (resultadoSenha !== "ok" || !usuario) {
+    return { mensagem: t("erroExcluirConta") };
   }
 
   // Anonimiza em vez de apagar: preserva as reclamações publicadas como
@@ -266,8 +282,20 @@ export async function excluirConta(
         telefone: null,
         image: null,
         ativo: false,
+        // O 2FA acompanha a conta: segredo cifrado e contadores não têm
+        // razão de ficar numa conta que nunca mais autentica (os códigos de
+        // backup e as notificações saem abaixo).
+        totpSecret: null,
+        totpConfirmadoEm: null,
+        totpTentativasFalhas: 0,
+        totpBloqueadoAte: null,
       },
     }),
+    prisma.totpBackupCode.deleteMany({ where: { userId: usuario.id } }),
+    // Título e mensagem das notificações citam reclamações e e-mails da
+    // pessoa; a exclusão promete apagar dados pessoais.
+    prisma.notificacao.deleteMany({ where: { userId: usuario.id } }),
+    apagarTokensPendentes(usuario.id, usuario.email),
     // ativo=false já impede o cron de resumo semanal de mandar e-mail pra
     // cá (ver filtro em resumoSemanal.ts), mas a assinatura em si ficaria
     // órfã no banco pra sempre sem isso - ninguém nunca mais vai cancelá-la

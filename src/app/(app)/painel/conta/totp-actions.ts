@@ -1,10 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import bcrypt from "bcryptjs";
 import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
+import { verificarSenhaAtual } from "@/lib/senhaAtual";
 import {
   cifrarSegredoTotp,
   codigoTotpValido,
@@ -17,23 +17,23 @@ import { exigirSessao } from "@/lib/sessao";
 
 import {
   criarConfirmarTotpSchema,
-  criarDesativarTotpSchema,
-  criarRegenerarCodigosSchema,
+  criarSenhaAtualSchema,
   type ConfirmarTotpFormState,
-  type DesativarTotpFormState,
   type RegenerarCodigosFormState,
+  type SenhaAtualFormState,
 } from "./definitions";
 
 export async function iniciarConfiguracaoTotp() {
   const session = await exigirSessao();
 
-  const usuario = await prisma.user.findUniqueOrThrow({ where: { id: session.user.id } });
-  if (usuario.totpConfirmadoEm) {
-    return;
-  }
-
-  await prisma.user.update({
-    where: { id: session.user.id },
+  // Só grava se não há 2FA ativo E nenhum segredo pendente - um único
+  // updateMany guardado, não "lê e depois atualiza". Antes, um duplo clique
+  // (ou uma segunda aba) trocava o segredo por baixo de um QR já escaneado,
+  // e uma confirmação concorrente podia ter o segredo ATIVO sobrescrito,
+  // deixando a pessoa trancada com um segredo que ela não conhece. Pra
+  // gerar um novo segredo, a pessoa cancela a configuração antes.
+  await prisma.user.updateMany({
+    where: { id: session.user.id, totpConfirmadoEm: null, totpSecret: null },
     data: { totpSecret: cifrarSegredoTotp(gerarSegredoTotp()) },
   });
 
@@ -100,32 +100,34 @@ export async function confirmarTotp(
 }
 
 export async function desativarTotp(
-  _state: DesativarTotpFormState,
+  _state: SenhaAtualFormState,
   formData: FormData
-): Promise<DesativarTotpFormState> {
+): Promise<SenhaAtualFormState> {
   const session = await exigirSessao();
 
   const t = await getTranslations("Totp");
-  const validado = criarDesativarTotpSchema(t).safeParse({
+  // O schema é compartilhado com excluirConta e pede as chaves de "Conta".
+  const validado = criarSenhaAtualSchema(await getTranslations("Conta")).safeParse({
     senhaAtual: formData.get("senhaAtual"),
   });
   if (!validado.success) {
     return { erros: validado.error.flatten().fieldErrors };
   }
 
-  const usuario = await prisma.user.findUnique({ where: { id: session.user.id } });
-  if (!usuario?.senhaHash) {
-    return { mensagem: t("erroDesativar") };
+  const resultadoSenha = await verificarSenhaAtual(session.user.id, validado.data.senhaAtual);
+  if (resultadoSenha === "bloqueada") {
+    return { mensagem: t("erroMuitasTentativas") };
   }
-
-  const senhaValida = await bcrypt.compare(validado.data.senhaAtual, usuario.senhaHash);
-  if (!senhaValida) {
+  if (resultadoSenha === "incorreta") {
     return { erros: { senhaAtual: [t("erroSenhaIncorreta")] } };
+  }
+  if (resultadoSenha !== "ok") {
+    return { mensagem: t("erroDesativar") };
   }
 
   await prisma.$transaction([
     prisma.user.update({
-      where: { id: usuario.id },
+      where: { id: session.user.id },
       data: {
         totpSecret: null,
         totpConfirmadoEm: null,
@@ -133,7 +135,7 @@ export async function desativarTotp(
         totpBloqueadoAte: null,
       },
     }),
-    prisma.totpBackupCode.deleteMany({ where: { userId: usuario.id } }),
+    prisma.totpBackupCode.deleteMany({ where: { userId: session.user.id } }),
   ]);
 
   revalidatePath("/painel/conta");
@@ -153,21 +155,26 @@ export async function regenerarCodigosBackup(
   const session = await exigirSessao();
 
   const t = await getTranslations("Totp");
-  const validado = criarRegenerarCodigosSchema(t).safeParse({
+  const validado = criarSenhaAtualSchema(await getTranslations("Conta")).safeParse({
     senhaAtual: formData.get("senhaAtual"),
   });
   if (!validado.success) {
     return { erros: validado.error.flatten().fieldErrors };
   }
 
-  const usuario = await prisma.user.findUnique({ where: { id: session.user.id } });
-  if (!usuario?.senhaHash || !usuario.totpConfirmadoEm) {
-    return { mensagem: t("erroGerarCodigos") };
+  const resultadoSenha = await verificarSenhaAtual(session.user.id, validado.data.senhaAtual);
+  if (resultadoSenha === "bloqueada") {
+    return { mensagem: t("erroMuitasTentativas") };
   }
-
-  const senhaValida = await bcrypt.compare(validado.data.senhaAtual, usuario.senhaHash);
-  if (!senhaValida) {
+  if (resultadoSenha === "incorreta") {
     return { erros: { senhaAtual: [t("erroSenhaIncorreta")] } };
+  }
+  const usuario = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { id: true, totpConfirmadoEm: true },
+  });
+  if (resultadoSenha !== "ok" || !usuario?.totpConfirmadoEm) {
+    return { mensagem: t("erroGerarCodigos") };
   }
 
   const codigosBackup = gerarCodigosBackup();

@@ -60,8 +60,9 @@ export function gerarQrCodeTotp(uri: string): Promise<string> {
 // vez (print de tela, log, malware no autenticador) durante toda a janela
 // de tolerância (~90s), já que só validar "é um código correto pra este
 // instante" não distingue "código já gasto" de "código novo". Quem chama
-// (auth.ts) precisa persistir o timeStep retornado em
-// User.totpUltimoTimeStep pra a proteção valer na tentativa seguinte.
+// (auth.ts) precisa reservar o timeStep retornado com reservarTimeStepTotp()
+// pra a proteção valer na tentativa seguinte - e valer mesmo sob tentativas
+// simultâneas, que esta leitura sozinha não impede.
 export async function codigoTotpValido(
   segredo: string,
   codigo: string,
@@ -104,13 +105,25 @@ export async function prepararCodigosBackup(userId: string, codigos: string[]) {
   );
 }
 
+// Formato dos códigos gerados por gerarCodigosBackup(): 5 bytes em hex.
+const FORMATO_CODIGO_BACKUP = /^[0-9a-f]{10}$/;
+
 // Cada código de backup só pode ser usado uma vez - se bater, marca
 // usadoEm na mesma consulta que valida, pra não reaproveitar em uma
 // corrida entre duas tentativas simultâneas com o mesmo código.
 export async function consumirCodigoBackup(
   userId: string,
-  codigo: string
+  codigoDigitado: string
 ): Promise<boolean> {
+  // Quem digita (ou cola) o código costuma errar na caixa ou deixar um
+  // espaço - e cada recusa conta como falha no bloqueio de 5 min, justo
+  // quando a pessoa perdeu o app autenticador. Também evita pagar até 8
+  // bcrypt.compare por uma entrada que nem tem o formato de um código.
+  const codigo = codigoDigitado.replace(/\s/g, "").toLowerCase();
+  if (!FORMATO_CODIGO_BACKUP.test(codigo)) {
+    return false;
+  }
+
   const candidatos = await prisma.totpBackupCode.findMany({
     where: { userId, usadoEm: null },
   });
@@ -149,17 +162,29 @@ export async function usuarioBloqueadoPorTotp(usuario: {
 
 export const registrarFalhaTotp = contador.registrarFalha;
 
-// novoTimeStep vem de um login por TOTP de verdade (não por código de
-// backup, que tem sua própria proteção de uso único) - persistido na
-// mesma escrita pra a próxima verificação já rejeitar esse timeStep (e
-// qualquer um anterior) via afterTimeStep em codigoTotpValido().
-export async function resetarFalhasTotp(userId: string, novoTimeStep?: number) {
+export async function resetarFalhasTotp(userId: string) {
   await prisma.user.update({
     where: { id: userId },
-    data: {
-      totpTentativasFalhas: 0,
-      totpBloqueadoAte: null,
-      ...(novoTimeStep !== undefined ? { totpUltimoTimeStep: novoTimeStep } : {}),
-    },
+    data: { totpTentativasFalhas: 0, totpBloqueadoAte: null },
   });
+}
+
+// "Gasta" o timeStep de um código TOTP já validado por codigoTotpValido():
+// grava como último usado SÓ se for maior que o gravado (ou se não houver),
+// num único UPDATE condicional, e diz se foi esta chamada que conseguiu.
+// Antes o login lia totpUltimoTimeStep, validava e gravava o novo depois,
+// incondicionalmente - duas tentativas simultâneas com o mesmo código (visto
+// por terceiro) liam o mesmo valor, as duas passavam, e uma escrita tardia
+// podia até regredir o campo e reabrir a janela de replay. Aqui, só uma
+// vence; a outra é tratada como código já usado. Não vale pra código de
+// backup, que tem a própria proteção de uso único (consumirCodigoBackup).
+export async function reservarTimeStepTotp(userId: string, timeStep: number): Promise<boolean> {
+  const { count } = await prisma.user.updateMany({
+    where: {
+      id: userId,
+      OR: [{ totpUltimoTimeStep: null }, { totpUltimoTimeStep: { lt: timeStep } }],
+    },
+    data: { totpUltimoTimeStep: timeStep },
+  });
+  return count > 0;
 }

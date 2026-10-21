@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { Check, Copy, KeyRound, ShieldCheck } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -20,22 +20,41 @@ function formatarChave(segredo: string) {
 
 function BotaoCopiar({ texto }: { texto: string }) {
   const t = useTranslations("Totp");
-  const [copiado, setCopiado] = useState(false);
+  const [estado, setEstado] = useState<"parado" | "copiado" | "falhou">("parado");
+  const temporizador = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // O componente pode sair da tela (revalidatePath) antes dos 2s - sem
+  // limpar, o setState rodava num componente já desmontado.
+  useEffect(() => () => clearTimeout(temporizador.current), []);
+
+  async function copiar() {
+    // Os códigos de backup só aparecem uma vez: se a cópia falhar (HTTP sem
+    // contexto seguro, permissão negada), a pessoa precisa saber, em vez de
+    // achar que copiou e perder os códigos.
+    try {
+      await navigator.clipboard.writeText(texto);
+      setEstado("copiado");
+    } catch {
+      setEstado("falhou");
+    }
+    clearTimeout(temporizador.current);
+    temporizador.current = setTimeout(() => setEstado("parado"), 3000);
+  }
 
   return (
     <button
       type="button"
-      onClick={async () => {
-        await navigator.clipboard.writeText(texto);
-        setCopiado(true);
-        setTimeout(() => setCopiado(false), 2000);
-      }}
+      onClick={copiar}
       className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
     >
-      {copiado ? (
+      {estado === "copiado" ? (
         <>
           <Check className="h-3.5 w-3.5" aria-hidden /> {t("copiado")}
         </>
+      ) : estado === "falhou" ? (
+        <span role="alert" className="text-red-600 dark:text-red-400">
+          {t("copiarFalhou")}
+        </span>
       ) : (
         <>
           <Copy className="h-3.5 w-3.5" aria-hidden /> {t("copiar")}

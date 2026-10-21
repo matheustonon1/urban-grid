@@ -16,6 +16,7 @@ import {
   consumirCodigoBackup,
   decifrarSegredoTotp,
   registrarFalhaTotp,
+  reservarTimeStepTotp,
   resetarFalhasTotp,
   usuarioBloqueadoPorTotp,
 } from "@/lib/totp";
@@ -54,6 +55,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
+        // Conta excluída (ativo=false) nunca autentica. Hoje excluirConta()
+        // já zera senhaHash, mas esta checagem não pode depender de ninguém
+        // lembrar de fazer isso: uma redefinição de senha ou troca de e-mail
+        // que atingisse a conta "removida" a reativaria na prática, já que
+        // o callback jwt só derruba a sessão DEPOIS do primeiro login.
+        if (!usuario.ativo) {
+          return null;
+        }
+
         if (usuarioBloqueadoPorLogin(usuario)) {
           return null;
         }
@@ -74,7 +84,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           const segredo = decifrarSegredoTotp(usuario.totpSecret!);
 
           let valido = false;
-          let novoTimeStep: number | undefined;
           if (typeof codigo === "string" && codigo.length > 0) {
             const resultado = await codigoTotpValido(
               segredo,
@@ -82,8 +91,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               usuario.totpUltimoTimeStep ?? undefined
             );
             if (resultado.valido) {
-              valido = true;
-              novoTimeStep = resultado.timeStep;
+              // A leitura acima não impede duas tentativas simultâneas com
+              // o mesmo código - a reserva atômica do timeStep decide qual
+              // vence (ver reservarTimeStepTotp). Quem perde conta como falha.
+              valido =
+                resultado.timeStep === undefined ||
+                (await reservarTimeStepTotp(usuario.id, resultado.timeStep));
             } else {
               valido = await consumirCodigoBackup(usuario.id, codigo);
             }
@@ -94,7 +107,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             return null;
           }
 
-          await resetarFalhasTotp(usuario.id, novoTimeStep);
+          await resetarFalhasTotp(usuario.id);
         }
 
         return {

@@ -75,11 +75,14 @@
     "baixarMeusDados": "Download my data",
     "cidadePadrao": "Default city",
     "cidadePadraoDesc": "Pre-selected when you file a new complaint (if you enter a ZIP code, its city wins). Clear the field to have no default city.",
-    "erroCidadeInvalida": "Pick a city from the list."
+    "erroCidadeInvalida": "Pick a city from the list.",
+    "erroMuitasTentativas": "Too many incorrect password attempts. Wait a few minutes and try again.",
+    "erroMuitosEnvios": "You've requested too many emails in a short time. Try again later."
   },
   "Totp": {
     "copiado": "Copied",
     "copiar": "Copy",
+    "copiarFalhou": "Couldn't copy. Select the codes and copy them by hand.",
     "ativada": "Two-factor authentication enabled",
     "guardeCodigos": "Keep these codes somewhere safe. Each one works only once, in case you lose access to your authenticator app.",
     "codigosBackup": "Backup codes",
@@ -112,7 +115,8 @@
     "gerarNovosCodigos": "Generate new codes",
     "guardeNovosCodigos": "Keep these codes somewhere safe. They are only shown now, and each one works only once.",
     "novosCodigosGerados": "New backup codes generated.",
-    "erroGerarCodigos": "Couldn't generate new codes."
+    "erroGerarCodigos": "Couldn't generate new codes.",
+    "erroMuitasTentativas": "Too many incorrect password attempts. Wait a few minutes and try again."
   },
   "Painel": {
     "titulo": "Dashboard",

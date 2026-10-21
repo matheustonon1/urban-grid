@@ -75,11 +75,14 @@
     "baixarMeusDados": "Baixar meus dados",
     "cidadePadrao": "Cidade padrão",
     "cidadePadraoDesc": "Já vem escolhida ao registrar uma reclamação nova (se você informar o CEP, vale a cidade dele). Apague o campo para ficar sem cidade padrão.",
-    "erroCidadeInvalida": "Escolha uma cidade da lista."
+    "erroCidadeInvalida": "Escolha uma cidade da lista.",
+    "erroMuitasTentativas": "Muitas tentativas de senha incorretas. Aguarde alguns minutos e tente de novo.",
+    "erroMuitosEnvios": "Você pediu muitos e-mails em pouco tempo. Tente de novo mais tarde."
   },
   "Totp": {
     "copiado": "Copiado",
     "copiar": "Copiar",
+    "copiarFalhou": "Não foi possível copiar. Selecione os códigos e copie à mão.",
     "ativada": "Autenticação em duas etapas ativada",
     "guardeCodigos": "Guarde estes códigos em um lugar seguro. Cada um funciona uma única vez, caso você perca acesso ao aplicativo autenticador.",
     "codigosBackup": "Códigos de backup",
@@ -112,7 +115,8 @@
     "gerarNovosCodigos": "Gerar novos códigos",
     "guardeNovosCodigos": "Guarde estes códigos em um lugar seguro. Eles só aparecem agora, e cada um funciona uma única vez.",
     "novosCodigosGerados": "Novos códigos de backup gerados.",
-    "erroGerarCodigos": "Não foi possível gerar novos códigos."
+    "erroGerarCodigos": "Não foi possível gerar novos códigos.",
+    "erroMuitasTentativas": "Muitas tentativas de senha incorretas. Aguarde alguns minutos e tente de novo."
   },
   "Painel": {
     "titulo": "Painel",

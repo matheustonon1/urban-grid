@@ -19,13 +19,18 @@ export default async function ConfirmarEmailPage({
   if (dados && !expirado) {
     const usuario = await prisma.user.findUnique({ where: { id: dados.userId } });
 
-    if (usuario?.email === dados.novoEmail) {
+    // Conta excluída não troca de e-mail: sem isto, um link pedido antes da
+    // exclusão (válido por 1h) gravava o e-mail novo numa conta já
+    // anonimizada, deixando esse endereço "em uso" por uma conta morta.
+    if (!usuario?.ativo) {
+      mensagem = "Link inválido ou expirado.";
+    } else if (usuario.email === dados.novoEmail) {
       // Já foi confirmado antes (ex.: provedor de e-mail pré-visitou o
       // link) - idempotente igual verificar-email, não é erro reexibir
       // sucesso num clique repetido.
       sucesso = true;
       mensagem = "E-mail confirmado! Use o novo endereço para entrar.";
-    } else if (usuario) {
+    } else {
       const emailEmUso = await prisma.user.findUnique({ where: { email: dados.novoEmail } });
       if (emailEmUso) {
         mensagem = "Este e-mail passou a estar em uso por outra conta. Peça uma nova troca.";
