@@ -17,3 +17,19 @@ export const linkSutil =
   "inline-flex items-center justify-center gap-1 rounded-full px-3 py-1.5 text-sm text-slate-600 transition-colors hover:bg-slate-100 hover:text-primary dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-blue-400";
 
 export const containerPagina = "mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 p-6 sm:p-8";
+
+// Páginas com mais coisa pra mostrar (lista, painel, cidade) respiram em
+// 3xl; o detalhe da reclamação, com coluna de resumo ao lado, usa 5xl.
+export const containerMedio = "mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 p-6 sm:p-8";
+export const containerLargo = "mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 p-6 sm:p-8";
+
+// Painel secundário: informação de apoio, sem sombra nem fundo branco cheio,
+// pra não competir com os cartões de conteúdo (cartao) - nem tudo precisa
+// parecer um objeto solto na página.
+export const painelSuave =
+  "rounded-lg border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900/50";
+
+// Rótulo de seção/campo pequeno, em caixa alta (mesmo tratamento do formulário
+// de nova reclamação).
+export const rotuloSecao =
+  "text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400";

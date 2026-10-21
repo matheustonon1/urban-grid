@@ -2,6 +2,9 @@ import { getTranslations } from "next-intl/server";
 
 import { TermosConteudo } from "@/components/termos-conteudo";
 import { containerPagina } from "@/lib/estilos";
+import { metadataDaPagina } from "@/lib/metadata";
+
+export const generateMetadata = metadataDaPagina("Footer", "termos");
 
 export default async function TermosPage() {
   const t = await getTranslations("Footer");

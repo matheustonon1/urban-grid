@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { Paginacao } from "@/components/paginacao";
 import { botaoSecundario, cartao, containerPagina } from "@/lib/estilos";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
+import { metadataDaPagina } from "@/lib/metadata";
 
 import { exigirAdmin } from "../solicitacoes-orgao/exigir-admin";
 import { reverterBanimento } from "./actions";
@@ -12,6 +13,8 @@ import { reverterBanimento } from "./actions";
 // tem um valor especial no banco - só uma data muito distante. Detecta
 // isso aqui só pra mostrar um rótulo melhor do que uma data em 2126.
 const LIMIAR_PERMANENTE_MS = 50 * 365 * 24 * 60 * 60 * 1000;
+
+export const generateMetadata = metadataDaPagina("Banimentos");
 
 export default async function BanimentosPage({ searchParams }: PageProps<"/banimentos">) {
   const t = await getTranslations("Banimentos");

@@ -2,8 +2,11 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
 import { linkSutil } from "@/lib/estilos";
+import { metadataDaPagina } from "@/lib/metadata";
 
 import { FormularioEsqueciSenha } from "./formulario";
+
+export const generateMetadata = metadataDaPagina("EsqueciSenha");
 
 export default async function EsqueciSenhaPage() {
   const t = await getTranslations("EsqueciSenha");

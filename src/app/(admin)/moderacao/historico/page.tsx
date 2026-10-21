@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { Paginacao } from "@/components/paginacao";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
 import { containerPagina, cartao } from "@/lib/estilos";
+import { metadataDaPagina } from "@/lib/metadata";
 
 import { exigirModerador } from "../exigir-moderador";
 
@@ -13,6 +14,8 @@ const DECISAO_ESTILO: Record<string, string> = {
   REPROVAR: "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400",
   ENCAMINHAR_REVISAO: "bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-400",
 };
+
+export const generateMetadata = metadataDaPagina("HistoricoModeracao");
 
 export default async function HistoricoModeracaoPage({
   searchParams,

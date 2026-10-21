@@ -1,0 +1,66 @@
+import { getTranslations } from "next-intl/server";
+
+import { cartao } from "@/lib/estilos";
+
+// Bloco cinza pulsante - o "esqueleto" do que vai aparecer. A animação some
+// com prefers-reduced-motion (motion-reduce:), sem depender de lista manual
+// em globals.css: é utilitário do Tailwind, não uma classe .animate-* nossa.
+export function Esqueleto({ className = "" }: { className?: string }) {
+  return (
+    <div
+      aria-hidden
+      className={`animate-pulse rounded-md bg-slate-200/80 motion-reduce:animate-none dark:bg-slate-800 ${className}`}
+    />
+  );
+}
+
+// Moldura de todo loading.tsx: anuncia "Carregando" pra leitor de tela
+// (role=status) e mantém o mesmo container das páginas de verdade, pra
+// nada pular de lugar quando o conteúdo chega.
+export async function EsqueletoPagina({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className: string;
+}) {
+  const t = await getTranslations("Comum");
+
+  return (
+    <main role="status" aria-busy="true" className={className}>
+      <span className="sr-only">{t("carregando")}</span>
+      {children}
+    </main>
+  );
+}
+
+export function EsqueletoCabecalho({ comDescricao = true }: { comDescricao?: boolean }) {
+  return (
+    <div className="flex flex-col gap-2">
+      <Esqueleto className="h-8 w-56" />
+      {comDescricao && <Esqueleto className="h-4 w-80 max-w-full" />}
+    </div>
+  );
+}
+
+// Um cartão de lista (título + meta + estatística), no mesmo formato de
+// CartaoReclamacao.
+export function EsqueletoCartao() {
+  return (
+    <div className={`flex flex-col gap-3 ${cartao}`}>
+      <Esqueleto className="h-5 w-3/4" />
+      <Esqueleto className="h-4 w-1/2" />
+      <Esqueleto className="h-4 w-1/4" />
+    </div>
+  );
+}
+
+export function EsqueletoCartoes({ quantidade = 5 }: { quantidade?: number }) {
+  return (
+    <div className="flex flex-col gap-3">
+      {Array.from({ length: quantidade }, (_, i) => (
+        <EsqueletoCartao key={i} />
+      ))}
+    </div>
+  );
+}

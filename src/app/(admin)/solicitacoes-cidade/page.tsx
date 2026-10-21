@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { Paginacao } from "@/components/paginacao";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
 import { botaoPrimario, botaoSecundario, campoInput, cartao, containerPagina } from "@/lib/estilos";
+import { metadataDaPagina } from "@/lib/metadata";
 
 import { aprovarSolicitacaoCidade, rejeitarSolicitacaoCidade } from "./actions";
 import { exigirAdmin } from "../solicitacoes-orgao/exigir-admin";
@@ -12,6 +13,8 @@ const STATUS_COR: Record<string, string> = {
   APROVADA: "text-green-700 dark:text-green-400",
   REJEITADA: "text-red-700 dark:text-red-400",
 };
+
+export const generateMetadata = metadataDaPagina("SolicitacoesCidade");
 
 export default async function SolicitacoesCidadePage({
   searchParams,

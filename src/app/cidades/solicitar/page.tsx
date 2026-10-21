@@ -2,8 +2,11 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
 import { linkSutil } from "@/lib/estilos";
+import { metadataDaPagina } from "@/lib/metadata";
 
 import { FormularioSolicitarCidade } from "./formulario";
+
+export const generateMetadata = metadataDaPagina("SolicitarCidade");
 
 export default async function SolicitarCidadePage() {
   const t = await getTranslations("SolicitarCidade");

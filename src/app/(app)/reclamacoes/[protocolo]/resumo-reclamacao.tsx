@@ -1,0 +1,100 @@
+import type { ReactNode } from "react";
+import Link from "next/link";
+import type { StatusReclamacao } from "@prisma/client";
+import { CalendarDays, MapPin, Users, type LucideIcon } from "lucide-react";
+import { getTranslations } from "next-intl/server";
+
+import { CategoriaIcon } from "@/components/categoria-icon";
+import { cartao, rotuloSecao } from "@/lib/estilos";
+import { formatarData } from "@/lib/formatarData";
+
+import { ProgressoStatus } from "./progresso-status";
+
+function Fato({
+  icone,
+  rotulo,
+  children,
+}: {
+  icone: ReactNode;
+  rotulo: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex gap-3">
+      <span className="mt-0.5 shrink-0 text-slate-400 dark:text-slate-500">{icone}</span>
+      <div className="flex min-w-0 flex-col">
+        <dt className="text-xs text-slate-500 dark:text-slate-400">{rotulo}</dt>
+        <dd className="text-sm text-slate-900 dark:text-slate-100">{children}</dd>
+      </div>
+    </div>
+  );
+}
+
+function icone(Icone: LucideIcon) {
+  return <Icone className="h-4 w-4" aria-hidden />;
+}
+
+// Coluna lateral do detalhe: o essencial da reclamação de relance (onde
+// está, de que tipo, desde quando, quantos confirmam) e a ação principal.
+// `acao` vem pronto da página porque depende da sessão (confirmar, entrar
+// pra confirmar, ou nada pro autor).
+export async function ResumoReclamacao({
+  status,
+  categoria,
+  cidade,
+  endereco,
+  criadaEm,
+  confirmacoes,
+  locale,
+  acao,
+  acaoSecundaria,
+}: {
+  status: StatusReclamacao;
+  categoria: { nome: string; icone: string | null };
+  cidade: { nome: string; slug: string; uf: string };
+  endereco: string;
+  criadaEm: Date;
+  confirmacoes: number;
+  locale: string;
+  acao: ReactNode;
+  // Ação rara e discreta (denunciar), logo abaixo da principal.
+  acaoSecundaria?: ReactNode;
+}) {
+  const t = await getTranslations("ReclamacaoDetalhe");
+
+  return (
+    <section className={`flex flex-col gap-5 ${cartao}`}>
+      <h2 className={rotuloSecao}>{t("resumo")}</h2>
+
+      <ProgressoStatus status={status} />
+
+      <dl className="flex flex-col gap-3.5">
+        <Fato
+          rotulo={t("categoria")}
+          icone={<CategoriaIcon icone={categoria.icone} className="h-4 w-4" />}
+        >
+          {categoria.nome}
+        </Fato>
+        <Fato rotulo={t("local")} icone={icone(MapPin)}>
+          {endereco}
+          <br />
+          <Link href={`/cidades/${cidade.slug}`} className="text-primary hover:underline">
+            {cidade.nome} - {cidade.uf}
+          </Link>
+        </Fato>
+        <Fato rotulo={t("registradaEm")} icone={icone(CalendarDays)}>
+          <span className="tabular-nums">{formatarData(criadaEm, locale)}</span>
+        </Fato>
+      </dl>
+
+      <div className="flex flex-col gap-3 border-t border-slate-200 pt-4 dark:border-slate-800">
+        <p className="flex items-center gap-2 text-sm font-medium text-slate-900 dark:text-slate-100">
+          <Users className="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" aria-hidden />
+          {t("pessoasConfirmaram", { count: confirmacoes })}
+        </p>
+        {acao}
+        {acaoSecundaria}
+      </div>
+    </section>
+  );
+}

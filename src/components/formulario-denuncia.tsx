@@ -32,7 +32,7 @@ export async function FormularioDenuncia({
   const tMotivo = await getTranslations("MotivoDenuncia");
 
   return (
-    <details className="w-fit">
+    <details className={largura === "w-full" ? "w-full" : "w-fit"}>
       <summary
         className={
           estilo === "pill"

@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import { cartao, containerPagina } from "@/lib/estilos";
+import { metadataDaPagina } from "@/lib/metadata";
 
 import { exigirModerador } from "../exigir-moderador";
 
@@ -55,6 +56,8 @@ function formatarDiaCurto(chave: string) {
   const [, mes, dia] = chave.split("-");
   return `${dia}/${mes}`;
 }
+
+export const generateMetadata = metadataDaPagina("Estatisticas");
 
 export default async function EstatisticasModeracaoPage() {
   const t = await getTranslations("Estatisticas");

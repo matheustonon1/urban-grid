@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { Paginacao } from "@/components/paginacao";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
 import { botaoPrimario, botaoSecundario, campoInput, cartao, containerPagina } from "@/lib/estilos";
+import { metadataDaPagina } from "@/lib/metadata";
 
 import { exigirAdmin } from "../solicitacoes-orgao/exigir-admin";
 import {
@@ -12,6 +13,8 @@ import {
   atualizarDadosOrgao,
   reenviarConviteOrgao,
 } from "./actions";
+
+export const generateMetadata = metadataDaPagina("OrgaosCategorias");
 
 export default async function OrgaosCategoriasPage({
   searchParams,

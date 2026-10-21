@@ -3,8 +3,11 @@ import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { containerPagina } from "@/lib/estilos";
 import { exigirSessao } from "@/lib/sessao";
+import { metadataDaPagina } from "@/lib/metadata";
 
 import { NovaReclamacaoForm } from "./form";
+
+export const generateMetadata = metadataDaPagina("NovaReclamacao", "tituloPagina");
 
 export default async function NovaReclamacaoPage() {
   const t = await getTranslations("NovaReclamacao");

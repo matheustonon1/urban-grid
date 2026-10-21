@@ -10,6 +10,7 @@ import {
 } from "@/lib/totp";
 import { iniciaisDoNome } from "@/lib/texto";
 import { exigirSessao } from "@/lib/sessao";
+import { metadataDaPagina } from "@/lib/metadata";
 
 import {
   FormularioExclusao,
@@ -21,6 +22,8 @@ import {
 import { ExportarDados } from "./exportar-dados";
 import { ResumoSeguranca } from "./resumo-seguranca";
 import { FormularioTotp } from "./totp-formulario";
+
+export const generateMetadata = metadataDaPagina("Conta");
 
 export default async function ContaPage() {
   const t = await getTranslations("Conta");

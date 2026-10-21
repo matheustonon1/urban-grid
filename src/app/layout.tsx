@@ -32,7 +32,8 @@ const plexMono = IBM_Plex_Mono({
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("Metadata");
   return {
-    title: "Urban Grid",
+    // Cada página define só o próprio título; o sufixo vem daqui.
+    title: { default: "Urban Grid", template: "%s · Urban Grid" },
     description: t("descricao"),
   };
 }

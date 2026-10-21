@@ -2,10 +2,13 @@ import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import { botaoPrimario, botaoSecundario, campoInput, cartao, containerPagina } from "@/lib/estilos";
+import { metadataDaPagina } from "@/lib/metadata";
 
 import { alterarPapelUsuario } from "./actions";
 import { PAPEIS_ATRIBUIVEIS } from "./definitions";
 import { exigirAdmin } from "../solicitacoes-orgao/exigir-admin";
+
+export const generateMetadata = metadataDaPagina("Usuarios");
 
 export default async function UsuariosPage({ searchParams }: PageProps<"/usuarios">) {
   const t = await getTranslations("Usuarios");

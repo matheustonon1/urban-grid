@@ -5,9 +5,12 @@ import { prisma } from "@/lib/prisma";
 import { Paginacao } from "@/components/paginacao";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
 import { botaoPrimario, botaoSecundario, cartao, containerPagina } from "@/lib/estilos";
+import { metadataDaPagina } from "@/lib/metadata";
 
 import { aprovarComentarioReprovado, confirmarRejeicaoComentario } from "./actions";
 import { exigirModerador } from "../exigir-moderador";
+
+export const generateMetadata = metadataDaPagina("ModeracaoComentarios");
 
 export default async function ModeracaoComentariosPage({
   searchParams,

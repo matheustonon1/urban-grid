@@ -5,9 +5,12 @@ import { prisma } from "@/lib/prisma";
 import { Paginacao } from "@/components/paginacao";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
 import { botaoPrimario, botaoSecundario, campoInput, cartao, containerPagina } from "@/lib/estilos";
+import { metadataDaPagina } from "@/lib/metadata";
 
 import { aprovarReclamacao, rejeitarReclamacao } from "./actions";
 import { exigirModerador } from "./exigir-moderador";
+
+export const generateMetadata = metadataDaPagina("Moderacao");
 
 export default async function ModeracaoPage({ searchParams }: PageProps<"/moderacao">) {
   const t = await getTranslations("Moderacao");

@@ -9,9 +9,12 @@ import { Metrica } from "@/components/metrica";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
 import { botaoPrimario, campoInput, cartao, containerPagina } from "@/lib/estilos";
 import { calcularMetricasOrgao, classificarIndice } from "@/lib/reputacaoOrgao";
+import { metadataDaPagina } from "@/lib/metadata";
 
 import { responderReclamacao } from "../reclamacoes/[protocolo]/actions";
 import { exigirOrgao } from "../reclamacoes/[protocolo]/exigir-orgao";
+
+export const generateMetadata = metadataDaPagina("PainelOrgao");
 
 export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orgao">) {
   const t = await getTranslations("PainelOrgao");

@@ -7,8 +7,11 @@ import { StatusBadge } from "@/components/status-badge";
 import { Paginacao } from "@/components/paginacao";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
 import { botaoPrimario, botaoSecundario, cartao, containerPagina } from "@/lib/estilos";
+import { metadataDaPagina } from "@/lib/metadata";
 
 import { reenviarVerificacao } from "./actions";
+
+export const generateMetadata = metadataDaPagina("Painel");
 
 export default async function PainelPage({ searchParams }: PageProps<"/painel">) {
   const t = await getTranslations("Painel");

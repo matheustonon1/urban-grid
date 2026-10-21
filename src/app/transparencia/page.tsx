@@ -11,7 +11,7 @@ const LIMITE_ORGAOS = 100;
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("Transparencia");
-  return { title: `${t("titulo")} · Urban Grid`, description: t("subtitulo") };
+  return { title: t("titulo"), description: t("subtitulo") };
 }
 
 export default async function TransparenciaPage() {

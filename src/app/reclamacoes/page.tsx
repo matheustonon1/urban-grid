@@ -9,8 +9,11 @@ import { formatarTempoRelativo } from "@/lib/tempo-relativo";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
 import { cartao, containerPagina } from "@/lib/estilos";
 import { STATUS_PUBLICOS } from "@/lib/statusPublicos";
+import { metadataDaPagina } from "@/lib/metadata";
 
 import { FiltroReclamacoes } from "./filtro";
+
+export const generateMetadata = metadataDaPagina("Reclamacoes");
 
 export default async function ReclamacoesPublicasPage({
   searchParams,

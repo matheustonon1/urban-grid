@@ -8,6 +8,9 @@ import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } 
 import { formatarTempoRelativo } from "@/lib/tempo-relativo";
 import { botaoSecundario, cartao, containerPagina } from "@/lib/estilos";
 import { exigirSessao } from "@/lib/sessao";
+import { metadataDaPagina } from "@/lib/metadata";
+
+export const generateMetadata = metadataDaPagina("Notificacoes");
 
 export default async function NotificacoesPage({
   searchParams,

@@ -657,7 +657,19 @@
     "erroRecursoCurto": "Explain in more detail why the rejection should be reviewed (min. 20 characters).",
     "erroRecursoLongo": "Text too long (max. 1000 characters).",
     "erroComentarioCurto": "Comment too short.",
-    "erroComentarioLongo": "Comment too long (max. 1000 characters)."
+    "erroComentarioLongo": "Comment too long (max. 1000 characters).",
+    "resumo": "Summary",
+    "categoria": "Category",
+    "local": "Location",
+    "registradaEm": "Filed on",
+    "progressoRotulo": "Complaint progress",
+    "etapaConcluida": "completed",
+    "entreParaConfirmar": "Sign in to say you're affected too",
+    "entreParaComentar": "Sign in to comment",
+    "abrirFoto": "Open photo {numero} full size",
+    "navegacaoRotulo": "You are here",
+    "reclamacoesRotulo": "Complaints",
+    "tituloGenerico": "Complaint"
   },
   "Reclamacoes": {
     "titulo": "Public complaints",
@@ -820,5 +832,8 @@
     "vocêMesmo": "You can't change your own role - ask another admin.",
     "salvar": "Save",
     "erroPapelInvalido": "Invalid role."
+  },
+  "Comum": {
+    "carregando": "Loading…"
   }
 }

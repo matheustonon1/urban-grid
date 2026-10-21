@@ -3,9 +3,12 @@ import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { cartao, containerPagina } from "@/lib/estilos";
 import { exigirSessao } from "@/lib/sessao";
+import { metadataDaPagina } from "@/lib/metadata";
 
 import { cancelarAssinatura } from "./actions";
 import { FormularioNovaAssinatura } from "./formulario";
+
+export const generateMetadata = metadataDaPagina("Assinaturas");
 
 export default async function AssinaturasPage() {
   const t = await getTranslations("Assinaturas");
