@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { Bell, Lock, LogOut, Mail, Trash2, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 
+import { SeletorCidade } from "@/components/cidade-combobox";
 import { botaoPrimario, botaoSecundario, campoInput, cartao } from "@/lib/estilos";
 
 import {
@@ -58,7 +59,13 @@ export function BotaoEncerrarSessoes() {
   );
 }
 
-export function FormularioPerfil({ telefone }: { telefone: string }) {
+export function FormularioPerfil({
+  telefone,
+  cidadePadrao,
+}: {
+  telefone: string;
+  cidadePadrao: { id: string; nome: string; uf: string } | null;
+}) {
   const t = useTranslations("Conta");
   const [state, action, pending] = useActionState(atualizarPerfil, undefined);
 
@@ -81,6 +88,19 @@ export function FormularioPerfil({ telefone }: { telefone: string }) {
         />
         {state?.erros?.telefone && (
           <p className="text-sm text-red-600 dark:text-red-400">{state.erros.telefone[0]}</p>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <Rotulo htmlFor="perfil-cidade">{t("cidadePadrao")}</Rotulo>
+        <SeletorCidade
+          id="perfil-cidade"
+          placeholder={t("cidadePadrao")}
+          defaultValue={cidadePadrao}
+        />
+        <p className="text-xs text-slate-500 dark:text-slate-400">{t("cidadePadraoDesc")}</p>
+        {state?.erros?.cidadeId && (
+          <p className="text-sm text-red-600 dark:text-red-400">{state.erros.cidadeId[0]}</p>
         )}
       </div>
 

@@ -24,6 +24,7 @@ export async function montarExportacaoDados(userId: string) {
       termosAceitosEm: true,
       criadoDeIp: true,
       createdAt: true,
+      cidade: { select: { nome: true, estado: { select: { uf: true } } } },
       reclamacoes: {
         orderBy: { createdAt: "asc" },
         select: {
@@ -124,6 +125,7 @@ export async function montarExportacaoDados(userId: string) {
       email: usuario.email,
       emailVerificadoEm: usuario.emailVerified,
       telefone: usuario.telefone,
+      cidadePadrao: usuario.cidade ? nomeCidade(usuario.cidade) : null,
       papel: usuario.papel,
       idioma: usuario.idioma,
       notificarPorEmail: usuario.notificarPorEmail,

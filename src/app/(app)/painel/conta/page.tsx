@@ -38,6 +38,7 @@ export default async function ContaPage() {
       notificarPorEmail: true,
       emailVerified: true,
       createdAt: true,
+      cidade: { select: { id: true, nome: true, estado: { select: { uf: true } } } },
     },
   });
 
@@ -80,7 +81,14 @@ export default async function ContaPage() {
         emailVerificado={!!usuario.emailVerified}
         criadoEm={usuario.createdAt}
       />
-      <FormularioPerfil telefone={usuario.telefone ?? ""} />
+      <FormularioPerfil
+        telefone={usuario.telefone ?? ""}
+        cidadePadrao={
+          usuario.cidade
+            ? { id: usuario.cidade.id, nome: usuario.cidade.nome, uf: usuario.cidade.estado.uf }
+            : null
+        }
+      />
       <FormularioPreferenciasNotificacao notificarPorEmail={usuario.notificarPorEmail} />
       <FormularioSenha />
       <FormularioTrocaEmail emailAtual={usuario.email} />

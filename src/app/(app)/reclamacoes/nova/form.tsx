@@ -26,8 +26,10 @@ interface CidadeResultado {
 
 export function NovaReclamacaoForm({
   categorias,
+  cidadePadrao,
 }: {
   categorias: Categoria[];
+  cidadePadrao: CidadeResultado | null;
 }) {
   const t = useTranslations("NovaReclamacao");
   const [state, action, pending] = useActionState(criarReclamacao, undefined);
@@ -202,11 +204,15 @@ export function NovaReclamacaoForm({
           </div>
 
           <div className="flex flex-col gap-1">
+            {/* O CEP sempre vale mais que a cidade padrão da conta: a key
+                muda de "padrao" pro id da cidade do CEP e remonta o campo,
+                mesmo que seja a mesma cidade (e mesmo que a pessoa já
+                tenha trocado a cidade na mão). */}
             <SeletorCidade
-              key={cidadeAutoPreenchida?.id ?? "manual"}
+              key={cidadeAutoPreenchida?.id ?? "padrao"}
               required
               placeholder={t("cidade")}
-              defaultValue={cidadeAutoPreenchida}
+              defaultValue={cidadeAutoPreenchida ?? cidadePadrao}
             />
             {state?.erros?.cidadeId && (
               <p className="text-sm text-red-600 dark:text-red-400">{state.erros.cidadeId[0]}</p>

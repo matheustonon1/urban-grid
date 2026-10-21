@@ -72,7 +72,10 @@
     "encerrarSessoesDesc": "Signs out this device and every other one you're logged in on, and asks for your password again on each. Useful after using a shared computer or if you suspect unauthorized access.",
     "privacidadeDados": "Privacy and data",
     "exportarDadosDesc": "Download a JSON copy of the data we keep about you: profile, complaints, comments, confirmations, ratings, reports, subscriptions and notifications. Your password, two-factor authentication and internal moderation data are not included. If you're going to delete your account, download this first: afterwards your name and contact details are gone.",
-    "baixarMeusDados": "Download my data"
+    "baixarMeusDados": "Download my data",
+    "cidadePadrao": "Default city",
+    "cidadePadraoDesc": "Pre-selected when you file a new complaint (if you enter a ZIP code, its city wins). Clear the field to have no default city.",
+    "erroCidadeInvalida": "Pick a city from the list."
   },
   "Totp": {
     "copiado": "Copied",

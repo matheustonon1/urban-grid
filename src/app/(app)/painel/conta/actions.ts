@@ -36,14 +36,20 @@ export async function atualizarPerfil(
 
   const validado = criarPerfilSchema().safeParse({
     telefone: formData.get("telefone"),
+    cidadeId: formData.get("cidadeId") ?? "",
   });
   if (!validado.success) {
     return { erros: validado.error.flatten().fieldErrors };
   }
 
+  const cidadeId = validado.data.cidadeId || null;
+  if (cidadeId && !(await prisma.cidade.findUnique({ where: { id: cidadeId }, select: { id: true } }))) {
+    return { erros: { cidadeId: [t("erroCidadeInvalida")] } };
+  }
+
   await prisma.user.update({
     where: { id: session.user.id },
-    data: { telefone: validado.data.telefone || null },
+    data: { telefone: validado.data.telefone || null, cidadeId },
   });
 
   revalidatePath("/painel/conta");

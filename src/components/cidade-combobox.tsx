@@ -20,12 +20,14 @@ function formatar(cidade: CidadeResultado) {
 }
 
 export function SeletorCidade({
+  id,
   name = "cidadeId",
   defaultValue = null,
   placeholder = "Cidade",
   required = false,
   onSelecionar,
 }: {
+  id?: string;
   name?: string;
   defaultValue?: CidadeResultado | null;
   placeholder?: string;
@@ -115,6 +117,7 @@ export function SeletorCidade({
   return (
     <div ref={containerRef} className="relative">
       <input
+        id={id}
         type="text"
         role="combobox"
         aria-expanded={aberto}

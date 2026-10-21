@@ -3,19 +3,22 @@ import type { getTranslations } from "next-intl/server";
 
 type T = Awaited<ReturnType<typeof getTranslations>>;
 
-// Só telefone é editável aqui - nome não é um campo que o usuário deve
-// poder ficar trocando livremente (é usado como identificação pública
-// em comentários e, no caso de conta de órgão, remonta à pessoa
-// responsável cadastrada na solicitação de acesso).
+// Telefone e cidade padrão são editáveis aqui - nome não é um campo que o
+// usuário deve poder ficar trocando livremente (é usado como
+// identificação pública em comentários e, no caso de conta de órgão,
+// remonta à pessoa responsável cadastrada na solicitação de acesso).
+// cidadeId vazio = sem cidade padrão; a existência da cidade é checada na
+// action (aqui só o formato).
 export function criarPerfilSchema() {
   return z.object({
     telefone: z.string().trim().max(20).optional().or(z.literal("")),
+    cidadeId: z.string().trim().max(50).optional().or(z.literal("")),
   });
 }
 
 export type PerfilFormState =
   | {
-      erros?: { telefone?: string[] };
+      erros?: { telefone?: string[]; cidadeId?: string[] };
       mensagem?: string;
     }
   | undefined;
