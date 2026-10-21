@@ -97,3 +97,17 @@ export type DesativarTotpFormState =
       mensagem?: string;
     }
   | undefined;
+
+export function criarRegenerarCodigosSchema(t: T) {
+  return z.object({
+    senhaAtual: z.string().min(1, { error: t("erroSenhaAtual") }).max(100),
+  });
+}
+
+export type RegenerarCodigosFormState =
+  | {
+      erros?: { senhaAtual?: string[] };
+      mensagem?: string;
+      codigosBackup?: string[];
+    }
+  | undefined;

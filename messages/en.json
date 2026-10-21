@@ -56,7 +56,20 @@
     "erroExcluirConta": "Couldn't delete the account.",
     "preferenciasNotificacao": "Notification preferences",
     "notificarPorEmailDesc": "Receive an email when a complaint's status changes (official response, publication, rejection, review request). The in-app bell notification always stays on.",
-    "preferenciasAtualizadas": "Preferences updated."
+    "preferenciasAtualizadas": "Preferences updated.",
+    "segurancaConta": "Account security",
+    "duasEtapas": "Two-factor authentication",
+    "ativada": "Enabled",
+    "desativada": "Disabled",
+    "emailRotulo": "Email",
+    "emailVerificado": "Verified",
+    "emailNaoVerificado": "Not verified",
+    "contaCriadaEm": "Account created on",
+    "reenviarVerificacao": "Resend verification email",
+    "verificacaoReenviada": "We sent a new verification link to {email}.",
+    "emailJaVerificado": "Your email is already verified.",
+    "encerrarSessoes": "Sign out on all devices",
+    "encerrarSessoesDesc": "Signs out this device and every other one you're logged in on, and asks for your password again on each. Useful after using a shared computer or if you suspect unauthorized access."
   },
   "Totp": {
     "copiado": "Copied",
@@ -84,7 +97,16 @@
     "ativadaMensagem": "Two-factor authentication enabled.",
     "erroDesativar": "Couldn't disable the authenticator.",
     "erroSenhaIncorreta": "Incorrect password.",
-    "desativadaMensagem": "Two-factor authentication disabled."
+    "desativadaMensagem": "Two-factor authentication disabled.",
+    "codigosRestantes": "{restantes} of {total} backup codes still available.",
+    "poucosCodigos": "You're running low on codes. Generate a new list before they run out.",
+    "semCodigos": "You have no backup codes left. Generate a new list now.",
+    "confirmeSenhaGerar": "Confirm your password to generate new codes",
+    "gerarNovosCodigosDesc": "The current codes, even unused ones, stop working as soon as the new ones are generated.",
+    "gerarNovosCodigos": "Generate new codes",
+    "guardeNovosCodigos": "Keep these codes somewhere safe. They are only shown now, and each one works only once.",
+    "novosCodigosGerados": "New backup codes generated.",
+    "erroGerarCodigos": "Couldn't generate new codes."
   },
   "Painel": {
     "titulo": "Dashboard",

@@ -1,16 +1,18 @@
 "use client";
 
 import { useActionState } from "react";
-import { Bell, Lock, Mail, Trash2, User } from "lucide-react";
+import { Bell, Lock, LogOut, Mail, Trash2, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { botaoPrimario, campoInput, cartao } from "@/lib/estilos";
+import { botaoPrimario, botaoSecundario, campoInput, cartao } from "@/lib/estilos";
 
 import {
   alterarSenha,
   atualizarPerfil,
   atualizarPreferenciasNotificacao,
+  encerrarSessoes,
   excluirConta,
+  reenviarVerificacaoEmail,
   solicitarTrocaEmail,
 } from "./actions";
 
@@ -22,6 +24,37 @@ function Rotulo({ children, htmlFor }: { children: string; htmlFor: string }) {
     >
       {children}
     </label>
+  );
+}
+
+export function BotaoReenviarVerificacao() {
+  const t = useTranslations("Conta");
+  const [state, action, pending] = useActionState(reenviarVerificacaoEmail, undefined);
+
+  return (
+    <form action={action} className="flex flex-col items-start gap-2">
+      <button type="submit" disabled={pending} className={botaoSecundario}>
+        {t("reenviarVerificacao")}
+      </button>
+      {state?.mensagem && (
+        <p role="status" className="text-sm text-slate-600 dark:text-slate-400">
+          {state.mensagem}
+        </p>
+      )}
+    </form>
+  );
+}
+
+export function BotaoEncerrarSessoes() {
+  const t = useTranslations("Conta");
+
+  return (
+    <form action={encerrarSessoes}>
+      <button type="submit" className={botaoSecundario}>
+        <LogOut className="h-4 w-4" aria-hidden />
+        {t("encerrarSessoes")}
+      </button>
+    </form>
   );
 }
 

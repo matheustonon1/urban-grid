@@ -8,7 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { criarContadorDeFalhas } from "@/lib/contadorFalhas";
 
 const NOME_EMISSOR = "Urban Grid";
-const QUANTIDADE_CODIGOS_BACKUP = 8;
+export const QUANTIDADE_CODIGOS_BACKUP = 8;
 const LIMITE_TENTATIVAS = 5;
 const BLOQUEIO_MS = 5 * 60 * 1000;
 // ±1 passo de 30s (padrão histórico do otplib) - absorve pequena

@@ -7,7 +7,12 @@ import { getTranslations } from "next-intl/server";
 import { signOut } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { alertarSenhaAlterada, alertarTrocaEmailSolicitada } from "@/lib/notificacoes";
-import { criarTokenTrocaEmail, enviarEmailConfirmarTrocaEmail } from "@/lib/email";
+import {
+  criarTokenTrocaEmail,
+  criarTokenVerificacao,
+  enviarEmailConfirmarTrocaEmail,
+  enviarEmailVerificacao,
+} from "@/lib/email";
 import { idiomaOuPadrao } from "@/i18n/config";
 import { exigirSessao } from "@/lib/sessao";
 
@@ -67,6 +72,50 @@ export async function atualizarPreferenciasNotificacao(
   revalidatePath("/painel/conta");
 
   return { mensagem: t("preferenciasAtualizadas") };
+}
+
+// Mesma regra de reenviarVerificacao() em painel/actions.ts, mas devolvendo
+// um estado pra "Minha conta" mostrar o resultado - aquela é usada direto
+// como `<form action>` no painel, que só aceita retorno void.
+export async function reenviarVerificacaoEmail(): Promise<{ mensagem?: string }> {
+  const t = await getTranslations("Conta");
+  const session = await exigirSessao();
+
+  const usuario = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { email: true, emailVerified: true, idioma: true },
+  });
+  if (!usuario) {
+    return {};
+  }
+  if (usuario.emailVerified) {
+    return { mensagem: t("emailJaVerificado") };
+  }
+
+  const token = await criarTokenVerificacao(usuario.email);
+  await enviarEmailVerificacao({
+    email: usuario.email,
+    token,
+    locale: idiomaOuPadrao(usuario.idioma),
+  });
+
+  return { mensagem: t("verificacaoReenviada", { email: usuario.email }) };
+}
+
+// Não existe tabela de sessões (a estratégia é JWT), mas o callback jwt em
+// auth.ts já derruba qualquer token emitido antes de senhaAlteradaEm - é
+// o que a troca de senha usa. Gravar o campo sem trocar a senha dá o mesmo
+// efeito: todos os dispositivos (inclusive este) precisam entrar de novo.
+// Por isso o campo não é exibido como "última troca de senha" na tela.
+export async function encerrarSessoes() {
+  const session = await exigirSessao();
+
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: { senhaAlteradaEm: new Date() },
+  });
+
+  await signOut({ redirectTo: "/login" });
 }
 
 export async function solicitarTrocaEmail(

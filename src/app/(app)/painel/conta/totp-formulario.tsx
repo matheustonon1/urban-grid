@@ -4,9 +4,15 @@ import { useActionState, useState } from "react";
 import { Check, Copy, KeyRound, ShieldCheck } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { botaoPrimario, campoInput, cartao } from "@/lib/estilos";
+import { botaoPrimario, botaoSecundario, campoInput, cartao } from "@/lib/estilos";
 
-import { cancelarConfiguracaoTotp, confirmarTotp, desativarTotp, iniciarConfiguracaoTotp } from "./totp-actions";
+import {
+  cancelarConfiguracaoTotp,
+  confirmarTotp,
+  desativarTotp,
+  iniciarConfiguracaoTotp,
+  regenerarCodigosBackup,
+} from "./totp-actions";
 
 function formatarChave(segredo: string) {
   return segredo.match(/.{1,4}/g)?.join(" ") ?? segredo;
@@ -39,16 +45,40 @@ function BotaoCopiar({ texto }: { texto: string }) {
   );
 }
 
+function CodigosBackup({ codigos }: { codigos: string[] }) {
+  const t = useTranslations("Totp");
+
+  return (
+    <div className="flex flex-col gap-2 rounded-lg bg-slate-50 p-3 dark:bg-slate-800">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+          {t("codigosBackup")}
+        </span>
+        <BotaoCopiar texto={codigos.join("\n")} />
+      </div>
+      <ul className="grid grid-cols-2 gap-2 font-mono text-sm text-slate-800 dark:text-slate-200">
+        {codigos.map((codigo) => (
+          <li key={codigo}>{codigo}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export function FormularioTotp({
   ativo,
   pendente,
   qrCodeDataUrl,
   segredoManual,
+  codigosRestantes,
+  codigosTotal,
 }: {
   ativo: boolean;
   pendente: boolean;
   qrCodeDataUrl?: string;
   segredoManual?: string;
+  codigosRestantes: number;
+  codigosTotal: number;
 }) {
   const t = useTranslations("Totp");
   const [stateConfirmar, actionConfirmar, pendingConfirmar] = useActionState(
@@ -57,6 +87,10 @@ export function FormularioTotp({
   );
   const [stateDesativar, actionDesativar, pendingDesativar] = useActionState(
     desativarTotp,
+    undefined
+  );
+  const [stateRegenerar, actionRegenerar, pendingRegenerar] = useActionState(
+    regenerarCodigosBackup,
     undefined
   );
 
@@ -71,24 +105,15 @@ export function FormularioTotp({
           <h2 className="font-semibold text-slate-900 dark:text-slate-100">{t("ativada")}</h2>
         </div>
         <p className="text-sm text-slate-700 dark:text-slate-300">{t("guardeCodigos")}</p>
-        <div className="flex flex-col gap-2 rounded-lg bg-slate-50 p-3 dark:bg-slate-800">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-              {t("codigosBackup")}
-            </span>
-            <BotaoCopiar texto={stateConfirmar.codigosBackup.join("\n")} />
-          </div>
-          <ul className="grid grid-cols-2 gap-2 font-mono text-sm text-slate-800 dark:text-slate-200">
-            {stateConfirmar.codigosBackup.map((codigo) => (
-              <li key={codigo}>{codigo}</li>
-            ))}
-          </ul>
-        </div>
+        <CodigosBackup codigos={stateConfirmar.codigosBackup} />
       </div>
     );
   }
 
   if (ativo) {
+    const semCodigos = codigosRestantes === 0;
+    const poucosCodigos = codigosRestantes <= 2;
+
     return (
       <div className={`flex flex-col gap-3 ${cartao}`}>
         <div className="flex items-center gap-2">
@@ -98,6 +123,60 @@ export function FormularioTotp({
           </h2>
         </div>
         <p className="text-sm text-green-700 dark:text-green-400">{t("ativadaPorApp")}</p>
+
+        <div className="flex flex-col gap-3 rounded-lg bg-slate-50 p-3 dark:bg-slate-800/60">
+          <div className="flex flex-col gap-1">
+            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              {t("codigosRestantes", { restantes: codigosRestantes, total: codigosTotal })}
+            </p>
+            {poucosCodigos && (
+              <p className="text-sm text-amber-700 dark:text-amber-400">
+                {semCodigos ? t("semCodigos") : t("poucosCodigos")}
+              </p>
+            )}
+          </div>
+
+          {stateRegenerar?.codigosBackup && (
+            <div className="animate-fade-in flex flex-col gap-3">
+              <p className="text-sm text-slate-700 dark:text-slate-300">{t("guardeNovosCodigos")}</p>
+              <CodigosBackup codigos={stateRegenerar.codigosBackup} />
+            </div>
+          )}
+
+          <form action={actionRegenerar} className="flex flex-col gap-2">
+            <label
+              htmlFor="totp-senha-regenerar"
+              className="text-sm font-medium text-slate-700 dark:text-slate-300"
+            >
+              {t("confirmeSenhaGerar")}
+            </label>
+            <input
+              id="totp-senha-regenerar"
+              type="password"
+              name="senhaAtual"
+              className={campoInput}
+            />
+            {stateRegenerar?.erros?.senhaAtual && (
+              <p className="text-sm text-red-600 dark:text-red-400">
+                {stateRegenerar.erros.senhaAtual[0]}
+              </p>
+            )}
+            {stateRegenerar?.mensagem && !stateRegenerar.codigosBackup && (
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                {stateRegenerar.mensagem}
+              </p>
+            )}
+            <p className="text-xs text-slate-500 dark:text-slate-400">{t("gerarNovosCodigosDesc")}</p>
+            <button
+              type="submit"
+              disabled={pendingRegenerar}
+              className={`${botaoSecundario} w-fit`}
+            >
+              {t("gerarNovosCodigos")}
+            </button>
+          </form>
+        </div>
+
         <form action={actionDesativar} className="flex flex-col gap-3">
           <div className="flex flex-col gap-1">
             <label

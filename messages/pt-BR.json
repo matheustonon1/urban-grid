@@ -56,7 +56,20 @@
     "erroExcluirConta": "Não foi possível excluir a conta.",
     "preferenciasNotificacao": "Preferências de notificação",
     "notificarPorEmailDesc": "Receber e-mail quando o status de uma reclamação mudar (resposta oficial, publicação, rejeição, pedido de avaliação). A notificação no sininho continua sempre ativa.",
-    "preferenciasAtualizadas": "Preferências atualizadas."
+    "preferenciasAtualizadas": "Preferências atualizadas.",
+    "segurancaConta": "Segurança da conta",
+    "duasEtapas": "Autenticação em duas etapas",
+    "ativada": "Ativada",
+    "desativada": "Desativada",
+    "emailRotulo": "E-mail",
+    "emailVerificado": "Verificado",
+    "emailNaoVerificado": "Não verificado",
+    "contaCriadaEm": "Conta criada em",
+    "reenviarVerificacao": "Reenviar e-mail de verificação",
+    "verificacaoReenviada": "Enviamos um novo link de verificação para {email}.",
+    "emailJaVerificado": "Seu e-mail já está verificado.",
+    "encerrarSessoes": "Encerrar sessões em todos os dispositivos",
+    "encerrarSessoesDesc": "Desconecta este e todos os outros dispositivos em que você entrou, e pede a senha de novo em cada um. Útil depois de usar um computador compartilhado ou se você suspeitar de acesso indevido."
   },
   "Totp": {
     "copiado": "Copiado",
@@ -84,7 +97,16 @@
     "ativadaMensagem": "Autenticação em duas etapas ativada.",
     "erroDesativar": "Não foi possível desativar o autenticador.",
     "erroSenhaIncorreta": "Senha incorreta.",
-    "desativadaMensagem": "Autenticação em duas etapas desativada."
+    "desativadaMensagem": "Autenticação em duas etapas desativada.",
+    "codigosRestantes": "{restantes} de {total} códigos de backup ainda disponíveis.",
+    "poucosCodigos": "Restam poucos códigos. Gere uma nova lista antes que acabem.",
+    "semCodigos": "Você não tem mais códigos de backup. Gere uma nova lista agora.",
+    "confirmeSenhaGerar": "Confirme sua senha para gerar novos códigos",
+    "gerarNovosCodigosDesc": "Os códigos atuais, mesmo os que ainda não foram usados, deixam de funcionar assim que os novos forem gerados.",
+    "gerarNovosCodigos": "Gerar novos códigos",
+    "guardeNovosCodigos": "Guarde estes códigos em um lugar seguro. Eles só aparecem agora, e cada um funciona uma única vez.",
+    "novosCodigosGerados": "Novos códigos de backup gerados.",
+    "erroGerarCodigos": "Não foi possível gerar novos códigos."
   },
   "Painel": {
     "titulo": "Painel",

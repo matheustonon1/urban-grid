@@ -18,8 +18,10 @@ import { exigirSessao } from "@/lib/sessao";
 import {
   criarConfirmarTotpSchema,
   criarDesativarTotpSchema,
+  criarRegenerarCodigosSchema,
   type ConfirmarTotpFormState,
   type DesativarTotpFormState,
+  type RegenerarCodigosFormState,
 } from "./definitions";
 
 export async function iniciarConfiguracaoTotp() {
@@ -137,4 +139,48 @@ export async function desativarTotp(
   revalidatePath("/painel/conta");
 
   return { mensagem: t("desativadaMensagem") };
+}
+
+// Os códigos de backup só são mostrados uma vez (na ativação) e cada um
+// vale um único uso - quem gasta ou perde a lista ficaria sem saída caso
+// perdesse também o aplicativo autenticador. Gerar um lote novo descarta
+// o anterior inteiro (inclusive os ainda não usados), por isso a senha é
+// exigida: é o mesmo nível de confirmação de desativarTotp().
+export async function regenerarCodigosBackup(
+  _state: RegenerarCodigosFormState,
+  formData: FormData
+): Promise<RegenerarCodigosFormState> {
+  const session = await exigirSessao();
+
+  const t = await getTranslations("Totp");
+  const validado = criarRegenerarCodigosSchema(t).safeParse({
+    senhaAtual: formData.get("senhaAtual"),
+  });
+  if (!validado.success) {
+    return { erros: validado.error.flatten().fieldErrors };
+  }
+
+  const usuario = await prisma.user.findUnique({ where: { id: session.user.id } });
+  if (!usuario?.senhaHash || !usuario.totpConfirmadoEm) {
+    return { mensagem: t("erroGerarCodigos") };
+  }
+
+  const senhaValida = await bcrypt.compare(validado.data.senhaAtual, usuario.senhaHash);
+  if (!senhaValida) {
+    return { erros: { senhaAtual: [t("erroSenhaIncorreta")] } };
+  }
+
+  const codigosBackup = gerarCodigosBackup();
+  const dadosCodigosBackup = await prepararCodigosBackup(usuario.id, codigosBackup);
+
+  // Atômico pelo mesmo motivo de confirmarTotp(): se o createMany falhasse
+  // depois do deleteMany, a conta ficaria com 2FA ativo e zero códigos.
+  await prisma.$transaction([
+    prisma.totpBackupCode.deleteMany({ where: { userId: usuario.id } }),
+    prisma.totpBackupCode.createMany({ data: dadosCodigosBackup }),
+  ]);
+
+  revalidatePath("/painel/conta");
+
+  return { mensagem: t("novosCodigosGerados"), codigosBackup };
 }

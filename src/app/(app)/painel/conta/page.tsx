@@ -2,7 +2,12 @@ import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import { containerPagina } from "@/lib/estilos";
-import { decifrarSegredoTotp, gerarQrCodeTotp, gerarUriTotp } from "@/lib/totp";
+import {
+  decifrarSegredoTotp,
+  gerarQrCodeTotp,
+  gerarUriTotp,
+  QUANTIDADE_CODIGOS_BACKUP,
+} from "@/lib/totp";
 import { iniciaisDoNome } from "@/lib/texto";
 import { exigirSessao } from "@/lib/sessao";
 
@@ -13,6 +18,7 @@ import {
   FormularioSenha,
   FormularioTrocaEmail,
 } from "./formularios";
+import { ResumoSeguranca } from "./resumo-seguranca";
 import { FormularioTotp } from "./totp-formulario";
 
 export default async function ContaPage() {
@@ -29,8 +35,15 @@ export default async function ContaPage() {
       totpSecret: true,
       totpConfirmadoEm: true,
       notificarPorEmail: true,
+      emailVerified: true,
+      createdAt: true,
     },
   });
+
+  const totpAtivo = !!usuario.totpConfirmadoEm;
+  const codigosRestantes = totpAtivo
+    ? await prisma.totpBackupCode.count({ where: { userId: session.user.id, usadoEm: null } })
+    : 0;
 
   const pendente = !!usuario.totpSecret && !usuario.totpConfirmadoEm;
   let qrCodeDataUrl: string | undefined;
@@ -61,15 +74,22 @@ export default async function ContaPage() {
         </div>
       </div>
 
+      <ResumoSeguranca
+        totpAtivo={totpAtivo}
+        emailVerificado={!!usuario.emailVerified}
+        criadoEm={usuario.createdAt}
+      />
       <FormularioPerfil telefone={usuario.telefone ?? ""} />
       <FormularioPreferenciasNotificacao notificarPorEmail={usuario.notificarPorEmail} />
       <FormularioSenha />
       <FormularioTrocaEmail emailAtual={usuario.email} />
       <FormularioTotp
-        ativo={!!usuario.totpConfirmadoEm}
+        ativo={totpAtivo}
         pendente={pendente}
         qrCodeDataUrl={qrCodeDataUrl}
         segredoManual={segredoManual}
+        codigosRestantes={codigosRestantes}
+        codigosTotal={QUANTIDADE_CODIGOS_BACKUP}
       />
       <FormularioExclusao />
     </main>
