@@ -37,6 +37,10 @@ Se o pedido for para mudar fonte, paleta ou esses componentes base, confirme
 que é isso mesmo antes de agir — são decisões já tomadas de propósito, não
 lacunas esquecidas.
 
+Vai trazer um componente de catálogo externo (React Bits, 21st.dev, Uiverse…)?
+Leia antes `componentes-externos.md`, nesta pasta: o que checar, como traduzir pro
+vocabulário do projeto e onde esse tipo de efeito não entra.
+
 ## Tiques de "design genérico de IA" — evite sem que o usuário peça
 
 Estes são os padrões que mais entregam uma tela feita às pressas por um
