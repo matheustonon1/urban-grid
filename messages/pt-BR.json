@@ -69,7 +69,10 @@
     "verificacaoReenviada": "Enviamos um novo link de verificação para {email}.",
     "emailJaVerificado": "Seu e-mail já está verificado.",
     "encerrarSessoes": "Encerrar sessões em todos os dispositivos",
-    "encerrarSessoesDesc": "Desconecta este e todos os outros dispositivos em que você entrou, e pede a senha de novo em cada um. Útil depois de usar um computador compartilhado ou se você suspeitar de acesso indevido."
+    "encerrarSessoesDesc": "Desconecta este e todos os outros dispositivos em que você entrou, e pede a senha de novo em cada um. Útil depois de usar um computador compartilhado ou se você suspeitar de acesso indevido.",
+    "privacidadeDados": "Privacidade e dados",
+    "exportarDadosDesc": "Baixe uma cópia em JSON dos dados que guardamos sobre você: perfil, reclamações, comentários, confirmações, avaliações, denúncias, assinaturas e notificações. Senha, autenticação em duas etapas e dados internos de moderação não entram no arquivo. Se for excluir a conta, baixe antes: depois disso o nome e o contato somem.",
+    "baixarMeusDados": "Baixar meus dados"
   },
   "Totp": {
     "copiado": "Copiado",

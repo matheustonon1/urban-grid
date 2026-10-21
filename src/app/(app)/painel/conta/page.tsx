@@ -18,6 +18,7 @@ import {
   FormularioSenha,
   FormularioTrocaEmail,
 } from "./formularios";
+import { ExportarDados } from "./exportar-dados";
 import { ResumoSeguranca } from "./resumo-seguranca";
 import { FormularioTotp } from "./totp-formulario";
 
@@ -91,6 +92,7 @@ export default async function ContaPage() {
         codigosRestantes={codigosRestantes}
         codigosTotal={QUANTIDADE_CODIGOS_BACKUP}
       />
+      <ExportarDados />
       <FormularioExclusao />
     </main>
   );
