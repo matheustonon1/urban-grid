@@ -1,13 +1,18 @@
+import { cache } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ListFilter } from "lucide-react";
-import { getLocale, getTranslations } from "next-intl/server";
+import { ChevronRight, ListFilter, SearchX } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { StatusBadge } from "@/components/status-badge";
+import { CabecalhoPagina } from "@/components/cabecalho-pagina";
+import { CartaoReclamacao } from "@/components/cartao-reclamacao";
 import { CategoriaIcon } from "@/components/categoria-icon";
-import { botaoPrimario, campoInput, cartao, containerPagina } from "@/lib/estilos";
+import { EstadoVazio } from "@/components/estado-vazio";
+import { Paginacao } from "@/components/paginacao";
+import { botaoPrimario, campoInput, cartao, containerMedio, rotuloSecao } from "@/lib/estilos";
 import { calcularMetricasOrgao, classificarIndice } from "@/lib/reputacaoOrgao";
 import { STATUS_PUBLICOS } from "@/lib/statusPublicos";
 
@@ -40,6 +45,21 @@ function linkFeed(slug: string, estado: EstadoFeed, overrides: Partial<EstadoFee
   return `/cidades/${slug}${query ? `?${query}` : ""}`;
 }
 
+// Mesma consulta pra página e pro generateMetadata, uma ida ao banco só.
+const buscarCidade = cache((slug: string) =>
+  prisma.cidade.findUnique({ where: { slug }, include: { estado: true } })
+);
+
+export async function generateMetadata({ params }: PageProps<"/cidades/[slug]">): Promise<Metadata> {
+  const { slug } = await params;
+  const t = await getTranslations("CidadeDetalhe");
+  const cidade = await buscarCidade(slug);
+  if (!cidade) return {};
+
+  const rotulo = `${cidade.nome} - ${cidade.estado.uf}`;
+  return { title: rotulo, description: t("metaDescricao", { cidade: rotulo }) };
+}
+
 export default async function CidadePage({
   params,
   searchParams,
@@ -47,14 +67,10 @@ export default async function CidadePage({
   const t = await getTranslations("CidadeDetalhe");
   const tStatus = await getTranslations("Status");
   const tSelo = await getTranslations("Selo");
-  const locale = await getLocale();
   const { slug } = await params;
   const query = await searchParams;
 
-  const cidade = await prisma.cidade.findUnique({
-    where: { slug },
-    include: { estado: true },
-  });
+  const cidade = await buscarCidade(slug);
   if (!cidade) {
     notFound();
   }
@@ -125,6 +141,7 @@ export default async function CidadePage({
       include: {
         categoria: true,
         bairro: true,
+        midias: { orderBy: { ordem: "asc" }, take: 1 },
         _count: { select: { confirmacoes: true } },
       },
     }),
@@ -138,6 +155,8 @@ export default async function CidadePage({
     categoria: categoriaPorId.get(item.categoriaId),
     total: item._count.categoriaId,
   }));
+
+  const maiorCategoria = Math.max(1, ...ranking.map((item) => item.total));
 
   const totalAvaliadas = avaliacoes.reduce((soma, a) => soma + a._count._all, 0);
   const confirmadasPeloCidadao =
@@ -162,101 +181,130 @@ export default async function CidadePage({
   ).sort((a, b) => (b.metricas.indiceResolucao ?? -1) - (a.metricas.indiceResolucao ?? -1));
 
   return (
-    <main className={containerPagina}>
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-        {cidade.nome} - {cidade.estado.uf}
-      </h1>
+    <main className={`${containerMedio} gap-8`}>
+      <CabecalhoPagina
+        titulo={`${cidade.nome} - ${cidade.estado.uf}`}
+        descricao={t("totalPublico", { count: totalPublico })}
+        acoes={
+          <SeguirCidade cidadeId={cidade.id} logado={!!session?.user} jaAssina={jaAssinaCidade} />
+        }
+      />
 
-      <SeguirCidade cidadeId={cidade.id} logado={!!session?.user} jaAssina={jaAssinaCidade} />
-
-      <div className={`flex flex-col gap-2 ${cartao}`}>
+      <section className={`flex flex-col gap-5 ${cartao}`}>
         <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
           {t("indiceResolucao")}
         </h2>
-        <p className="text-sm text-slate-600 dark:text-slate-400">
-          {indiceOrgao !== null
-            ? t("indiceOrgaoTexto", { indice: indiceOrgao })
-            : t("semReclamacoesSuficientes")}
-        </p>
-        <p className="text-sm text-slate-600 dark:text-slate-400">
-          {indiceCidadao !== null
-            ? t("indiceCidadaoTexto", {
-                indice: indiceCidadao,
-                confirmadas: confirmadasPeloCidadao,
-                total: totalAvaliadas,
-              })
-            : t("semAvaliacoesSuficientes")}
-        </p>
-      </div>
+        <div className="grid gap-6 sm:grid-cols-2">
+          <Indicador
+            titulo={t("indiceOrgaoTitulo")}
+            valor={indiceOrgao}
+            legenda={t("indiceOrgaoLegenda")}
+            vazio={t("semReclamacoesSuficientes")}
+          />
+          <Indicador
+            titulo={t("indiceCidadaoTitulo")}
+            valor={indiceCidadao}
+            legenda={t("indiceCidadaoLegenda", {
+              confirmadas: confirmadasPeloCidadao,
+              total: totalAvaliadas,
+            })}
+            vazio={t("semAvaliacoesSuficientes")}
+          />
+        </div>
+      </section>
 
-      <div className="flex flex-col gap-2">
+      <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
           {t("categoriasMaisReclamadas")}
         </h2>
-        {ranking.length === 0 && (
+        {ranking.length === 0 ? (
           <p className="text-sm text-slate-500 dark:text-slate-400">
             {t("nenhumaReclamacaoPublica")}
           </p>
+        ) : (
+          <ul className={`flex flex-col gap-4 ${cartao}`}>
+            {ranking.map(
+              (item) =>
+                item.categoria && (
+                  <li key={item.categoria.id} className="flex flex-col gap-1.5">
+                    <div className="flex items-center gap-2.5 text-sm">
+                      <CategoriaIcon
+                        icone={item.categoria.icone}
+                        className="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500"
+                      />
+                      <span className="flex-1 text-slate-800 dark:text-slate-200">
+                        {item.categoria.nome}
+                      </span>
+                      <span className="font-mono font-medium tabular-nums text-slate-700 dark:text-slate-300">
+                        {item.total}
+                      </span>
+                    </div>
+                    {/* Barra proporcional à categoria mais reclamada. Uma cor
+                        só: é uma série única, ordenada - não há o que
+                        diferenciar por matiz. */}
+                    <div aria-hidden className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-800">
+                      <div
+                        className="h-full rounded-full bg-primary/70"
+                        style={{
+                          width: `${Math.max(4, Math.round((item.total / maiorCategoria) * 100))}%`,
+                        }}
+                      />
+                    </div>
+                  </li>
+                )
+            )}
+          </ul>
         )}
-        {ranking.map(
-          (item) =>
-            item.categoria && (
-              <div key={item.categoria.id} className={`flex items-center gap-3 ${cartao}`}>
-                <CategoriaIcon
-                  icone={item.categoria.icone}
-                  className="h-5 w-5 text-slate-400 dark:text-slate-500"
-                />
-                <span className="flex-1 text-sm text-slate-800 dark:text-slate-200">
-                  {item.categoria.nome}
-                </span>
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  {item.total}
-                </span>
-              </div>
-            )
-        )}
-      </div>
+      </section>
 
-      <div className="flex flex-col gap-2">
+      <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
           {t("orgaosDestaCidade")}
         </h2>
-        {rankingOrgaos.length === 0 && (
+        {rankingOrgaos.length === 0 ? (
           <p className="text-sm text-slate-500 dark:text-slate-400">
             {t("nenhumOrgaoCadastrado")}
           </p>
+        ) : (
+          <ul className={`divide-y divide-slate-200 overflow-hidden p-0 dark:divide-slate-800 ${cartao}`}>
+            {rankingOrgaos.map(({ orgao, metricas }) => {
+              const classificacao = classificarIndice(
+                metricas.indiceResolucao,
+                metricas.totalRespondidas
+              );
+              return (
+                <li key={orgao.id}>
+                  <Link
+                    href={`/orgaos/${orgao.id}`}
+                    className="group flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                  >
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <span className="line-clamp-2 text-sm font-medium text-slate-900 group-hover:text-primary dark:text-slate-100">
+                        {orgao.nome}
+                        {orgao.sigla && ` (${orgao.sigla})`}
+                      </span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">
+                        {t("reclamacoesRespondidas", { count: metricas.totalRespondidas })}
+                      </span>
+                    </div>
+                    <span
+                      className={`inline-block shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${classificacao.className}`}
+                    >
+                      {tSelo(classificacao.chave)}
+                    </span>
+                    <ChevronRight
+                      className="h-4 w-4 shrink-0 text-slate-300 transition-transform group-hover:translate-x-0.5 group-hover:text-primary dark:text-slate-600"
+                      aria-hidden
+                    />
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
         )}
-        {rankingOrgaos.map(({ orgao, metricas }) => {
-          const classificacao = classificarIndice(
-            metricas.indiceResolucao,
-            metricas.totalRespondidas
-          );
-          return (
-            <Link
-              key={orgao.id}
-              href={`/orgaos/${orgao.id}`}
-              className={`flex items-center gap-3 ${cartao} transition hover:border-primary`}
-            >
-              <div className="flex flex-1 flex-col">
-                <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                  {orgao.nome}
-                  {orgao.sigla && ` (${orgao.sigla})`}
-                </span>
-                <span className="text-xs text-slate-500 dark:text-slate-400">
-                  {t("reclamacoesRespondidas", { count: metricas.totalRespondidas })}
-                </span>
-              </div>
-              <span
-                className={`inline-block shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${classificacao.className}`}
-              >
-                {tSelo(classificacao.chave)}
-              </span>
-            </Link>
-          );
-        })}
-      </div>
+      </section>
 
-      <div className="flex flex-col gap-3">
+      <section className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
           {t("reclamacoes")} {totalFeed > 0 && `(${totalFeed})`}
         </h2>
@@ -265,10 +313,7 @@ export default async function CidadePage({
           <form method="get" className="flex flex-wrap items-end gap-3">
             <input type="hidden" name="ordenar" value={ordenar} />
             <div className="flex min-w-[160px] flex-1 flex-col gap-1">
-              <label
-                htmlFor="categoriaId"
-                className="text-xs font-medium text-slate-500 dark:text-slate-400"
-              >
+              <label htmlFor="categoriaId" className={rotuloSecao}>
                 {t("categoria")}
               </label>
               <select
@@ -286,10 +331,7 @@ export default async function CidadePage({
               </select>
             </div>
             <div className="flex min-w-[160px] flex-1 flex-col gap-1">
-              <label
-                htmlFor="status"
-                className="text-xs font-medium text-slate-500 dark:text-slate-400"
-              >
+              <label htmlFor="status" className={rotuloSecao}>
                 {t("status")}
               </label>
               <select
@@ -307,15 +349,13 @@ export default async function CidadePage({
               </select>
             </div>
             <button type="submit" className={botaoPrimario}>
-              <ListFilter className="h-4 w-4" />
+              <ListFilter className="h-4 w-4" aria-hidden />
               {t("filtrar")}
             </button>
           </form>
 
           <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
-            <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-              {t("ordenarPor")}
-            </span>
+            <span className={rotuloSecao}>{t("ordenarPor")}</span>
             <div className="flex gap-1 rounded-full bg-slate-100 p-1 dark:bg-slate-800">
               <Link
                 href={linkFeed(slug, estadoFeed, { ordenar: "recentes", pagina: 1 })}
@@ -341,68 +381,88 @@ export default async function CidadePage({
           </div>
         </div>
 
-        {reclamacoes.length === 0 && (
-          <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumaComFiltros")}</p>
+        {reclamacoes.length === 0 ? (
+          <EstadoVazio icone={SearchX} titulo={t("nenhumaComFiltros")} />
+        ) : (
+          <ul className="flex flex-col gap-3">
+            {reclamacoes.map((reclamacao) => (
+              <li key={reclamacao.id}>
+                <CartaoReclamacao
+                  protocolo={reclamacao.protocolo}
+                  titulo={reclamacao.titulo}
+                  status={reclamacao.status}
+                  categoria={{ nome: reclamacao.categoria.nome, icone: reclamacao.categoria.icone }}
+                  local={reclamacao.bairro?.nome}
+                  descricao={reclamacao.descricao}
+                  fotoUrl={
+                    reclamacao.midias[0]
+                      ? (reclamacao.midias[0].urlTratada ?? reclamacao.midias[0].url)
+                      : null
+                  }
+                  confirmacoes={reclamacao._count.confirmacoes}
+                  data={reclamacao.createdAt}
+                />
+              </li>
+            ))}
+          </ul>
         )}
 
-        {reclamacoes.map((reclamacao) => (
-          <Link
-            key={reclamacao.id}
-            href={`/reclamacoes/${reclamacao.protocolo}`}
-            className={`flex flex-col gap-2 ${cartao} transition hover:border-primary hover:-translate-y-0.5 hover:shadow-md`}
-          >
-            <div className="flex items-center justify-between gap-2">
-              <h3 className="font-semibold text-slate-900 dark:text-slate-100">
-                {reclamacao.titulo}
-              </h3>
-              <StatusBadge status={reclamacao.status} />
-            </div>
-            <p className="flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400">
-              <CategoriaIcon
-                icone={reclamacao.categoria.icone}
-                className="h-4 w-4 text-slate-400 dark:text-slate-500"
-              />
-              {reclamacao.categoria.nome}
-              {reclamacao.bairro && ` · ${reclamacao.bairro.nome}`}
-            </p>
-            <p className="line-clamp-2 text-sm text-slate-700 dark:text-slate-300">
-              {reclamacao.descricao}
-            </p>
-            <p className="text-xs text-slate-400 dark:text-slate-500">
-              {t("pessoasConfirmaram", { count: reclamacao._count.confirmacoes })} ·{" "}
-              {reclamacao.createdAt.toLocaleDateString(locale)}
-            </p>
-          </Link>
-        ))}
-
-        {totalPaginas > 1 && (
-          <div className="flex items-center justify-between text-sm">
-            {paginaAtual > 1 ? (
-              <Link
-                href={linkFeed(slug, estadoFeed, { pagina: paginaAtual - 1 })}
-                className="text-primary underline"
-              >
-                ← {t("anterior")}
-              </Link>
-            ) : (
-              <span />
-            )}
-            <span className="text-slate-500 dark:text-slate-400">
-              {t("paginaXDeY", { atual: paginaAtual, total: totalPaginas })}
-            </span>
-            {paginaAtual < totalPaginas ? (
-              <Link
-                href={linkFeed(slug, estadoFeed, { pagina: paginaAtual + 1 })}
-                className="text-primary underline"
-              >
-                {t("proxima")} →
-              </Link>
-            ) : (
-              <span />
-            )}
-          </div>
-        )}
-      </div>
+        <Paginacao
+          paginaAtual={paginaAtual}
+          totalPaginas={totalPaginas}
+          basePath={`/cidades/${slug}`}
+          paramName="pagina"
+          searchParams={{
+            categoriaId,
+            status,
+            ordenar: ordenar !== "recentes" ? ordenar : undefined,
+          }}
+        />
+      </section>
     </main>
+  );
+}
+
+// Índice como número grande + barra + o que ele significa (a legenda traz a
+// ressalva de quem reporta o dado - "autorreportado pelo órgão" -, que é parte
+// da informação, não rodapé). Sem dado suficiente, mostra o motivo em vez de 0%.
+function Indicador({
+  titulo,
+  valor,
+  legenda,
+  vazio,
+}: {
+  titulo: string;
+  valor: number | null;
+  legenda: string;
+  vazio: string;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <h3 className={rotuloSecao}>{titulo}</h3>
+      {valor === null ? (
+        <p className="text-sm text-slate-500 dark:text-slate-400">{vazio}</p>
+      ) : (
+        <>
+          <p className="font-mono text-3xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+            {valor}%
+          </p>
+          <div
+            role="progressbar"
+            aria-valuenow={valor}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={titulo}
+            className="h-2 rounded-full bg-slate-100 dark:bg-slate-800"
+          >
+            <div
+              className="h-full rounded-full bg-green-600 dark:bg-green-500"
+              style={{ width: `${valor}%` }}
+            />
+          </div>
+          <p className="text-sm text-slate-600 dark:text-slate-400">{legenda}</p>
+        </>
+      )}
+    </div>
   );
 }

@@ -64,3 +64,24 @@ export function EsqueletoCartoes({ quantidade = 5 }: { quantidade?: number }) {
     </div>
   );
 }
+
+// Esqueleto genérico de página de lista: cabeçalho, faixa de números
+// opcional e cartões. `container` é a MESMA classe de largura que a página
+// real usa - é o que impede o conteúdo de "pular" de largura ao chegar.
+export function EsqueletoListaGenerica({
+  container,
+  comNumeros = false,
+  quantidade = 4,
+}: {
+  container: string;
+  comNumeros?: boolean;
+  quantidade?: number;
+}) {
+  return (
+    <EsqueletoPagina className={container}>
+      <EsqueletoCabecalho />
+      {comNumeros && <Esqueleto className="h-20 w-full rounded-xl" />}
+      <EsqueletoCartoes quantidade={quantidade} />
+    </EsqueletoPagina>
+  );
+}

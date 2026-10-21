@@ -103,7 +103,7 @@ export function classificarIndice(
   if (indice === null || totalRespondidas < MINIMO_PARA_CLASSIFICAR) {
     return {
       chave: "poucosDados",
-      className: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
+      className: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400",
     };
   }
   if (indice >= 80) {

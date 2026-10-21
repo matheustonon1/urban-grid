@@ -77,7 +77,12 @@
     "cidadePadraoDesc": "Pre-selected when you file a new complaint (if you enter a ZIP code, its city wins). Clear the field to have no default city.",
     "erroCidadeInvalida": "Pick a city from the list.",
     "erroMuitasTentativas": "Too many incorrect password attempts. Wait a few minutes and try again.",
-    "erroMuitosEnvios": "You've requested too many emails in a short time. Try again later."
+    "erroMuitosEnvios": "You've requested too many emails in a short time. Try again later.",
+    "navegacaoSecoes": "Account sections",
+    "secaoPerfil": "Profile and preferences",
+    "secaoSeguranca": "Security",
+    "secaoDados": "Your data",
+    "secaoExcluir": "Danger zone"
   },
   "Totp": {
     "copiado": "Copied",
@@ -120,12 +125,17 @@
   },
   "Painel": {
     "titulo": "Dashboard",
-    "logadoComo": "Logged in as",
     "emailNaoVerificado": "Your email hasn't been verified yet.",
     "reenviarVerificacao": "Resend verification email",
     "novaReclamacao": "New complaint",
     "minhasReclamacoes": "My complaints",
-    "nenhumaReclamacao": "You haven't filed any complaints yet."
+    "nenhumaReclamacao": "You haven't filed any complaints yet.",
+    "ola": "Hi, {nome}",
+    "metricaTotal": "Complaints",
+    "metricaAndamento": "In progress",
+    "metricaResolvidas": "Resolved",
+    "metricaConfirmacoes": "Confirmations received",
+    "nenhumaReclamacaoDesc": "Report a problem in your neighborhood and follow the responsible agency's response."
   },
   "Selo": {
     "poucosDados": "Not enough data yet",
@@ -136,9 +146,7 @@
   },
   "CidadeDetalhe": {
     "indiceResolucao": "Resolution rate",
-    "indiceOrgaoTexto": "{indice}% of public complaints are marked as resolved (self-reported by the department).",
     "semReclamacoesSuficientes": "There aren't enough public complaints in this city yet.",
-    "indiceCidadaoTexto": "{indice}% of citizens who rated confirm the problem was resolved ({confirmadas} of {total} rated).",
     "semAvaliacoesSuficientes": "There aren't enough citizen ratings in this city yet.",
     "categoriasMaisReclamadas": "Most reported categories",
     "nenhumaReclamacaoPublica": "No public complaints in this city yet.",
@@ -155,14 +163,16 @@
     "maisRecentes": "Most recent",
     "maisConfirmadas": "Most confirmed",
     "nenhumaComFiltros": "No complaints found with these filters.",
-    "pessoasConfirmaram": "{count, plural, one {# person confirmed} other {# people confirmed}}",
-    "anterior": "Previous",
-    "proxima": "Next",
-    "paginaXDeY": "Page {atual} of {total}",
     "acompanharCidade": "Follow this city by e-mail",
     "jaAcompanha": "You already follow this city by e-mail.",
     "gerenciarAssinaturas": "Manage subscriptions",
-    "entrarParaAcompanhar": "Log in to follow this city by e-mail"
+    "entrarParaAcompanhar": "Log in to follow this city by e-mail",
+    "totalPublico": "{count, plural, =0 {No public complaints yet} one {# public complaint} other {# public complaints}}",
+    "indiceOrgaoTitulo": "According to agencies",
+    "indiceOrgaoLegenda": "of public complaints are marked as resolved (self-reported by the agency).",
+    "indiceCidadaoTitulo": "According to residents",
+    "indiceCidadaoLegenda": "of residents who rated it confirm the problem was resolved ({confirmadas} of {total} rated).",
+    "metaDescricao": "Public complaints, responsible agencies and resolution rates for {cidade}."
   },
   "OrgaoDetalhe": {
     "orgaoInativo": "Inactive department",
@@ -436,7 +446,9 @@
     "verTodas": "View all notifications",
     "verReclamacao": "View complaint",
     "marcarComoLida": "Mark as read",
-    "naoLida": "(unread)"
+    "naoLida": "(unread)",
+    "resumoNaoLidas": "{count, plural, =0 {All caught up, none unread} one {# unread} other {# unread}}",
+    "nenhumaDesc": "Updates about your complaints, official responses and account security show up here."
   },
   "Footer": {
     "tcc": "Urban Grid — Capstone Project",
@@ -596,7 +608,8 @@
     "removerFoto": "Remove photo",
     "fecharImagem": "Close image",
     "avisoTamanhoExcedido": "{nome} is {tamanho}MB — the limit is 5MB per photo.",
-    "avisoTipoInvalido": "{nome}: unsupported format (use JPEG, PNG or WebP)."
+    "avisoTipoInvalido": "{nome}: unsupported format (use JPEG, PNG or WebP).",
+    "subtitulo": "Describe the problem in as much detail as you can. Complaints go through moderation before they become public."
   },
   "MotivoDenuncia": {
     "OFENSIVO": "Offensive content",
@@ -681,7 +694,11 @@
     "removerFiltro": "Remove filter \"{filtro}\"",
     "limpar": "clear all",
     "nenhumaPublicada": "No complaints published yet.",
-    "confirmacoes": "{count, plural, one {# confirmation} other {# confirmations}}"
+    "confirmacoes": "{count, plural, one {# confirmation} other {# confirmations}}",
+    "subtitulo": "Urban problems reported by residents, with each agency's official response.",
+    "registrar": "File a complaint",
+    "nenhumaPublicadaDesc": "Try removing a filter, or file the first problem in your area.",
+    "resultados": "{count, plural, one {# result} other {# results}}"
   },
   "Login": {
     "titulo": "Log in",

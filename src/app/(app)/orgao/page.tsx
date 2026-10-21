@@ -1,15 +1,18 @@
 import Link from "next/link";
 import { StatusReclamacao } from "@prisma/client";
 import { getLocale, getTranslations } from "next-intl/server";
+import { CircleCheck, MessageSquareText } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
 import { StatusBadge } from "@/components/status-badge";
 import { Paginacao } from "@/components/paginacao";
-import { Metrica } from "@/components/metrica";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
 import { botaoPrimario, campoInput, cartao, containerPagina } from "@/lib/estilos";
 import { calcularMetricasOrgao, classificarIndice } from "@/lib/reputacaoOrgao";
 import { metadataDaPagina } from "@/lib/metadata";
+import { CabecalhoPagina } from "@/components/cabecalho-pagina";
+import { EstadoVazio } from "@/components/estado-vazio";
+import { PainelNumeros } from "@/components/painel-numeros";
 
 import { responderReclamacao } from "../reclamacoes/[protocolo]/actions";
 import { exigirOrgao } from "../reclamacoes/[protocolo]/exigir-orgao";
@@ -95,25 +98,22 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
 
   return (
     <main className={`${containerPagina} max-w-3xl`}>
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-          {t("titulo")}{orgao ? ` — ${orgao.nome}` : ""}
-        </h1>
-        {orgao && (
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            {categoriaIds
-              ? t("atende", { categorias: orgao.categorias.map((c) => c.nome).join(", ") })
-              : t("atendeTodas")}
-          </p>
-        )}
-      </div>
+      <CabecalhoPagina
+        titulo={`${t("titulo")}${orgao ? ` — ${orgao.nome}` : ""}`}
+        descricao={
+          orgao &&
+          (categoriaIds
+            ? t("atende", { categorias: orgao.categorias.map((c) => c.nome).join(", ") })
+            : t("atendeTodas"))
+        }
+      />
 
       {orgao && metricas && classificacao && (
-        <div className={`flex flex-col gap-3 ${cartao}`}>
+        <section className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <span
-                className={`inline-block w-fit rounded-full px-2 py-0.5 text-xs font-medium ${classificacao.className}`}
+                className={`inline-block w-fit rounded-full px-2.5 py-0.5 text-xs font-medium ${classificacao.className}`}
               >
                 {tSelo(classificacao.chave)}
               </span>
@@ -121,31 +121,32 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
                 {t("suaReputacao")}
               </span>
             </div>
-            <Link href={`/orgaos/${orgao.id}`} className="text-sm text-primary underline">
+            <Link href={`/orgaos/${orgao.id}`} className="text-sm text-primary hover:underline">
               {t("verComoOsCidadaosVeem")}
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <Metrica
-              label={t("resolvidas")}
-              valor={metricas.indiceResolucao !== null ? `${metricas.indiceResolucao}%` : "—"}
-            />
-            <Metrica
-              label={t("tempoMedioResposta")}
-              valor={
-                metricas.tempoMedioRespostaDias !== null
-                  ? `${metricas.tempoMedioRespostaDias}d`
-                  : "—"
-              }
-            />
-            <Metrica
-              label={t("notaCidadaos")}
-              valor={metricas.notaMedia !== null ? `${metricas.notaMedia}/5` : "—"}
-            />
-            <Metrica label={t("avaliacoesRecebidas")} valor={String(metricas.totalAvaliacoes)} />
-          </div>
-        </div>
+          <PainelNumeros
+            itens={[
+              {
+                rotulo: t("resolvidas"),
+                valor: metricas.indiceResolucao !== null ? `${metricas.indiceResolucao}%` : "—",
+              },
+              {
+                rotulo: t("tempoMedioResposta"),
+                valor:
+                  metricas.tempoMedioRespostaDias !== null
+                    ? `${metricas.tempoMedioRespostaDias}d`
+                    : "—",
+              },
+              {
+                rotulo: t("notaCidadaos"),
+                valor: metricas.notaMedia !== null ? `${metricas.notaMedia}/5` : "—",
+              },
+              { rotulo: t("avaliacoesRecebidas"), valor: String(metricas.totalAvaliacoes) },
+            ]}
+          />
+        </section>
       )}
 
       <div className="flex flex-col gap-3">
@@ -154,7 +155,7 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
         </h2>
 
         {pendentes.length === 0 && (
-          <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumaPendente")}</p>
+          <EstadoVazio icone={CircleCheck} titulo={t("nenhumaPendente")} />
         )}
 
         {pendentes.map((reclamacao) => (
@@ -208,7 +209,7 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
         </h2>
 
         {historico.length === 0 && (
-          <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumaRespondida")}</p>
+          <EstadoVazio icone={MessageSquareText} titulo={t("nenhumaRespondida")} />
         )}
 
         {historico.map((resposta) => (

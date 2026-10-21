@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { containerPagina } from "@/lib/estilos";
 import { exigirSessao } from "@/lib/sessao";
 import { metadataDaPagina } from "@/lib/metadata";
+import { CabecalhoPagina } from "@/components/cabecalho-pagina";
 
 import { NovaReclamacaoForm } from "./form";
 
@@ -30,9 +31,7 @@ export default async function NovaReclamacaoPage() {
 
   return (
     <main className={`${containerPagina} max-w-xl`}>
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-        {t("tituloPagina")}
-      </h1>
+      <CabecalhoPagina titulo={t("tituloPagina")} descricao={t("subtitulo")} />
       <NovaReclamacaoForm categorias={categorias} cidadePadrao={cidadePadrao} />
     </main>
   );

@@ -77,7 +77,12 @@
     "cidadePadraoDesc": "Já vem escolhida ao registrar uma reclamação nova (se você informar o CEP, vale a cidade dele). Apague o campo para ficar sem cidade padrão.",
     "erroCidadeInvalida": "Escolha uma cidade da lista.",
     "erroMuitasTentativas": "Muitas tentativas de senha incorretas. Aguarde alguns minutos e tente de novo.",
-    "erroMuitosEnvios": "Você pediu muitos e-mails em pouco tempo. Tente de novo mais tarde."
+    "erroMuitosEnvios": "Você pediu muitos e-mails em pouco tempo. Tente de novo mais tarde.",
+    "navegacaoSecoes": "Seções da conta",
+    "secaoPerfil": "Perfil e preferências",
+    "secaoSeguranca": "Segurança",
+    "secaoDados": "Seus dados",
+    "secaoExcluir": "Zona de perigo"
   },
   "Totp": {
     "copiado": "Copiado",
@@ -120,12 +125,17 @@
   },
   "Painel": {
     "titulo": "Painel",
-    "logadoComo": "Logado como",
     "emailNaoVerificado": "Seu e-mail ainda não foi verificado.",
     "reenviarVerificacao": "Reenviar e-mail de verificação",
     "novaReclamacao": "Nova reclamação",
     "minhasReclamacoes": "Minhas reclamações",
-    "nenhumaReclamacao": "Você ainda não registrou nenhuma reclamação."
+    "nenhumaReclamacao": "Você ainda não registrou nenhuma reclamação.",
+    "ola": "Olá, {nome}",
+    "metricaTotal": "Reclamações",
+    "metricaAndamento": "Em andamento",
+    "metricaResolvidas": "Resolvidas",
+    "metricaConfirmacoes": "Confirmações recebidas",
+    "nenhumaReclamacaoDesc": "Registre um problema do seu bairro e acompanhe a resposta do órgão responsável."
   },
   "Selo": {
     "poucosDados": "Poucos dados ainda",
@@ -136,9 +146,7 @@
   },
   "CidadeDetalhe": {
     "indiceResolucao": "Índice de resolução",
-    "indiceOrgaoTexto": "{indice}% das reclamações públicas estão marcadas como resolvidas (autorreportado pelo órgão).",
     "semReclamacoesSuficientes": "Ainda não há reclamações públicas suficientes nesta cidade.",
-    "indiceCidadaoTexto": "{indice}% dos cidadãos que avaliaram confirmam que o problema foi resolvido ({confirmadas} de {total, plural, one {# avaliada} other {# avaliadas}}).",
     "semAvaliacoesSuficientes": "Ainda não há avaliações de cidadãos suficientes nesta cidade.",
     "categoriasMaisReclamadas": "Categorias mais reclamadas",
     "nenhumaReclamacaoPublica": "Nenhuma reclamação pública nesta cidade ainda.",
@@ -155,14 +163,16 @@
     "maisRecentes": "Mais recentes",
     "maisConfirmadas": "Mais confirmadas",
     "nenhumaComFiltros": "Nenhuma reclamação encontrada com esses filtros.",
-    "pessoasConfirmaram": "{count, plural, =0 {Nenhuma pessoa confirmou} one {# pessoa confirmou} other {# pessoas confirmaram}}",
-    "anterior": "Anterior",
-    "proxima": "Próxima",
-    "paginaXDeY": "Página {atual} de {total}",
     "acompanharCidade": "Acompanhar esta cidade por e-mail",
     "jaAcompanha": "Você já acompanha esta cidade por e-mail.",
     "gerenciarAssinaturas": "Gerenciar assinaturas",
-    "entrarParaAcompanhar": "Entre para acompanhar esta cidade por e-mail"
+    "entrarParaAcompanhar": "Entre para acompanhar esta cidade por e-mail",
+    "totalPublico": "{count, plural, =0 {Nenhuma reclamação pública ainda} one {# reclamação pública} other {# reclamações públicas}}",
+    "indiceOrgaoTitulo": "Segundo os órgãos",
+    "indiceOrgaoLegenda": "das reclamações públicas estão marcadas como resolvidas (autorreportado pelo órgão).",
+    "indiceCidadaoTitulo": "Segundo os cidadãos",
+    "indiceCidadaoLegenda": "dos cidadãos que avaliaram confirmam que o problema foi resolvido ({confirmadas} de {total, plural, one {# avaliada} other {# avaliadas}}).",
+    "metaDescricao": "Reclamações públicas, órgãos responsáveis e índices de resolução de {cidade}."
   },
   "OrgaoDetalhe": {
     "orgaoInativo": "Órgão inativo",
@@ -436,7 +446,9 @@
     "verTodas": "Ver todas as notificações",
     "verReclamacao": "Ver reclamação",
     "marcarComoLida": "Marcar como lida",
-    "naoLida": "(não lida)"
+    "naoLida": "(não lida)",
+    "resumoNaoLidas": "{count, plural, =0 {Tudo em dia, nenhuma não lida} one {# não lida} other {# não lidas}}",
+    "nenhumaDesc": "Avisos sobre suas reclamações, respostas oficiais e a segurança da conta aparecem aqui."
   },
   "Footer": {
     "tcc": "Urban Grid — Trabalho de Conclusão de Curso",
@@ -596,7 +608,8 @@
     "removerFoto": "Remover foto",
     "fecharImagem": "Fechar imagem",
     "avisoTamanhoExcedido": "{nome} tem {tamanho}MB — o limite é 5MB por foto.",
-    "avisoTipoInvalido": "{nome}: formato não aceito (use JPEG, PNG ou WebP)."
+    "avisoTipoInvalido": "{nome}: formato não aceito (use JPEG, PNG ou WebP).",
+    "subtitulo": "Descreva o problema com o máximo de detalhes. A reclamação passa por uma moderação antes de ficar pública."
   },
   "MotivoDenuncia": {
     "OFENSIVO": "Conteúdo ofensivo",
@@ -681,7 +694,11 @@
     "removerFiltro": "Remover filtro \"{filtro}\"",
     "limpar": "limpar tudo",
     "nenhumaPublicada": "Nenhuma reclamação publicada ainda.",
-    "confirmacoes": "{count, plural, =0 {Nenhuma confirmação} one {# confirmação} other {# confirmações}}"
+    "confirmacoes": "{count, plural, =0 {Nenhuma confirmação} one {# confirmação} other {# confirmações}}",
+    "subtitulo": "Problemas urbanos registrados pelos moradores, com a resposta oficial de cada órgão.",
+    "registrar": "Registrar reclamação",
+    "nenhumaPublicadaDesc": "Tente remover algum filtro ou registre o primeiro problema da sua região.",
+    "resultados": "{count, plural, =0 {Nenhum resultado} one {# resultado} other {# resultados}}"
   },
   "Login": {
     "titulo": "Entrar",

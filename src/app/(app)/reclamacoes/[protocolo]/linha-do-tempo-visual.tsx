@@ -22,12 +22,12 @@ export function LinhaDoTempoVisual({
             {!ultimo && (
               <span
                 aria-hidden
-                className="absolute top-5 bottom-0 left-[5px] w-px bg-slate-200 dark:bg-slate-800"
+                className="absolute top-5 bottom-0 left-1.25 w-px bg-slate-200 dark:bg-slate-800"
               />
             )}
             <span
               aria-hidden
-              className={`relative mt-1.5 h-[11px] w-[11px] shrink-0 rounded-full border-2 ${
+              className={`relative mt-1.5 h-2.75 w-2.75 shrink-0 rounded-full border-2 ${
                 ultimo
                   ? "border-primary bg-primary"
                   : "border-slate-300 bg-background dark:border-slate-600"
