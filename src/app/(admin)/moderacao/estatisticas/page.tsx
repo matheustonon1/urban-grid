@@ -1,6 +1,11 @@
+import { BarChart3 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
+import { BarraDecisoes } from "@/components/barra-decisoes";
+import { CabecalhoPagina } from "@/components/cabecalho-pagina";
+import { EstadoVazio } from "@/components/estado-vazio";
+import { PainelNumeros } from "@/components/painel-numeros";
 import { cartao, containerPagina } from "@/lib/estilos";
 import { metadataDaPagina } from "@/lib/metadata";
 
@@ -8,40 +13,18 @@ import { exigirModerador } from "../exigir-moderador";
 
 const DIAS_VOLUME = 14;
 
-const DECISAO_COR: Record<string, string> = {
-  APROVAR: "text-green-700 dark:text-green-400",
-  REPROVAR: "text-red-700 dark:text-red-400",
-  ENCAMINHAR_REVISAO: "text-amber-700 dark:text-amber-400",
-};
-
-// Número em mono/tabular, mesmo vocabulário do painel de estatísticas
-// da home (ver app/page.tsx) - lembra um painel técnico, não um stat
-// card isolado. Sem cartao próprio aqui de propósito: cada Estatistica
-// é um item dentro do painel único montado onde é usada, não um bloco
-// solto.
-function Estatistica({ label, valor }: { label: string; valor: string }) {
-  return (
-    <div className="flex min-w-30 flex-1 flex-col gap-0.5 px-4 py-3">
-      <span className="font-mono text-2xl font-bold tabular-nums text-slate-900 dark:text-slate-100">
-        {valor}
-      </span>
-      <span className="text-xs text-slate-500 dark:text-slate-400">{label}</span>
-    </div>
-  );
-}
-
 function BarraScore({ rotulo, valor }: { rotulo: string; valor: number | null }) {
   const pct = valor !== null ? Math.round(valor * 100) : null;
   return (
     <div className="flex items-center gap-3">
       <span className="w-40 shrink-0 text-sm text-slate-600 dark:text-slate-400">{rotulo}</span>
-      <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+      <div aria-hidden className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
         <div
           className="h-full rounded-full bg-primary transition-all"
           style={{ width: `${pct ?? 0}%` }}
         />
       </div>
-      <span className="w-12 shrink-0 text-right text-sm font-medium text-slate-700 dark:text-slate-300">
+      <span className="w-12 shrink-0 text-right font-mono text-sm font-medium tabular-nums text-slate-700 dark:text-slate-300">
         {pct !== null ? `${pct}%` : "—"}
       </span>
     </div>
@@ -61,7 +44,6 @@ export const generateMetadata = metadataDaPagina("Estatisticas");
 
 export default async function EstatisticasModeracaoPage() {
   const t = await getTranslations("Estatisticas");
-  const tDecisao = await getTranslations("Decisao");
   await exigirModerador();
 
   const agora = new Date();
@@ -148,29 +130,26 @@ export default async function EstatisticasModeracaoPage() {
 
   return (
     <main className={`${containerPagina} max-w-3xl`}>
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-        {t("titulo")}
-      </h1>
+      <CabecalhoPagina titulo={t("titulo")} descricao={t("subtitulo")} />
 
       {totalAnalises === 0 ? (
-        <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumaAnalise")}</p>
+        <EstadoVazio icone={BarChart3} titulo={t("nenhumaAnalise")} />
       ) : (
         <>
-          <div className="flex w-full flex-wrap divide-x divide-slate-300 border border-slate-300 bg-white/70 dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-900/50">
-            <Estatistica label={t("analisesNoTotal")} valor={String(totalAnalises)} />
-            <Estatistica
-              label={t("taxaAprovacao")}
-              valor={taxaAprovacao !== null ? `${taxaAprovacao}%` : "—"}
-            />
-            <Estatistica
-              label={t("tempoMedioResposta")}
-              valor={latenciaMediaMs != null ? `${(latenciaMediaMs / 1000).toFixed(1)}s` : "—"}
-            />
-            <Estatistica
-              label={t("concordanciaHumana")}
-              valor={concordanciaHumana !== null ? `${concordanciaHumana}%` : t("semRevisaoAinda")}
-            />
-          </div>
+          <PainelNumeros
+            itens={[
+              { rotulo: t("analisesNoTotal"), valor: String(totalAnalises) },
+              { rotulo: t("taxaAprovacao"), valor: taxaAprovacao !== null ? `${taxaAprovacao}%` : "—" },
+              {
+                rotulo: t("tempoMedioResposta"),
+                valor: latenciaMediaMs != null ? `${(latenciaMediaMs / 1000).toFixed(1)}s` : "—",
+              },
+              {
+                rotulo: t("concordanciaHumana"),
+                valor: concordanciaHumana !== null ? `${concordanciaHumana}%` : t("semRevisaoAinda"),
+              },
+            ]}
+          />
 
           <div className={`flex flex-col gap-3 ${cartao}`}>
             <h2 className="font-semibold text-slate-900 dark:text-slate-100">
@@ -180,18 +159,15 @@ export default async function EstatisticasModeracaoPage() {
               const total = decisoes.reduce((soma, item) => soma + item._count._all, 0);
               if (total === 0) return null;
               return (
-                <div key={tipo} className="flex flex-col gap-1">
+                <div key={tipo} className="flex flex-col gap-2">
                   <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
                     {tipo === "RECLAMACAO" ? t("reclamacoes") : t("comentarios")} ({total})
                   </p>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
-                    {decisoes.map((item) => (
-                      <span key={item.decisao} className={DECISAO_COR[item.decisao]}>
-                        {tDecisao(item.decisao)}: {item._count._all} (
-                        {Math.round((item._count._all / total) * 100)}%)
-                      </span>
-                    ))}
-                  </div>
+                  <BarraDecisoes
+                    contagens={Object.fromEntries(
+                      decisoes.map((item) => [item.decisao, item._count._all])
+                    )}
+                  />
                 </div>
               );
             })}

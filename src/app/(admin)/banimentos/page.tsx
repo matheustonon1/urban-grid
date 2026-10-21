@@ -1,10 +1,15 @@
 import { getLocale, getTranslations } from "next-intl/server";
+import { CircleCheck } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
 import { Paginacao } from "@/components/paginacao";
 import { botaoSecundario, cartao, containerPagina } from "@/lib/estilos";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
 import { metadataDaPagina } from "@/lib/metadata";
+import { EstadoVazio } from "@/components/estado-vazio";
+import { AvatarIniciais } from "@/components/avatar-iniciais";
+import { CabecalhoPagina } from "@/components/cabecalho-pagina";
+import { formatarDataHora } from "@/lib/formatarData";
 
 import { exigirAdmin } from "../solicitacoes-orgao/exigir-admin";
 import { reverterBanimento } from "./actions";
@@ -40,15 +45,13 @@ export default async function BanimentosPage({ searchParams }: PageProps<"/banim
 
   return (
     <main className={`${containerPagina} max-w-3xl`}>
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-          {t("titulo")} {totalBanidos > 0 && `(${totalBanidos})`}
-        </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">{t("descricao")}</p>
-      </div>
+      <CabecalhoPagina
+        titulo={`${t("titulo")}${totalBanidos > 0 ? ` (${totalBanidos})` : ""}`}
+        descricao={t("descricao")}
+      />
 
       {banidos.length === 0 && (
-        <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumBanido")}</p>
+        <EstadoVazio icone={CircleCheck} titulo={t("nenhumBanido")} />
       )}
 
       {banidos.map((usuario) => {
@@ -60,14 +63,15 @@ export default async function BanimentosPage({ searchParams }: PageProps<"/banim
             key={usuario.id}
             className={`flex flex-wrap items-center justify-between gap-3 ${cartao}`}
           >
-            <div>
+            <AvatarIniciais nome={usuario.name ?? usuario.email} />
+            <div className="min-w-0 flex-1">
               <p className="font-medium text-slate-900 dark:text-slate-100">
                 {usuario.name ?? usuario.email}
               </p>
               <p className="text-sm text-slate-500 dark:text-slate-400">
                 {permanente
                   ? t("banidoPermanente")
-                  : t("banidoAte", { data: usuario.banidoAte!.toLocaleString(locale) })}
+                  : t("banidoAte", { data: formatarDataHora(usuario.banidoAte!, locale) })}
               </p>
             </div>
 

@@ -272,7 +272,8 @@
     "categorias": "Categorias",
     "banimentos": "Banimentos",
     "solicitacoesCidade": "Cidades",
-    "usuarios": "Usuários"
+    "usuarios": "Usuários",
+    "pendentes": "{count, plural, one {# pendente} other {# pendentes}}"
   },
   "Moderacao": {
     "titulo": "Fila de moderação",
@@ -294,7 +295,15 @@
     "aprovar": "Aprovar",
     "motivoRejeicaoPlaceholder": "Motivo da rejeição",
     "rejeitar": "Rejeitar",
-    "erroMotivoCurto": "Informe um motivo com pelo menos 10 caracteres."
+    "erroMotivoCurto": "Informe um motivo com pelo menos 10 caracteres.",
+    "resumoPendentes": "{count, plural, =0 {Fila em dia} one {# reclamação aguardando revisão humana} other {# reclamações aguardando revisão humana}}",
+    "nenhumaPendenteDesc": "Tudo o que a IA encaminhou para revisão humana já foi analisado.",
+    "geral": "Geral",
+    "origem_ia": "Encaminhada pela IA",
+    "origem_recurso": "Recurso",
+    "origem_falha": "Sem análise automática",
+    "semAnaliseIA": "Não há análise automática registrada para esta reclamação (o processamento falhou antes de gravar o resultado). Revise o conteúdo por conta própria.",
+    "naFilaDesde": "Na fila desde {data}"
   },
   "ModeracaoComentarios": {
     "titulo": "Comentários reprovados pela IA",
@@ -303,7 +312,8 @@
     "em": "em",
     "respostaAOutroComentario": "resposta a outro comentário",
     "aprovarMesmoAssim": "Aprovar mesmo assim",
-    "confirmarRejeicao": "Confirmar rejeição"
+    "confirmarRejeicao": "Confirmar rejeição",
+    "nenhumPendenteDesc": "Nenhum comentário ocultado pela IA aguarda uma segunda opinião."
   },
   "Decisao": {
     "APROVAR": "Aprovado",
@@ -332,7 +342,8 @@
     "volumeUltimosDias": "Volume nos últimos {dias} dias",
     "analisesNoPeriodo": "{analises} no período",
     "analises": "{count, plural, =0 {Nenhuma análise} one {# análise} other {# análises}}",
-    "picoDe": "pico de {total} em {data}"
+    "picoDe": "pico de {total} em {data}",
+    "subtitulo": "Como a moderação automática está decidindo, e o quanto os moderadores concordam com ela."
   },
   "HistoricoModeracao": {
     "titulo": "Histórico de moderação",
@@ -350,7 +361,10 @@
     "coerenciaTextoImagem": "Coerência texto/imagem",
     "revisadoPor": "Revisado por",
     "em": "em",
-    "decisaoFinal": "decisão final"
+    "decisaoFinal": "decisão final",
+    "humano": "humano",
+    "todasPontuacoes": "Ver todas as pontuações",
+    "nenhumEixoAlto": "Nenhum eixo acima do limite de revisão."
   },
   "HistoricoComentarios": {
     "titulo": "Histórico de moderação de comentários",
@@ -373,7 +387,11 @@
     "procedenteReclamacao": "Procedente (arquivar reclamação)",
     "procedenteComentario": "Procedente (remover comentário)",
     "comentarioEm": "Comentário em \"{titulo}\"",
-    "comentarioDe": "Comentário de {autor}:"
+    "comentarioDe": "Comentário de {autor}:",
+    "resumoAbertas": "{count, plural, =0 {Nenhuma denúncia em aberto} one {# denúncia em aberto} other {# denúncias em aberto}}",
+    "nenhumaEmAbertoDesc": "Quando alguém denunciar uma reclamação ou comentário, ele aparece aqui para análise.",
+    "tipoReclamacao": "Reclamação",
+    "tipoComentario": "Comentário"
   },
   "OrgaosCategorias": {
     "titulo": "Categorias por órgão",
@@ -391,7 +409,9 @@
     "erroNomeOrgao": "Informe o nome do órgão.",
     "erroEmailInvalido": "E-mail inválido.",
     "convitePendente": "Convite pendente",
-    "reenviarConvite": "Reenviar convite para {email}"
+    "reenviarConvite": "Reenviar convite para {email}",
+    "atendeTodasResumo": "Atende todas as categorias",
+    "atendeResumo": "Atende {count} de {total} categorias"
   },
   "SolicitacoesOrgao": {
     "titulo": "Solicitações de acesso como órgão",
@@ -406,7 +426,8 @@
     "rejeitada": "Rejeitada",
     "por": "por",
     "em": "em",
-    "verFormularioPublico": "Ver formulário público de solicitação"
+    "verFormularioPublico": "Ver formulário público de solicitação",
+    "resumoPendentes": "{count, plural, =0 {Nenhuma solicitação pendente} one {# solicitação aguardando análise} other {# solicitações aguardando análise}}"
   },
   "Status": {
     "RASCUNHO": "Rascunho",
@@ -837,7 +858,8 @@
     "aprovada": "Aprovada",
     "rejeitada": "Rejeitada",
     "por": "por",
-    "em": "em"
+    "em": "em",
+    "resumoPendentes": "{count, plural, =0 {Nenhuma solicitação pendente} one {# solicitação aguardando análise} other {# solicitações aguardando análise}}"
   },
   "Usuarios": {
     "titulo": "Usuários",
@@ -848,7 +870,8 @@
     "nenhumEncontrado": "Nenhum usuário encontrado.",
     "vocêMesmo": "Você não pode alterar seu próprio papel - peça a outro admin.",
     "salvar": "Salvar",
-    "erroPapelInvalido": "Papel inválido."
+    "erroPapelInvalido": "Papel inválido.",
+    "equipe": "Equipe (moderadores e administradores)"
   },
   "Comum": {
     "carregando": "Carregando…"

@@ -1,10 +1,25 @@
 import Link from "next/link";
+import { CircleCheck, History } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
+import { AvatarIniciais } from "@/components/avatar-iniciais";
+import { CabecalhoPagina } from "@/components/cabecalho-pagina";
+import { DecisaoBadge } from "@/components/decisao-badge";
+import { EstadoVazio } from "@/components/estado-vazio";
 import { Paginacao } from "@/components/paginacao";
+import { PontuacoesIA } from "@/components/pontuacoes-ia";
+import { TempoNaFila } from "@/components/tempo-na-fila";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
-import { botaoPrimario, botaoSecundario, cartao, containerPagina } from "@/lib/estilos";
+import {
+  blocoCitacao,
+  botaoPerigo,
+  botaoPrimario,
+  botaoSecundario,
+  cartao,
+  containerPagina,
+  rotuloSecao,
+} from "@/lib/estilos";
 import { metadataDaPagina } from "@/lib/metadata";
 
 import { aprovarComentarioReprovado, confirmarRejeicaoComentario } from "./actions";
@@ -12,11 +27,14 @@ import { exigirModerador } from "../exigir-moderador";
 
 export const generateMetadata = metadataDaPagina("ModeracaoComentarios");
 
+const rotuloEixo = (rotulo: string) => rotulo.replace(/:\s*$/, "");
+
 export default async function ModeracaoComentariosPage({
   searchParams,
 }: PageProps<"/moderacao/comentarios">) {
   const t = await getTranslations("ModeracaoComentarios");
   const tMod = await getTranslations("Moderacao");
+  const tHist = await getTranslations("HistoricoModeracao");
   await exigirModerador();
 
   const { page } = await searchParams;
@@ -44,66 +62,79 @@ export default async function ModeracaoComentariosPage({
 
   return (
     <main className={`${containerPagina} max-w-3xl`}>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-          {t("titulo")}
-        </h1>
-        <Link href="/moderacao/historico/comentarios" className="text-sm text-primary underline">
-          {tMod("verHistorico")}
-        </Link>
-      </div>
-      <p className="text-sm text-slate-500 dark:text-slate-400">{t("descricao")}</p>
+      <CabecalhoPagina
+        titulo={t("titulo")}
+        descricao={t("descricao")}
+        acoes={
+          <Link href="/moderacao/historico/comentarios" className={botaoSecundario}>
+            <History className="h-4 w-4" aria-hidden />
+            {tMod("verHistorico")}
+          </Link>
+        }
+      />
 
       {logsPendentes.length === 0 && (
-        <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumPendente")}</p>
+        <EstadoVazio
+          icone={CircleCheck}
+          titulo={t("nenhumPendente")}
+          descricao={t("nenhumPendenteDesc")}
+        />
       )}
 
       {logsPendentes.map((log) => {
         const comentario = comentarioPorId.get(log.alvoId);
         if (!comentario) return null;
+        const nomeAutor = comentario.autor.name ?? comentario.autor.email;
 
         return (
-          <div key={log.id} className={`flex flex-col gap-2 ${cartao}`}>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              {comentario.autor.name ?? comentario.autor.email} {t("em")}{" "}
-              <Link
-                href={`/reclamacoes/${comentario.reclamacao.protocolo}`}
-                className="text-primary underline"
-              >
-                {comentario.reclamacao.titulo}
-              </Link>
-              {comentario.paiId && ` · ${t("respostaAOutroComentario")}`}
-            </p>
-            <p className="text-slate-800 dark:text-slate-200">{comentario.texto}</p>
+          <div key={log.id} className={`flex flex-col gap-4 ${cartao}`}>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <DecisaoBadge decisao="REPROVAR" origem={tHist("ia")} />
+              <TempoNaFila desde={log.createdAt} />
+            </div>
 
-            <div className="rounded-lg bg-amber-50 p-3 text-sm dark:bg-amber-950/40">
-              <p className="font-medium text-amber-800 dark:text-amber-300">
-                {tMod("analiseIA")}
+            <div className="flex items-center gap-2.5 text-sm text-slate-600 dark:text-slate-400">
+              <AvatarIniciais nome={nomeAutor} />
+              <p>
+                <span className="font-medium text-slate-900 dark:text-slate-100">{nomeAutor}</span>{" "}
+                {t("em")}{" "}
+                <Link
+                  href={`/reclamacoes/${comentario.reclamacao.protocolo}`}
+                  className="text-primary hover:underline"
+                >
+                  {comentario.reclamacao.titulo}
+                </Link>
+                {comentario.paiId && ` · ${t("respostaAOutroComentario")}`}
               </p>
-              <p className="text-amber-900 dark:text-amber-200">
-                {tMod("ofensivo")} {log.scoreOfensivo?.toFixed(2)}
-              </p>
-              <p className="text-amber-900 dark:text-amber-200">
-                {tMod("spam")} {log.scoreSpam?.toFixed(2)}
-              </p>
-              <p className="text-amber-900 dark:text-amber-200">
-                {tMod("dadosPessoais")} {log.scoreDadosPessoais?.toFixed(2)}
-              </p>
+            </div>
+
+            <p className={blocoCitacao}>{comentario.texto}</p>
+
+            <div className="flex flex-col gap-3 rounded-lg border border-slate-200 p-4 dark:border-slate-800">
+              <p className={rotuloSecao}>{tMod("analiseIA")}</p>
+              <PontuacoesIA
+                itens={[
+                  { rotulo: tMod("geral"), valor: log.scoreGeral, destaque: true },
+                  { rotulo: rotuloEixo(tMod("ofensivo")), valor: log.scoreOfensivo },
+                  { rotulo: rotuloEixo(tMod("spam")), valor: log.scoreSpam },
+                  { rotulo: rotuloEixo(tMod("dadosPessoais")), valor: log.scoreDadosPessoais },
+                ]}
+              />
               {log.justificativa && (
-                <p className="mt-1 italic text-amber-900 dark:text-amber-200">
-                  {log.justificativa}
+                <p className="text-sm text-slate-600 italic dark:text-slate-300">
+                  “{log.justificativa}”
                 </p>
               )}
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2 border-t border-slate-200 pt-4 dark:border-slate-800">
               <form action={aprovarComentarioReprovado.bind(null, comentario.id)}>
                 <button type="submit" className={botaoPrimario}>
                   {t("aprovarMesmoAssim")}
                 </button>
               </form>
               <form action={confirmarRejeicaoComentario.bind(null, comentario.id)}>
-                <button type="submit" className={botaoSecundario}>
+                <button type="submit" className={botaoPerigo}>
                   {t("confirmarRejeicao")}
                 </button>
               </form>

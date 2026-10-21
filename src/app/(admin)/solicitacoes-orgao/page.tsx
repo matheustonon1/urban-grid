@@ -1,19 +1,19 @@
 import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
+import { CircleCheck } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
 import { Paginacao } from "@/components/paginacao";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
-import { botaoPrimario, botaoSecundario, campoInput, cartao, containerPagina } from "@/lib/estilos";
+import { botaoPerigo, botaoPrimario, campoInput, cartao, containerPagina } from "@/lib/estilos";
 import { metadataDaPagina } from "@/lib/metadata";
+import { EstadoVazio } from "@/components/estado-vazio";
+import { CabecalhoPagina } from "@/components/cabecalho-pagina";
+import { Selo } from "@/components/selo";
+import { formatarDataHora } from "@/lib/formatarData";
 
 import { aprovarSolicitacao, rejeitarSolicitacao } from "./actions";
 import { exigirAdmin } from "./exigir-admin";
-
-const STATUS_COR: Record<string, string> = {
-  APROVADA: "text-green-700 dark:text-green-400",
-  REJEITADA: "text-red-700 dark:text-red-400",
-};
 
 export const generateMetadata = metadataDaPagina("SolicitacoesOrgao");
 
@@ -52,12 +52,13 @@ export default async function SolicitacoesOrgaoPage({
 
   return (
     <main className={`${containerPagina} max-w-3xl`}>
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-        {t("titulo")}
-      </h1>
+      <CabecalhoPagina
+        titulo={t("titulo")}
+        descricao={t("resumoPendentes", { count: totalPendentes })}
+      />
 
       {pendentes.length === 0 && (
-        <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumaPendente")}</p>
+        <EstadoVazio icone={CircleCheck} titulo={t("nenhumaPendente")} />
       )}
 
       {pendentes.map((solicitacao) => (
@@ -74,7 +75,7 @@ export default async function SolicitacoesOrgaoPage({
             {solicitacao.telefone && ` · ${solicitacao.telefone}`}
           </p>
           <p className="text-xs text-slate-400 dark:text-slate-500">
-            {t("enviadoEm")} {solicitacao.createdAt.toLocaleString(locale)}
+            {t("enviadoEm")} {formatarDataHora(solicitacao.createdAt, locale)}
           </p>
 
           <div className="flex items-start gap-2">
@@ -96,7 +97,7 @@ export default async function SolicitacoesOrgaoPage({
                 rows={1}
                 className={`flex-1 ${campoInput}`}
               />
-              <button type="submit" className={botaoSecundario}>
+              <button type="submit" className={botaoPerigo}>
                 {t("rejeitar")}
               </button>
             </form>
@@ -126,14 +127,14 @@ export default async function SolicitacoesOrgaoPage({
                   {solicitacao.nomeOrgao}
                   {solicitacao.sigla && ` (${solicitacao.sigla})`} · {solicitacao.cidade.nome}
                 </p>
-                <span className={`text-sm font-medium ${STATUS_COR[solicitacao.status]}`}>
+                <Selo tom={solicitacao.status === "APROVADA" ? "sucesso" : "erro"}>
                   {solicitacao.status === "APROVADA" ? t("aprovada") : t("rejeitada")}
-                </span>
+                </Selo>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 {solicitacao.email} · {t("por")}{" "}
                 {solicitacao.analisadoPor?.name ?? solicitacao.analisadoPor?.email ?? "—"} {t("em")}{" "}
-                {solicitacao.analisadoEm?.toLocaleString(locale)}
+                {solicitacao.analisadoEm ? formatarDataHora(solicitacao.analisadoEm, locale) : "—"}
               </p>
               {solicitacao.motivoRejeicao && (
                 <p className="text-sm italic text-slate-600 dark:text-slate-400">

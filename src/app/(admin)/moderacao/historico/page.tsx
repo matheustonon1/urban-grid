@@ -1,27 +1,29 @@
 import Link from "next/link";
+import { History, UserCheck } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
+import { CabecalhoPagina } from "@/components/cabecalho-pagina";
+import { DecisaoBadge } from "@/components/decisao-badge";
+import { EstadoVazio } from "@/components/estado-vazio";
 import { Paginacao } from "@/components/paginacao";
+import { ChipsPontuacao, PontuacoesIA } from "@/components/pontuacoes-ia";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
-import { containerPagina, cartao } from "@/lib/estilos";
+import { botaoSecundario, cartao, containerPagina } from "@/lib/estilos";
+import { formatarDataHora } from "@/lib/formatarData";
+import { rotuloVersaoPrompt } from "@/lib/texto";
 import { metadataDaPagina } from "@/lib/metadata";
 
 import { exigirModerador } from "../exigir-moderador";
 
-const DECISAO_ESTILO: Record<string, string> = {
-  APROVAR: "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-400",
-  REPROVAR: "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400",
-  ENCAMINHAR_REVISAO: "bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-400",
-};
-
 export const generateMetadata = metadataDaPagina("HistoricoModeracao");
+
+const rotuloEixo = (rotulo: string) => rotulo.replace(/:\s*$/, "");
 
 export default async function HistoricoModeracaoPage({
   searchParams,
 }: PageProps<"/moderacao/historico">) {
   const t = await getTranslations("HistoricoModeracao");
-  const tDecisao = await getTranslations("Decisao");
   const locale = await getLocale();
   await exigirModerador();
 
@@ -51,34 +53,39 @@ export default async function HistoricoModeracaoPage({
 
   return (
     <main className={`${containerPagina} max-w-3xl`}>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-          {t("titulo")}
-        </h1>
-        <Link href="/moderacao/historico/comentarios" className="text-sm text-primary underline">
-          {t("historicoComentarios")}
-        </Link>
-      </div>
-      <p className="text-sm text-slate-500 dark:text-slate-400">
-        {t("decisoesDesc")}
-        {totalLogs > 0 && ` (${totalLogs})`}.
-      </p>
+      <CabecalhoPagina
+        titulo={t("titulo")}
+        descricao={`${t("decisoesDesc")}${totalLogs > 0 ? ` (${totalLogs})` : ""}`}
+        acoes={
+          <Link href="/moderacao/historico/comentarios" className={botaoSecundario}>
+            <History className="h-4 w-4" aria-hidden />
+            {t("historicoComentarios")}
+          </Link>
+        }
+      />
 
-      {logs.length === 0 && (
-        <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumaDecisao")}</p>
-      )}
+      {logs.length === 0 && <EstadoVazio icone={History} titulo={t("nenhumaDecisao")} />}
 
       {logs.map((log) => {
         const reclamacao = reclamacaoPorId.get(log.alvoId);
+        const pontuacoes = [
+          { rotulo: rotuloEixo(t("geral")), valor: log.scoreGeral, destaque: true },
+          { rotulo: t("ofensivo"), valor: log.scoreOfensivo },
+          { rotulo: t("spam"), valor: log.scoreSpam },
+          { rotulo: t("dadosPessoais"), valor: log.scoreDadosPessoais },
+          { rotulo: t("foraDeEscopo"), valor: log.scoreForaEscopo },
+          { rotulo: t("desinformacao"), valor: log.scoreDesinformacao },
+          { rotulo: t("coerenciaTextoImagem"), valor: log.coerenciaTextoImagem, invertido: true },
+        ];
 
         return (
-          <div key={log.id} className={`flex flex-col gap-2 ${cartao}`}>
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div>
+          <div key={log.id} className={`flex flex-col gap-3 ${cartao}`}>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="flex min-w-0 flex-col gap-0.5">
                 {reclamacao ? (
                   <Link
                     href={`/reclamacoes/${reclamacao.protocolo}`}
-                    className="font-medium text-slate-900 hover:underline dark:text-slate-100"
+                    className="font-semibold text-slate-900 hover:text-primary dark:text-slate-100"
                   >
                     {reclamacao.titulo}
                   </Link>
@@ -87,41 +94,55 @@ export default async function HistoricoModeracaoPage({
                     {t("reclamacaoRemovida", { id: log.alvoId })}
                   </p>
                 )}
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  <span className="font-mono">{reclamacao?.protocolo}</span> ·{" "}
-                  {log.createdAt.toLocaleString(locale)} ·{" "}
-                  v{log.versaoPrompt}
-                  {log.latenciaMs != null && ` · ${log.latenciaMs}ms`}
+                <p className="flex flex-wrap items-center gap-x-1.5 text-xs text-slate-500 dark:text-slate-400">
+                  {reclamacao && <span className="font-mono">{reclamacao.protocolo}</span>}
+                  {reclamacao && <span aria-hidden>·</span>}
+                  <time dateTime={log.createdAt.toISOString()}>
+                    {formatarDataHora(log.createdAt, locale)}
+                  </time>
+                  <span aria-hidden>·</span>
+                  <span>{rotuloVersaoPrompt(log.versaoPrompt)}</span>
+                  {log.latenciaMs != null && (
+                    <>
+                      <span aria-hidden>·</span>
+                      <span className="tabular-nums">{log.latenciaMs}ms</span>
+                    </>
+                  )}
                 </p>
               </div>
-              <span
-                className={`inline-block shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${DECISAO_ESTILO[log.decisao]}`}
-              >
-                {tDecisao(log.decisao)} ({t("ia")})
-              </span>
+              <DecisaoBadge decisao={log.decisao} origem={t("ia")} />
             </div>
 
-            <p className="text-sm text-slate-700 dark:text-slate-300">
-              {t("geral")} {log.scoreGeral.toFixed(2)} · {t("ofensivo")}: {log.scoreOfensivo?.toFixed(2)} ·
-              {" "}{t("spam")}: {log.scoreSpam?.toFixed(2)} · {t("dadosPessoais")}: {log.scoreDadosPessoais?.toFixed(2)} ·
-              {" "}{t("foraDeEscopo")}: {log.scoreForaEscopo?.toFixed(2)} · {t("desinformacao")}:{" "}
-              {log.scoreDesinformacao?.toFixed(2)}
-              {log.coerenciaTextoImagem !== null &&
-                ` · ${t("coerenciaTextoImagem")}: ${log.coerenciaTextoImagem?.toFixed(2)}`}
-            </p>
+            <ChipsPontuacao itens={pontuacoes} vazio={t("nenhumEixoAlto")} />
 
             {log.justificativa && (
-              <p className="text-sm italic text-slate-600 dark:text-slate-400">
+              <p className="text-sm text-slate-600 italic dark:text-slate-300">
                 “{log.justificativa}”
               </p>
             )}
 
+            <details className="group">
+              <summary className="w-fit cursor-pointer text-xs font-medium text-primary hover:underline">
+                {t("todasPontuacoes")}
+              </summary>
+              <div className="mt-3">
+                <PontuacoesIA itens={pontuacoes} />
+              </div>
+            </details>
+
             {log.decisaoFinal && (
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                {t("revisadoPor")} {log.revisadoPor?.name ?? log.revisadoPor?.email ?? "—"} {t("em")}{" "}
-                {log.revisadoEm?.toLocaleString(locale)} → {t("decisaoFinal")}:{" "}
-                <span className="font-medium">{tDecisao(log.decisaoFinal)}</span>
-              </p>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 border-t border-slate-200 pt-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+                <UserCheck className="h-3.5 w-3.5" aria-hidden />
+                <span>
+                  {t("revisadoPor")}{" "}
+                  <span className="font-medium text-slate-700 dark:text-slate-300">
+                    {log.revisadoPor?.name ?? log.revisadoPor?.email ?? "—"}
+                  </span>{" "}
+                  {t("em")} {log.revisadoEm ? formatarDataHora(log.revisadoEm, locale) : "—"} →{" "}
+                  {t("decisaoFinal")}
+                </span>
+                <DecisaoBadge decisao={log.decisaoFinal} origem={t("humano")} />
+              </div>
             )}
           </div>
         );

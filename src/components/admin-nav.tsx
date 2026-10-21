@@ -38,7 +38,14 @@ const ITENS_ADMIN: ItemNav[] = [
   { href: "/usuarios", chave: "usuarios", icone: Users },
 ];
 
-export function AdminNav({ ehAdmin }: { ehAdmin: boolean }) {
+export function AdminNav({
+  ehAdmin,
+  pendentes = {},
+}: {
+  ehAdmin: boolean;
+  // Itens esperando revisão por aba (chave = ItemNav.chave); ausente/0 = sem selo.
+  pendentes?: Record<string, number>;
+}) {
   const t = useTranslations("AdminNav");
   const pathname = usePathname();
   const itens = ehAdmin ? [...ITENS_MODERADOR, ...ITENS_ADMIN] : ITENS_MODERADOR;
@@ -54,7 +61,13 @@ export function AdminNav({ ehAdmin }: { ehAdmin: boolean }) {
     const ativo = ativoRef.current;
     if (!nav || !ativo) return;
 
-    const alvo = ativo.offsetLeft - nav.clientWidth / 2 + ativo.clientWidth / 2;
+    // Só rola se a aba ativa não estiver inteira à vista - antes centralizava
+    // sempre, o que cortava a primeira aba à esquerda mesmo quando tudo cabia.
+    const inicio = ativo.offsetLeft;
+    const fim = inicio + ativo.clientWidth;
+    if (inicio >= nav.scrollLeft && fim <= nav.scrollLeft + nav.clientWidth) return;
+
+    const alvo = inicio - nav.clientWidth / 2 + ativo.clientWidth / 2;
     nav.scrollLeft = Math.max(0, alvo);
   }, [pathname]);
 
@@ -88,7 +101,7 @@ export function AdminNav({ ehAdmin }: { ehAdmin: boolean }) {
               href={item.href}
               ref={ativo ? ativoRef : undefined}
               aria-current={ativo ? "page" : undefined}
-              className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+              className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1.5 text-sm font-medium transition-colors ${
                 ativo
                   ? "bg-primary text-white"
                   : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
@@ -96,6 +109,18 @@ export function AdminNav({ ehAdmin }: { ehAdmin: boolean }) {
             >
               <item.icone className="h-3.5 w-3.5" aria-hidden />
               {t(item.chave)}
+              {(pendentes[item.chave] ?? 0) > 0 && (
+                <span
+                  className={`rounded-full px-1.5 text-xs leading-5 font-semibold tabular-nums ${
+                    ativo
+                      ? "bg-white/25 text-white"
+                      : "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
+                  }`}
+                >
+                  <span aria-hidden>{pendentes[item.chave] > 99 ? "99+" : pendentes[item.chave]}</span>
+                  <span className="sr-only"> {t("pendentes", { count: pendentes[item.chave] })}</span>
+                </span>
+              )}
             </Link>
           );
         })}

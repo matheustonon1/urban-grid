@@ -272,7 +272,8 @@
     "categorias": "Categories",
     "banimentos": "Bans",
     "solicitacoesCidade": "Cities",
-    "usuarios": "Users"
+    "usuarios": "Users",
+    "pendentes": "{count, plural, one {# pending} other {# pending}}"
   },
   "Moderacao": {
     "titulo": "Moderation queue",
@@ -294,7 +295,15 @@
     "aprovar": "Approve",
     "motivoRejeicaoPlaceholder": "Rejection reason",
     "rejeitar": "Reject",
-    "erroMotivoCurto": "Enter a reason with at least 10 characters."
+    "erroMotivoCurto": "Enter a reason with at least 10 characters.",
+    "resumoPendentes": "{count, plural, =0 {Queue is clear} one {# complaint awaiting human review} other {# complaints awaiting human review}}",
+    "nenhumaPendenteDesc": "Everything the AI flagged for human review has been handled.",
+    "geral": "Overall",
+    "origem_ia": "Flagged by AI",
+    "origem_recurso": "Appeal",
+    "origem_falha": "No automatic analysis",
+    "semAnaliseIA": "There's no automatic analysis recorded for this complaint (processing failed before saving the result). Review the content yourself.",
+    "naFilaDesde": "In queue since {data}"
   },
   "ModeracaoComentarios": {
     "titulo": "Comments rejected by AI",
@@ -303,7 +312,8 @@
     "em": "on",
     "respostaAOutroComentario": "reply to another comment",
     "aprovarMesmoAssim": "Approve anyway",
-    "confirmarRejeicao": "Confirm rejection"
+    "confirmarRejeicao": "Confirm rejection",
+    "nenhumPendenteDesc": "No comment hidden by the AI is waiting for a second opinion."
   },
   "Decisao": {
     "APROVAR": "Approved",
@@ -332,7 +342,8 @@
     "volumeUltimosDias": "Volume in the last {dias} days",
     "analisesNoPeriodo": "{analises} in the period",
     "analises": "{count, plural, one {# analysis} other {# analyses}}",
-    "picoDe": "peak of {total} on {data}"
+    "picoDe": "peak of {total} on {data}",
+    "subtitulo": "How automatic moderation is deciding, and how much moderators agree with it."
   },
   "HistoricoModeracao": {
     "titulo": "Moderation history",
@@ -350,7 +361,10 @@
     "coerenciaTextoImagem": "Text/image coherence",
     "revisadoPor": "Reviewed by",
     "em": "on",
-    "decisaoFinal": "final decision"
+    "decisaoFinal": "final decision",
+    "humano": "human",
+    "todasPontuacoes": "See all scores",
+    "nenhumEixoAlto": "No axis above the review threshold."
   },
   "HistoricoComentarios": {
     "titulo": "Comment moderation history",
@@ -373,7 +387,11 @@
     "procedenteReclamacao": "Uphold (archive complaint)",
     "procedenteComentario": "Uphold (remove comment)",
     "comentarioEm": "Comment on \"{titulo}\"",
-    "comentarioDe": "Comment by {autor}:"
+    "comentarioDe": "Comment by {autor}:",
+    "resumoAbertas": "{count, plural, =0 {No open reports} one {# open report} other {# open reports}}",
+    "nenhumaEmAbertoDesc": "When someone reports a complaint or comment, it shows up here for review.",
+    "tipoReclamacao": "Complaint",
+    "tipoComentario": "Comment"
   },
   "OrgaosCategorias": {
     "titulo": "Categories by department",
@@ -391,7 +409,9 @@
     "erroNomeOrgao": "Enter the agency name.",
     "erroEmailInvalido": "Invalid email.",
     "convitePendente": "Invite pending",
-    "reenviarConvite": "Resend invite to {email}"
+    "reenviarConvite": "Resend invite to {email}",
+    "atendeTodasResumo": "Serves all categories",
+    "atendeResumo": "Serves {count} of {total} categories"
   },
   "SolicitacoesOrgao": {
     "titulo": "Department access requests",
@@ -406,7 +426,8 @@
     "rejeitada": "Rejected",
     "por": "by",
     "em": "on",
-    "verFormularioPublico": "View public request form"
+    "verFormularioPublico": "View public request form",
+    "resumoPendentes": "{count, plural, =0 {No pending requests} one {# request awaiting review} other {# requests awaiting review}}"
   },
   "Status": {
     "RASCUNHO": "Draft",
@@ -837,7 +858,8 @@
     "aprovada": "Approved",
     "rejeitada": "Rejected",
     "por": "by",
-    "em": "on"
+    "em": "on",
+    "resumoPendentes": "{count, plural, =0 {No pending requests} one {# request awaiting review} other {# requests awaiting review}}"
   },
   "Usuarios": {
     "titulo": "Users",
@@ -848,7 +870,8 @@
     "nenhumEncontrado": "No users found.",
     "vocêMesmo": "You can't change your own role - ask another admin.",
     "salvar": "Save",
-    "erroPapelInvalido": "Invalid role."
+    "erroPapelInvalido": "Invalid role.",
+    "equipe": "Team (moderators and admins)"
   },
   "Comum": {
     "carregando": "Loading…"

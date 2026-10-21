@@ -1,10 +1,22 @@
 import { getTranslations } from "next-intl/server";
+import { Building2 } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
 import { Paginacao } from "@/components/paginacao";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
-import { botaoPrimario, botaoSecundario, campoInput, cartao, containerPagina } from "@/lib/estilos";
+import {
+  botaoPerigo,
+  botaoPrimario,
+  botaoSecundario,
+  campoInput,
+  cartao,
+  containerPagina,
+} from "@/lib/estilos";
 import { metadataDaPagina } from "@/lib/metadata";
+import { EstadoVazio } from "@/components/estado-vazio";
+import { CabecalhoPagina } from "@/components/cabecalho-pagina";
+import { Selo } from "@/components/selo";
 
 import { exigirAdmin } from "../solicitacoes-orgao/exigir-admin";
 import {
@@ -52,15 +64,13 @@ export default async function OrgaosCategoriasPage({
 
   return (
     <main className={`${containerPagina} max-w-3xl`}>
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-          {t("titulo")}
-        </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">{t("descricao")}</p>
-      </div>
+      <CabecalhoPagina
+        titulo={t("titulo")}
+        descricao={t("descricao")}
+      />
 
       {orgaos.length === 0 && (
-        <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumOrgao")}</p>
+        <EstadoVazio icone={Building2} titulo={t("nenhumOrgao")} />
       )}
 
       {orgaos.map((orgao) => (
@@ -73,18 +83,13 @@ export default async function OrgaosCategoriasPage({
               <p className="flex items-center gap-2 font-medium text-slate-900 dark:text-slate-100">
                 {orgao.nome}
                 {orgao.sigla && ` (${orgao.sigla})`}
-                {!orgao.ativo && (
-                  <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-normal text-slate-600 dark:bg-slate-700 dark:text-slate-300">
-                    {t("inativo")}
-                  </span>
-                )}
-                {orgao.responsaveis.length > 0 && (
-                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-normal text-amber-700 dark:bg-amber-950/40 dark:text-amber-400">
-                    {t("convitePendente")}
-                  </span>
-                )}
+                {!orgao.ativo && <Selo tom="neutro">{t("inativo")}</Selo>}
+                {orgao.responsaveis.length > 0 && <Selo tom="atencao">{t("convitePendente")}</Selo>}
               </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">{orgao.cidade.nome}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {orgao.cidade.nome}
+                {orgao.email && ` · ${orgao.email}`}
+              </p>
               {orgao.responsaveis.map((responsavel) => (
                 <form key={responsavel.id} action={reenviarConviteOrgao.bind(null, responsavel.id)}>
                   <button type="submit" className="mt-1 text-xs text-primary hover:underline">
@@ -95,14 +100,7 @@ export default async function OrgaosCategoriasPage({
             </div>
 
             <form action={alternarAtivoOrgao.bind(null, orgao.id, !orgao.ativo)}>
-              <button
-                type="submit"
-                className={
-                  orgao.ativo
-                    ? "rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-700 transition hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/40"
-                    : botaoSecundario
-                }
-              >
+              <button type="submit" className={orgao.ativo ? botaoPerigo : botaoSecundario}>
                 {orgao.ativo ? t("desativar") : t("reativar")}
               </button>
             </form>
@@ -142,10 +140,20 @@ export default async function OrgaosCategoriasPage({
             </form>
           </details>
 
-          <form
-            action={atualizarCategoriasOrgao.bind(null, orgao.id)}
-            className="flex flex-col gap-3"
-          >
+          <details className="group text-sm">
+            <summary className="flex w-fit cursor-pointer list-none items-center gap-2 text-primary">
+              <ChevronRight
+                className="h-4 w-4 transition-transform group-open:rotate-90"
+                aria-hidden
+              />
+              {orgao.categorias.length === 0
+                ? t("atendeTodasResumo")
+                : t("atendeResumo", { count: orgao.categorias.length, total: categorias.length })}
+            </summary>
+            <form
+              action={atualizarCategoriasOrgao.bind(null, orgao.id)}
+              className="animate-fade-in mt-3 flex flex-col gap-3"
+            >
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {categorias.map((categoria) => (
                 <label
@@ -166,7 +174,8 @@ export default async function OrgaosCategoriasPage({
             <button type="submit" className={`${botaoPrimario} w-fit`}>
               {t("salvar")}
             </button>
-          </form>
+            </form>
+          </details>
         </div>
       ))}
 

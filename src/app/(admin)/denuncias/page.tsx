@@ -1,10 +1,24 @@
 import Link from "next/link";
+import { CircleCheck, Flag } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
+import { AvatarIniciais } from "@/components/avatar-iniciais";
+import { CabecalhoPagina } from "@/components/cabecalho-pagina";
+import { EstadoVazio } from "@/components/estado-vazio";
 import { Paginacao } from "@/components/paginacao";
+import { TempoNaFila } from "@/components/tempo-na-fila";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
-import { botaoPrimario, botaoSecundario, cartao, containerPagina } from "@/lib/estilos";
+import {
+  blocoCitacao,
+  botaoPerigo,
+  botaoPrimario,
+  botaoSecundario,
+  campoInput,
+  cartao,
+  containerPagina,
+} from "@/lib/estilos";
+import { formatarDataHora } from "@/lib/formatarData";
 import { metadataDaPagina } from "@/lib/metadata";
 
 import { exigirModerador } from "../moderacao/exigir-moderador";
@@ -64,12 +78,17 @@ export default async function DenunciasPage({ searchParams }: PageProps<"/denunc
 
   return (
     <main className={`${containerPagina} max-w-3xl`}>
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-        {t("titulo")}
-      </h1>
+      <CabecalhoPagina
+        titulo={t("titulo")}
+        descricao={t("resumoAbertas", { count: totalDenuncias })}
+      />
 
       {denuncias.length === 0 && (
-        <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumaEmAberto")}</p>
+        <EstadoVazio
+          icone={CircleCheck}
+          titulo={t("nenhumaEmAberto")}
+          descricao={t("nenhumaEmAbertoDesc")}
+        />
       )}
 
       {denuncias.map((denuncia) => {
@@ -78,35 +97,47 @@ export default async function DenunciasPage({ searchParams }: PageProps<"/denunc
         const comentario =
           denuncia.alvoTipo === "COMENTARIO" ? comentarioPorId.get(denuncia.alvoId) : undefined;
         const alvoExiste = Boolean(reclamacao ?? comentario);
+        const nomeDenunciante = denuncia.denunciante.name ?? denuncia.denunciante.email;
 
         return (
-          <div key={denuncia.id} className={`flex flex-col gap-2 ${cartao}`}>
+          <div key={denuncia.id} className={`flex flex-col gap-4 ${cartao}`}>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                  {denuncia.alvoTipo === "COMENTARIO" ? t("tipoComentario") : t("tipoReclamacao")}
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700 dark:bg-red-950 dark:text-red-400">
+                  <Flag className="h-3 w-3" aria-hidden />
+                  {tMotivo(denuncia.motivo)}
+                </span>
+              </div>
+              <TempoNaFila desde={denuncia.createdAt} />
+            </div>
+
             {reclamacao && (
               <Link
                 href={`/reclamacoes/${reclamacao.protocolo}`}
-                className="font-medium text-slate-900 hover:underline dark:text-slate-100"
+                className="text-lg leading-snug font-semibold text-slate-900 hover:text-primary dark:text-slate-100"
               >
                 {reclamacao.titulo}
               </Link>
             )}
-            {reclamacao && (
-              <p className="text-sm text-slate-600 dark:text-slate-400">{reclamacao.descricao}</p>
-            )}
+            {reclamacao && <p className={blocoCitacao}>{reclamacao.descricao}</p>}
 
             {comentario && (
               <>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  {t("comentarioDe", {
+                    autor: comentario.autor.name ?? comentario.autor.email,
+                  })}
+                </p>
+                <p className={blocoCitacao}>“{comentario.texto}”</p>
                 <Link
                   href={`/reclamacoes/${comentario.reclamacao.protocolo}`}
-                  className="font-medium text-slate-900 hover:underline dark:text-slate-100"
+                  className="text-sm text-primary hover:underline"
                 >
                   {t("comentarioEm", { titulo: comentario.reclamacao.titulo })}
                 </Link>
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  {t("comentarioDe", {
-                    autor: comentario.autor.name ?? comentario.autor.email,
-                  })}{" "}
-                  “{comentario.texto}”
-                </p>
               </>
             )}
 
@@ -116,18 +147,28 @@ export default async function DenunciasPage({ searchParams }: PageProps<"/denunc
               </p>
             )}
 
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              {t("motivo")} <strong>{tMotivo(denuncia.motivo)}</strong> · {t("denunciadoPor")}{" "}
-              {denuncia.denunciante.name ?? denuncia.denunciante.email} {t("em")}{" "}
-              {denuncia.createdAt.toLocaleString(locale)}
-            </p>
-            {denuncia.descricao && (
-              <p className="text-sm italic text-slate-600 dark:text-slate-400">
-                “{denuncia.descricao}”
-              </p>
-            )}
+            <div className="flex flex-col gap-2 rounded-lg border border-slate-200 p-3.5 dark:border-slate-800">
+              <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+                <AvatarIniciais nome={nomeDenunciante} />
+                <span>
+                  {t("denunciadoPor")}{" "}
+                  <span className="font-medium text-slate-900 dark:text-slate-100">
+                    {nomeDenunciante}
+                  </span>{" "}
+                  {t("em")}{" "}
+                  <time dateTime={denuncia.createdAt.toISOString()}>
+                    {formatarDataHora(denuncia.createdAt, locale)}
+                  </time>
+                </span>
+              </div>
+              {denuncia.descricao && (
+                <p className="text-sm text-slate-600 italic dark:text-slate-300">
+                  “{denuncia.descricao}”
+                </p>
+              )}
+            </div>
 
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 border-t border-slate-200 pt-4 dark:border-slate-800">
               <form action={marcarProcedente.bind(null, denuncia.id)}>
                 <button type="submit" className={botaoPrimario}>
                   {denuncia.alvoTipo === "COMENTARIO"
@@ -144,21 +185,14 @@ export default async function DenunciasPage({ searchParams }: PageProps<"/denunc
               {ehAdmin && (
                 <form
                   action={banirAutor.bind(null, denuncia.id)}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 sm:ml-auto"
                 >
-                  <select
-                    name="duracao"
-                    defaultValue="7"
-                    className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                  >
+                  <select name="duracao" defaultValue="7" className={`${campoInput} py-1.5`}>
                     <option value="7">{t("seteDias")}</option>
                     <option value="30">{t("trintaDias")}</option>
                     <option value="permanente">{t("permanente")}</option>
                   </select>
-                  <button
-                    type="submit"
-                    className="rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-700 transition hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/40"
-                  >
+                  <button type="submit" className={botaoPerigo}>
                     {t("banirAutor")}
                   </button>
                 </form>
