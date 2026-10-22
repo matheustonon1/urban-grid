@@ -33,7 +33,7 @@ export function SecaoFormulario({
         <div className="flex min-w-0 flex-col gap-0.5">
           <h2
             id={`${id}-titulo`}
-            className="font-display text-lg font-semibold tracking-tight text-ink"
+            className="text-xl font-extrabold tracking-tight text-ink"
           >
             {titulo}
           </h2>

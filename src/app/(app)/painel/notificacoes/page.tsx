@@ -22,7 +22,7 @@ import { marcarNotificacaoLida, marcarTodasLidas } from "@/components/layout/not
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/util/paginacao";
 import { formatarDataHora } from "@/lib/util/formatarData";
 import { formatarTempoRelativo } from "@/lib/util/tempo-relativo";
-import { botaoSecundario, cartao, containerPagina } from "@/lib/estilos";
+import { botaoSecundario, pagina } from "@/lib/estilos";
 import { exigirSessao } from "@/lib/seguranca/sessao";
 import { metadataDaPagina } from "@/lib/metadata";
 
@@ -65,8 +65,9 @@ export default async function NotificacoesPage({
   const totalPaginas = calcularTotalPaginas(totalNotificacoes);
 
   return (
-    <main className={containerPagina}>
+    <main className={pagina}>
       <CabecalhoPagina
+        kicker={t("kicker")}
         titulo={t("titulo")}
         descricao={totalNotificacoes > 0 ? t("resumoNaoLidas", { count: totalNaoLidas }) : undefined}
         acoes={
@@ -80,84 +81,76 @@ export default async function NotificacoesPage({
         }
       />
 
-      {notificacoes.length === 0 ? (
-        <EstadoVazio icone={BellOff} titulo={t("nenhuma")} descricao={t("nenhumaDesc")} />
-      ) : (
-        <ul className={`divide-y divide-line overflow-hidden p-0 ${cartao}`}>
-          {notificacoes.map((notificacao) => {
-            const Icone = ICONE_POR_TIPO[notificacao.tipo];
-            return (
-              <li
-                key={notificacao.id}
-                className={`flex items-start gap-3.5 px-4 py-4 ${
-                  notificacao.lida ? "" : "bg-brand-soft/50"
-                }`}
-              >
-                <span
-                  aria-hidden
-                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
-                    notificacao.lida
-                      ? "bg-sunken text-ink-muted"
-                      : "bg-brand-soft text-brand-ink"
+      <div className="flex max-w-4xl flex-col gap-6">
+        {notificacoes.length === 0 ? (
+          <EstadoVazio icone={BellOff} titulo={t("nenhuma")} descricao={t("nenhumaDesc")} />
+        ) : (
+          <ul className="divide-y divide-line border-y border-line">
+            {notificacoes.map((notificacao) => {
+              const Icone = ICONE_POR_TIPO[notificacao.tipo];
+              return (
+                <li
+                  key={notificacao.id}
+                  className={`flex items-start gap-4 px-3 py-5 sm:px-4 ${
+                    notificacao.lida ? "" : "bg-brand-soft/50"
                   }`}
                 >
-                  <Icone className="h-4.5 w-4.5" />
-                </span>
-
-                <div className="flex min-w-0 flex-1 flex-col gap-1">
-                  <p
-                    className={
-                      notificacao.lida
-                        ? "font-medium text-ink-2"
-                        : "font-semibold text-ink"
-                    }
+                  <span
+                    aria-hidden
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md ${
+                      notificacao.lida ? "bg-sunken text-ink-muted" : "bg-brand text-on-brand"
+                    }`}
                   >
-                    {notificacao.titulo}
-                    {!notificacao.lida && <span className="sr-only"> {t("naoLida")}</span>}
-                  </p>
-                  <p className="text-sm text-ink-muted">{notificacao.mensagem}</p>
-                  <p className="flex flex-wrap items-center gap-x-2 text-xs text-ink-muted">
-                    <time
-                      dateTime={notificacao.createdAt.toISOString()}
-                      title={formatarDataHora(notificacao.createdAt, locale)}
-                    >
-                      {formatarTempoRelativo(notificacao.createdAt, locale)}
-                    </time>
-                    {notificacao.reclamacao && (
-                      <>
-                        <span aria-hidden>·</span>
+                    <Icone className="h-4.5 w-4.5" />
+                  </span>
+
+                  <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    <p className={notificacao.lida ? "font-semibold text-ink-2" : "font-bold text-ink"}>
+                      {notificacao.titulo}
+                      {!notificacao.lida && <span className="sr-only"> {t("naoLida")}</span>}
+                    </p>
+                    <p className="leading-relaxed text-ink-muted">{notificacao.mensagem}</p>
+                    <p className="flex flex-wrap items-center gap-x-3 gap-y-1 pt-1 text-xs text-ink-muted">
+                      <time
+                        dateTime={notificacao.createdAt.toISOString()}
+                        title={formatarDataHora(notificacao.createdAt, locale)}
+                        className="kicker"
+                      >
+                        {formatarTempoRelativo(notificacao.createdAt, locale)}
+                      </time>
+                      {notificacao.reclamacao && (
                         <Link
                           href={`/reclamacoes/${notificacao.reclamacao.protocolo}`}
-                          className="font-medium text-brand hover:underline"
+                          className="font-semibold text-brand hover:underline"
                         >
                           {t("verReclamacao")}
                         </Link>
-                      </>
-                    )}
-                  </p>
-                </div>
+                      )}
+                    </p>
+                  </div>
 
-                {!notificacao.lida && (
-                  <form action={marcarNotificacaoLida.bind(null, notificacao.id)}>
-                    <button
-                      type="submit"
-                      className="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-brand hover:bg-brand/10"
-                    >
-                      {t("marcarComoLida")}
-                    </button>
-                  </form>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      )}
+                  {!notificacao.lida && (
+                    <form action={marcarNotificacaoLida.bind(null, notificacao.id)}>
+                      <button
+                        type="submit"
+                        className="shrink-0 rounded-md px-2.5 py-1.5 text-xs font-semibold text-brand hover:bg-brand-soft"
+                      >
+                        {t("marcarComoLida")}
+                      </button>
+                    </form>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
 
-      <Paginacao
-        paginaAtual={paginaAtual}
-        totalPaginas={totalPaginas}
-        basePath="/painel/notificacoes"
-      />
+        <Paginacao
+          paginaAtual={paginaAtual}
+          totalPaginas={totalPaginas}
+          basePath="/painel/notificacoes"
+        />
+      </div>
     </main>
   );
 }

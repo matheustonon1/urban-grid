@@ -1,7 +1,8 @@
 import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
-import { containerPagina, rotuloSecao } from "@/lib/estilos";
+import { Secao } from "@/components/ui/secao";
+import { grade, pagina } from "@/lib/estilos";
 import {
   decifrarSegredoTotp,
   gerarQrCodeTotp,
@@ -31,19 +32,6 @@ const SECOES = [
   { id: "dados", chave: "secaoDados", perigo: false },
   { id: "excluir", chave: "secaoExcluir", perigo: true },
 ] as const;
-
-// Agrupa os cartões de uma seção sob um rótulo, com o id que a navegação
-// aponta. scroll-mt compensa o cabeçalho fixo ao pular pela âncora.
-function Grupo({ id, titulo, children }: { id: string; titulo: string; children: React.ReactNode }) {
-  return (
-    <div id={id} role="group" aria-labelledby={`${id}-titulo`} className="flex scroll-mt-24 flex-col gap-4">
-      <p id={`${id}-titulo`} className={rotuloSecao}>
-        {titulo}
-      </p>
-      {children}
-    </div>
-  );
-}
 
 export default async function ContaPage() {
   const t = await getTranslations("Conta");
@@ -81,34 +69,35 @@ export default async function ContaPage() {
   const nomeExibido = usuario.name || usuario.email;
 
   return (
-    <main className={`${containerPagina} max-w-4xl`}>
-      <div className="flex items-center gap-4">
-        <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-brand text-lg font-bold text-on-brand">
+    <main className={pagina}>
+      <header className="flex items-center gap-5 border-b-2 border-ink pb-6">
+        <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-brand text-xl font-bold text-on-brand">
           {iniciaisDoNome(nomeExibido)}
         </span>
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-bold tracking-tight text-ink">
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <span className="kicker">{t("kicker")}</span>
+          <h1 className="text-3xl leading-tight font-extrabold tracking-tight text-ink sm:text-4xl">
             {usuario.name || t("titulo")}
           </h1>
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="text-sm text-ink-muted">{usuario.email}</p>
-            <span className="inline-block w-fit rounded-full bg-sunken px-2 py-0.5 text-xs font-medium text-ink-2">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <p className="text-ink-muted">{usuario.email}</p>
+            <span className="inline-block rounded-[5px] bg-sunken px-2 py-0.5 text-xs font-semibold text-ink-2">
               {tPapel(session.user.papel)}
             </span>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[12rem_minmax(0,1fr)] lg:items-start">
+      <div className={grade}>
         {/* Navegação por seções: coluna fixa no desktop, faixa rolável no celular.
-            São âncoras simples (sem JS): cada grupo abaixo tem o id correspondente. */}
-        <nav aria-label={t("navegacaoSecoes")} className="min-w-0 lg:sticky lg:top-20">
-          <ul className="-mx-6 flex gap-1.5 overflow-x-auto px-6 pb-1 sm:-mx-8 sm:px-8 lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0 lg:pb-0">
+            São âncoras simples (sem JS): cada seção abaixo tem o id correspondente. */}
+        <nav aria-label={t("navegacaoSecoes")} className="min-w-0 lg:sticky lg:top-24 lg:col-span-3">
+          <ul className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:-mx-8 sm:px-8 lg:mx-0 lg:flex-col lg:gap-0.5 lg:overflow-visible lg:px-0 lg:pb-0">
             {SECOES.map(({ id, chave, perigo }) => (
               <li key={id} className="shrink-0">
                 <a
                   href={`#${id}`}
-                  className={`block rounded-full px-3 py-1.5 text-sm font-medium transition-colors lg:rounded-lg ${
+                  className={`block rounded-md px-3 py-2 text-sm font-semibold transition-colors ${
                     perigo
                       ? "text-danger-ink hover:bg-danger-soft"
                       : "text-ink-muted hover:bg-sunken hover:text-ink"
@@ -121,8 +110,8 @@ export default async function ContaPage() {
           </ul>
         </nav>
 
-        <div className="flex min-w-0 flex-col gap-10">
-          <Grupo id="perfil" titulo={t("secaoPerfil")}>
+        <div className="flex min-w-0 flex-col gap-12 lg:col-span-9 lg:max-w-3xl">
+          <Secao id="perfil" titulo={t("secaoPerfil")}>
             <FormularioPerfil
               telefone={usuario.telefone ?? ""}
               cidadePadrao={
@@ -132,9 +121,9 @@ export default async function ContaPage() {
               }
             />
             <FormularioPreferenciasNotificacao notificarPorEmail={usuario.notificarPorEmail} />
-          </Grupo>
+          </Secao>
 
-          <Grupo id="seguranca" titulo={t("secaoSeguranca")}>
+          <Secao id="seguranca" titulo={t("secaoSeguranca")}>
             <ResumoSeguranca
               totpAtivo={totpAtivo}
               emailVerificado={!!usuario.emailVerified}
@@ -150,15 +139,15 @@ export default async function ContaPage() {
               codigosRestantes={codigosRestantes}
               codigosTotal={QUANTIDADE_CODIGOS_BACKUP}
             />
-          </Grupo>
+          </Secao>
 
-          <Grupo id="dados" titulo={t("secaoDados")}>
+          <Secao id="dados" titulo={t("secaoDados")}>
             <ExportarDados />
-          </Grupo>
+          </Secao>
 
-          <Grupo id="excluir" titulo={t("secaoExcluir")}>
+          <Secao id="excluir" titulo={t("secaoExcluir")}>
             <FormularioExclusao />
-          </Grupo>
+          </Secao>
         </div>
       </div>
     </main>

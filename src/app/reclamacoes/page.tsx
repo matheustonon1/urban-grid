@@ -8,7 +8,13 @@ import { CartaoReclamacao } from "@/components/reclamacao/cartao-reclamacao";
 import { EstadoVazio } from "@/components/ui/estado-vazio";
 import { Paginacao } from "@/components/ui/paginacao";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/util/paginacao";
-import { botaoPrimario, containerMedio } from "@/lib/estilos";
+import {
+  botaoPrimario,
+  colunaFiltros,
+  colunaResultados,
+  grade,
+  pagina,
+} from "@/lib/estilos";
 import { STATUS_PUBLICOS } from "@/lib/reclamacoes/statusPublicos";
 import { metadataDaPagina } from "@/lib/metadata";
 
@@ -86,7 +92,7 @@ export default async function ReclamacoesPublicasPage({
   );
 
   return (
-    <main className={containerMedio}>
+    <main className={pagina}>
       <CabecalhoPagina
         titulo={t("titulo")}
         descricao={t("subtitulo")}
@@ -94,60 +100,66 @@ export default async function ReclamacoesPublicasPage({
         acoes={reclamacoes.length > 0 ? novaReclamacao : undefined}
       />
 
-      <FiltroReclamacoes
-        categorias={categoriasParaFiltro}
-        categoriaIdFiltro={categoriaIdFiltro}
-        cidadeFiltro={
-          cidadeFiltro
-            ? {
-                id: cidadeFiltro.id,
-                nome: cidadeFiltro.nome,
-                slug: cidadeFiltro.slug,
-                estado: { uf: cidadeFiltro.estado.uf },
-              }
-            : null
-        }
-        buscaFiltro={buscaFiltro}
-      />
+      <div className={grade}>
+        <aside aria-label={t("filtros")} className={colunaFiltros}>
+          <FiltroReclamacoes
+            categorias={categoriasParaFiltro}
+            categoriaIdFiltro={categoriaIdFiltro}
+            cidadeFiltro={
+              cidadeFiltro
+                ? {
+                    id: cidadeFiltro.id,
+                    nome: cidadeFiltro.nome,
+                    slug: cidadeFiltro.slug,
+                    estado: { uf: cidadeFiltro.estado.uf },
+                  }
+                : null
+            }
+            buscaFiltro={buscaFiltro}
+          />
+        </aside>
 
-      {reclamacoes.length === 0 ? (
-        <EstadoVazio
-          icone={SearchX}
-          titulo={t("nenhumaPublicada")}
-          descricao={t("nenhumaPublicadaDesc")}
-        >
-          {novaReclamacao}
-        </EstadoVazio>
-      ) : (
-        <>
-          <p className="text-sm text-ink-muted" aria-live="polite">
-            {t("resultados", { count: totalReclamacoes })}
-          </p>
-          <ul className="flex flex-col gap-3">
-            {reclamacoes.map((reclamacao) => (
-              <li key={reclamacao.id}>
-                <CartaoReclamacao
-                  protocolo={reclamacao.protocolo}
-                  titulo={reclamacao.titulo}
-                  status={reclamacao.status}
-                  categoria={{ nome: reclamacao.categoria.nome, icone: reclamacao.categoria.icone }}
-                  local={reclamacao.cidade.nome}
-                  fotoUrl={reclamacao.midias[0] ? (reclamacao.midias[0].urlTratada ?? reclamacao.midias[0].url) : null}
-                  confirmacoes={reclamacao._count.confirmacoes}
-                  data={reclamacao.publicadaEm ?? reclamacao.createdAt}
-                />
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
+        <div className={colunaResultados}>
+          {reclamacoes.length === 0 ? (
+            <EstadoVazio
+              icone={SearchX}
+              titulo={t("nenhumaPublicada")}
+              descricao={t("nenhumaPublicadaDesc")}
+            >
+              {novaReclamacao}
+            </EstadoVazio>
+          ) : (
+            <>
+              <p className="kicker" aria-live="polite">
+                {t("resultados", { count: totalReclamacoes })}
+              </p>
+              <ul className="flex flex-col gap-3">
+                {reclamacoes.map((reclamacao) => (
+                  <li key={reclamacao.id}>
+                    <CartaoReclamacao
+                      protocolo={reclamacao.protocolo}
+                      titulo={reclamacao.titulo}
+                      status={reclamacao.status}
+                      categoria={{ nome: reclamacao.categoria.nome, icone: reclamacao.categoria.icone }}
+                      local={reclamacao.cidade.nome}
+                      fotoUrl={reclamacao.midias[0] ? (reclamacao.midias[0].urlTratada ?? reclamacao.midias[0].url) : null}
+                      confirmacoes={reclamacao._count.confirmacoes}
+                      data={reclamacao.publicadaEm ?? reclamacao.createdAt}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
 
-      <Paginacao
-        paginaAtual={paginaAtual}
-        totalPaginas={totalPaginas}
-        basePath="/reclamacoes"
-        searchParams={{ cidadeId: cidadeIdFiltro, categoriaId: categoriaIdFiltro, q: buscaFiltro }}
-      />
+          <Paginacao
+            paginaAtual={paginaAtual}
+            totalPaginas={totalPaginas}
+            basePath="/reclamacoes"
+            searchParams={{ cidadeId: cidadeIdFiltro, categoriaId: categoriaIdFiltro, q: buscaFiltro }}
+          />
+        </div>
+      </div>
     </main>
   );
 }

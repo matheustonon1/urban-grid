@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, FilePlus, Plus, Users } from "lucide-react";
+import { Bell, ChevronRight, FilePlus, Plus, Rss, User, Users } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
@@ -8,10 +8,18 @@ import { Aviso } from "@/components/ui/aviso";
 import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
 import { EstadoVazio } from "@/components/ui/estado-vazio";
 import { PainelNumeros } from "@/components/ui/painel-numeros";
+import { Secao } from "@/components/ui/secao";
 import { StatusBadge } from "@/components/reclamacao/status-badge";
 import { Paginacao } from "@/components/ui/paginacao";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/util/paginacao";
-import { botaoPrimario, botaoSecundario, cartao, containerMedio } from "@/lib/estilos";
+import {
+  botaoPrimario,
+  botaoSecundario,
+  colunaLateral,
+  colunaPrincipal,
+  grade,
+  pagina,
+} from "@/lib/estilos";
 import { metadataDaPagina } from "@/lib/metadata";
 import { formatarTempoRelativo } from "@/lib/util/tempo-relativo";
 
@@ -22,6 +30,8 @@ export const generateMetadata = metadataDaPagina("Painel");
 export default async function PainelPage({ searchParams }: PageProps<"/painel">) {
   const t = await getTranslations("Painel");
   const tPapel = await getTranslations("Papel");
+  const tMenu = await getTranslations("UserMenu");
+  const tNotificacoes = await getTranslations("Notificacoes");
   const locale = await getLocale();
   const session = await exigirSessao();
 
@@ -52,6 +62,12 @@ export default async function PainelPage({ searchParams }: PageProps<"/painel">)
     porStatus.find((grupo) => grupo.status === status)?._count._all ?? 0;
   const primeiroNome = session.user.name?.trim().split(/\s+/)[0];
 
+  const atalhos = [
+    { href: "/painel/notificacoes", rotulo: tNotificacoes("titulo"), icone: Bell },
+    { href: "/painel/assinaturas", rotulo: tMenu("assinaturas"), icone: Rss },
+    { href: "/painel/conta", rotulo: tMenu("minhaConta"), icone: User },
+  ];
+
   const novaReclamacao = (
     <Link href="/reclamacoes/nova" className={botaoPrimario}>
       <Plus className="h-4 w-4" aria-hidden />
@@ -60,8 +76,9 @@ export default async function PainelPage({ searchParams }: PageProps<"/painel">)
   );
 
   return (
-    <main className={containerMedio}>
+    <main className={pagina}>
       <CabecalhoPagina
+        kicker={t("kicker")}
         titulo={primeiroNome ? t("ola", { nome: primeiroNome }) : t("titulo")}
         descricao={`${tPapel(session.user.papel)} · ${session.user.email}`}
         acoes={totalReclamacoes > 0 ? novaReclamacao : undefined}
@@ -93,61 +110,79 @@ export default async function PainelPage({ searchParams }: PageProps<"/painel">)
         />
       )}
 
-      <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold text-ink">
-          {t("minhasReclamacoes")}
-        </h2>
+      <div className={grade}>
+        <div className={colunaPrincipal}>
+          <Secao id="minhas" titulo={t("minhasReclamacoes")} contador={totalReclamacoes}>
+            {reclamacoes.length === 0 ? (
+              <EstadoVazio
+                icone={FilePlus}
+                titulo={t("nenhumaReclamacao")}
+                descricao={t("nenhumaReclamacaoDesc")}
+              >
+                {novaReclamacao}
+              </EstadoVazio>
+            ) : (
+              <ul className="-mt-2 divide-y divide-line">
+                {reclamacoes.map((reclamacao) => (
+                  <li key={reclamacao.id}>
+                    <Link
+                      href={`/reclamacoes/${reclamacao.protocolo}`}
+                      className="group flex items-center gap-4 py-4 transition-colors"
+                    >
+                      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                        <div className="sm:hidden">
+                          <StatusBadge status={reclamacao.status} />
+                        </div>
+                        <p className="line-clamp-2 font-bold text-ink group-hover:text-brand sm:line-clamp-1">
+                          {reclamacao.titulo}
+                        </p>
+                        <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-ink-muted">
+                          <span className="kicker">{reclamacao.protocolo}</span>
+                          <span>{formatarTempoRelativo(reclamacao.createdAt, locale)}</span>
+                          {reclamacao._count.confirmacoes > 0 && (
+                            <span className="flex items-center gap-1">
+                              <Users className="h-3 w-3" aria-hidden />
+                              <span className="tabular-nums">{reclamacao._count.confirmacoes}</span>
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                      <div className="hidden sm:block">
+                        <StatusBadge status={reclamacao.status} />
+                      </div>
+                      <ChevronRight
+                        className="h-4 w-4 shrink-0 text-ink-faint transition-transform group-hover:translate-x-0.5 group-hover:text-brand"
+                        aria-hidden
+                      />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
 
-        {reclamacoes.length === 0 ? (
-          <EstadoVazio
-            icone={FilePlus}
-            titulo={t("nenhumaReclamacao")}
-            descricao={t("nenhumaReclamacaoDesc")}
-          >
-            {novaReclamacao}
-          </EstadoVazio>
-        ) : (
-          <ul className={`divide-y divide-line overflow-hidden p-0 ${cartao}`}>
-            {reclamacoes.map((reclamacao) => (
-              <li key={reclamacao.id}>
-                <Link
-                  href={`/reclamacoes/${reclamacao.protocolo}`}
-                  className="group flex items-center gap-4 px-4 py-3.5 transition-colors hover:bg-sunken/50 focus-visible:bg-sunken/50"
-                >
-                  <div className="flex min-w-0 flex-1 flex-col gap-1">
-                    <div className="sm:hidden">
-                      <StatusBadge status={reclamacao.status} />
-                    </div>
-                    <p className="line-clamp-2 font-medium text-ink group-hover:text-brand sm:line-clamp-1">
-                      {reclamacao.titulo}
-                    </p>
-                    <p className="flex flex-wrap items-center gap-x-2 text-xs text-ink-muted">
-                      <span className="font-mono">{reclamacao.protocolo}</span>
-                      <span aria-hidden>·</span>
-                      <span>{formatarTempoRelativo(reclamacao.createdAt, locale)}</span>
-                      {reclamacao._count.confirmacoes > 0 && (
-                        <span className="flex items-center gap-1">
-                          <Users className="h-3 w-3" aria-hidden />
-                          <span className="tabular-nums">{reclamacao._count.confirmacoes}</span>
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                  <div className="hidden sm:block">
-                    <StatusBadge status={reclamacao.status} />
-                  </div>
-                  <ChevronRight
-                    className="h-4 w-4 shrink-0 text-ink-faint transition-transform group-hover:translate-x-0.5 group-hover:text-brand"
-                    aria-hidden
-                  />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
+            <Paginacao paginaAtual={paginaAtual} totalPaginas={totalPaginas} basePath="/painel" />
+          </Secao>
+        </div>
 
-        <Paginacao paginaAtual={paginaAtual} totalPaginas={totalPaginas} basePath="/painel" />
-      </section>
+        <aside className={colunaLateral}>
+          <Secao id="atalhos" titulo={t("atalhos")}>
+            <ul className="-mt-2 divide-y divide-line">
+              {atalhos.map(({ href, rotulo, icone: Icone }) => (
+                <li key={href}>
+                  <Link
+                    href={href}
+                    className="group flex items-center gap-3 py-3.5 text-ink-2 transition-colors hover:text-brand"
+                  >
+                    <Icone className="h-4 w-4 shrink-0 text-ink-muted group-hover:text-brand" aria-hidden />
+                    <span className="flex-1 font-medium">{rotulo}</span>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-ink-faint" aria-hidden />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </Secao>
+        </aside>
+      </div>
     </main>
   );
 }

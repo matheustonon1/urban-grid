@@ -40,7 +40,7 @@ export async function ProgressoStatus({ status }: { status: StatusReclamacao }) 
             )}
             <span
               aria-hidden
-              className={`relative z-10 flex h-6 w-6 items-center justify-center rounded-full border-2 ${
+              className={`relative z-10 flex h-6 w-6 items-center justify-center rounded-md border-2 ${
                 concluida
                   ? "border-brand bg-brand text-on-brand"
                   : atual
@@ -51,7 +51,7 @@ export async function ProgressoStatus({ status }: { status: StatusReclamacao }) 
               {concluida ? (
                 <Check className="h-3.5 w-3.5" strokeWidth={3} />
               ) : atual ? (
-                <span className="h-2 w-2 rounded-full bg-brand" />
+                <span className="h-2 w-2 rounded-xs bg-brand" />
               ) : null}
             </span>
             <span

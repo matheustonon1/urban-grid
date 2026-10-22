@@ -7,21 +7,28 @@ import { getLocale, getTranslations } from "next-intl/server";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { Aviso } from "@/components/ui/aviso";
-import { StatusBadge } from "@/components/reclamacao/status-badge";
+import { Campo } from "@/components/formulario/campo";
 import { FormularioDenuncia } from "@/components/reclamacao/formulario-denuncia";
+import { PlacaProtocolo } from "@/components/reclamacao/placa-protocolo";
+import { RespostaOficial } from "@/components/reclamacao/resposta-oficial";
+import { StatusBadge } from "@/components/reclamacao/status-badge";
+import { Aviso } from "@/components/ui/aviso";
+import { AvatarIniciais } from "@/components/ui/avatar-iniciais";
+import { Secao } from "@/components/ui/secao";
 import {
   botaoPrimario,
   botaoSecundario,
   campoInput,
-  cartao,
-  containerLargo,
+  cartaoSecao,
+  colunaLateral,
+  colunaPrincipal,
+  grade,
+  pagina,
   painelSuave,
 } from "@/lib/estilos";
 import { formatarDataHora } from "@/lib/util/formatarData";
 import { orgaoAtendeCategoria } from "@/lib/orgaos/orgaoCategoria";
 import { STATUS_PUBLICOS } from "@/lib/reclamacoes/statusPublicos";
-import { iniciaisDoNome } from "@/lib/util/texto";
 import { formatarTempoRelativo } from "@/lib/util/tempo-relativo";
 
 import {
@@ -195,8 +202,8 @@ export default async function ReclamacaoPage({
   );
 
   return (
-    <main className={containerLargo}>
-      <header className="flex flex-col gap-3">
+    <main className={pagina}>
+      <header className="flex flex-col gap-5">
         <nav aria-label={t("navegacaoRotulo")}>
           <ol className="flex flex-wrap items-center gap-1 text-sm text-ink-muted">
             <li>
@@ -215,28 +222,19 @@ export default async function ReclamacaoPage({
             </li>
           </ol>
         </nav>
-        <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">
+        <h1 className="max-w-4xl text-3xl leading-[1.1] font-extrabold tracking-tight text-ink sm:text-5xl">
           {reclamacao.titulo}
         </h1>
-        <div className="flex flex-wrap items-center gap-2 text-sm text-ink-muted">
+        <div className="flex flex-wrap items-center gap-3 border-b-2 border-ink pb-6">
           <StatusBadge status={reclamacao.status} />
-          {/* Borda tracejada + mono, tipo canhoto de ticket - separa
-              visualmente "isto é um código de registro" de "isto é um
-              estado" (StatusBadge, ao lado), em vez dos dois competirem
-              pelo mesmo tratamento de pílula arredondada. */}
-          <span className="inline-flex items-center gap-1.5 rounded border border-dashed border-line-strong px-2 py-0.5">
-            <span className="text-xs text-ink-muted">{t("protocolo")}</span>
-            <span className="font-mono text-xs tracking-tight text-ink-muted">
-              {reclamacao.protocolo}
-            </span>
-          </span>
+          <PlacaProtocolo protocolo={reclamacao.protocolo} rotulo={t("protocolo")} />
         </div>
       </header>
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+      <div className={grade}>
         {/* Resumo primeiro no celular (status, local, confirmar são o que a
             pessoa procura de cara), à direita e fixo no desktop. */}
-        <aside className="lg:sticky lg:top-20 lg:order-last">
+        <aside className={`${colunaLateral} lg:order-last`}>
           <ResumoReclamacao
             status={reclamacao.status}
             categoria={{ nome: reclamacao.categoria.nome, icone: reclamacao.categoria.icone }}
@@ -256,16 +254,17 @@ export default async function ReclamacaoPage({
               !denunciaAberta && (
                 <FormularioDenuncia
                   action={criarDenuncia.bind(null, reclamacao.id, protocolo)}
-                  largura="w-full"
+                  id="denuncia-reclamacao"
+                  estilo="botao"
                 />
               )
             }
           />
         </aside>
 
-        <div className="flex min-w-0 flex-col gap-8">
-          <section className="flex flex-col gap-4">
-            <p className="text-base leading-relaxed whitespace-pre-line text-ink-2">
+        <div className={colunaPrincipal}>
+          <section className="flex flex-col gap-6">
+            <p className="text-lg leading-relaxed whitespace-pre-line text-ink-2">
               {reclamacao.descricao}
             </p>
 
@@ -283,7 +282,7 @@ export default async function ReclamacaoPage({
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label={t("abrirFoto", { numero: indice + 1 })}
-                        className="group relative block aspect-square overflow-hidden rounded-lg border border-line"
+                        className="group relative block aspect-4/3 overflow-hidden rounded-lg border border-line bg-sunken"
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element -- imagem externa (Vercel Blob), sem domínio fixo pra configurar no next/image */}
                         <img
@@ -291,7 +290,7 @@ export default async function ReclamacaoPage({
                           alt=""
                           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                         />
-                        <span className="absolute right-2 bottom-2 flex h-7 w-7 items-center justify-center rounded-full bg-night/70 text-chalk opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                        <span className="absolute right-2 bottom-2 flex h-7 w-7 items-center justify-center rounded-md bg-night/70 text-chalk opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
                           <ExternalLink className="h-3.5 w-3.5" aria-hidden />
                         </span>
                       </a>
@@ -309,17 +308,19 @@ export default async function ReclamacaoPage({
             {reclamacao.status === "REJEITADA" && ehAutor && !reclamacao.emRecurso && (
               <form
                 action={contestarRejeicao.bind(null, reclamacao.id, protocolo)}
-                className={`flex flex-col gap-2 ${painelSuave}`}
+                className={`flex flex-col gap-4 ${painelSuave}`}
               >
                 <p className="text-sm text-ink-muted">{t("contestarDesc")}</p>
-                <textarea
-                  name="texto"
-                  required
-                  minLength={20}
-                  placeholder={t("contestarPlaceholder")}
-                  rows={3}
-                  className={campoInput}
-                />
+                <Campo id="contestar-texto" rotulo={t("contestarPlaceholder")}>
+                  <textarea
+                    id="contestar-texto"
+                    name="texto"
+                    required
+                    minLength={20}
+                    rows={3}
+                    className={campoInput}
+                  />
+                </Campo>
                 <button type="submit" className={`${botaoSecundario} w-fit`}>
                   {t("contestarRejeicao")}
                 </button>
@@ -342,40 +343,67 @@ export default async function ReclamacaoPage({
                 .
               </Aviso>
             )}
-
           </section>
 
+          {reclamacao.respostas.length > 0 && (
+            <Secao id="respostas" titulo={t("respostasOficiais")} contador={reclamacao.respostas.length}>
+              <div className="flex flex-col gap-4">
+                {reclamacao.respostas.map((resposta) => (
+                  <RespostaOficial
+                    key={resposta.id}
+                    orgao={resposta.orgao.nome}
+                    texto={resposta.texto}
+                    data={resposta.createdAt}
+                    novoStatus={resposta.novoStatus}
+                    prazoEstimado={resposta.prazoEstimado}
+                    locale={locale}
+                    rotulos={{
+                      respostaOficial: t("respostaOficial"),
+                      novoStatus: t("novoStatusRotulo"),
+                      prazo: t("prazoRotulo"),
+                    }}
+                  />
+                ))}
+              </div>
+            </Secao>
+          )}
+
           {linhaDoTempo.length > 1 && (
-            <section className="flex flex-col gap-4">
-              <h2 className="text-lg font-semibold text-ink">
-                {t("linhaDoTempo")}
-              </h2>
+            <Secao id="linha-do-tempo" titulo={t("linhaDoTempo")}>
               <LinhaDoTempoVisual eventos={linhaDoTempo} locale={locale} />
-            </section>
+            </Secao>
           )}
 
           {podeResponder && (
             <form
               action={responderReclamacao.bind(null, reclamacao.id, protocolo)}
-              className={`flex flex-col gap-2 ${cartao}`}
+              className={`flex flex-col gap-5 ${cartaoSecao}`}
             >
-              <h2 className="font-semibold text-ink">
+              <h2 className="text-xl font-extrabold tracking-tight text-ink">
                 {t("responderComoOrgao")}
               </h2>
-              <textarea
-                name="texto"
-                required
-                minLength={10}
-                placeholder={t("respostaOficial")}
-                rows={3}
-                className={campoInput}
-              />
-              <select name="novoStatus" defaultValue="" className={campoInput}>
-                <option value="">{t("manterStatus")}</option>
-                <option value="EM_ANDAMENTO">{t("marcarEmAndamento")}</option>
-                <option value="RESOLVIDA">{t("marcarResolvida")}</option>
-              </select>
-              <input type="date" name="prazoEstimado" className={campoInput} />
+              <Campo id="resposta-texto" rotulo={t("respostaOficial")}>
+                <textarea
+                  id="resposta-texto"
+                  name="texto"
+                  required
+                  minLength={10}
+                  rows={4}
+                  className={campoInput}
+                />
+              </Campo>
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Campo id="resposta-status" rotulo={t("statusRotulo")}>
+                  <select id="resposta-status" name="novoStatus" defaultValue="" className={campoInput}>
+                    <option value="">{t("manterStatus")}</option>
+                    <option value="EM_ANDAMENTO">{t("marcarEmAndamento")}</option>
+                    <option value="RESOLVIDA">{t("marcarResolvida")}</option>
+                  </select>
+                </Campo>
+                <Campo id="resposta-prazo" rotulo={t("prazoRotulo")} opcional={t("opcional")}>
+                  <input id="resposta-prazo" type="date" name="prazoEstimado" className={campoInput} />
+                </Campo>
+              </div>
               <button type="submit" className={`${botaoPrimario} w-fit`}>
                 {t("enviarResposta")}
               </button>
@@ -385,71 +413,71 @@ export default async function ReclamacaoPage({
           {podeAvaliar && (
             <form
               action={avaliarReclamacao.bind(null, reclamacao.id, protocolo)}
-              className={`flex flex-col gap-2 ${cartao}`}
+              aria-labelledby="avaliacao-titulo"
+              className={`flex flex-col gap-5 ${cartaoSecao}`}
             >
-              <h2 className="font-semibold text-ink">
+              <h2 id="avaliacao-titulo" className="text-xl font-extrabold tracking-tight text-ink">
                 {t("foiRealmenteResolvido")}
               </h2>
-              <select name="nota" required defaultValue="" className={campoInput}>
-                <option value="" disabled>
-                  {t("notaUmACinco")}
-                </option>
-                {[1, 2, 3, 4, 5].map((nota) => (
-                  <option key={nota} value={nota}>
-                    {nota}
-                  </option>
-                ))}
-              </select>
-              <div className="flex gap-4 text-sm text-ink-2">
-                <label className="flex items-center gap-1">
-                  <input type="radio" name="resolvido" value="true" required />
+              {/* O nome do grupo é o próprio título acima: um <legend> repetiria a
+                  pergunta (duas vezes no texto da página). */}
+              <fieldset aria-labelledby="avaliacao-titulo" className="flex flex-col gap-2.5">
+                <label className="flex items-center gap-2.5 text-ink-2">
+                  <input type="radio" name="resolvido" value="true" required className="h-4 w-4 accent-brand" />
                   {t("simFoiResolvido")}
                 </label>
-                <label className="flex items-center gap-1">
-                  <input type="radio" name="resolvido" value="false" required />
+                <label className="flex items-center gap-2.5 text-ink-2">
+                  <input type="radio" name="resolvido" value="false" required className="h-4 w-4 accent-brand" />
                   {t("naoFoiResolvido")}
                 </label>
-              </div>
-              <textarea
-                name="comentario"
-                placeholder={t("comentarioOpcional")}
-                rows={2}
-                className={campoInput}
-              />
+              </fieldset>
+              <Campo id="avaliacao-nota" rotulo={t("notaUmACinco")}>
+                <select id="avaliacao-nota" name="nota" required defaultValue="" className={`${campoInput} sm:w-40`}>
+                  <option value="" disabled>
+                    —
+                  </option>
+                  {[1, 2, 3, 4, 5].map((nota) => (
+                    <option key={nota} value={nota}>
+                      {nota}
+                    </option>
+                  ))}
+                </select>
+              </Campo>
+              <Campo id="avaliacao-comentario" rotulo={t("comentarioOpcional")}>
+                <textarea id="avaliacao-comentario" name="comentario" rows={2} className={campoInput} />
+              </Campo>
               <button type="submit" className={`${botaoPrimario} w-fit`}>
                 {t("enviarAvaliacao")}
               </button>
             </form>
           )}
 
-          <section className="flex flex-col gap-4">
-            <h2 className="text-lg font-semibold text-ink">
-              {t("comentarios")} {comentarios.length > 0 && `(${comentarios.length})`}
-            </h2>
-
+          <Secao id="comentarios" titulo={t("comentarios")} contador={comentarios.length}>
             {session?.user ? (
               <form
                 action={criarComentario.bind(null, reclamacao.id, protocolo)}
-                className="flex flex-col gap-2"
+                className="flex flex-col gap-3"
               >
-                <textarea
-                  name="texto"
-                  required
-                  minLength={3}
-                  maxLength={1000}
-                  placeholder={t("deixeComentario")}
-                  rows={2}
-                  className={campoInput}
-                />
-                <button type="submit" className={`${botaoSecundario} w-fit`}>
+                <Campo id="comentario-novo" rotulo={t("deixeComentario")}>
+                  <textarea
+                    id="comentario-novo"
+                    name="texto"
+                    required
+                    minLength={3}
+                    maxLength={1000}
+                    rows={3}
+                    className={campoInput}
+                  />
+                </Campo>
+                <button type="submit" className={`${botaoPrimario} w-fit`}>
                   {t("comentar")}
                 </button>
               </form>
             ) : (
-              <p className="text-sm text-ink-muted">
+              <p className={`text-sm ${painelSuave}`}>
                 <Link
                   href={`/login?callbackUrl=${encodeURIComponent(`/reclamacoes/${protocolo}`)}`}
-                  className="font-medium text-brand hover:underline"
+                  className="font-semibold text-brand hover:underline"
                 >
                   {t("entreParaComentar")}
                 </Link>
@@ -468,15 +496,10 @@ export default async function ReclamacaoPage({
                 {comentarios.map((comentario) => {
                   const nomeAutor = comentario.autor.name ?? comentario.autor.email;
                   return (
-                    <article key={comentario.id} className="flex gap-3 py-5 first:pt-0 last:pb-0">
-                      <span
-                        aria-hidden
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-line text-xs font-semibold text-ink-2"
-                      >
-                        {iniciaisDoNome(nomeAutor)}
-                      </span>
+                    <article key={comentario.id} className="flex gap-3.5 py-6 first:pt-0 last:pb-0">
+                      <AvatarIniciais nome={nomeAutor} />
                       <div className="flex min-w-0 flex-1 flex-col gap-2">
-                        <p className="text-sm font-medium text-ink">
+                        <p className="text-sm font-semibold text-ink">
                           {nomeAutor}
                           <time
                             dateTime={comentario.createdAt.toISOString()}
@@ -486,30 +509,30 @@ export default async function ReclamacaoPage({
                             {formatarTempoRelativo(comentario.createdAt, locale)}
                           </time>
                         </p>
-                        <p className="text-sm text-ink-2">
-                          {comentario.texto}
-                        </p>
+                        <p className="leading-relaxed text-ink-2">{comentario.texto}</p>
 
                         {session?.user && (
-                          <div className="flex flex-wrap items-center gap-3">
-                            <details>
-                              <summary className="w-fit cursor-pointer text-xs text-brand">
+                          <div className="flex flex-wrap items-start gap-x-5 gap-y-2">
+                            <details className="w-fit open:w-full open:max-w-sm">
+                              <summary className="inline-flex w-fit cursor-pointer list-none items-center text-xs font-semibold text-brand hover:underline">
                                 {t("responder")}
                               </summary>
                               <form
                                 action={criarComentario.bind(null, reclamacao.id, protocolo)}
-                                className="animate-fade-in mt-2 flex flex-col gap-2"
+                                className="animate-fade-in mt-3 flex flex-col gap-3"
                               >
                                 <input type="hidden" name="paiId" value={comentario.id} />
-                                <textarea
-                                  name="texto"
-                                  required
-                                  minLength={3}
-                                  maxLength={1000}
-                                  placeholder={t("escrevaResposta")}
-                                  rows={2}
-                                  className={campoInput}
-                                />
+                                <Campo id={`resposta-${comentario.id}`} rotulo={t("escrevaResposta")}>
+                                  <textarea
+                                    id={`resposta-${comentario.id}`}
+                                    name="texto"
+                                    required
+                                    minLength={3}
+                                    maxLength={1000}
+                                    rows={2}
+                                    className={campoInput}
+                                  />
+                                </Campo>
                                 <button type="submit" className={`${botaoSecundario} w-fit`}>
                                   {t("responder")}
                                 </button>
@@ -519,17 +542,17 @@ export default async function ReclamacaoPage({
                             {comentario.autor.id !== session.user.id && (
                               <FormularioDenuncia
                                 action={criarDenunciaComentario.bind(null, comentario.id, protocolo)}
-                                largura="w-64"
+                                id={`denuncia-${comentario.id}`}
                               />
                             )}
                           </div>
                         )}
 
                         {comentario.respostas.length > 0 && (
-                          <div className="mt-1 flex flex-col gap-3 border-l border-line pl-4">
+                          <div className="mt-1 flex flex-col gap-4 border-l-2 border-line pl-4">
                             {comentario.respostas.map((resposta) => (
-                              <div key={resposta.id}>
-                                <p className="text-sm font-medium text-ink">
+                              <div key={resposta.id} className="flex flex-col gap-1.5">
+                                <p className="text-sm font-semibold text-ink">
                                   {resposta.autor.name ?? resposta.autor.email}
                                   <time
                                     dateTime={resposta.createdAt.toISOString()}
@@ -539,13 +562,11 @@ export default async function ReclamacaoPage({
                                     {formatarTempoRelativo(resposta.createdAt, locale)}
                                   </time>
                                 </p>
-                                <p className="text-sm text-ink-2">
-                                  {resposta.texto}
-                                </p>
+                                <p className="leading-relaxed text-ink-2">{resposta.texto}</p>
                                 {session?.user && resposta.autor.id !== session.user.id && (
                                   <FormularioDenuncia
                                     action={criarDenunciaComentario.bind(null, resposta.id, protocolo)}
-                                    largura="w-64"
+                                    id={`denuncia-${resposta.id}`}
                                   />
                                 )}
                               </div>
@@ -558,7 +579,7 @@ export default async function ReclamacaoPage({
                 })}
               </div>
             )}
-          </section>
+          </Secao>
         </div>
       </div>
     </main>

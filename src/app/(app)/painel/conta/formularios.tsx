@@ -5,7 +5,8 @@ import { Bell, Lock, LogOut, Mail, Trash2, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { SeletorCidade } from "@/components/formulario/cidade-combobox";
-import { botaoPrimario, botaoSecundario, campoInput, cartao } from "@/lib/estilos";
+import { botaoPrimario, botaoSecundario, campoInput, cartaoSecao } from "@/lib/estilos";
+import { CabecalhoCartao } from "@/components/ui/cabecalho-cartao";
 
 import {
   alterarSenha,
@@ -70,11 +71,8 @@ export function FormularioPerfil({
   const [state, action, pending] = useActionState(atualizarPerfil, undefined);
 
   return (
-    <form action={action} className={`flex flex-col gap-3 ${cartao}`}>
-      <div className="flex items-center gap-2">
-        <User className="h-5 w-5 text-ink-muted" aria-hidden />
-        <h2 className="font-semibold text-ink">{t("dadosPessoais")}</h2>
-      </div>
+    <form action={action} className={`flex flex-col gap-3 ${cartaoSecao}`}>
+      <CabecalhoCartao icone={User} titulo={t("dadosPessoais")} />
 
       <div className="flex flex-col gap-1">
         <Rotulo htmlFor="perfil-telefone">{t("telefone")}</Rotulo>
@@ -120,13 +118,8 @@ export function FormularioPreferenciasNotificacao({ notificarPorEmail }: { notif
   const [state, action, pending] = useActionState(atualizarPreferenciasNotificacao, undefined);
 
   return (
-    <form action={action} className={`flex flex-col gap-3 ${cartao}`}>
-      <div className="flex items-center gap-2">
-        <Bell className="h-5 w-5 text-ink-muted" aria-hidden />
-        <h2 className="font-semibold text-ink">
-          {t("preferenciasNotificacao")}
-        </h2>
-      </div>
+    <form action={action} className={`flex flex-col gap-3 ${cartaoSecao}`}>
+      <CabecalhoCartao icone={Bell} titulo={t("preferenciasNotificacao")} />
 
       <label className="flex items-start gap-2 text-sm text-ink-2">
         <input
@@ -154,11 +147,8 @@ export function FormularioSenha() {
   const [state, action, pending] = useActionState(alterarSenha, undefined);
 
   return (
-    <form action={action} className={`flex flex-col gap-3 ${cartao}`}>
-      <div className="flex items-center gap-2">
-        <Lock className="h-5 w-5 text-ink-muted" aria-hidden />
-        <h2 className="font-semibold text-ink">{t("alterarSenha")}</h2>
-      </div>
+    <form action={action} className={`flex flex-col gap-3 ${cartaoSecao}`}>
+      <CabecalhoCartao icone={Lock} titulo={t("alterarSenha")} />
 
       <div className="flex flex-col gap-1">
         <Rotulo htmlFor="senha-atual">{t("senhaAtual")}</Rotulo>
@@ -218,11 +208,8 @@ export function FormularioTrocaEmail({ emailAtual }: { emailAtual: string }) {
   const [state, action, pending] = useActionState(solicitarTrocaEmail, undefined);
 
   return (
-    <form action={action} className={`flex flex-col gap-3 ${cartao}`}>
-      <div className="flex items-center gap-2">
-        <Mail className="h-5 w-5 text-ink-muted" aria-hidden />
-        <h2 className="font-semibold text-ink">{t("trocarEmail")}</h2>
-      </div>
+    <form action={action} className={`flex flex-col gap-3 ${cartaoSecao}`}>
+      <CabecalhoCartao icone={Mail} titulo={t("trocarEmail")} />
       <p className="text-sm text-ink-muted">
         {t("emailAtual")} <span className="font-medium">{emailAtual}</span>. {t("trocaEmailDesc")}
       </p>
@@ -273,10 +260,7 @@ export function FormularioExclusao() {
       action={action}
       className="flex flex-col gap-3 rounded-lg border border-danger-ink/30 bg-danger-soft/50 p-4"
     >
-      <div className="flex items-center gap-2">
-        <Trash2 className="h-5 w-5 text-danger-ink" aria-hidden />
-        <h2 className="font-semibold text-danger-ink">{t("excluirConta")}</h2>
-      </div>
+      <CabecalhoCartao icone={Trash2} titulo={t("excluirConta")} tom="perigo" />
       <p className="text-sm text-danger-ink">{t("excluirContaDesc")}</p>
 
       <div className="flex flex-col gap-1">

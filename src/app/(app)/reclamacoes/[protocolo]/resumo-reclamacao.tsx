@@ -5,7 +5,7 @@ import { CalendarDays, MapPin, Users, type LucideIcon } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { CategoriaIcon } from "@/components/reclamacao/categoria-icon";
-import { cartao, rotuloSecao } from "@/lib/estilos";
+import { cartaoSecao, rotuloSecao } from "@/lib/estilos";
 import { formatarData } from "@/lib/util/formatarData";
 
 import { ProgressoStatus } from "./progresso-status";
@@ -63,7 +63,7 @@ export async function ResumoReclamacao({
   const t = await getTranslations("ReclamacaoDetalhe");
 
   return (
-    <section className={`flex flex-col gap-5 ${cartao}`}>
+    <section className={`flex flex-col gap-5 ${cartaoSecao}`}>
       <h2 className={rotuloSecao}>{t("resumo")}</h2>
 
       <ProgressoStatus status={status} />

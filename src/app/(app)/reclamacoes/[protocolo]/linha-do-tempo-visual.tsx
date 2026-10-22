@@ -27,14 +27,14 @@ export function LinhaDoTempoVisual({
             )}
             <span
               aria-hidden
-              className={`relative mt-1.5 h-2.75 w-2.75 shrink-0 rounded-full border-2 ${
+              className={`relative mt-1.5 h-2.75 w-2.75 shrink-0 rounded-[3px] border-2 ${
                 ultimo
                   ? "border-brand bg-brand"
                   : "border-line-strong bg-paper"
               }`}
             />
             <div className="flex min-w-0 flex-col gap-0.5">
-              <p className="font-medium text-ink">{evento.titulo}</p>
+              <p className="font-semibold text-ink">{evento.titulo}</p>
               <time
                 dateTime={evento.data.toISOString()}
                 className="text-xs tabular-nums text-ink-muted"

@@ -4,7 +4,8 @@ import { useActionState, useEffect, useRef, useState } from "react";
 import { Check, Copy, KeyRound, ShieldCheck } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { botaoPrimario, botaoSecundario, campoInput, cartao } from "@/lib/estilos";
+import { botaoPrimario, botaoSecundario, campoInput, cartaoSecao } from "@/lib/estilos";
+import { CabecalhoCartao } from "@/components/ui/cabecalho-cartao";
 
 import {
   cancelarConfiguracaoTotp,
@@ -118,11 +119,8 @@ export function FormularioTotp({
   // voltar, a página recarrega sem eles (ativo=true cai no branch normal).
   if (stateConfirmar?.codigosBackup) {
     return (
-      <div className={`animate-fade-in flex flex-col gap-3 ${cartao}`}>
-        <div className="flex items-center gap-2">
-          <ShieldCheck className="h-5 w-5 text-ok-ink" aria-hidden />
-          <h2 className="font-semibold text-ink">{t("ativada")}</h2>
-        </div>
+      <div className={`animate-fade-in flex flex-col gap-3 ${cartaoSecao}`}>
+        <CabecalhoCartao icone={ShieldCheck} titulo={t("ativada")} tom="ok" />
         <p className="text-sm text-ink-2">{t("guardeCodigos")}</p>
         <CodigosBackup codigos={stateConfirmar.codigosBackup} />
       </div>
@@ -134,13 +132,8 @@ export function FormularioTotp({
     const poucosCodigos = codigosRestantes <= 2;
 
     return (
-      <div className={`flex flex-col gap-3 ${cartao}`}>
-        <div className="flex items-center gap-2">
-          <ShieldCheck className="h-5 w-5 text-ok-ink" aria-hidden />
-          <h2 className="font-semibold text-ink">
-            {t("duasEtapas")}
-          </h2>
-        </div>
+      <div className={`flex flex-col gap-3 ${cartaoSecao}`}>
+        <CabecalhoCartao icone={ShieldCheck} titulo={t("duasEtapas")} tom="ok" />
         <p className="text-sm text-ok-ink">{t("ativadaPorApp")}</p>
 
         <div className="flex flex-col gap-3 rounded-lg bg-sunken/60 p-3">
@@ -235,13 +228,8 @@ export function FormularioTotp({
 
   if (pendente) {
     return (
-      <div className={`animate-fade-in flex flex-col gap-4 ${cartao}`}>
-        <div className="flex items-center gap-2">
-          <KeyRound className="h-5 w-5 text-brand" aria-hidden />
-          <h2 className="font-semibold text-ink">
-            {t("configurarAutenticador")}
-          </h2>
-        </div>
+      <div className={`animate-fade-in flex flex-col gap-4 ${cartaoSecao}`}>
+        <CabecalhoCartao icone={KeyRound} titulo={t("configurarAutenticador")} tom="marca" />
 
         <div className="flex flex-col gap-3 rounded-lg bg-sunken/60 p-4">
           <p className="text-sm font-medium text-ink-2">
@@ -322,11 +310,8 @@ export function FormularioTotp({
   }
 
   return (
-    <div className={`flex flex-col gap-3 ${cartao}`}>
-      <div className="flex items-center gap-2">
-        <KeyRound className="h-5 w-5 text-ink-muted" aria-hidden />
-        <h2 className="font-semibold text-ink">{t("duasEtapas")}</h2>
-      </div>
+    <div className={`flex flex-col gap-3 ${cartaoSecao}`}>
+      <CabecalhoCartao icone={KeyRound} titulo={t("duasEtapas")} />
       <p className="text-sm text-ink-muted">{t("duasEtapasDesc")}</p>
       <form action={iniciarConfiguracaoTotp}>
         <button type="submit" className={`${botaoPrimario} w-fit`}>

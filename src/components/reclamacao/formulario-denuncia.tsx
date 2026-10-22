@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 
-import { botaoPrimario, botaoSecundario, campoInput, cartao } from "@/lib/estilos";
+import { Campo } from "@/components/formulario/campo";
+import { botaoPrimario, botaoSecundario, campoInput, painelSuave } from "@/lib/estilos";
 
 const MOTIVOS_DENUNCIA = [
   "OFENSIVO",
@@ -18,52 +19,54 @@ const MOTIVOS_DENUNCIA = [
 // action ligada a cada um.
 export async function FormularioDenuncia({
   action,
-  largura = "w-72",
-  // "pill" imita o mesmo botão secundário ao lado de "também sofro com
-  // isso" (nível reclamação); "link" é mais discreto, para caber ao lado
-  // de cada comentário/resposta sem competir visualmente com o texto.
+  id,
+  // "botao" é o gatilho largo ao lado de "também sofro com isso" (nível
+  // reclamação); "link" é mais discreto, para caber ao lado de cada
+  // comentário/resposta sem competir visualmente com o texto.
   estilo = "link",
 }: {
   action: (formData: FormData) => void | Promise<void>;
-  largura?: string;
-  estilo?: "pill" | "link";
+  // Prefixo único dos ids dos campos (há um formulário por comentário na página).
+  id: string;
+  estilo?: "botao" | "link";
 }) {
   const t = await getTranslations("ReclamacaoDetalhe");
   const tMotivo = await getTranslations("MotivoDenuncia");
 
   return (
-    <details className={largura === "w-full" ? "w-full" : "w-fit"}>
+    <details className={estilo === "botao" ? "w-full" : "w-fit open:w-full open:max-w-sm"}>
       <summary
         className={
-          estilo === "pill"
-            ? `${botaoSecundario} inline-flex w-fit cursor-pointer list-none text-danger-ink`
-            : "inline-flex w-fit cursor-pointer list-none items-center text-xs font-medium text-danger-ink hover:underline"
+          estilo === "botao"
+            ? `${botaoSecundario} w-full cursor-pointer list-none text-danger-ink`
+            : "inline-flex w-fit cursor-pointer list-none items-center text-xs font-semibold text-danger-ink hover:underline"
         }
       >
         {t("denunciar")}
       </summary>
-      <form
-        action={action}
-        className={`animate-fade-in mt-2 flex ${largura} flex-col gap-2 ${cartao}`}
-      >
-        <select name="motivo" required defaultValue="" className={campoInput}>
-          <option value="" disabled>
-            {t("motivo")}
-          </option>
-          {MOTIVOS_DENUNCIA.map((valor) => (
-            <option key={valor} value={valor}>
-              {tMotivo(valor)}
+      <form action={action} className={`animate-fade-in mt-3 flex flex-col gap-4 ${painelSuave}`}>
+        <Campo id={`${id}-motivo`} rotulo={t("motivo")}>
+          <select id={`${id}-motivo`} name="motivo" required defaultValue="" className={campoInput}>
+            <option value="" disabled>
+              —
             </option>
-          ))}
-        </select>
-        <textarea
-          name="descricao"
-          placeholder={t("descricaoOpcional")}
-          rows={2}
-          className={campoInput}
-        />
-        <label className="flex items-start gap-2 text-xs text-ink-muted">
-          <input type="checkbox" name="declaracaoVeracidade" required className="mt-0.5" />
+            {MOTIVOS_DENUNCIA.map((valor) => (
+              <option key={valor} value={valor}>
+                {tMotivo(valor)}
+              </option>
+            ))}
+          </select>
+        </Campo>
+        <Campo id={`${id}-descricao`} rotulo={t("descricaoOpcional")}>
+          <textarea id={`${id}-descricao`} name="descricao" rows={2} className={campoInput} />
+        </Campo>
+        <label className="flex items-start gap-2.5 text-xs text-ink-muted">
+          <input
+            type="checkbox"
+            name="declaracaoVeracidade"
+            required
+            className="mt-0.5 h-4 w-4 shrink-0 accent-brand"
+          />
           <span>{t("declaracaoBoaFe")}</span>
         </label>
         <button type="submit" className={`${botaoPrimario} w-fit`}>

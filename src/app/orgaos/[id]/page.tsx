@@ -10,8 +10,9 @@ import { Aviso } from "@/components/ui/aviso";
 import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
 import { EstadoVazio } from "@/components/ui/estado-vazio";
 import { PainelNumeros } from "@/components/ui/painel-numeros";
+import { Secao } from "@/components/ui/secao";
 import { StatusBadge } from "@/components/reclamacao/status-badge";
-import { containerMedio } from "@/lib/estilos";
+import { pagina } from "@/lib/estilos";
 import { formatarDataHora } from "@/lib/util/formatarData";
 import { calcularMetricasOrgao, classificarIndice } from "@/lib/orgaos/reputacaoOrgao";
 import { formatarTempoRelativo } from "@/lib/util/tempo-relativo";
@@ -51,8 +52,9 @@ export default async function OrgaoPage({ params }: PageProps<"/orgaos/[id]">) {
   const classificacao = classificarIndice(metricas.indiceResolucao, metricas.totalRespondidas);
 
   return (
-    <main className={containerMedio}>
+    <main className={pagina}>
       <CabecalhoPagina
+        kicker={t("kicker")}
         titulo={orgao.nome}
         descricao={
           <>
@@ -68,7 +70,7 @@ export default async function OrgaoPage({ params }: PageProps<"/orgaos/[id]">) {
               {t("reclamacoesRespondidas", { count: metricas.totalRespondidas })}
             </span>
             <span
-              className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${classificacao.className}`}
+              className={`inline-block rounded-[5px] px-2.5 py-1 text-sm font-semibold ${classificacao.className}`}
             >
               {tSelo(classificacao.chave)}
             </span>
@@ -97,34 +99,28 @@ export default async function OrgaoPage({ params }: PageProps<"/orgaos/[id]">) {
         ]}
       />
 
-      <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold text-ink">
-          {t("respostasRecentes")}
-        </h2>
-
+      <Secao id="respostas" titulo={t("respostasRecentes")} contador={respostasRecentes.length}>
         {respostasRecentes.length === 0 ? (
           <EstadoVazio icone={MessageSquareText} titulo={t("nenhumaResposta")} />
         ) : (
-          <ul className="flex flex-col gap-3">
+          <ul className="-mt-2 divide-y divide-line">
             {respostasRecentes.map((resposta) => (
               <li key={resposta.id}>
                 <Link
                   href={`/reclamacoes/${resposta.reclamacao.protocolo}`}
-                  className="group flex flex-col gap-2 rounded-lg border border-line bg-surface p-4 transition-colors hover:border-ink-faint"
+                  className="group flex flex-col gap-2 py-5 transition-colors"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="font-semibold leading-snug text-ink transition-colors group-hover:text-brand">
+                  <div className="flex items-start justify-between gap-4">
+                    <p className="text-lg leading-snug font-bold text-ink transition-colors group-hover:text-brand">
                       {resposta.reclamacao.titulo}
                     </p>
                     <StatusBadge status={resposta.reclamacao.status} />
                   </div>
-                  <p className="line-clamp-3 text-sm text-ink-2">
-                    {resposta.texto}
-                  </p>
+                  <p className="line-clamp-3 max-w-3xl leading-relaxed text-ink-2">{resposta.texto}</p>
                   <time
                     dateTime={resposta.createdAt.toISOString()}
                     title={formatarDataHora(resposta.createdAt, locale)}
-                    className="text-xs text-ink-muted"
+                    className="kicker"
                   >
                     {formatarTempoRelativo(resposta.createdAt, locale)}
                   </time>
@@ -133,7 +129,7 @@ export default async function OrgaoPage({ params }: PageProps<"/orgaos/[id]">) {
             ))}
           </ul>
         )}
-      </section>
+      </Secao>
     </main>
   );
 }

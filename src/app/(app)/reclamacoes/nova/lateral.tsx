@@ -3,10 +3,8 @@ import { useTranslations } from "next-intl";
 
 export type ChaveEtapa = "titulo" | "descricao" | "categoria" | "local" | "declaracao";
 
-const painel =
-  "flex flex-col gap-3 rounded-lg border border-line bg-surface p-4";
-const tituloPainel =
-  "text-xs font-semibold tracking-wide text-ink-muted uppercase";
+const painel = "flex flex-col gap-3.5 rounded-lg border border-line bg-surface p-5";
+const tituloPainel = "kicker";
 
 // O que falta preencher, em tempo real. Não impede o envio (quem valida é o
 // servidor) - só responde "falta muito?" sem a pessoa ter que rolar a página.
@@ -35,10 +33,10 @@ export function ProgressoPreenchimento({
         aria-valuemax={etapas.length}
         aria-valuenow={feitas}
         aria-label={t("progressoContagem", { feitas, total: etapas.length })}
-        className="h-1.5 overflow-hidden rounded-full bg-sunken"
+        className="h-1.5 overflow-hidden rounded-xs bg-sunken"
       >
         <div
-          className="h-full rounded-full bg-brand transition-[width] duration-300 motion-reduce:transition-none"
+          className="h-full rounded-xs bg-brand transition-[width] duration-300 motion-reduce:transition-none"
           style={{ width: `${(feitas / etapas.length) * 100}%` }}
         />
       </div>
@@ -47,7 +45,7 @@ export function ProgressoPreenchimento({
           <li key={chave} className="flex items-center gap-2.5 text-sm">
             <span
               aria-hidden
-              className={`flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-full border ${
+              className={`flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded-[4px] border ${
                 ok
                   ? "border-brand bg-brand text-on-brand"
                   : "border-line-strong"

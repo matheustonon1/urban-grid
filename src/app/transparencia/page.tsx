@@ -7,7 +7,8 @@ import { prisma } from "@/lib/prisma";
 import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
 import { EstadoVazio } from "@/components/ui/estado-vazio";
 import { PainelNumeros } from "@/components/ui/painel-numeros";
-import { cartao, containerLargo } from "@/lib/estilos";
+import { Secao } from "@/components/ui/secao";
+import { pagina } from "@/lib/estilos";
 import { calcularMetricasOrgao, classificarIndice } from "@/lib/orgaos/reputacaoOrgao";
 import { STATUS_PUBLICOS } from "@/lib/reclamacoes/statusPublicos";
 
@@ -54,63 +55,81 @@ export default async function TransparenciaPage() {
   ];
 
   return (
-    <main className={containerLargo}>
-      <CabecalhoPagina titulo={t("titulo")} descricao={t("subtitulo")} />
+    <main className={pagina}>
+      <CabecalhoPagina kicker={t("kicker")} titulo={t("titulo")} descricao={t("subtitulo")} />
 
       <PainelNumeros itens={resumo} />
 
-      <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold text-ink">
-          {t("rankingTitulo")}
-        </h2>
-        <p className="text-sm text-ink-muted">{t("rankingNota")}</p>
-
+      <Secao
+        id="ranking"
+        titulo={t("rankingTitulo")}
+        contador={ranking.length}
+        descricao={t("rankingNota")}
+      >
         {ranking.length === 0 ? (
           <EstadoVazio icone={Building2} titulo={t("semDados")} />
         ) : (
-          <div className={`overflow-x-auto p-0 ${cartao}`}>
+          <div className="overflow-x-auto rounded-lg border border-line bg-surface">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-line bg-sunken/60 text-xs text-ink-muted">
+              <thead className="border-b border-line bg-sunken/60">
                 <tr>
-                  <th scope="col" className="px-4 py-2 font-medium">{t("colOrgao")}</th>
-                  <th scope="col" className="px-4 py-2 font-medium">{t("colRespondidas")}</th>
-                  <th scope="col" className="px-4 py-2 font-medium">{t("colResolucao")}</th>
-                  <th scope="col" className="px-4 py-2 font-medium">{t("colTempo")}</th>
-                  <th scope="col" className="px-4 py-2 font-medium">{t("colNota")}</th>
+                  <th scope="col" className="kicker px-4 py-3">
+                    {t("colOrgao")}
+                  </th>
+                  <th scope="col" className="kicker px-4 py-3">
+                    {t("colRespondidas")}
+                  </th>
+                  <th scope="col" className="kicker px-4 py-3">
+                    {t("colResolucao")}
+                  </th>
+                  <th scope="col" className="kicker px-4 py-3">
+                    {t("colTempo")}
+                  </th>
+                  <th scope="col" className="kicker px-4 py-3">
+                    {t("colNota")}
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {ranking.map(({ orgao, metricas }) => {
+                {ranking.map(({ orgao, metricas }, indice) => {
                   const selo = classificarIndice(metricas.indiceResolucao, metricas.totalRespondidas);
                   return (
                     <tr
                       key={orgao.id}
-                      className="border-b border-line transition-colors last:border-0 hover:bg-sunken/40"
+                      className="border-b border-line transition-colors last:border-0 hover:bg-sunken/50"
                     >
-                      <th scope="row" className="px-4 py-3 font-normal">
-                        <Link href={`/orgaos/${orgao.id}`} className="font-medium text-brand hover:underline">
-                          {orgao.sigla ?? orgao.nome}
-                        </Link>
-                        <span className="block text-xs text-ink-muted">
-                          {orgao.cidade.nome}
-                        </span>
+                      <th scope="row" className="px-4 py-3.5 font-normal">
+                        <div className="flex items-center gap-3">
+                          <span aria-hidden className="w-6 shrink-0 font-mono text-base text-ink-faint tabular-nums">
+                            {String(indice + 1).padStart(2, "0")}
+                          </span>
+                          <div className="min-w-0">
+                            <Link
+                              href={`/orgaos/${orgao.id}`}
+                              className="font-bold text-ink hover:text-brand hover:underline"
+                            >
+                              {orgao.sigla ?? orgao.nome}
+                            </Link>
+                            <span className="block text-xs text-ink-muted">{orgao.cidade.nome}</span>
+                          </div>
+                        </div>
                       </th>
-                      <td className="px-4 py-3 tabular-nums">{metricas.totalRespondidas}</td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3.5 font-mono tabular-nums">{metricas.totalRespondidas}</td>
+                      <td className="px-4 py-3.5">
                         <span
-                          className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${selo.className}`}
+                          className={`inline-block rounded-[5px] px-2 py-0.5 text-xs font-semibold ${selo.className}`}
                         >
                           {metricas.indiceResolucao !== null ? `${metricas.indiceResolucao}%` : "—"}
                           {" · "}
                           {tSelo(selo.chave)}
                         </span>
                       </td>
-                      <td className="px-4 py-3 tabular-nums">
+                      <td className="px-4 py-3.5 font-mono tabular-nums">
                         {metricas.tempoMedioRespostaDias !== null
                           ? `${metricas.tempoMedioRespostaDias}d`
                           : "—"}
                       </td>
-                      <td className="px-4 py-3 tabular-nums">
+                      <td className="px-4 py-3.5 font-mono tabular-nums">
                         {metricas.notaMedia !== null ? `${metricas.notaMedia}/5` : "—"}
                       </td>
                     </tr>
@@ -120,7 +139,7 @@ export default async function TransparenciaPage() {
             </table>
           </div>
         )}
-      </section>
+      </Secao>
     </main>
   );
 }

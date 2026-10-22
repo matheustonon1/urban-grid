@@ -2,7 +2,8 @@ import type { ReactNode } from "react";
 import { CircleCheck, Shield, TriangleAlert } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 
-import { cartao } from "@/lib/estilos";
+import { cartaoSecao } from "@/lib/estilos";
+import { CabecalhoCartao } from "@/components/ui/cabecalho-cartao";
 
 import { BotaoEncerrarSessoes, BotaoReenviarVerificacao } from "./formularios";
 
@@ -43,11 +44,8 @@ export async function ResumoSeguranca({
   const locale = await getLocale();
 
   return (
-    <section className={`flex flex-col gap-3 ${cartao}`}>
-      <div className="flex items-center gap-2">
-        <Shield className="h-5 w-5 text-ink-muted" aria-hidden />
-        <h2 className="font-semibold text-ink">{t("segurancaConta")}</h2>
-      </div>
+    <section className={`flex flex-col gap-3 ${cartaoSecao}`}>
+      <CabecalhoCartao icone={Shield} titulo={t("segurancaConta")} />
 
       <dl className="flex flex-col divide-y divide-line text-sm">
         <Linha rotulo={t("duasEtapas")}>

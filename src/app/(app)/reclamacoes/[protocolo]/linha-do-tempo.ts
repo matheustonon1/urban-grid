@@ -33,15 +33,15 @@ export function construirLinhaDoTempo(
     });
   }
 
+  // O texto da resposta fica no bloco "Resposta oficial" da página; aqui entra só
+  // o marco (quem respondeu, quando) e, se mudou, o novo status.
   for (const resposta of respostas) {
     eventos.push({
       data: resposta.createdAt,
       titulo: t("timelineRespostaDe", { orgao: resposta.orgao.nome }),
-      descricao:
-        resposta.texto +
-        (resposta.novoStatus
-          ? ` (${t("timelineNovoStatus", { status: tStatus(resposta.novoStatus) })})`
-          : ""),
+      descricao: resposta.novoStatus
+        ? t("timelineNovoStatus", { status: tStatus(resposta.novoStatus) })
+        : undefined,
     });
   }
 

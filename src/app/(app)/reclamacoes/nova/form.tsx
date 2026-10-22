@@ -168,7 +168,7 @@ export function NovaReclamacaoForm({
   );
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_17rem] lg:items-start">
+    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
       <form ref={formRef} onSubmit={enviar} className="flex min-w-0 flex-col gap-5">
         <details className="rounded-lg border border-line bg-surface px-4 py-3 lg:hidden">
           <summary className="cursor-pointer text-sm font-medium text-ink-2">
@@ -431,7 +431,7 @@ export function NovaReclamacaoForm({
         </SecaoFormulario>
       </form>
 
-      <aside className="flex flex-col gap-4 lg:sticky lg:top-20">
+      <aside className="flex flex-col gap-4 lg:sticky lg:top-24">
         <div className="hidden lg:block">
           <ProgressoPreenchimento etapas={etapas} />
         </div>
