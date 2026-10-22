@@ -18,7 +18,8 @@ Além do fluxo básico de reclamação → moderação → resposta oficial, a p
 - **Autenticação em duas etapas (TOTP)** por aplicativo autenticador, com códigos de backup de uso único
 - **Tema claro/escuro** com preferência persistida por usuário
 - **Cadastro de órgão com aprovação**: prefeituras/secretarias solicitam acesso publicamente, um ADMIN aprova ou rejeita, e só então a conta é criada e um link de definição de senha é enviado
-- **Dashboard de estatísticas de moderação**: taxa de aprovação, score médio por eixo, volume por dia e concordância entre a IA e a revisão humana
+- **Dashboard de estatísticas de moderação** com período selecionável (7, 30, 90 dias ou tudo) e comparação com o período anterior: decisões da IA, fila de espera por idade, volume ao longo do tempo, distribuição das pontuações, critérios que mais disparam revisão, quanto os moderadores discordam da IA (reclamações enviadas à revisão e reprovações de comentário revertidas), denúncias, versões do prompt e consumo do modelo. Cada gráfico tem uma versão em tabela
+- **Formulário de reclamação guiado**: etapas numeradas, categorias à vista, preenchimento de endereço pelo CEP, fotos com arrastar e soltar, progresso e dicas ao lado; um erro de validação nunca apaga o que a pessoa já escreveu
 - **Recurso contra rejeição**: o autor pode contestar uma vez a rejeição de uma reclamação, encaminhando-a para revisão humana com o motivo original e o argumento do autor lado a lado
 - **Notificação por e-mail nos eventos-chave** (reclamação publicada/rejeitada, resposta oficial, pedido de avaliação, arquivamento por denúncia) além do sininho in-app — só para quem já verificou o e-mail
 
@@ -232,15 +233,22 @@ Os testes em `e2e/` exercitam fluxos completos pelo navegador contra um
 servidor real (não usam mocks) - cadastro/login, bloqueio por força
 bruta, ciclo completo do 2FA, órgão restrito por categoria, recurso
 contra rejeição, onboarding de órgão de ponta a ponta, denúncia/banimento,
-avaliação de resolução, exclusão de conta e confirmação ("também sofro
-com isso"). Cada teste cria seus próprios dados (usuários com e-mail
+avaliação de resolução, exclusão de conta, confirmação ("também sofro
+com isso"), formulário de nova reclamação e estatísticas de moderação.
+Cada teste cria seus próprios dados (usuários com e-mail
 prefixado `e2e-teste-*`, reclamações com protocolo prefixado) e limpa
 tudo ao final, então é seguro rodar contra o banco de desenvolvimento
 normal.
 
 Nenhum teste passa pelo fluxo real de criação de reclamação com upload
 de imagem (usam `criarReclamacaoTeste()`, direto no banco) - isso evitaria
-chamar a API do Gemini e o Vercel Blob de verdade a cada execução.
+chamar a API do Gemini e o Vercel Blob de verdade a cada execução. Os
+testes do formulário de nova reclamação só inspecionam a requisição de
+envio (as fotos escolhidas vão nela) e a abortam antes de chegar ao servidor.
+
+O banco de testes é o mesmo do desenvolvimento, que já tem análises de
+moderação de verdade: os testes de estatísticas comparam o número antes e
+depois de semear dados, nunca um valor absoluto.
 
 **Se `NEXT_PUBLIC_TURNSTILE_SITE_KEY`/`TURNSTILE_SECRET_KEY` estiverem
 configuradas no `.env`**, os testes de cadastro em `auth.spec.ts` falham:
@@ -268,6 +276,11 @@ Rodam com 1 worker (`playwright.config.ts`) de propósito: os testes
 escrevem no mesmo banco compartilhado, então paralelismo entre arquivos
 causaria corrida (ex.: dois testes usando a fila de `/moderacao` ao
 mesmo tempo).
+
+O servidor de desenvolvimento guarda limites por IP em memória (por exemplo,
+5 pedidos de redefinição de senha por hora). Rodar a suíte inteira várias
+vezes seguidas faz `redefinir-senha` e `seguranca-sessao` falharem sem ser
+regressão: reinicie o `npm run dev` (ou espere uma hora) para zerar.
 
 ### Recomeçar o banco do zero
 
@@ -307,6 +320,10 @@ urban-grid/
 │   │   ├── auth.ts          # configuração do Auth.js
 │   │   ├── moderacao/       # pipeline de moderação por IA (texto + imagem)
 │   │   ├── moderacaoComentario.ts # moderação de comentários (mais leve que a de reclamações)
+│   │   ├── pontuacoes.ts    # cortes de pontuação da IA (revisão, reprovação), numa fonte só
+│   │   ├── estatisticasModeracao.ts # cálculos puros do dashboard (percentis, séries, taxas, IA × humano)
+│   │   ├── carregarEstatisticasModeracao.ts # leitura das análises e filas para o dashboard
+│   │   ├── formatarEstatistica.ts # porcentagem, duração e variação no idioma ativo
 │   │   ├── imagem.ts        # phash, EXIF e desfoque de rosto/placa
 │   │   ├── storage.ts       # upload para o Vercel Blob
 │   │   ├── cpf.ts           # validação e hash do CPF
@@ -394,6 +411,9 @@ Existe um arquivo `prisma.config.ts` na raiz do projeto, resíduo de uma versão
 
 **Erro de tipo após alterar o `schema.prisma`**
 O Prisma Client precisa ser regenerado: `npx prisma generate`.
+
+**`Build Error: Can't resolve '@vercel/turbopack-next/internal/font/google/font'` no `npm run dev`**
+O Turbopack perdeu o estado das fontes do Google (`next/font/google`), em geral depois de recompilações simultâneas ou de uma falha de rede ao baixá-las. A configuração das fontes não tem problema. Pare o servidor, apague a pasta `.next/dev` (é só cache de build, regenerada sozinha) e rode `npm run dev` de novo. Se o terminal avisar "Failed to download ... from Google Fonts. Using a fallback font", a rede falhou no arranque: reinicie mais uma vez para baixar as fontes de verdade.
 
 **Teste E2E de cadastro trava/falha com "Não foi possível confirmar que você não é um robô"**
 O Turnstile está configurado no `.env` e bloqueou corretamente o navegador automatizado do Playwright. Comente `NEXT_PUBLIC_TURNSTILE_SITE_KEY`/`TURNSTILE_SECRET_KEY`, reinicie o `npm run dev` e rode os testes de novo (ver "Testes end-to-end" acima).
