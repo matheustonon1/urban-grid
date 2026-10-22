@@ -41,18 +41,23 @@ frio); estenda esta base com a mesma intenção, não a substitua por hábito.
   Inter/Geist por padrão.
 - **`src/lib/estilos.ts`** — `botaoPrimario`, `botaoSecundario`, `botaoPerigo`,
   `campoInput`/`campoInputInvalido`, `cartao`, `cartaoSecao`, `linkSutil`, `painelSuave`,
-  `blocoCitacao`, `rotuloSecao` e os contêineres (`containerSite` 6xl, `containerLargo`
-  5xl, `containerMedio` 3xl, `containerPagina` 2xl). Se nenhuma serve, vira constante
-  **ali**, não classe improvisada na tela.
+  `blocoCitacao`, `rotuloSecao` e a **estrutura de página**: `containerSite` (faixas de
+  largura total) e `pagina` / `grade` / `colunaPrincipal` / `colunaLateral` /
+  `colunaFiltros` / `colunaResultados` (ver "Estrutura de página" abaixo). Se nenhuma
+  serve, vira constante **ali**, não classe improvisada na tela.
 - **Componentes** (`src/components/`, por papel):
-  - `ui/` — `Marca`, `CabecalhoPagina`, `EstadoVazio`, `Aviso` (erro anuncia com
+  - `ui/` — `Marca`, `CabecalhoPagina` (kicker + título + régua), `Secao` (título de
+    seção com régua), `CabecalhoCartao` (ícone + título de bloco de formulário),
+    `ResumoLateral` (número grande + quebra, coluna lateral das filas), `FormularioRejeicao`
+    (motivo + rejeitar das filas de decisão), `EstadoVazio`, `Aviso` (erro anuncia com
     `role="alert"`), `Etiqueta` (base de `StatusBadge`/`DecisaoBadge`/`Selo`),
     `PainelNumeros`, `Esqueleto*`, `Paginacao`, `Revelar`, `AvatarIniciais`,
     `PaginaAuth` (moldura de login/cadastro/redefinição: painel escuro + formulário)
   - `layout/` — cabeçalho fixo, rodapé, menus, sino, tema, idioma, abas do admin
   - `formulario/` — `Campo` (rótulo + dica/erro, `aria-describedby`), `cidade-combobox`,
     termos
-  - `reclamacao/` e `moderacao/` — cartão de reclamação, badges, pontuações da IA…
+  - `reclamacao/` e `moderacao/` — cartão de reclamação, `PlacaProtocolo` (protocolo em
+    placa), `RespostaOficial`, badges, pontuações da IA, `GuiaPontuacoes` (legenda dos cortes)…
 
 Se o pedido for mudar fonte, paleta, tokens ou esses componentes base, confirme
 que é isso mesmo: foram decisões deliberadas, não lacunas.
@@ -69,8 +74,9 @@ antes `componentes-externos.md`, nesta pasta.
 - **Raio por papel**: botão/campo `rounded-md`; cartão `rounded-lg`; etiqueta de estado
   `rounded-[5px]` com quadradinho de cor (como placa); ficha de destaque `rounded-xl`;
   `rounded-full` só em avatar de pessoa, ponto e barra de progresso.
-- **Hierarquia editorial.** Título de página 3xl–4xl `font-extrabold`; seção `h2`
-  3xl; rótulo = `kicker`. Números grandes em mono (`font-mono tabular-nums`).
+- **Hierarquia editorial.** Título de página (`h1`) 3xl–4xl `font-extrabold`; seção
+  (`h2`, via `Secao`) `text-xl font-extrabold` com régua de tinta de 2px embaixo;
+  bloco dentro da seção `h3`; rótulo = `kicker`. Números grandes em mono (`font-mono tabular-nums`).
   Alinhamento **à esquerda** por padrão; centralizar é exceção (estado vazio, erro).
 - **Régua e índice.** Passo a passo = sequência numerada (`01`–`04`) sobre uma linha;
   bloco de destaque = `border-t-2 border-ink`; seção de página inteira alterna
@@ -84,6 +90,40 @@ antes `componentes-externos.md`, nesta pasta.
 - **Movimento discreto:** `animate-fade-in` / `Revelar` (uma vez, ao entrar na tela),
   transição de cor. Respeite `prefers-reduced-motion` (`motion-reduce:`). Sem fundo
   "respirando" ou grade deslizando.
+
+## Estrutura de página
+
+Toda página interna (e todo `loading.tsx`) segue o **mesmo eixo**: o do cabeçalho e do
+rodapé (`max-w-6xl`), título à esquerda, conteúdo numa grade de 12 colunas.
+
+```tsx
+<main className={pagina}>
+  <CabecalhoPagina kicker="Moderação" titulo="…" descricao="…" acoes={…} />
+  <div className={grade}>
+    <div className={colunaPrincipal}>          {/* 8 colunas */}
+      <Secao id="fila" titulo="Aguardando revisão" contador={n}>…</Secao>
+    </div>
+    <aside className={colunaLateral}>          {/* 4 colunas, sticky no desktop */}
+      <ResumoLateral rotulo="…" valor={n} itens={[…]} />
+    </aside>
+  </div>
+</main>
+```
+
+- Lista com filtros: `colunaFiltros` (3) + `colunaResultados` (9). Texto corrido
+  (termos): `pagina` + `max-w-3xl` dentro dele, sempre alinhado à esquerda.
+- **Uma `Secao` por assunto**: ela é o único `h2` da página (a hierarquia h1 → h2 → h3
+  não pode pular nível — o axe reclama) e dá nome à região (`aria-labelledby`).
+- A lateral só entra se **diz algo que o corpo não diz** (quebra do número, legenda dos
+  cortes, atalhos, reputação) — não repita ali o que o cabeçalho já afirma.
+- Lista de itens leves (histórico, usuários, banidos) = `ul.divide-y` dentro da `Secao`;
+  item com formulário/decisão = `article` com `cartaoSecao`.
+- O `loading.tsx` usa a **mesma** grade (`EsqueletoListaGenerica`): o conteúdo não pode
+  "pular" de largura ao chegar.
+- **Contrato com os testes E2E:** specs localizam o cartão pelo texto e sobem `..` até
+  ele (`text=protocolo` → `..` → `..`). Mudar o aninhamento de um cartão de admin
+  (fila, usuários, banidos, órgãos, solicitações) quebra o spec sem erro visual — leia o
+  `.spec.ts` antes e rode-o depois.
 
 ## Tiques de "design genérico de IA" — evite sem que o usuário peça
 

@@ -328,7 +328,7 @@ urban-grid/
 │   │   ├── termos/          # Termos de Uso e Política de Privacidade
 │   │   └── api/             # rotas de API (busca de cidade, consulta de CEP)
 │   ├── components/
-│   │   ├── ui/              # blocos base: marca, cabeçalho de página, aviso, etiqueta de estado, estado vazio, esqueleto, moldura das telas de entrada
+│   │   ├── ui/              # blocos base: marca, cabeçalho de página, seção com régua, resumo lateral, aviso, etiqueta de estado, estado vazio, esqueleto, moldura das telas de entrada
 │   │   ├── layout/          # cabeçalho fixo, rodapé, menu do usuário, sino, tema, idioma, abas do admin
 │   │   ├── formulario/      # campo com rótulo e erro, combobox de cidade, termos, troca de tipo de cadastro
 │   │   ├── reclamacao/      # cartão de reclamação, badge de status, categorias, denúncia
@@ -337,7 +337,7 @@ urban-grid/
 │   ├── i18n/                # idiomas (pt-BR/en), cookie e mensagens; teste de paridade das chaves
 │   ├── lib/
 │   │   ├── prisma.ts        # instância única do Prisma Client
-│   │   ├── estilos.ts       # classes compartilhadas (botões, campos, cartões, contêineres)
+│   │   ├── estilos.ts       # classes compartilhadas (botões, campos, cartões, estrutura de página em grade de 12 colunas)
 │   │   ├── metadata.ts      # título de aba por página
 │   │   ├── seguranca/       # CPF (hash), TOTP + códigos de backup, limite de tentativas, Turnstile, limite por IP, guard de sessão
 │   │   ├── conta/           # identificador (e-mail/CPF), verificação de e-mail, senha atual, exportação de dados (LGPD)
