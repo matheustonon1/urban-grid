@@ -80,13 +80,13 @@ export default async function OrgaosCategoriasPage({
         >
           <div className="flex items-start justify-between gap-2">
             <div>
-              <p className="flex items-center gap-2 font-medium text-slate-900 dark:text-slate-100">
+              <p className="flex items-center gap-2 font-medium text-ink">
                 {orgao.nome}
                 {orgao.sigla && ` (${orgao.sigla})`}
                 {!orgao.ativo && <Selo tom="neutro">{t("inativo")}</Selo>}
                 {orgao.responsaveis.length > 0 && <Selo tom="atencao">{t("convitePendente")}</Selo>}
               </p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-ink-muted">
                 {orgao.cidade.nome}
                 {orgao.email && ` · ${orgao.email}`}
               </p>
@@ -108,7 +108,7 @@ export default async function OrgaosCategoriasPage({
           </div>
 
           <details className="text-sm">
-            <summary className="w-fit cursor-pointer text-primary">{t("editarDados")}</summary>
+            <summary className="w-fit cursor-pointer text-brand">{t("editarDados")}</summary>
             <form
               action={atualizarDadosOrgao.bind(null, orgao.id)}
               className="animate-fade-in mt-2 flex flex-wrap gap-2"
@@ -142,7 +142,7 @@ export default async function OrgaosCategoriasPage({
           </details>
 
           <details className="group text-sm">
-            <summary className="flex w-fit cursor-pointer list-none items-center gap-2 text-primary">
+            <summary className="flex w-fit cursor-pointer list-none items-center gap-2 text-brand">
               <ChevronRight
                 className="h-4 w-4 transition-transform group-open:rotate-90"
                 aria-hidden
@@ -159,7 +159,7 @@ export default async function OrgaosCategoriasPage({
               {categorias.map((categoria) => (
                 <label
                   key={categoria.id}
-                  className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300"
+                  className="flex items-center gap-2 text-sm text-ink-2"
                 >
                   <input
                     type="checkbox"

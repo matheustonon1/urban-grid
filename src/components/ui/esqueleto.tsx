@@ -9,7 +9,7 @@ export function Esqueleto({ className = "" }: { className?: string }) {
   return (
     <div
       aria-hidden
-      className={`animate-pulse rounded-md bg-slate-200/80 motion-reduce:animate-none dark:bg-slate-800 ${className}`}
+      className={`animate-pulse rounded-md bg-sunken motion-reduce:animate-none ${className}`}
     />
   );
 }
@@ -83,7 +83,7 @@ export function EsqueletoListaGenerica({
   return (
     <EsqueletoPagina className={container}>
       <EsqueletoCabecalho />
-      {comNumeros && <Esqueleto className="h-20 w-full rounded-xl" />}
+      {comNumeros && <Esqueleto className="h-20 w-full rounded-lg" />}
       <EsqueletoCartoes quantidade={quantidade} />
     </EsqueletoPagina>
   );

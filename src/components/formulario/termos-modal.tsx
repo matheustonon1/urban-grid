@@ -18,7 +18,7 @@ export function TermosModal() {
       <button
         type="button"
         onClick={() => dialogRef.current?.showModal()}
-        className="text-primary underline"
+        className="text-brand underline"
       >
         {t("linkTexto")}
       </button>
@@ -31,18 +31,18 @@ export function TermosModal() {
             dialogRef.current?.close();
           }
         }}
-        className="animate-pop-in m-auto w-full max-w-2xl rounded-lg border border-slate-200 bg-white p-0 shadow-xl backdrop:bg-slate-900/50 dark:border-slate-700 dark:bg-slate-900"
+        className="animate-pop-in m-auto w-full max-w-2xl rounded-lg border border-line bg-surface p-0 shadow-xl backdrop:bg-night/60"
       >
         <div className="flex max-h-[80vh] flex-col">
-          <div className="flex items-center justify-between border-b border-slate-200 p-4 dark:border-slate-800">
-            <h2 id="termos-modal-titulo" className="font-semibold text-slate-900 dark:text-slate-100">
+          <div className="flex items-center justify-between border-b border-line p-4">
+            <h2 id="termos-modal-titulo" className="font-semibold text-ink">
               {tFooter("termos")}
             </h2>
             <button
               type="button"
               onClick={() => dialogRef.current?.close()}
               aria-label={t("fechar")}
-              className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+              className="rounded-lg p-1 text-ink-muted hover:bg-sunken hover:text-ink-2"
             >
               <X className="h-5 w-5" aria-hidden />
             </button>
@@ -52,7 +52,7 @@ export function TermosModal() {
             <TermosConteudo />
           </div>
 
-          <div className="border-t border-slate-200 p-4 dark:border-slate-800">
+          <div className="border-t border-line p-4">
             <button
               type="button"
               onClick={() => dialogRef.current?.close()}

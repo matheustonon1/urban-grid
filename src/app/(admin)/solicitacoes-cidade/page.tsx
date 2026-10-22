@@ -61,13 +61,13 @@ export default async function SolicitacoesCidadePage({
 
       {pendentes.map((solicitacao) => (
         <div key={solicitacao.id} className={`flex flex-col gap-2 ${cartao}`}>
-          <p className="font-medium text-slate-900 dark:text-slate-100">
+          <p className="font-medium text-ink">
             {solicitacao.nomeCidade} - {solicitacao.uf}
           </p>
-          <p className="text-sm text-slate-600 dark:text-slate-400">
+          <p className="text-sm text-ink-muted">
             {t("solicitadoPor")} {solicitacao.nomeSolicitante} · {solicitacao.email}
           </p>
-          <p className="text-xs text-slate-400 dark:text-slate-500">
+          <p className="text-xs text-ink-muted">
             {t("enviadoEm")} {formatarDataHora(solicitacao.createdAt, locale)}
           </p>
 
@@ -122,26 +122,26 @@ export default async function SolicitacoesCidadePage({
 
       {decididasRecentemente.length > 0 && (
         <div className="flex flex-col gap-2">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+          <h2 className="text-lg font-semibold text-ink">
             {t("decididasRecentemente")} {totalDecididas > 0 && `(${totalDecididas})`}
           </h2>
           {decididasRecentemente.map((solicitacao) => (
             <div key={solicitacao.id} className={`flex flex-col gap-1 ${cartao}`}>
               <div className="flex items-center justify-between gap-2">
-                <p className="font-medium text-slate-900 dark:text-slate-100">
+                <p className="font-medium text-ink">
                   {solicitacao.nomeCidade} - {solicitacao.uf}
                 </p>
                 <Selo tom={solicitacao.status === "APROVADA" ? "sucesso" : "erro"}>
                   {solicitacao.status === "APROVADA" ? t("aprovada") : t("rejeitada")}
                 </Selo>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
+              <p className="text-xs text-ink-muted">
                 {solicitacao.email} · {t("por")}{" "}
                 {solicitacao.analisadoPor?.name ?? solicitacao.analisadoPor?.email ?? "—"} {t("em")}{" "}
                 {solicitacao.analisadoEm ? formatarDataHora(solicitacao.analisadoEm, locale) : "—"}
               </p>
               {solicitacao.motivoRejeicao && (
-                <p className="text-sm italic text-slate-600 dark:text-slate-400">
+                <p className="text-sm italic text-ink-muted">
                   “{solicitacao.motivoRejeicao}”
                 </p>
               )}

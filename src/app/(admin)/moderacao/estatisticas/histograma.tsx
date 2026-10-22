@@ -52,14 +52,14 @@ export function HistogramaPontuacoes({
       descricao={t("scoreDescricao", { revisao: num(LIMITE_REVISAO), reprovacao: num(LIMITE_REPROVACAO) })}
       lateral={
         mediana !== null && (
-          <p className="text-right text-sm text-slate-600 dark:text-slate-400">
+          <p className="text-right text-sm text-ink-muted">
             {t("scoreMediana", { valor: num(mediana) })}
           </p>
         )
       }
     >
       <div role="group" aria-label={t("scoreTitulo")} className="flex gap-3">
-        <div aria-hidden className="relative h-36 w-8 shrink-0 font-mono text-[11px] tabular-nums text-slate-400 dark:text-slate-500">
+        <div aria-hidden className="relative h-36 w-8 shrink-0 font-mono text-[11px] tabular-nums text-ink-muted">
           <span className="absolute top-0 right-0 -translate-y-1/2">{teto}</span>
           <span className="absolute top-1/2 right-0 -translate-y-1/2">{teto / 2}</span>
           <span className="absolute right-0 bottom-0 translate-y-1/2">0</span>
@@ -67,16 +67,16 @@ export function HistogramaPontuacoes({
 
         <div className="min-w-0 flex-1">
           <div className="relative h-36">
-            <div aria-hidden className="absolute inset-x-0 top-0 border-t border-slate-200 dark:border-slate-800" />
-            <div aria-hidden className="absolute inset-x-0 top-1/2 border-t border-slate-200 dark:border-slate-800" />
-            <div aria-hidden className="absolute inset-x-0 bottom-0 border-t border-slate-300 dark:border-slate-700" />
+            <div aria-hidden className="absolute inset-x-0 top-0 border-t border-line" />
+            <div aria-hidden className="absolute inset-x-0 top-1/2 border-t border-line" />
+            <div aria-hidden className="absolute inset-x-0 bottom-0 border-t border-line-strong" />
 
             {/* Cortes que o pipeline usa pra decidir. */}
             {[LIMITE_REVISAO, LIMITE_REPROVACAO].map((corte) => (
               <div
                 key={corte}
                 aria-hidden
-                className="absolute inset-y-0 border-l border-dashed border-slate-400 dark:border-slate-500"
+                className="absolute inset-y-0 border-l border-dashed border-ink-faint"
                 style={{ left: `${corte * 100}%` }}
               />
             ))}
@@ -99,7 +99,7 @@ export function HistogramaPontuacoes({
                     )}
                     <div
                       aria-hidden
-                      className={`pointer-events-none absolute z-20 mb-1.5 hidden rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs whitespace-nowrap text-white shadow-lg group-hover:block dark:bg-slate-100 dark:text-slate-900 ${
+                      className={`pointer-events-none absolute z-20 mb-1.5 hidden rounded-lg bg-ink px-2.5 py-1.5 text-xs whitespace-nowrap text-paper shadow-lg group-hover:block ${
                         indice < faixas.length * 0.25
                           ? "left-0"
                           : indice > faixas.length * 0.75
@@ -118,7 +118,7 @@ export function HistogramaPontuacoes({
           </div>
 
           {/* Eixo horizontal: só 0, os dois cortes e 1 (marcas seletivas). */}
-          <div aria-hidden className="relative mt-1.5 h-4 font-mono text-[11px] tabular-nums text-slate-500 dark:text-slate-400">
+          <div aria-hidden className="relative mt-1.5 h-4 font-mono text-[11px] tabular-nums text-ink-muted">
             {[
               { valor: 0, deslocamento: "" },
               { valor: LIMITE_REVISAO, deslocamento: "-translate-x-1/2" },
@@ -136,7 +136,7 @@ export function HistogramaPontuacoes({
             {porZona.map(({ chave, rotulo, quantidade, fracao }, i) => (
               <li
                 key={chave}
-                className="flex min-w-0 flex-col gap-0.5 text-slate-600 dark:text-slate-400"
+                className="flex min-w-0 flex-col gap-0.5 text-ink-muted"
                 // Largura proporcional ao trecho da escala que a zona cobre,
                 // pra ficar embaixo das barras dela.
                 style={{
@@ -144,7 +144,7 @@ export function HistogramaPontuacoes({
                 }}
               >
                 <span aria-hidden className={`mb-1 h-0.5 w-full ${COR_ZONA[chave]}`} />
-                <span className="font-medium text-slate-800 dark:text-slate-200">{t(rotulo)}</span>
+                <span className="font-medium text-ink-2">{t(rotulo)}</span>
                 <span className="font-mono tabular-nums">
                   {quantidade} · {formatarPorcentagem(fracao, locale)}
                 </span>

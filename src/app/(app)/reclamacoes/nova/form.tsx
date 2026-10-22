@@ -8,7 +8,7 @@ import { Aviso } from "@/components/ui/aviso";
 import { SeletorCidade } from "@/components/formulario/cidade-combobox";
 import { botaoPrimario, campoInput, campoInputInvalido } from "@/lib/estilos";
 
-import { Campo, descritoPor } from "./campo";
+import { Campo, descritoPor } from "@/components/formulario/campo";
 import { FotosReclamacao } from "./fotos";
 import {
   DepoisDeEnviar,
@@ -159,8 +159,8 @@ export function NovaReclamacaoForm({
       aria-hidden
       className={`font-mono text-xs tabular-nums ${
         atual > 0 && atual < minimo
-          ? "text-amber-700 dark:text-amber-400"
-          : "text-slate-500 dark:text-slate-400"
+          ? "text-warn-ink"
+          : "text-ink-muted"
       }`}
     >
       {atual}/{maximo}
@@ -170,8 +170,8 @@ export function NovaReclamacaoForm({
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_17rem] lg:items-start">
       <form ref={formRef} onSubmit={enviar} className="flex min-w-0 flex-col gap-5">
-        <details className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm lg:hidden dark:border-slate-800 dark:bg-slate-900">
-          <summary className="cursor-pointer text-sm font-medium text-slate-800 dark:text-slate-200">
+        <details className="rounded-lg border border-line bg-surface px-4 py-3 lg:hidden">
+          <summary className="cursor-pointer text-sm font-medium text-ink-2">
             {t("dicasTitulo")}
           </summary>
           <div className="pt-3">
@@ -286,13 +286,13 @@ export function NovaReclamacaoForm({
                 />
                 <span aria-hidden className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
                   {statusCep === "buscando" && (
-                    <LoaderCircle className="h-4 w-4 animate-spin text-slate-400" />
+                    <LoaderCircle className="h-4 w-4 animate-spin text-ink-muted" />
                   )}
                   {statusCep === "preenchido" && (
-                    <Check className="h-4 w-4 text-green-600 dark:text-green-400" strokeWidth={3} />
+                    <Check className="h-4 w-4 text-ok-ink" strokeWidth={3} />
                   )}
                   {statusCep === "nao-encontrado" && (
-                    <CircleAlert className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                    <CircleAlert className="h-4 w-4 text-warn-ink" />
                   )}
                 </span>
               </div>
@@ -380,10 +380,10 @@ export function NovaReclamacaoForm({
           descricao={t("confirmacaoDesc")}
         >
           <label
-            className={`flex cursor-pointer items-start gap-3 rounded-lg border px-3.5 py-3 text-sm transition-colors has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-primary ${
+            className={`flex cursor-pointer items-start gap-3 rounded-lg border px-3.5 py-3 text-sm transition-colors has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-brand ${
               erros.declaracaoVeracidade
-                ? "border-red-400 bg-red-50/50 dark:border-red-700 dark:bg-red-950/20"
-                : "border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900/50"
+                ? "border-danger-ink/60 bg-danger-soft/50"
+                : "border-line bg-sunken/60"
             }`}
           >
             <input
@@ -393,14 +393,14 @@ export function NovaReclamacaoForm({
               checked={declaracao}
               onChange={(evento) => setDeclaracao(evento.target.checked)}
               aria-invalid={erros.declaracaoVeracidade ? true : undefined}
-              className="mt-0.5 h-4 w-4 shrink-0 accent-blue-700 dark:accent-blue-400"
+              className="mt-0.5 h-4 w-4 shrink-0 accent-brand"
             />
-            <span className="leading-relaxed text-slate-700 dark:text-slate-300">
+            <span className="leading-relaxed text-ink-2">
               {t("declaracaoVeracidade")}
             </span>
           </label>
           {erros.declaracaoVeracidade && (
-            <p role="alert" className="flex items-start gap-1.5 text-sm text-red-700 dark:text-red-400">
+            <p role="alert" className="flex items-start gap-1.5 text-sm text-danger-ink">
               <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
               {erros.declaracaoVeracidade[0]}
             </p>
@@ -424,7 +424,7 @@ export function NovaReclamacaoForm({
                 </>
               )}
             </button>
-            <p role="status" className="text-center text-xs text-slate-500 dark:text-slate-400">
+            <p role="status" className="text-center text-xs text-ink-muted">
               {pending ? t("enviandoAviso") : t("avisoModeracao")}
             </p>
           </div>

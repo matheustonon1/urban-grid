@@ -120,7 +120,7 @@ export default async function ReclamacoesPublicasPage({
         </EstadoVazio>
       ) : (
         <>
-          <p className="text-sm text-slate-500 dark:text-slate-400" aria-live="polite">
+          <p className="text-sm text-ink-muted" aria-live="polite">
             {t("resultados", { count: totalReclamacoes })}
           </p>
           <ul className="flex flex-col gap-3">

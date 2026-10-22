@@ -17,15 +17,15 @@ type Pontuacao = {
 };
 
 const COR_BARRA = {
-  ok: "bg-slate-400 dark:bg-slate-500",
-  atencao: "bg-amber-500",
-  alto: "bg-red-600 dark:bg-red-500",
+  ok: "bg-ink-faint",
+  atencao: "bg-warn-ink",
+  alto: "bg-danger-ink",
 } as const;
 
 const COR_VALOR = {
-  ok: "text-slate-500 dark:text-slate-400",
-  atencao: "font-semibold text-amber-700 dark:text-amber-400",
-  alto: "font-semibold text-red-700 dark:text-red-400",
+  ok: "text-ink-muted",
+  atencao: "font-semibold text-warn-ink",
+  alto: "font-semibold text-danger-ink",
 } as const;
 
 export function PontuacoesIA({ itens }: { itens: Pontuacao[] }) {
@@ -42,12 +42,12 @@ export function PontuacoesIA({ itens }: { itens: Pontuacao[] }) {
             <div
               className={`flex items-baseline justify-between gap-2 ${destaque ? "text-sm font-medium" : "text-xs"}`}
             >
-              <span className="text-slate-600 dark:text-slate-300">{rotulo}</span>
+              <span className="text-ink-2">{rotulo}</span>
               <span className={`font-mono tabular-nums ${COR_VALOR[n]}`}>{valor.toFixed(2)}</span>
             </div>
             <div
               aria-hidden
-              className={`rounded-full bg-slate-200/80 dark:bg-slate-800 ${destaque ? "h-2.5" : "h-1.5"}`}
+              className={`rounded-full bg-sunken ${destaque ? "h-2.5" : "h-1.5"}`}
             >
               <div
                 className={`h-full rounded-full ${COR_BARRA[n]}`}
@@ -78,7 +78,7 @@ export function ChipsPontuacao({
   });
 
   if (alertas.length === 0) {
-    return <p className="text-xs text-slate-500 dark:text-slate-400">{vazio}</p>;
+    return <p className="text-xs text-ink-muted">{vazio}</p>;
   }
 
   return (
@@ -88,8 +88,8 @@ export function ChipsPontuacao({
           key={rotulo}
           className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-medium ${
             n === "alto"
-              ? "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400"
-              : "bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-400"
+              ? "bg-danger-soft text-danger-ink"
+              : "bg-warn-soft text-warn-ink"
           }`}
         >
           {rotulo}

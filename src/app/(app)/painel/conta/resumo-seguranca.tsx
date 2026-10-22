@@ -12,7 +12,7 @@ function Situacao({ ok, children }: { ok: boolean; children: string }) {
   return (
     <span
       className={`inline-flex items-center gap-1.5 font-medium ${
-        ok ? "text-green-700 dark:text-green-400" : "text-amber-700 dark:text-amber-400"
+        ok ? "text-ok-ink" : "text-warn-ink"
       }`}
     >
       <Icone className="h-4 w-4 shrink-0" aria-hidden />
@@ -24,8 +24,8 @@ function Situacao({ ok, children }: { ok: boolean; children: string }) {
 function Linha({ rotulo, children }: { rotulo: string; children: ReactNode }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-2.5">
-      <dt className="text-slate-600 dark:text-slate-400">{rotulo}</dt>
-      <dd className="text-slate-900 dark:text-slate-100">{children}</dd>
+      <dt className="text-ink-muted">{rotulo}</dt>
+      <dd className="text-ink">{children}</dd>
     </div>
   );
 }
@@ -45,11 +45,11 @@ export async function ResumoSeguranca({
   return (
     <section className={`flex flex-col gap-3 ${cartao}`}>
       <div className="flex items-center gap-2">
-        <Shield className="h-5 w-5 text-slate-400 dark:text-slate-500" aria-hidden />
-        <h2 className="font-semibold text-slate-900 dark:text-slate-100">{t("segurancaConta")}</h2>
+        <Shield className="h-5 w-5 text-ink-muted" aria-hidden />
+        <h2 className="font-semibold text-ink">{t("segurancaConta")}</h2>
       </div>
 
-      <dl className="flex flex-col divide-y divide-slate-100 text-sm dark:divide-slate-800">
+      <dl className="flex flex-col divide-y divide-line text-sm">
         <Linha rotulo={t("duasEtapas")}>
           <Situacao ok={totpAtivo}>{totpAtivo ? t("ativada") : t("desativada")}</Situacao>
         </Linha>
@@ -67,8 +67,8 @@ export async function ResumoSeguranca({
 
       {!emailVerificado && <BotaoReenviarVerificacao />}
 
-      <div className="flex flex-col gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
-        <p className="text-sm text-slate-500 dark:text-slate-400">{t("encerrarSessoesDesc")}</p>
+      <div className="flex flex-col gap-2 border-t border-line pt-3">
+        <p className="text-sm text-ink-muted">{t("encerrarSessoesDesc")}</p>
         <BotaoEncerrarSessoes />
       </div>
     </section>

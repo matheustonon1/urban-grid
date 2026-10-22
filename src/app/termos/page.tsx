@@ -11,7 +11,7 @@ export default async function TermosPage() {
 
   return (
     <main className={`${containerPagina} max-w-2xl`}>
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+      <h1 className="text-2xl font-bold tracking-tight text-ink">
         {t("termos")}
       </h1>
 

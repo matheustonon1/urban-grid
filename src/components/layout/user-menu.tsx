@@ -38,20 +38,16 @@ function ItemMenu({
     <Link
       href={href}
       onClick={onClick}
-      className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+      className="flex items-center gap-2.5 px-3 py-2 text-sm text-ink-2 transition-colors hover:bg-sunken hover:text-ink"
     >
-      <Icone className="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" aria-hidden />
+      <Icone className="h-4 w-4 shrink-0 text-ink-muted" aria-hidden />
       {children}
     </Link>
   );
 }
 
 function TituloSecao({ children }: { children: string }) {
-  return (
-    <p className="px-3 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500">
-      {children}
-    </p>
-  );
+  return <p className="kicker px-3 pt-3 pb-1">{children}</p>;
 }
 
 export function UserMenu({
@@ -80,18 +76,18 @@ export function UserMenu({
         type="button"
         onClick={() => setAberto((valor) => !valor)}
         aria-expanded={aberto}
-        className="flex items-center gap-2 rounded-lg py-1 pl-1 pr-2 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+        className="flex items-center gap-2 rounded-md py-1 pr-2 pl-1 text-sm text-ink-2 transition-colors hover:bg-sunken"
       >
-        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-semibold text-white dark:bg-blue-600">
+        <span className="flex h-8 w-8 items-center justify-center rounded-md bg-brand text-xs font-bold text-on-brand">
           {iniciais}
         </span>
-        <span className="hidden max-w-40 truncate sm:inline">{nome}</span>
-        <ChevronDown className="h-4 w-4 text-slate-400 dark:text-slate-500" aria-hidden />
+        <span className="hidden max-w-40 truncate font-medium sm:inline">{nome}</span>
+        <ChevronDown className="h-4 w-4 text-ink-muted" aria-hidden />
       </button>
 
       {aberto && (
-        <div className="animate-pop-in absolute right-0 z-10 mt-1 w-64 origin-top-right rounded-lg border border-slate-200 bg-white py-1 shadow-md dark:border-slate-700 dark:bg-slate-900">
-          <p className="truncate px-3 py-2 text-xs text-slate-400 dark:text-slate-500">{email}</p>
+        <div className="animate-pop-in absolute right-0 z-10 mt-2 w-64 origin-top-right rounded-lg border border-line bg-surface py-1 shadow-[0_18px_40px_-16px_rgb(14_21_32/0.35)]">
+          <p className="truncate px-3 py-2 text-xs text-ink-muted">{email}</p>
 
           <ItemMenu href="/painel" icone={LayoutDashboard} onClick={fechar}>
             {t("painel")}
@@ -110,7 +106,7 @@ export function UserMenu({
 
           {ehModerador && (
             <>
-              <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+              <div className="my-1 border-t border-line" />
               <TituloSecao>{t("moderacao")}</TituloSecao>
               <ItemMenu href="/moderacao" icone={ClipboardList} onClick={fechar}>
                 {t("filaModeracao")}
@@ -132,7 +128,7 @@ export function UserMenu({
 
           {ehAdmin && (
             <>
-              <div className="my-1 border-t border-slate-100 dark:border-slate-800" />
+              <div className="my-1 border-t border-line" />
               <TituloSecao>{t("administracao")}</TituloSecao>
               <ItemMenu href="/solicitacoes-orgao" icone={Building2} onClick={fechar}>
                 {t("solicitacoesOrgao")}
@@ -143,10 +139,10 @@ export function UserMenu({
             </>
           )}
 
-          <form action={sair} className="mt-1 border-t border-slate-100 dark:border-slate-800">
+          <form action={sair} className="mt-1 border-t border-line">
             <button
               type="submit"
-              className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm text-red-600 hover:bg-slate-50 dark:text-red-400 dark:hover:bg-slate-800"
+              className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm font-medium text-danger-ink transition-colors hover:bg-danger-soft"
             >
               <LogOut className="h-4 w-4 shrink-0" aria-hidden />
               {t("sair")}

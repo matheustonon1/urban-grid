@@ -35,8 +35,8 @@ export function FormularioNovaAssinatura({ categorias }: { categorias: Categoria
 
   return (
     <form action={action} className={`flex flex-col gap-3 ${cartao}`}>
-      <h2 className="font-semibold text-slate-900 dark:text-slate-100">{t("nova")}</h2>
-      <p className="text-sm text-slate-500 dark:text-slate-400">{t("novaDescricao")}</p>
+      <h2 className="font-semibold text-ink">{t("nova")}</h2>
+      <p className="text-sm text-ink-muted">{t("novaDescricao")}</p>
 
       <div className="flex flex-wrap gap-2">
         <div className="min-w-48 flex-1">
@@ -52,7 +52,7 @@ export function FormularioNovaAssinatura({ categorias }: { categorias: Categoria
         </div>
       </div>
 
-      {state?.erro && <p className="text-sm text-red-600 dark:text-red-400">{state.erro}</p>}
+      {state?.erro && <p className="text-sm text-danger-ink">{state.erro}</p>}
 
       <button type="submit" disabled={pending} className={`${botaoPrimario} w-fit`}>
         {t("assinar")}

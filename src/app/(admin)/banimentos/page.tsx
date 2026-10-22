@@ -65,10 +65,10 @@ export default async function BanimentosPage({ searchParams }: PageProps<"/banim
           >
             <AvatarIniciais nome={usuario.name ?? usuario.email} />
             <div className="min-w-0 flex-1">
-              <p className="font-medium text-slate-900 dark:text-slate-100">
+              <p className="font-medium text-ink">
                 {usuario.name ?? usuario.email}
               </p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-ink-muted">
                 {permanente
                   ? t("banidoPermanente")
                   : t("banidoAte", { data: formatarDataHora(usuario.banidoAte!, locale) })}

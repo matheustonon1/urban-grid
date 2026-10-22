@@ -117,11 +117,11 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
               >
                 {tSelo(classificacao.chave)}
               </span>
-              <span className="text-sm text-slate-500 dark:text-slate-400">
+              <span className="text-sm text-ink-muted">
                 {t("suaReputacao")}
               </span>
             </div>
-            <Link href={`/orgaos/${orgao.id}`} className="text-sm text-primary hover:underline">
+            <Link href={`/orgaos/${orgao.id}`} className="text-sm text-brand hover:underline">
               {t("verComoOsCidadaosVeem")}
             </Link>
           </div>
@@ -150,7 +150,7 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
       )}
 
       <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+        <h2 className="text-lg font-semibold text-ink">
           {t("pendentesDeResposta")} {totalPendentes > 0 && `(${totalPendentes})`}
         </h2>
 
@@ -160,12 +160,12 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
 
         {pendentes.map((reclamacao) => (
           <div key={reclamacao.id} className={`flex flex-col gap-2 ${cartao}`}>
-            <p className="font-medium text-slate-900 dark:text-slate-100">{reclamacao.titulo}</p>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <p className="font-medium text-ink">{reclamacao.titulo}</p>
+            <p className="text-sm text-ink-muted">
               <span className="font-mono text-xs">{reclamacao.protocolo}</span> ·{" "}
               {reclamacao.categoria.nome} · {reclamacao.endereco}
             </p>
-            <p className="text-slate-700 dark:text-slate-300">{reclamacao.descricao}</p>
+            <p className="text-ink-2">{reclamacao.descricao}</p>
 
             <form
               action={responderReclamacao.bind(null, reclamacao.id, reclamacao.protocolo)}
@@ -204,7 +204,7 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
       </div>
 
       <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+        <h2 className="text-lg font-semibold text-ink">
           {t("historicoRespostas")} {totalHistorico > 0 && `(${totalHistorico})`}
         </h2>
 
@@ -216,17 +216,17 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
           <Link
             key={resposta.id}
             href={`/reclamacoes/${resposta.reclamacao.protocolo}`}
-            className={`flex flex-col gap-2 ${cartao} transition hover:border-primary hover:-translate-y-0.5 hover:shadow-md`}
+            className={`flex flex-col gap-2 ${cartao} transition-colors hover:border-ink-faint`}
           >
             <div className="flex items-center justify-between gap-2">
-              <p className="font-medium text-slate-900 dark:text-slate-100">
+              <p className="font-medium text-ink">
                 {resposta.reclamacao.titulo}
               </p>
               <StatusBadge status={resposta.reclamacao.status} />
             </div>
-            <p className="text-sm text-slate-700 dark:text-slate-300">{resposta.texto}</p>
+            <p className="text-sm text-ink-2">{resposta.texto}</p>
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-xs text-slate-400 dark:text-slate-500">
+              <p className="text-xs text-ink-muted">
                 <span className="font-mono">{resposta.reclamacao.protocolo}</span> ·{" "}
                 {resposta.createdAt.toLocaleDateString(locale)}
               </p>
@@ -234,8 +234,8 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
                 <p
                   className={`text-xs font-medium ${
                     resposta.reclamacao.avaliacao.resolvido
-                      ? "text-green-700 dark:text-green-400"
-                      : "text-red-600 dark:text-red-400"
+                      ? "text-ok-ink"
+                      : "text-danger-ink"
                   }`}
                 >
                   {resposta.reclamacao.avaliacao.resolvido
@@ -244,7 +244,7 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
                   ({resposta.reclamacao.avaliacao.nota}/5)
                 </p>
               ) : (
-                <p className="text-xs text-slate-400 dark:text-slate-500">
+                <p className="text-xs text-ink-muted">
                   {t("aguardandoAvaliacao")}
                 </p>
               )}

@@ -54,8 +54,8 @@ export function GraficoVolume({
             : "volumeDescricaoMes"
       )}
       lateral={
-        <p className="text-right text-sm text-slate-600 dark:text-slate-400">
-          <span className="font-mono font-medium tabular-nums text-slate-900 dark:text-slate-100">
+        <p className="text-right text-sm text-ink-muted">
+          <span className="font-mono font-medium tabular-nums text-ink">
             {t("analises", { count: totalGeral })}
           </span>
           {pico.total > 0 && (
@@ -73,7 +73,7 @@ export function GraficoVolume({
       <LegendaDecisoes comFalhas={temFalhas} />
 
       <div role="group" aria-label={t("volumeTitulo")} className="flex gap-3">
-        <div aria-hidden className="relative mt-5 h-44 w-8 shrink-0 font-mono text-[11px] tabular-nums text-slate-400 dark:text-slate-500">
+        <div aria-hidden className="relative mt-5 h-44 w-8 shrink-0 font-mono text-[11px] tabular-nums text-ink-muted">
           <span className="absolute top-0 right-0 -translate-y-1/2">{teto}</span>
           <span className="absolute top-1/2 right-0 -translate-y-1/2">{teto / 2}</span>
           <span className="absolute right-0 bottom-0 translate-y-1/2">0</span>
@@ -82,9 +82,9 @@ export function GraficoVolume({
         <div className="min-w-0 flex-1">
           <div className="relative mt-5 h-44">
             {/* Linhas de grade: fio de 1px sólido, mais fraco que os dados. */}
-            <div aria-hidden className="absolute inset-x-0 top-0 border-t border-slate-200 dark:border-slate-800" />
-            <div aria-hidden className="absolute inset-x-0 top-1/2 border-t border-slate-200 dark:border-slate-800" />
-            <div aria-hidden className="absolute inset-x-0 bottom-0 border-t border-slate-300 dark:border-slate-700" />
+            <div aria-hidden className="absolute inset-x-0 top-0 border-t border-line" />
+            <div aria-hidden className="absolute inset-x-0 top-1/2 border-t border-line" />
+            <div aria-hidden className="absolute inset-x-0 bottom-0 border-t border-line-strong" />
 
             <div className="absolute inset-0 flex items-end gap-0.5">
               {buckets.map((bucket, indice) => {
@@ -104,7 +104,7 @@ export function GraficoVolume({
                     className="group relative flex h-full min-w-0 flex-1 items-end justify-center"
                   >
                     {bucket.total === 0 ? (
-                      <span aria-hidden className="h-px w-full max-w-6 bg-slate-300 dark:bg-slate-600" />
+                      <span aria-hidden className="h-px w-full max-w-6 bg-line-strong" />
                     ) : (
                       <div
                         className="relative flex w-full max-w-6 flex-col gap-0.5"
@@ -113,7 +113,7 @@ export function GraficoVolume({
                         {bucket === pico && (
                           <span
                             aria-hidden
-                            className="absolute bottom-full left-1/2 mb-0.5 -translate-x-1/2 font-mono text-[11px] font-medium tabular-nums text-slate-700 dark:text-slate-300"
+                            className="absolute bottom-full left-1/2 mb-0.5 -translate-x-1/2 font-mono text-[11px] font-medium tabular-nums text-ink-2"
                           >
                             {bucket.total}
                           </span>
@@ -130,7 +130,7 @@ export function GraficoVolume({
 
                     <div
                       aria-hidden
-                      className={`pointer-events-none absolute z-20 mb-1.5 hidden rounded-lg bg-slate-900 px-2.5 py-1.5 text-xs whitespace-nowrap text-white shadow-lg group-hover:block dark:bg-slate-100 dark:text-slate-900 ${posicaoBalao(indice, buckets.length)}`}
+                      className={`pointer-events-none absolute z-20 mb-1.5 hidden rounded-lg bg-ink px-2.5 py-1.5 text-xs whitespace-nowrap text-paper shadow-lg group-hover:block ${posicaoBalao(indice, buckets.length)}`}
                       style={{ bottom: bucket.total === 0 ? "0" : `${(bucket.total / teto) * 100}%` }}
                     >
                       {linhas.map((linha, i) => (
@@ -147,7 +147,7 @@ export function GraficoVolume({
 
           <div
             aria-hidden
-            className="mt-2 flex justify-between font-mono text-[11px] tabular-nums text-slate-500 dark:text-slate-400"
+            className="mt-2 flex justify-between font-mono text-[11px] tabular-nums text-ink-muted"
           >
             <span>{rotulo(buckets[0])}</span>
             {buckets.length > 6 && <span>{rotulo(meio)}</span>}

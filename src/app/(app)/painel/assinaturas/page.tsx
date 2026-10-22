@@ -36,26 +36,26 @@ export default async function AssinaturasPage() {
       <FormularioNovaAssinatura categorias={categoriasAtivas} />
 
       <div className="flex flex-col gap-2">
-        <h2 className="font-semibold text-slate-900 dark:text-slate-100">{t("suasAssinaturas")}</h2>
+        <h2 className="font-semibold text-ink">{t("suasAssinaturas")}</h2>
 
         {assinaturas.length === 0 && (
           <EstadoVazio icone={Rss} titulo={t("nenhumaAssinatura")} />
         )}
 
         {assinaturas.length > 0 && (
-          <ul className={`divide-y divide-slate-200 overflow-hidden p-0 dark:divide-slate-800 ${cartao}`}>
+          <ul className={`divide-y divide-line overflow-hidden p-0 ${cartao}`}>
             {assinaturas.map((assinatura) => (
               <li key={assinatura.id} className="flex items-center justify-between gap-3 px-4 py-3.5">
                 <div className="flex flex-col">
-                  <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                  <span className="text-sm font-medium text-ink">
                     {assinatura.cidade.nome} - {assinatura.cidade.estado.uf}
                   </span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                  <span className="text-xs text-ink-muted">
                     {assinatura.categoria?.nome ?? t("todasCategorias")}
                   </span>
                 </div>
                 <form action={cancelarAssinatura.bind(null, assinatura.id)}>
-                  <button type="submit" className="rounded-md px-2 py-1 text-sm font-medium text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40">
+                  <button type="submit" className="rounded-md px-2 py-1 text-sm font-medium text-danger-ink hover:bg-danger-soft/40">
                     {t("cancelar")}
                   </button>
                 </form>

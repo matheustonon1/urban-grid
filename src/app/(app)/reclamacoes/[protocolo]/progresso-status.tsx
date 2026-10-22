@@ -34,7 +34,7 @@ export async function ProgressoStatus({ status }: { status: StatusReclamacao }) 
               <span
                 aria-hidden
                 className={`absolute top-3 left-1/2 h-0.5 w-full ${
-                  i < indiceAtual ? "bg-primary" : "bg-slate-200 dark:bg-slate-700"
+                  i < indiceAtual ? "bg-brand" : "bg-line"
                 }`}
               />
             )}
@@ -42,23 +42,23 @@ export async function ProgressoStatus({ status }: { status: StatusReclamacao }) 
               aria-hidden
               className={`relative z-10 flex h-6 w-6 items-center justify-center rounded-full border-2 ${
                 concluida
-                  ? "border-primary bg-primary text-white dark:text-slate-950"
+                  ? "border-brand bg-brand text-on-brand"
                   : atual
-                    ? "border-primary bg-white dark:bg-slate-900"
-                    : "border-slate-300 bg-white dark:border-slate-600 dark:bg-slate-900"
+                    ? "border-brand bg-surface"
+                    : "border-line-strong bg-surface"
               }`}
             >
               {concluida ? (
                 <Check className="h-3.5 w-3.5" strokeWidth={3} />
               ) : atual ? (
-                <span className="h-2 w-2 rounded-full bg-primary" />
+                <span className="h-2 w-2 rounded-full bg-brand" />
               ) : null}
             </span>
             <span
               className={`text-xs ${
                 concluida || atual
-                  ? "font-medium text-slate-900 dark:text-slate-100"
-                  : "text-slate-400 dark:text-slate-500"
+                  ? "font-medium text-ink"
+                  : "text-ink-muted"
               }`}
             >
               {tStatus(etapa)}

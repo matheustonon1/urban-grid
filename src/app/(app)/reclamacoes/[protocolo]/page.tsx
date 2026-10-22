@@ -198,9 +198,9 @@ export default async function ReclamacaoPage({
     <main className={containerLargo}>
       <header className="flex flex-col gap-3">
         <nav aria-label={t("navegacaoRotulo")}>
-          <ol className="flex flex-wrap items-center gap-1 text-sm text-slate-500 dark:text-slate-400">
+          <ol className="flex flex-wrap items-center gap-1 text-sm text-ink-muted">
             <li>
-              <Link href="/reclamacoes" className="hover:text-primary hover:underline">
+              <Link href="/reclamacoes" className="hover:text-brand hover:underline">
                 {t("reclamacoesRotulo")}
               </Link>
             </li>
@@ -208,25 +208,25 @@ export default async function ReclamacaoPage({
             <li>
               <Link
                 href={`/cidades/${reclamacao.cidade.slug}`}
-                className="hover:text-primary hover:underline"
+                className="hover:text-brand hover:underline"
               >
                 {reclamacao.cidade.nome}
               </Link>
             </li>
           </ol>
         </nav>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl dark:text-slate-100">
+        <h1 className="text-2xl font-bold tracking-tight text-ink sm:text-3xl">
           {reclamacao.titulo}
         </h1>
-        <div className="flex flex-wrap items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+        <div className="flex flex-wrap items-center gap-2 text-sm text-ink-muted">
           <StatusBadge status={reclamacao.status} />
           {/* Borda tracejada + mono, tipo canhoto de ticket - separa
               visualmente "isto é um código de registro" de "isto é um
               estado" (StatusBadge, ao lado), em vez dos dois competirem
               pelo mesmo tratamento de pílula arredondada. */}
-          <span className="inline-flex items-center gap-1.5 rounded border border-dashed border-slate-300 px-2 py-0.5 dark:border-slate-700">
-            <span className="text-xs text-slate-400 dark:text-slate-500">{t("protocolo")}</span>
-            <span className="font-mono text-xs tracking-tight text-slate-600 dark:text-slate-400">
+          <span className="inline-flex items-center gap-1.5 rounded border border-dashed border-line-strong px-2 py-0.5">
+            <span className="text-xs text-ink-muted">{t("protocolo")}</span>
+            <span className="font-mono text-xs tracking-tight text-ink-muted">
               {reclamacao.protocolo}
             </span>
           </span>
@@ -265,7 +265,7 @@ export default async function ReclamacaoPage({
 
         <div className="flex min-w-0 flex-col gap-8">
           <section className="flex flex-col gap-4">
-            <p className="text-base leading-relaxed whitespace-pre-line text-slate-800 dark:text-slate-200">
+            <p className="text-base leading-relaxed whitespace-pre-line text-ink-2">
               {reclamacao.descricao}
             </p>
 
@@ -283,7 +283,7 @@ export default async function ReclamacaoPage({
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label={t("abrirFoto", { numero: indice + 1 })}
-                        className="group relative block aspect-square overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700"
+                        className="group relative block aspect-square overflow-hidden rounded-lg border border-line"
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element -- imagem externa (Vercel Blob), sem domínio fixo pra configurar no next/image */}
                         <img
@@ -291,7 +291,7 @@ export default async function ReclamacaoPage({
                           alt=""
                           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                         />
-                        <span className="absolute right-2 bottom-2 flex h-7 w-7 items-center justify-center rounded-full bg-slate-900/70 text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                        <span className="absolute right-2 bottom-2 flex h-7 w-7 items-center justify-center rounded-full bg-night/70 text-chalk opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
                           <ExternalLink className="h-3.5 w-3.5" aria-hidden />
                         </span>
                       </a>
@@ -311,7 +311,7 @@ export default async function ReclamacaoPage({
                 action={contestarRejeicao.bind(null, reclamacao.id, protocolo)}
                 className={`flex flex-col gap-2 ${painelSuave}`}
               >
-                <p className="text-sm text-slate-600 dark:text-slate-400">{t("contestarDesc")}</p>
+                <p className="text-sm text-ink-muted">{t("contestarDesc")}</p>
                 <textarea
                   name="texto"
                   required
@@ -347,7 +347,7 @@ export default async function ReclamacaoPage({
 
           {linhaDoTempo.length > 1 && (
             <section className="flex flex-col gap-4">
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+              <h2 className="text-lg font-semibold text-ink">
                 {t("linhaDoTempo")}
               </h2>
               <LinhaDoTempoVisual eventos={linhaDoTempo} locale={locale} />
@@ -359,7 +359,7 @@ export default async function ReclamacaoPage({
               action={responderReclamacao.bind(null, reclamacao.id, protocolo)}
               className={`flex flex-col gap-2 ${cartao}`}
             >
-              <h2 className="font-semibold text-slate-900 dark:text-slate-100">
+              <h2 className="font-semibold text-ink">
                 {t("responderComoOrgao")}
               </h2>
               <textarea
@@ -387,7 +387,7 @@ export default async function ReclamacaoPage({
               action={avaliarReclamacao.bind(null, reclamacao.id, protocolo)}
               className={`flex flex-col gap-2 ${cartao}`}
             >
-              <h2 className="font-semibold text-slate-900 dark:text-slate-100">
+              <h2 className="font-semibold text-ink">
                 {t("foiRealmenteResolvido")}
               </h2>
               <select name="nota" required defaultValue="" className={campoInput}>
@@ -400,7 +400,7 @@ export default async function ReclamacaoPage({
                   </option>
                 ))}
               </select>
-              <div className="flex gap-4 text-sm text-slate-700 dark:text-slate-300">
+              <div className="flex gap-4 text-sm text-ink-2">
                 <label className="flex items-center gap-1">
                   <input type="radio" name="resolvido" value="true" required />
                   {t("simFoiResolvido")}
@@ -423,7 +423,7 @@ export default async function ReclamacaoPage({
           )}
 
           <section className="flex flex-col gap-4">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+            <h2 className="text-lg font-semibold text-ink">
               {t("comentarios")} {comentarios.length > 0 && `(${comentarios.length})`}
             </h2>
 
@@ -446,10 +446,10 @@ export default async function ReclamacaoPage({
                 </button>
               </form>
             ) : (
-              <p className="text-sm text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-ink-muted">
                 <Link
                   href={`/login?callbackUrl=${encodeURIComponent(`/reclamacoes/${protocolo}`)}`}
-                  className="font-medium text-primary hover:underline"
+                  className="font-medium text-brand hover:underline"
                 >
                   {t("entreParaComentar")}
                 </Link>
@@ -457,43 +457,43 @@ export default async function ReclamacaoPage({
             )}
 
             {comentarios.length === 0 && (
-              <p className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+              <p className="flex items-center gap-2 text-sm text-ink-muted">
                 <MessageSquare className="h-4 w-4 shrink-0" aria-hidden />
                 {t("nenhumComentario")}
               </p>
             )}
 
             {comentarios.length > 0 && (
-              <div className="flex flex-col divide-y divide-slate-200 dark:divide-slate-800">
+              <div className="flex flex-col divide-y divide-line">
                 {comentarios.map((comentario) => {
                   const nomeAutor = comentario.autor.name ?? comentario.autor.email;
                   return (
                     <article key={comentario.id} className="flex gap-3 py-5 first:pt-0 last:pb-0">
                       <span
                         aria-hidden
-                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xs font-semibold text-slate-700 dark:bg-slate-700 dark:text-slate-200"
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-line text-xs font-semibold text-ink-2"
                       >
                         {iniciaisDoNome(nomeAutor)}
                       </span>
                       <div className="flex min-w-0 flex-1 flex-col gap-2">
-                        <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                        <p className="text-sm font-medium text-ink">
                           {nomeAutor}
                           <time
                             dateTime={comentario.createdAt.toISOString()}
                             title={formatarDataHora(comentario.createdAt, locale)}
-                            className="ml-2 font-normal text-slate-400 dark:text-slate-500"
+                            className="ml-2 font-normal text-ink-muted"
                           >
                             {formatarTempoRelativo(comentario.createdAt, locale)}
                           </time>
                         </p>
-                        <p className="text-sm text-slate-700 dark:text-slate-300">
+                        <p className="text-sm text-ink-2">
                           {comentario.texto}
                         </p>
 
                         {session?.user && (
                           <div className="flex flex-wrap items-center gap-3">
                             <details>
-                              <summary className="w-fit cursor-pointer text-xs text-primary">
+                              <summary className="w-fit cursor-pointer text-xs text-brand">
                                 {t("responder")}
                               </summary>
                               <form
@@ -526,20 +526,20 @@ export default async function ReclamacaoPage({
                         )}
 
                         {comentario.respostas.length > 0 && (
-                          <div className="mt-1 flex flex-col gap-3 border-l border-slate-200 pl-4 dark:border-slate-700">
+                          <div className="mt-1 flex flex-col gap-3 border-l border-line pl-4">
                             {comentario.respostas.map((resposta) => (
                               <div key={resposta.id}>
-                                <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                                <p className="text-sm font-medium text-ink">
                                   {resposta.autor.name ?? resposta.autor.email}
                                   <time
                                     dateTime={resposta.createdAt.toISOString()}
                                     title={formatarDataHora(resposta.createdAt, locale)}
-                                    className="ml-2 font-normal text-slate-400 dark:text-slate-500"
+                                    className="ml-2 font-normal text-ink-muted"
                                   >
                                     {formatarTempoRelativo(resposta.createdAt, locale)}
                                   </time>
                                 </p>
-                                <p className="text-sm text-slate-700 dark:text-slate-300">
+                                <p className="text-sm text-ink-2">
                                   {resposta.texto}
                                 </p>
                                 {session?.user && resposta.autor.id !== session.user.id && (

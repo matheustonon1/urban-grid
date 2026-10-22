@@ -85,16 +85,16 @@ export default async function HistoricoModeracaoPage({
                 {reclamacao ? (
                   <Link
                     href={`/reclamacoes/${reclamacao.protocolo}`}
-                    className="font-semibold text-slate-900 hover:text-primary dark:text-slate-100"
+                    className="font-semibold text-ink hover:text-brand"
                   >
                     {reclamacao.titulo}
                   </Link>
                 ) : (
-                  <p className="font-medium text-slate-400 dark:text-slate-500">
+                  <p className="font-medium text-ink-muted">
                     {t("reclamacaoRemovida", { id: log.alvoId })}
                   </p>
                 )}
-                <p className="flex flex-wrap items-center gap-x-1.5 text-xs text-slate-500 dark:text-slate-400">
+                <p className="flex flex-wrap items-center gap-x-1.5 text-xs text-ink-muted">
                   {reclamacao && <span className="font-mono">{reclamacao.protocolo}</span>}
                   {reclamacao && <span aria-hidden>·</span>}
                   <time dateTime={log.createdAt.toISOString()}>
@@ -116,13 +116,13 @@ export default async function HistoricoModeracaoPage({
             <ChipsPontuacao itens={pontuacoes} vazio={t("nenhumEixoAlto")} />
 
             {log.justificativa && (
-              <p className="text-sm text-slate-600 italic dark:text-slate-300">
+              <p className="text-sm text-ink-2 italic">
                 “{log.justificativa}”
               </p>
             )}
 
             <details className="group">
-              <summary className="w-fit cursor-pointer text-xs font-medium text-primary hover:underline">
+              <summary className="w-fit cursor-pointer text-xs font-medium text-brand hover:underline">
                 {t("todasPontuacoes")}
               </summary>
               <div className="mt-3">
@@ -131,11 +131,11 @@ export default async function HistoricoModeracaoPage({
             </details>
 
             {log.decisaoFinal && (
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 border-t border-slate-200 pt-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 border-t border-line pt-3 text-xs text-ink-muted">
                 <UserCheck className="h-3.5 w-3.5" aria-hidden />
                 <span>
                   {t("revisadoPor")}{" "}
-                  <span className="font-medium text-slate-700 dark:text-slate-300">
+                  <span className="font-medium text-ink-2">
                     {log.revisadoPor?.name ?? log.revisadoPor?.email ?? "—"}
                   </span>{" "}
                   {t("em")} {log.revisadoEm ? formatarDataHora(log.revisadoEm, locale) : "—"} →{" "}

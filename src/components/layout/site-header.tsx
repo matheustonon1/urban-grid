@@ -2,10 +2,12 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
 import { auth } from "@/auth";
+import { Marca } from "@/components/ui/marca";
 import { prisma } from "@/lib/prisma";
-import { botaoSecundario } from "@/lib/estilos";
+import { botaoPrimario } from "@/lib/estilos";
 
 import { BuscaCidadeHeader, BuscaCidadeMobile } from "./busca-cidade-header";
+import { LinkNav } from "./link-nav";
 import { NotificacoesSino } from "./notificacoes-sino";
 import { SeletorIdioma } from "./seletor-idioma";
 import { ThemeToggle } from "./theme-toggle";
@@ -42,31 +44,23 @@ export async function SiteHeader() {
   ]);
 
   return (
-    <header className="relative border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
-      <div className="mx-auto flex max-w-4xl items-center gap-4 px-4 py-3 sm:px-8">
-        <Link
-          href="/"
-          className="shrink-0 whitespace-nowrap text-lg font-bold tracking-tight text-slate-900 dark:text-slate-100"
-        >
-          Urban <span className="text-primary">Grid</span>
+    <header className="sticky top-0 z-30 border-b border-line bg-paper/90 backdrop-blur-md">
+      {/* relative: o painel de busca do celular se ancora neste container. */}
+      <div className="relative mx-auto flex h-16 max-w-6xl items-center gap-2 px-3 sm:gap-6 sm:px-8">
+        <Link href="/" aria-label="Urban Grid" className="shrink-0">
+          <Marca />
         </Link>
+
+        <nav aria-label={t("principal")} className="hidden h-full items-stretch sm:flex">
+          <LinkNav href="/reclamacoes">{t("reclamacoes")}</LinkNav>
+          <LinkNav href="/transparencia" className="hidden md:inline-flex">
+            {t("transparencia")}
+          </LinkNav>
+        </nav>
 
         <BuscaCidadeHeader />
 
-        <nav className="ml-auto flex items-center gap-2 text-sm sm:gap-4">
-          <Link
-            href="/reclamacoes"
-            className="hidden text-slate-600 hover:text-slate-900 sm:inline dark:text-slate-400 dark:hover:text-slate-100"
-          >
-            {t("reclamacoes")}
-          </Link>
-          <Link
-            href="/transparencia"
-            className="hidden text-slate-600 hover:text-slate-900 md:inline dark:text-slate-400 dark:hover:text-slate-100"
-          >
-            {t("transparencia")}
-          </Link>
-
+        <div className="ml-auto flex items-center gap-1 sm:gap-2">
           <BuscaCidadeMobile />
 
           {usuario ? (
@@ -94,11 +88,11 @@ export async function SiteHeader() {
             <>
               <Link
                 href="/login"
-                className="hidden text-slate-600 hover:text-slate-900 sm:inline dark:text-slate-400 dark:hover:text-slate-100"
+                className="hidden rounded-md px-3 py-2 text-sm font-medium text-ink-muted transition-colors hover:text-ink sm:inline"
               >
                 {t("entrar")}
               </Link>
-              <Link href="/cadastro" className={botaoSecundario}>
+              <Link href="/cadastro" className={`${botaoPrimario} px-3 py-1.5 sm:px-4 sm:py-2`}>
                 {t("cadastrar")}
               </Link>
             </>
@@ -106,7 +100,7 @@ export async function SiteHeader() {
 
           <SeletorIdioma />
           <ThemeToggle />
-        </nav>
+        </div>
       </div>
     </header>
   );

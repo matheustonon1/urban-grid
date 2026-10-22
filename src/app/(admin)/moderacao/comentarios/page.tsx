@@ -93,14 +93,14 @@ export default async function ModeracaoComentariosPage({
               <TempoNaFila desde={log.createdAt} />
             </div>
 
-            <div className="flex items-center gap-2.5 text-sm text-slate-600 dark:text-slate-400">
+            <div className="flex items-center gap-2.5 text-sm text-ink-muted">
               <AvatarIniciais nome={nomeAutor} />
               <p>
-                <span className="font-medium text-slate-900 dark:text-slate-100">{nomeAutor}</span>{" "}
+                <span className="font-medium text-ink">{nomeAutor}</span>{" "}
                 {t("em")}{" "}
                 <Link
                   href={`/reclamacoes/${comentario.reclamacao.protocolo}`}
-                  className="text-primary hover:underline"
+                  className="text-brand hover:underline"
                 >
                   {comentario.reclamacao.titulo}
                 </Link>
@@ -110,7 +110,7 @@ export default async function ModeracaoComentariosPage({
 
             <p className={blocoCitacao}>{comentario.texto}</p>
 
-            <div className="flex flex-col gap-3 rounded-lg border border-slate-200 p-4 dark:border-slate-800">
+            <div className="flex flex-col gap-3 rounded-lg border border-line p-4">
               <p className={rotuloSecao}>{tMod("analiseIA")}</p>
               <PontuacoesIA
                 itens={[
@@ -121,13 +121,13 @@ export default async function ModeracaoComentariosPage({
                 ]}
               />
               {log.justificativa && (
-                <p className="text-sm text-slate-600 italic dark:text-slate-300">
+                <p className="text-sm text-ink-2 italic">
                   “{log.justificativa}”
                 </p>
               )}
             </div>
 
-            <div className="flex flex-wrap gap-2 border-t border-slate-200 pt-4 dark:border-slate-800">
+            <div className="flex flex-wrap gap-2 border-t border-line pt-4">
               <form action={aprovarComentarioReprovado.bind(null, comentario.id)}>
                 <button type="submit" className={botaoPrimario}>
                   {t("aprovarMesmoAssim")}

@@ -42,7 +42,7 @@ export function Paginacao({
         <span />
       )}
 
-      <p className="text-sm text-slate-500 dark:text-slate-400">
+      <p className="text-sm text-ink-muted">
         {t("pagina", { atual: paginaAtual, total: totalPaginas })}
       </p>
 

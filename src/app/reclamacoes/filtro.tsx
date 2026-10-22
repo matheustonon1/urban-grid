@@ -32,13 +32,13 @@ function Chip({
   ariaLabel: string;
 }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 py-1 pl-2.5 pr-1 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+    <span className="inline-flex items-center gap-1 rounded-full border border-line bg-sunken py-1 pl-2.5 pr-1 text-ink-2">
       {children}
       <button
         type="button"
         onClick={onRemover}
         aria-label={ariaLabel}
-        className="rounded-full p-0.5 hover:bg-slate-200 dark:hover:bg-slate-700"
+        className="rounded-full p-0.5 hover:bg-line"
       >
         <X className="h-3 w-3" aria-hidden />
       </button>
@@ -85,7 +85,7 @@ export function FiltroReclamacoes({
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Search
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted"
               aria-hidden
             />
             <input
@@ -101,7 +101,7 @@ export function FiltroReclamacoes({
           </button>
         </div>
 
-        <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
+        <div className="flex flex-wrap gap-2 border-t border-line pt-3">
           <div className="min-w-48 flex-1">
             <SeletorCidade
               key={cidadeFiltro?.id ?? "sem-cidade"}
@@ -126,7 +126,7 @@ export function FiltroReclamacoes({
       </form>
 
       {temFiltroAtivo && (
-        <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
+        <div className="flex flex-wrap items-center gap-2 border-t border-line pt-3 text-sm text-ink-muted">
           <span>{t("filtrosAtivos")}</span>
           {buscaFiltro && (
             <Chip ariaLabel={t("removerFiltro", { filtro: buscaFiltro })} onRemover={() => navegar({ q: null })}>
@@ -153,7 +153,7 @@ export function FiltroReclamacoes({
               </Link>
             </Chip>
           )}
-          <Link href="/reclamacoes" className="text-primary underline">
+          <Link href="/reclamacoes" className="text-brand underline">
             {t("limpar")}
           </Link>
         </div>

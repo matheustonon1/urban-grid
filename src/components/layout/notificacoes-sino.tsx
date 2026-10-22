@@ -38,13 +38,13 @@ export function NotificacoesSino({
         onClick={() => setAberto((valor) => !valor)}
         aria-expanded={aberto}
         aria-label={t("botaoAria", { count: totalNaoLidas })}
-        className="relative rounded-lg p-2 text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+        className="relative rounded-md p-1.5 text-ink-muted sm:p-2 transition-colors hover:bg-sunken hover:text-ink"
       >
         <Bell className="h-5 w-5" aria-hidden />
         {totalNaoLidas > 0 && (
           <span
             aria-hidden
-            className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-medium text-white"
+            className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-[4px] bg-signal px-1 text-[10px] font-bold text-on-signal"
           >
             {totalNaoLidas > 9 ? "9+" : totalNaoLidas}
           </span>
@@ -58,12 +58,12 @@ export function NotificacoesSino({
         // de tema depois dele). Vira um painel fixo ancorado na própria
         // tela (não no botão) até o breakpoint sm, onde volta ao
         // posicionamento relativo ao botão de sempre.
-        <div className="animate-pop-in fixed inset-x-4 top-16 z-10 origin-top rounded-lg border border-slate-200 bg-white py-1 shadow-md sm:absolute sm:inset-x-auto sm:top-auto sm:right-0 sm:mt-1 sm:w-80 sm:origin-top-right dark:border-slate-700 dark:bg-slate-900">
+        <div className="animate-pop-in fixed inset-x-4 top-16 z-10 origin-top rounded-lg border border-line bg-surface py-1 shadow-md sm:absolute sm:inset-x-auto sm:top-auto sm:right-0 sm:mt-1 sm:w-80 sm:origin-top-right">
           <div className="flex items-center justify-between px-3 py-2">
-            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t("titulo")}</p>
+            <p className="text-sm font-semibold text-ink">{t("titulo")}</p>
             {totalNaoLidas > 0 && (
               <form action={marcarTodasLidas}>
-                <button type="submit" className="text-xs text-primary hover:underline">
+                <button type="submit" className="text-xs font-medium text-brand hover:underline">
                   {t("marcarTodasLidas")}
                 </button>
               </form>
@@ -71,7 +71,7 @@ export function NotificacoesSino({
           </div>
 
           {notificacoes.length === 0 && (
-            <p className="px-3 py-4 text-center text-sm text-slate-500 dark:text-slate-400">
+            <p className="px-3 py-4 text-center text-sm text-ink-muted">
               {t("nenhuma")}
             </p>
           )}
@@ -80,14 +80,14 @@ export function NotificacoesSino({
             {notificacoes.map((notificacao) => {
               const conteudo = (
                 <>
-                  <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                  <p className="text-sm font-medium text-ink">
                     {notificacao.titulo}
                     {!notificacao.lida && <span className="sr-only"> {t("naoLida")}</span>}
                   </p>
-                  <p className="mt-0.5 line-clamp-2 text-xs text-slate-500 dark:text-slate-400">
+                  <p className="mt-0.5 line-clamp-2 text-xs text-ink-muted">
                     {notificacao.mensagem}
                   </p>
-                  <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+                  <p className="mt-1 text-xs text-ink-muted">
                     {formatarTempoRelativo(notificacao.createdAt, locale)}
                   </p>
                 </>
@@ -96,8 +96,8 @@ export function NotificacoesSino({
               return (
                 <li
                   key={notificacao.id}
-                  className={`border-t border-slate-100 px-3 py-2 dark:border-slate-800 ${
-                    notificacao.lida ? "" : "bg-blue-50/50 dark:bg-blue-950/30"
+                  className={`border-t border-line px-3 py-2 ${
+                    notificacao.lida ? "" : "bg-brand-soft/60"
                   }`}
                 >
                   {notificacao.protocolo ? (
@@ -124,7 +124,7 @@ export function NotificacoesSino({
           <Link
             href="/painel/notificacoes"
             onClick={() => setAberto(false)}
-            className="block border-t border-slate-100 px-3 py-2 text-center text-xs font-medium text-primary hover:underline dark:border-slate-800"
+            className="block border-t border-line px-3 py-2 text-center text-xs font-medium text-brand hover:underline"
           >
             {t("verTodas")}
           </Link>

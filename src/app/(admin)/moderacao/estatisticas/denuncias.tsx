@@ -22,14 +22,14 @@ export function DenunciasDoPeriodo({ resumo }: { resumo: ResumoDenuncias }) {
   return (
     <SecaoEstatistica id="denuncias" titulo={t("denunciasTitulo")} descricao={t("denunciasDescricao")}>
       {resumo.total === 0 ? (
-        <p className="text-sm text-slate-500 dark:text-slate-400">{t("denunciasNenhuma")}</p>
+        <p className="text-sm text-ink-muted">{t("denunciasNenhuma")}</p>
       ) : (
         <>
           <dl className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4">
             {numeros.map(({ rotulo, valor }) => (
               <div key={rotulo} className="flex flex-col gap-0.5">
-                <dt className="text-xs text-slate-500 dark:text-slate-400">{rotulo}</dt>
-                <dd className="font-mono text-2xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+                <dt className="text-xs text-ink-muted">{rotulo}</dt>
+                <dd className="font-mono text-2xl font-semibold tabular-nums text-ink">
                   {valor}
                 </dd>
               </div>
@@ -41,16 +41,16 @@ export function DenunciasDoPeriodo({ resumo }: { resumo: ResumoDenuncias }) {
               <div
                 role="img"
                 aria-label={`${t("denunciasProcedentes")}: ${resumo.procedentes}, ${t("denunciasImprocedentes")}: ${resumo.improcedentes}`}
-                className="flex h-2.5 gap-0.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"
+                className="flex h-2.5 gap-0.5 overflow-hidden rounded-full bg-sunken"
               >
                 {resumo.procedentes > 0 && (
-                  <div className="bg-primary" style={{ flex: `${resumo.procedentes} 1 0` }} />
+                  <div className="bg-brand" style={{ flex: `${resumo.procedentes} 1 0` }} />
                 )}
                 {resumo.improcedentes > 0 && (
-                  <div className="bg-slate-400 dark:bg-slate-500" style={{ flex: `${resumo.improcedentes} 1 0` }} />
+                  <div className="bg-ink-faint" style={{ flex: `${resumo.improcedentes} 1 0` }} />
                 )}
               </div>
-              <p className="text-sm text-slate-600 dark:text-slate-400">
+              <p className="text-sm text-ink-muted">
                 {t("denunciasLeitura", { pct: formatarPorcentagem(resumo.taxaProcedente, locale) })}
                 {resumo.medianaResolucaoMs !== null &&
                   ` ${t("denunciasMediana", { tempo: formatarDuracao(resumo.medianaResolucaoMs, locale) })}`}
@@ -59,21 +59,21 @@ export function DenunciasDoPeriodo({ resumo }: { resumo: ResumoDenuncias }) {
           )}
 
           <div className="flex flex-col gap-3">
-            <h3 className="text-sm font-medium text-slate-800 dark:text-slate-200">{t("denunciasPorMotivo")}</h3>
+            <h3 className="text-sm font-medium text-ink-2">{t("denunciasPorMotivo")}</h3>
             <ul className="flex flex-col gap-2.5">
               {resumo.porMotivo.map(({ motivo, quantidade }) => (
                 <li
                   key={motivo}
                   className="grid grid-cols-[minmax(0,11rem)_minmax(0,1fr)_2rem] items-center gap-x-3 text-sm"
                 >
-                  <span className="leading-snug text-slate-700 dark:text-slate-300">{tMotivo(motivo)}</span>
-                  <div aria-hidden className="h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                  <span className="leading-snug text-ink-2">{tMotivo(motivo)}</span>
+                  <div aria-hidden className="h-2 overflow-hidden rounded-full bg-sunken">
                     <div
-                      className="h-full rounded-full bg-primary"
+                      className="h-full rounded-full bg-brand"
                       style={{ width: `${(quantidade / maiorMotivo) * 100}%` }}
                     />
                   </div>
-                  <span className="text-right font-mono tabular-nums text-slate-800 dark:text-slate-200">
+                  <span className="text-right font-mono tabular-nums text-ink-2">
                     {quantidade}
                   </span>
                 </li>

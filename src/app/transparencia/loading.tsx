@@ -5,8 +5,8 @@ export default function Loading() {
   return (
     <EsqueletoPagina className={containerLargo}>
       <EsqueletoCabecalho />
-      <Esqueleto className="h-20 w-full rounded-xl" />
-      <Esqueleto className="h-72 w-full rounded-xl" />
+      <Esqueleto className="h-20 w-full rounded-lg" />
+      <Esqueleto className="h-72 w-full rounded-lg" />
     </EsqueletoPagina>
   );
 }

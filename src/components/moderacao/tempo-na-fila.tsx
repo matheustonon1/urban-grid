@@ -22,10 +22,10 @@ export function TempoNaFila({ desde }: { desde: Date }) {
 
   const tom =
     horas >= HORAS_URGENTE
-      ? "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400"
+      ? "bg-danger-soft text-danger-ink"
       : horas >= HORAS_ATENCAO
-        ? "bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-400"
-        : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300";
+        ? "bg-warn-soft text-warn-ink"
+        : "bg-sunken text-ink-2";
 
   return (
     <span

@@ -5,8 +5,10 @@ import Link from "next/link";
 import Script from "next/script";
 import { useTranslations } from "next-intl";
 
+import { Campo, MensagemErro, descritoPor } from "@/components/formulario/campo";
 import { TermosModal } from "@/components/formulario/termos-modal";
-import { botaoPrimario, campoInput, cartaoDestaque, linkSutil } from "@/lib/estilos";
+import { Aviso } from "@/components/ui/aviso";
+import { botaoPrimario, campoInput, campoInputInvalido, linkSutil } from "@/lib/estilos";
 
 import { cadastrar } from "./actions";
 
@@ -15,6 +17,15 @@ const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 export function FormularioCadastroPessoa() {
   const t = useTranslations("Cadastro");
   const [state, action, pending] = useActionState(cadastrar, undefined);
+  const erros = state?.erros;
+
+  // Atributos de acessibilidade e de estilo de um campo com (ou sem) erro.
+  const atributos = (id: string, erro?: string) => ({
+    id,
+    className: erro ? campoInputInvalido : campoInput,
+    "aria-invalid": erro ? true : undefined,
+    "aria-describedby": descritoPor(id, erro),
+  });
 
   return (
     <>
@@ -25,84 +36,88 @@ export function FormularioCadastroPessoa() {
         />
       )}
 
-      <form action={action} className={`flex flex-col gap-3 ${cartaoDestaque}`}>
-        <input
-          type="text"
-          name="nome"
-          placeholder={t("nomeCompleto")}
-          className={campoInput}
-        />
-        {state?.erros?.nome && (
-          <p className="text-sm text-red-600 dark:text-red-400">{state.erros.nome[0]}</p>
-        )}
+      <form action={action} className="flex w-full flex-col gap-5">
+        <Campo id="cadastro-nome" rotulo={t("nomeCompleto")} erro={erros?.nome?.[0]}>
+          <input
+            type="text"
+            name="nome"
+            autoComplete="name"
+            {...atributos("cadastro-nome", erros?.nome?.[0])}
+          />
+        </Campo>
 
-        <input
-          type="email"
-          name="email"
-          placeholder={t("email")}
-          className={campoInput}
-        />
-        {state?.erros?.email && (
-          <p className="text-sm text-red-600 dark:text-red-400">{state.erros.email[0]}</p>
-        )}
+        <Campo id="cadastro-email" rotulo={t("email")} erro={erros?.email?.[0]}>
+          <input
+            type="email"
+            name="email"
+            autoComplete="email"
+            {...atributos("cadastro-email", erros?.email?.[0])}
+          />
+        </Campo>
 
-        <input
-          type="text"
-          name="cpf"
-          placeholder={t("cpf")}
-          className={campoInput}
-        />
-        {state?.erros?.cpf && (
-          <p className="text-sm text-red-600 dark:text-red-400">{state.erros.cpf[0]}</p>
-        )}
+        <Campo id="cadastro-cpf" rotulo={t("cpf")} erro={erros?.cpf?.[0]}>
+          <input
+            type="text"
+            name="cpf"
+            inputMode="numeric"
+            autoComplete="off"
+            {...atributos("cadastro-cpf", erros?.cpf?.[0])}
+          />
+        </Campo>
 
-        <input
-          type="password"
-          name="senha"
-          placeholder={t("senha")}
-          className={campoInput}
-        />
-        {state?.erros?.senha && (
-          <p className="text-sm text-red-600 dark:text-red-400">{state.erros.senha[0]}</p>
-        )}
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Campo id="cadastro-senha" rotulo={t("senha")} erro={erros?.senha?.[0]}>
+            <input
+              type="password"
+              name="senha"
+              autoComplete="new-password"
+              {...atributos("cadastro-senha", erros?.senha?.[0])}
+            />
+          </Campo>
 
-        <input
-          type="password"
-          name="confirmarSenha"
-          placeholder={t("confirmarSenha")}
-          className={campoInput}
-        />
-        {state?.erros?.confirmarSenha && (
-          <p className="text-sm text-red-600 dark:text-red-400">
-            {state.erros.confirmarSenha[0]}
-          </p>
-        )}
+          <Campo
+            id="cadastro-confirmar"
+            rotulo={t("confirmarSenha")}
+            erro={erros?.confirmarSenha?.[0]}
+          >
+            <input
+              type="password"
+              name="confirmarSenha"
+              autoComplete="new-password"
+              {...atributos("cadastro-confirmar", erros?.confirmarSenha?.[0])}
+            />
+          </Campo>
+        </div>
 
-        <label className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
-          <input type="checkbox" name="aceitaTermos" required className="mt-0.5" />
-          <span>
-            {t("liEAceito")} <TermosModal />.
-          </span>
-        </label>
-        {state?.erros?.aceitaTermos && (
-          <p className="text-sm text-red-600 dark:text-red-400">{state.erros.aceitaTermos[0]}</p>
-        )}
+        <div className="flex flex-col gap-1.5">
+          <label className="flex items-start gap-2.5 text-sm text-ink-muted">
+            <input
+              type="checkbox"
+              name="aceitaTermos"
+              required
+              aria-describedby={erros?.aceitaTermos ? "cadastro-termos-erro" : undefined}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-brand"
+            />
+            <span>
+              {t("liEAceito")} <TermosModal />.
+            </span>
+          </label>
+          {erros?.aceitaTermos && (
+            <MensagemErro id="cadastro-termos">{erros.aceitaTermos[0]}</MensagemErro>
+          )}
+        </div>
 
-        {TURNSTILE_SITE_KEY && (
-          <div className="cf-turnstile" data-sitekey={TURNSTILE_SITE_KEY} />
-        )}
+        {TURNSTILE_SITE_KEY && <div className="cf-turnstile" data-sitekey={TURNSTILE_SITE_KEY} />}
 
-        {state?.mensagem && (
-          <p className="text-sm text-red-600 dark:text-red-400">{state.mensagem}</p>
-        )}
+        {state?.mensagem && <Aviso tom="erro">{state.mensagem}</Aviso>}
 
-        <button type="submit" disabled={pending} className={botaoPrimario}>
+        <button type="submit" disabled={pending} className={`${botaoPrimario} w-full py-3`}>
           {t("criarConta")}
         </button>
 
-        <div className="mt-1 flex justify-center border-t border-slate-100 pt-4 dark:border-slate-800">
+        <div className="flex justify-center border-t border-line pt-5">
           <Link href="/login" className={linkSutil}>
-            {t("jaTemConta")} <span className="font-semibold">{t("entrar")}</span>
+            {t("jaTemConta")} <span className="font-semibold text-ink">{t("entrar")}</span>
           </Link>
         </div>
       </form>

@@ -36,8 +36,8 @@ export async function FormularioDenuncia({
       <summary
         className={
           estilo === "pill"
-            ? `${botaoSecundario} inline-flex w-fit cursor-pointer list-none text-red-700 dark:text-red-400`
-            : "inline-flex w-fit cursor-pointer list-none items-center text-xs font-medium text-red-700 hover:underline dark:text-red-400"
+            ? `${botaoSecundario} inline-flex w-fit cursor-pointer list-none text-danger-ink`
+            : "inline-flex w-fit cursor-pointer list-none items-center text-xs font-medium text-danger-ink hover:underline"
         }
       >
         {t("denunciar")}
@@ -62,7 +62,7 @@ export async function FormularioDenuncia({
           rows={2}
           className={campoInput}
         />
-        <label className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-400">
+        <label className="flex items-start gap-2 text-xs text-ink-muted">
           <input type="checkbox" name="declaracaoVeracidade" required className="mt-0.5" />
           <span>{t("declaracaoBoaFe")}</span>
         </label>

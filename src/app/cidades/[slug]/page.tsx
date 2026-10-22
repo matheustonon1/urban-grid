@@ -191,7 +191,7 @@ export default async function CidadePage({
       />
 
       <section className={`flex flex-col gap-5 ${cartao}`}>
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+        <h2 className="text-lg font-semibold text-ink">
           {t("indiceResolucao")}
         </h2>
         <div className="grid gap-6 sm:grid-cols-2">
@@ -214,11 +214,11 @@ export default async function CidadePage({
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+        <h2 className="text-lg font-semibold text-ink">
           {t("categoriasMaisReclamadas")}
         </h2>
         {ranking.length === 0 ? (
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-sm text-ink-muted">
             {t("nenhumaReclamacaoPublica")}
           </p>
         ) : (
@@ -230,21 +230,21 @@ export default async function CidadePage({
                     <div className="flex items-center gap-2.5 text-sm">
                       <CategoriaIcon
                         icone={item.categoria.icone}
-                        className="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500"
+                        className="h-4 w-4 shrink-0 text-ink-muted"
                       />
-                      <span className="flex-1 text-slate-800 dark:text-slate-200">
+                      <span className="flex-1 text-ink-2">
                         {item.categoria.nome}
                       </span>
-                      <span className="font-mono font-medium tabular-nums text-slate-700 dark:text-slate-300">
+                      <span className="font-mono font-medium tabular-nums text-ink-2">
                         {item.total}
                       </span>
                     </div>
                     {/* Barra proporcional à categoria mais reclamada. Uma cor
                         só: é uma série única, ordenada - não há o que
                         diferenciar por matiz. */}
-                    <div aria-hidden className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-800">
+                    <div aria-hidden className="h-1.5 rounded-full bg-sunken">
                       <div
-                        className="h-full rounded-full bg-primary/70"
+                        className="h-full rounded-full bg-brand/70"
                         style={{
                           width: `${Math.max(4, Math.round((item.total / maiorCategoria) * 100))}%`,
                         }}
@@ -258,15 +258,15 @@ export default async function CidadePage({
       </section>
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+        <h2 className="text-lg font-semibold text-ink">
           {t("orgaosDestaCidade")}
         </h2>
         {rankingOrgaos.length === 0 ? (
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-sm text-ink-muted">
             {t("nenhumOrgaoCadastrado")}
           </p>
         ) : (
-          <ul className={`divide-y divide-slate-200 overflow-hidden p-0 dark:divide-slate-800 ${cartao}`}>
+          <ul className={`divide-y divide-line overflow-hidden p-0 ${cartao}`}>
             {rankingOrgaos.map(({ orgao, metricas }) => {
               const classificacao = classificarIndice(
                 metricas.indiceResolucao,
@@ -276,14 +276,14 @@ export default async function CidadePage({
                 <li key={orgao.id}>
                   <Link
                     href={`/orgaos/${orgao.id}`}
-                    className="group flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                    className="group flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-sunken/50"
                   >
                     <div className="flex min-w-0 flex-1 flex-col">
-                      <span className="line-clamp-2 text-sm font-medium text-slate-900 group-hover:text-primary dark:text-slate-100">
+                      <span className="line-clamp-2 text-sm font-medium text-ink group-hover:text-brand">
                         {orgao.nome}
                         {orgao.sigla && ` (${orgao.sigla})`}
                       </span>
-                      <span className="text-xs text-slate-500 dark:text-slate-400">
+                      <span className="text-xs text-ink-muted">
                         {t("reclamacoesRespondidas", { count: metricas.totalRespondidas })}
                       </span>
                     </div>
@@ -293,7 +293,7 @@ export default async function CidadePage({
                       {tSelo(classificacao.chave)}
                     </span>
                     <ChevronRight
-                      className="h-4 w-4 shrink-0 text-slate-300 transition-transform group-hover:translate-x-0.5 group-hover:text-primary dark:text-slate-600"
+                      className="h-4 w-4 shrink-0 text-ink-faint transition-transform group-hover:translate-x-0.5 group-hover:text-brand"
                       aria-hidden
                     />
                   </Link>
@@ -305,7 +305,7 @@ export default async function CidadePage({
       </section>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+        <h2 className="text-lg font-semibold text-ink">
           {t("reclamacoes")} {totalFeed > 0 && `(${totalFeed})`}
         </h2>
 
@@ -354,15 +354,15 @@ export default async function CidadePage({
             </button>
           </form>
 
-          <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
+          <div className="flex flex-wrap items-center gap-2 border-t border-line pt-3">
             <span className={rotuloSecao}>{t("ordenarPor")}</span>
-            <div className="flex gap-1 rounded-full bg-slate-100 p-1 dark:bg-slate-800">
+            <div className="flex gap-1 rounded-full bg-sunken p-1">
               <Link
                 href={linkFeed(slug, estadoFeed, { ordenar: "recentes", pagina: 1 })}
                 className={
                   ordenar === "recentes"
-                    ? "rounded-full bg-white px-3 py-1 text-xs font-semibold text-primary shadow-sm dark:bg-slate-700"
-                    : "rounded-full px-3 py-1 text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                    ? "rounded-full bg-surface px-3 py-1 text-xs font-semibold text-brand shadow-sm"
+                    : "rounded-full px-3 py-1 text-xs font-medium text-ink-muted hover:text-ink-2"
                 }
               >
                 {t("maisRecentes")}
@@ -371,8 +371,8 @@ export default async function CidadePage({
                 href={linkFeed(slug, estadoFeed, { ordenar: "confirmadas", pagina: 1 })}
                 className={
                   ordenar === "confirmadas"
-                    ? "rounded-full bg-white px-3 py-1 text-xs font-semibold text-primary shadow-sm dark:bg-slate-700"
-                    : "rounded-full px-3 py-1 text-xs font-medium text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                    ? "rounded-full bg-surface px-3 py-1 text-xs font-semibold text-brand shadow-sm"
+                    : "rounded-full px-3 py-1 text-xs font-medium text-ink-muted hover:text-ink-2"
                 }
               >
                 {t("maisConfirmadas")}
@@ -441,10 +441,10 @@ function Indicador({
     <div className="flex flex-col gap-2">
       <h3 className={rotuloSecao}>{titulo}</h3>
       {valor === null ? (
-        <p className="text-sm text-slate-500 dark:text-slate-400">{vazio}</p>
+        <p className="text-sm text-ink-muted">{vazio}</p>
       ) : (
         <>
-          <p className="font-mono text-3xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+          <p className="font-mono text-3xl font-semibold tabular-nums text-ink">
             {valor}%
           </p>
           <div
@@ -453,14 +453,14 @@ function Indicador({
             aria-valuemin={0}
             aria-valuemax={100}
             aria-label={titulo}
-            className="h-2 rounded-full bg-slate-100 dark:bg-slate-800"
+            className="h-2 rounded-full bg-sunken"
           >
             <div
-              className="h-full rounded-full bg-green-600 dark:bg-green-500"
+              className="h-full rounded-full bg-ok-ink"
               style={{ width: `${valor}%` }}
             />
           </div>
-          <p className="text-sm text-slate-600 dark:text-slate-400">{legenda}</p>
+          <p className="text-sm text-ink-muted">{legenda}</p>
         </>
       )}
     </div>

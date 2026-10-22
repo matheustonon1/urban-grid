@@ -83,22 +83,22 @@ export default async function NotificacoesPage({
       {notificacoes.length === 0 ? (
         <EstadoVazio icone={BellOff} titulo={t("nenhuma")} descricao={t("nenhumaDesc")} />
       ) : (
-        <ul className={`divide-y divide-slate-200 overflow-hidden p-0 dark:divide-slate-800 ${cartao}`}>
+        <ul className={`divide-y divide-line overflow-hidden p-0 ${cartao}`}>
           {notificacoes.map((notificacao) => {
             const Icone = ICONE_POR_TIPO[notificacao.tipo];
             return (
               <li
                 key={notificacao.id}
                 className={`flex items-start gap-3.5 px-4 py-4 ${
-                  notificacao.lida ? "" : "bg-primary/5 dark:bg-primary/10"
+                  notificacao.lida ? "" : "bg-brand-soft/50"
                 }`}
               >
                 <span
                   aria-hidden
                   className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
                     notificacao.lida
-                      ? "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500"
-                      : "bg-blue-100 text-primary dark:bg-blue-950 dark:text-blue-300"
+                      ? "bg-sunken text-ink-muted"
+                      : "bg-brand-soft text-brand-ink"
                   }`}
                 >
                   <Icone className="h-4.5 w-4.5" />
@@ -108,15 +108,15 @@ export default async function NotificacoesPage({
                   <p
                     className={
                       notificacao.lida
-                        ? "font-medium text-slate-700 dark:text-slate-300"
-                        : "font-semibold text-slate-900 dark:text-slate-100"
+                        ? "font-medium text-ink-2"
+                        : "font-semibold text-ink"
                     }
                   >
                     {notificacao.titulo}
                     {!notificacao.lida && <span className="sr-only"> {t("naoLida")}</span>}
                   </p>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">{notificacao.mensagem}</p>
-                  <p className="flex flex-wrap items-center gap-x-2 text-xs text-slate-400 dark:text-slate-500">
+                  <p className="text-sm text-ink-muted">{notificacao.mensagem}</p>
+                  <p className="flex flex-wrap items-center gap-x-2 text-xs text-ink-muted">
                     <time
                       dateTime={notificacao.createdAt.toISOString()}
                       title={formatarDataHora(notificacao.createdAt, locale)}
@@ -128,7 +128,7 @@ export default async function NotificacoesPage({
                         <span aria-hidden>·</span>
                         <Link
                           href={`/reclamacoes/${notificacao.reclamacao.protocolo}`}
-                          className="font-medium text-primary hover:underline"
+                          className="font-medium text-brand hover:underline"
                         >
                           {t("verReclamacao")}
                         </Link>
@@ -141,7 +141,7 @@ export default async function NotificacoesPage({
                   <form action={marcarNotificacaoLida.bind(null, notificacao.id)}>
                     <button
                       type="submit"
-                      className="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-primary hover:bg-primary/10"
+                      className="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-brand hover:bg-brand/10"
                     >
                       {t("marcarComoLida")}
                     </button>

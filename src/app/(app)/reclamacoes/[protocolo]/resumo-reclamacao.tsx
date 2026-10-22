@@ -21,10 +21,10 @@ function Fato({
 }) {
   return (
     <div className="flex gap-3">
-      <span className="mt-0.5 shrink-0 text-slate-400 dark:text-slate-500">{icone}</span>
+      <span className="mt-0.5 shrink-0 text-ink-muted">{icone}</span>
       <div className="flex min-w-0 flex-col">
-        <dt className="text-xs text-slate-500 dark:text-slate-400">{rotulo}</dt>
-        <dd className="text-sm text-slate-900 dark:text-slate-100">{children}</dd>
+        <dt className="text-xs text-ink-muted">{rotulo}</dt>
+        <dd className="text-sm text-ink">{children}</dd>
       </div>
     </div>
   );
@@ -78,7 +78,7 @@ export async function ResumoReclamacao({
         <Fato rotulo={t("local")} icone={icone(MapPin)}>
           {endereco}
           <br />
-          <Link href={`/cidades/${cidade.slug}`} className="text-primary hover:underline">
+          <Link href={`/cidades/${cidade.slug}`} className="text-brand hover:underline">
             {cidade.nome} - {cidade.uf}
           </Link>
         </Fato>
@@ -87,9 +87,9 @@ export async function ResumoReclamacao({
         </Fato>
       </dl>
 
-      <div className="flex flex-col gap-3 border-t border-slate-200 pt-4 dark:border-slate-800">
-        <p className="flex items-center gap-2 text-sm font-medium text-slate-900 dark:text-slate-100">
-          <Users className="h-4 w-4 shrink-0 text-slate-400 dark:text-slate-500" aria-hidden />
+      <div className="flex flex-col gap-3 border-t border-line pt-4">
+        <p className="flex items-center gap-2 text-sm font-medium text-ink">
+          <Users className="h-4 w-4 shrink-0 text-ink-muted" aria-hidden />
           {t("pessoasConfirmaram", { count: confirmacoes })}
         </p>
         {acao}

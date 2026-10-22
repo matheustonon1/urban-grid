@@ -549,6 +549,12 @@
     "pt-BR": "Português",
     "en": "English"
   },
+  "Auth": {
+    "painelTitulo": "Todo problema da cidade merece um protocolo.",
+    "ponto1": "Cada reclamação é pública e pode ser acompanhada do começo ao fim.",
+    "ponto2": "O órgão responsável responde oficialmente, e a resposta fica registrada.",
+    "ponto3": "Quem relatou confirma se o problema foi resolvido de verdade."
+  },
   "Header": {
     "reclamacoes": "Reclamações",
     "entrar": "Entrar",
@@ -556,7 +562,9 @@
     "buscarCidade": "Buscar cidade...",
     "buscarCidadeAbrir": "Buscar cidade",
     "buscarCidadeFechar": "Fechar busca de cidade",
-    "transparencia": "Transparência"
+    "transparencia": "Transparência",
+    "principal": "Navegação principal",
+    "pularConteudo": "Pular para o conteúdo"
   },
   "Notificacoes": {
     "titulo": "Notificações",
@@ -572,10 +580,19 @@
   },
   "Footer": {
     "tcc": "Urban Grid — Trabalho de Conclusão de Curso",
-    "termos": "Termos de Uso e Política de Privacidade"
+    "termos": "Termos de Uso e Política de Privacidade",
+    "descricao": "Plataforma pública de reclamações urbanas: cada problema recebe um protocolo, a resposta do órgão fica registrada e quem relatou confirma se foi resolvido.",
+    "navegacao": "Rodapé",
+    "participe": "Participe",
+    "incluirCidade": "Incluir minha cidade",
+    "acessoOrgaos": "Acesso para órgãos públicos"
   },
   "Home": {
     "badge": "Moderação de conteúdo assistida por IA",
+    "titulo": "Registre o problema do seu bairro e acompanhe até ele ser <marca>resolvido</marca>.",
+    "abrirFicha": "Abrir esta reclamação",
+    "etapas": "Etapas da reclamação",
+    "numeros": "A plataforma em números",
     "subtitulo": "Registre problemas urbanos do seu município, acompanhe a resposta oficial do órgão responsável e confirme quando o problema for resolvido de verdade.",
     "verReclamacoes": "Ver reclamações públicas",
     "criarConta": "Criar conta",
@@ -587,13 +604,13 @@
     "statIndice": "índice de resolução",
     "comoFunciona": "Como funciona",
     "comoFuncionaSub": "Do registro à confirmação, cada etapa é pública e auditável.",
-    "passo1Titulo": "1. Registre",
+    "passo1Titulo": "Registre",
     "passo1Desc": "Descreva o problema urbano do seu bairro — buraco, iluminação, coleta de lixo e outros — com fotos, se quiser.",
-    "passo2Titulo": "2. Moderação por IA",
+    "passo2Titulo": "Moderação por IA",
     "passo2Desc": "Cada reclamação passa por checagens automáticas de conteúdo antes de ir ao ar publicamente.",
-    "passo3Titulo": "3. Órgão responde",
+    "passo3Titulo": "Órgão responde",
     "passo3Desc": "O órgão responsável responde oficialmente e atualiza o status do problema.",
-    "passo4Titulo": "4. Você confirma",
+    "passo4Titulo": "Você confirma",
     "passo4Desc": "Avalie se o problema foi realmente resolvido — sua nota entra no índice público da cidade.",
     "acontecendoAgora": "Acontecendo agora",
     "acontecendoAgoraSub": "As reclamações mais recentes registradas na plataforma, em tempo real.",
@@ -625,8 +642,9 @@
   "Cadastro": {
     "tituloOrgao": "Solicitar acesso como órgão",
     "descOrgao": "Uma conta de órgão pode responder oficialmente às reclamações da sua cidade. Um administrador analisa cada pedido antes de liberar o acesso.",
-    "ariaOrgaoSelecionado": "Cadastro de órgão público selecionado. Clique para trocar para cadastro de pessoa",
-    "ariaPessoaSelecionado": "Cadastro de pessoa selecionado. Clique para trocar para solicitação de órgão público",
+    "tipoDeConta": "Tipo de conta",
+    "tipoPessoa": "Sou cidadão",
+    "tipoOrgao": "Sou órgão público",
     "nomeCompleto": "Nome completo",
     "email": "E-mail",
     "cpf": "CPF",
@@ -647,12 +665,14 @@
     "erroCpfDuplicado": "Já existe uma conta com este CPF.",
     "erroEmailDuplicado": "Já existe uma conta com este e-mail.",
     "erroLoginAutomatico": "Conta criada, mas não foi possível entrar automaticamente. Faça login.",
-    "nomeOrgaoPlaceholder": "Nome do órgão (ex: Secretaria de Obras)",
-    "sigla": "Sigla (opcional)",
+    "nomeOrgao": "Nome do órgão",
+    "nomeOrgaoExemplo": "Ex.: Secretaria de Obras",
+    "siglaRotulo": "Sigla",
+    "opcional": "opcional",
     "cidade": "Cidade",
     "seuNomeCompleto": "Seu nome completo",
     "emailInstitucional": "E-mail institucional",
-    "telefoneOpcional": "Telefone (opcional)",
+    "telefone": "Telefone",
     "enviarSolicitacao": "Enviar solicitação",
     "solicitacaoEnviadaTitulo": "Solicitação enviada!",
     "voltarInicio": "Voltar para o início",
@@ -685,6 +705,15 @@
     "erroLinkInvalido": "Este link não é válido para redefinição de senha.",
     "erroLinkUsado": "Este link já foi usado ou não é mais válido.",
     "senhaRedefinida": "Senha redefinida! Faça login para continuar."
+  },
+  "ConfirmarEmail": {
+    "atualizado": "E-mail atualizado!",
+    "linkInvalidoTitulo": "Link inválido ou expirado",
+    "linkInvalido": "Link inválido ou expirado.",
+    "confirmado": "E-mail confirmado! Use o novo endereço para entrar.",
+    "emUso": "Este e-mail passou a estar em uso por outra conta. Peça uma nova troca.",
+    "expirado": "Este link expirou. Peça uma nova troca em 'Minha conta'.",
+    "irParaLogin": "Ir para o login"
   },
   "VerificarEmail": {
     "verificado": "E-mail verificado!",

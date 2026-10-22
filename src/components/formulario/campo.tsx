@@ -21,7 +21,7 @@ export function MensagemErro({ id, children }: { id: string; children: ReactNode
     <p
       id={idErro(id)}
       role="alert"
-      className="flex items-start gap-1.5 text-sm text-red-700 dark:text-red-400"
+      className="flex items-start gap-1.5 text-sm text-danger-ink"
     >
       <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
       <span>{children}</span>
@@ -52,10 +52,10 @@ export function Campo({
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
       <div className="flex items-baseline justify-between gap-3">
-        <label htmlFor={id} className="text-sm font-medium text-slate-800 dark:text-slate-200">
+        <label htmlFor={id} className="text-sm font-medium text-ink-2">
           {rotulo}
           {opcional && (
-            <span className="ml-1.5 font-normal text-slate-500 dark:text-slate-400">({opcional})</span>
+            <span className="ml-1.5 font-normal text-ink-muted">({opcional})</span>
           )}
         </label>
         {contador}
@@ -64,7 +64,7 @@ export function Campo({
       {erro ? (
         <MensagemErro id={id}>{erro}</MensagemErro>
       ) : dica ? (
-        <p id={idDica(id)} className="text-xs text-slate-500 dark:text-slate-400">
+        <p id={idDica(id)} className="text-xs text-ink-muted">
           {dica}
         </p>
       ) : null}

@@ -16,9 +16,9 @@ export interface FilaAgora {
 // Mesmos cortes e mesma gramática de cor do TempoNaFila: neutro até um dia,
 // âmbar até três, vermelho depois. Os números ao lado repetem o que a cor diz.
 const FAIXAS = [
-  { chave: "ate24h", cor: "bg-slate-300 dark:bg-slate-600", rotulo: "idadeAte24" },
-  { chave: "de24a72h", cor: "bg-amber-500", rotulo: "idade24a72" },
-  { chave: "mais72h", cor: "bg-red-600 dark:bg-red-500", rotulo: "idadeMais72" },
+  { chave: "ate24h", cor: "bg-line-strong", rotulo: "idadeAte24" },
+  { chave: "de24a72h", cor: "bg-warn-ink", rotulo: "idade24a72" },
+  { chave: "mais72h", cor: "bg-danger-ink", rotulo: "idadeMais72" },
 ] as const;
 
 export function FilaAgora({ filas }: { filas: FilaAgora[] }) {
@@ -33,7 +33,7 @@ export function FilaAgora({ filas }: { filas: FilaAgora[] }) {
             <div className="flex items-baseline justify-between gap-3">
               <Link
                 href={href}
-                className="group inline-flex items-center gap-1 rounded text-sm font-medium text-slate-800 hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary dark:text-slate-200 dark:hover:text-blue-400"
+                className="group inline-flex items-center gap-1 rounded text-sm font-medium text-ink-2 hover:text-brand focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
               >
                 {t(`fila.${chave}`)}
                 <ArrowRight
@@ -41,19 +41,19 @@ export function FilaAgora({ filas }: { filas: FilaAgora[] }) {
                   aria-hidden
                 />
               </Link>
-              <span className="font-mono text-2xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+              <span className="font-mono text-2xl font-semibold tabular-nums text-ink">
                 {idades.total}
               </span>
             </div>
 
             {idades.total === 0 ? (
-              <p className="flex items-center gap-1.5 text-sm text-green-700 dark:text-green-400">
+              <p className="flex items-center gap-1.5 text-sm text-ok-ink">
                 <Check className="h-4 w-4" strokeWidth={3} aria-hidden />
                 {t("filaVazia")}
               </p>
             ) : (
               <>
-                <div aria-hidden className="flex h-2 gap-0.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                <div aria-hidden className="flex h-2 gap-0.5 overflow-hidden rounded-full bg-sunken">
                   {FAIXAS.map(
                     ({ chave: faixa, cor }) =>
                       idades[faixa] > 0 && (
@@ -65,11 +65,11 @@ export function FilaAgora({ filas }: { filas: FilaAgora[] }) {
                       )
                   )}
                 </div>
-                <ul className="flex flex-col gap-1 text-xs text-slate-600 dark:text-slate-400">
+                <ul className="flex flex-col gap-1 text-xs text-ink-muted">
                   {FAIXAS.filter(({ chave: faixa }) => idades[faixa] > 0).map(({ chave: faixa, cor, rotulo }) => (
                     <li key={faixa} className="flex items-center gap-1.5">
                       <span aria-hidden className={`h-2 w-2 rounded-sm ${cor}`} />
-                      <span className="font-mono font-medium tabular-nums text-slate-800 dark:text-slate-200">
+                      <span className="font-mono font-medium tabular-nums text-ink-2">
                         {idades[faixa]}
                       </span>
                       {t(rotulo)}
@@ -77,7 +77,7 @@ export function FilaAgora({ filas }: { filas: FilaAgora[] }) {
                   ))}
                 </ul>
                 {idades.maisAntigaMs !== null && (
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className="text-xs text-ink-muted">
                     {t("maisAntiga", { tempo: formatarDuracao(idades.maisAntigaMs, locale) })}
                   </p>
                 )}

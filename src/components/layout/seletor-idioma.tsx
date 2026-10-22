@@ -37,8 +37,10 @@ export function SeletorIdioma() {
         disabled={pending}
         aria-expanded={aberto}
         aria-haspopup="true"
-        aria-label={t("rotulo")}
-        className="flex items-center gap-1 rounded-lg p-2 text-xs font-medium text-slate-600 hover:bg-slate-100 disabled:opacity-50 dark:text-slate-300 dark:hover:bg-slate-800"
+        // O texto visível ("PT"/"EN") precisa fazer parte do nome acessível (WCAG
+        // 2.5.3): quem comanda por voz diz "clicar PT".
+        aria-label={`${t("rotulo")}: ${locale === "pt-BR" ? "PT" : "EN"}`}
+        className="flex items-center gap-1 rounded-md p-1.5 text-xs sm:p-2 font-semibold text-ink-2 transition-colors hover:bg-sunken disabled:opacity-50"
       >
         <Languages className="h-5 w-5" aria-hidden />
         <span aria-hidden className="hidden sm:inline">
@@ -47,17 +49,17 @@ export function SeletorIdioma() {
       </button>
 
       {aberto && (
-        <div className="animate-pop-in absolute right-0 z-10 mt-1 w-36 origin-top-right rounded-lg border border-slate-200 bg-white py-1 shadow-md dark:border-slate-700 dark:bg-slate-900">
+        <div className="animate-pop-in absolute right-0 z-10 mt-2 w-36 origin-top-right rounded-lg border border-line bg-surface py-1 shadow-[0_18px_40px_-16px_rgb(14_21_32/0.35)]">
           {IDIOMAS.map((idioma) => (
             <button
               key={idioma}
               type="button"
               onClick={() => escolher(idioma)}
-              className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+              className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm text-ink-2 hover:bg-sunken"
             >
               {t(idioma)}
               {idioma === locale && (
-                <Check className="h-4 w-4 text-primary" aria-hidden />
+                <Check className="h-4 w-4 text-brand" aria-hidden />
               )}
             </button>
           ))}

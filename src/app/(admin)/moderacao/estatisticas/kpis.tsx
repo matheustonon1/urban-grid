@@ -28,27 +28,27 @@ export function Kpis({
   descricaoComparacao: string;
 }) {
   return (
-    <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-slate-200 bg-slate-200 shadow-sm lg:grid-cols-4 dark:border-slate-800 dark:bg-slate-800">
+    <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-line bg-line shadow-sm lg:grid-cols-4">
       {itens.map(({ rotulo, valor, variacao, detalhe }) => {
         const Seta = variacao ? SETA[variacao.direcao] : null;
         return (
-          <div key={rotulo} className="flex flex-col gap-1 bg-white px-4 py-4 dark:bg-slate-900">
-            <dt className="text-xs font-medium text-slate-500 dark:text-slate-400">{rotulo}</dt>
+          <div key={rotulo} className="flex flex-col gap-1 bg-surface px-4 py-4">
+            <dt className="text-xs font-medium text-ink-muted">{rotulo}</dt>
             <dd className="flex flex-col gap-1">
-              <span className="font-mono text-3xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+              <span className="font-mono text-3xl font-semibold tabular-nums text-ink">
                 {valor}
               </span>
               {variacao && Seta && (
-                <span className="inline-flex items-center gap-1 text-xs text-slate-600 dark:text-slate-400">
+                <span className="inline-flex items-center gap-1 text-xs text-ink-muted">
                   <Seta className="h-3.5 w-3.5" aria-hidden />
                   <span className="font-mono font-medium tabular-nums">{variacao.texto}</span>
-                  <span aria-hidden className="text-slate-400 dark:text-slate-500">
+                  <span aria-hidden className="text-ink-muted">
                     {rotuloComparacao}
                   </span>
                   <span className="sr-only">{descricaoComparacao}</span>
                 </span>
               )}
-              {detalhe && <span className="text-xs text-slate-500 dark:text-slate-400">{detalhe}</span>}
+              {detalhe && <span className="text-xs text-ink-muted">{detalhe}</span>}
             </dd>
           </div>
         );

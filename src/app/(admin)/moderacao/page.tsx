@@ -31,9 +31,9 @@ export const generateMetadata = metadataDaPagina("Moderacao");
 type Origem = "ia" | "recurso" | "falha";
 
 const ESTILO_ORIGEM: Record<Origem, string> = {
-  ia: "bg-amber-50 text-amber-800 dark:bg-amber-950 dark:text-amber-400",
-  recurso: "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-400",
-  falha: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
+  ia: "bg-warn-soft text-warn-ink",
+  recurso: "bg-brand-soft text-brand",
+  falha: "bg-sunken text-ink-2",
 };
 
 // As mensagens dos eixos trazem ":" no fim (herança do formato em texto
@@ -121,10 +121,10 @@ export default async function ModeracaoPage({ searchParams }: PageProps<"/modera
               <TempoNaFila desde={reclamacao.updatedAt} />
             </div>
 
-            <p className="text-lg leading-snug font-semibold text-slate-900 dark:text-slate-100">
+            <p className="text-lg leading-snug font-semibold text-ink">
               {reclamacao.titulo}
             </p>
-            <p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm text-slate-500 dark:text-slate-400">
+            <p className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm text-ink-muted">
               <span className="font-mono text-xs">{reclamacao.protocolo}</span> ·{" "}
               {reclamacao.categoria.nome}
               <span aria-hidden>·</span>
@@ -132,7 +132,7 @@ export default async function ModeracaoPage({ searchParams }: PageProps<"/modera
               {reclamacao.endereco} - {reclamacao.cidade.nome}/{reclamacao.cidade.estado.uf}
             </p>
 
-            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+            <div className="flex items-center gap-2 text-sm text-ink-muted">
               <AvatarIniciais nome={nomeAutor} />
               <span>
                 {t("autor")} <span className="font-medium">{nomeAutor}</span>
@@ -149,7 +149,7 @@ export default async function ModeracaoPage({ searchParams }: PageProps<"/modera
                     key={midia.id}
                     src={midia.urlTratada ?? midia.url}
                     alt=""
-                    className="aspect-square w-full rounded-lg border border-slate-200 object-cover dark:border-slate-700"
+                    className="aspect-square w-full rounded-lg border border-line object-cover"
                   />
                 ))}
               </div>
@@ -172,7 +172,7 @@ export default async function ModeracaoPage({ searchParams }: PageProps<"/modera
             )}
 
             {log && (
-              <div className="flex flex-col gap-3 rounded-lg border border-slate-200 p-4 dark:border-slate-800">
+              <div className="flex flex-col gap-3 rounded-lg border border-line p-4">
                 <p className={rotuloSecao}>{t("analiseIA")}</p>
                 <PontuacoesIA
                   itens={[
@@ -190,7 +190,7 @@ export default async function ModeracaoPage({ searchParams }: PageProps<"/modera
                   ]}
                 />
                 {log.justificativa && (
-                  <p className="text-sm text-slate-600 italic dark:text-slate-300">
+                  <p className="text-sm text-ink-2 italic">
                     “{log.justificativa}”
                   </p>
                 )}
@@ -201,7 +201,7 @@ export default async function ModeracaoPage({ searchParams }: PageProps<"/modera
 
             {blurPendente && <Aviso tom="erro">{t("desfoquePendenteDesc")}</Aviso>}
 
-            <div className="grid gap-4 border-t border-slate-200 pt-4 sm:grid-cols-[auto_1fr] dark:border-slate-800">
+            <div className="grid gap-4 border-t border-line pt-4 sm:grid-cols-[auto_1fr]">
               <form action={aprovarReclamacao.bind(null, reclamacao.id)}>
                 <button
                   type="submit"

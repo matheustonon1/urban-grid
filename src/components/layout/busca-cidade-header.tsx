@@ -16,6 +16,7 @@ export function BuscaCidadeHeader() {
       <SeletorCidade
         name="cidadeId"
         placeholder={t("buscarCidade")}
+        variante="cabecalho"
         onSelecionar={(cidade) => {
           if (cidade.slug) {
             router.push(`/cidades/${cidade.slug}`);
@@ -43,13 +44,13 @@ export function BuscaCidadeMobile() {
         onClick={() => setAberto((valor) => !valor)}
         aria-expanded={aberto}
         aria-label={aberto ? t("buscarCidadeFechar") : t("buscarCidadeAbrir")}
-        className="rounded-lg p-2 text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+        className="rounded-md p-1.5 text-ink-muted sm:p-2 transition-colors hover:bg-sunken hover:text-ink"
       >
         {aberto ? <X className="h-5 w-5" aria-hidden /> : <Search className="h-5 w-5" aria-hidden />}
       </button>
 
       {aberto && (
-        <div className="animate-pop-in absolute inset-x-0 top-full z-10 origin-top border-b border-slate-200 bg-white p-3 shadow-md dark:border-slate-800 dark:bg-slate-900">
+        <div className="animate-pop-in absolute inset-x-0 top-full z-10 origin-top border-b border-line bg-surface p-3 shadow-md">
           <SeletorCidade
             name="cidadeId"
             placeholder={t("buscarCidade")}

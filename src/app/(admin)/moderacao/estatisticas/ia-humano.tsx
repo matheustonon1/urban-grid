@@ -37,37 +37,37 @@ function PainelRevisao({ revisao }: { revisao: RevisaoHumana }) {
   ];
 
   return (
-    <div className="flex min-w-0 flex-col gap-4 rounded-lg border border-slate-200 bg-slate-50/60 p-4 dark:border-slate-800 dark:bg-slate-900/50">
+    <div className="flex min-w-0 flex-col gap-4 rounded-lg border border-line bg-sunken/60 p-4">
       <div className="flex items-baseline justify-between gap-3">
-        <h3 className="text-sm font-medium text-slate-800 dark:text-slate-200">
+        <h3 className="text-sm font-medium text-ink-2">
           {t(reclamacao ? "humanoReclamacoesTitulo" : "humanoComentariosTitulo")}
         </h3>
-        <span className="font-mono text-2xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+        <span className="font-mono text-2xl font-semibold tabular-nums text-ink">
           {revisao.paraRevisar}
         </span>
       </div>
 
       {revisadas === 0 ? (
-        <p className="text-sm text-slate-500 dark:text-slate-400">{t("humanoSemRevisao")}</p>
+        <p className="text-sm text-ink-muted">{t("humanoSemRevisao")}</p>
       ) : (
         <>
           <div className="flex flex-col gap-2.5">
             <div
               role="img"
               aria-label={partes.map((p) => `${p.rotulo}: ${p.n}`).join(", ")}
-              className="flex h-2.5 gap-0.5 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"
+              className="flex h-2.5 gap-0.5 overflow-hidden rounded-full bg-sunken"
             >
               {partes.map((parte) => parte.n > 0 && (
                 <div key={parte.chave} className={parte.cor} style={{ flex: `${parte.n} 1 0` }} />
               ))}
             </div>
-            <ul className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-slate-700 dark:text-slate-300">
+            <ul className="flex flex-wrap gap-x-5 gap-y-1 text-sm text-ink-2">
               {partes.map((parte) => (
                 <li key={parte.chave} className="flex items-center gap-1.5">
                   <span aria-hidden className={`h-2 w-2 rounded-full ${parte.cor}`} />
                   {parte.rotulo}
                   <span className="font-mono font-medium tabular-nums">{parte.n}</span>
-                  <span className="text-slate-400 dark:text-slate-500">
+                  <span className="text-ink-muted">
                     ({formatarPorcentagem(parte.n / revisadas, locale)})
                   </span>
                 </li>
@@ -75,7 +75,7 @@ function PainelRevisao({ revisao }: { revisao: RevisaoHumana }) {
             </ul>
           </div>
 
-          <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+          <p className="text-sm leading-relaxed text-ink-muted">
             {reclamacao
               ? t("humanoLeituraReclamacao", {
                   pct: formatarPorcentagem(revisao.taxaAprovadaPorHumano, locale),
@@ -92,19 +92,19 @@ function PainelRevisao({ revisao }: { revisao: RevisaoHumana }) {
         <Aviso tom="atencao">{t("humanoAmostra", { count: revisadas })}</Aviso>
       )}
 
-      <dl className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+      <dl className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-ink-muted">
         <div className="flex gap-1.5">
           <dt>{t("humanoRevisados")}</dt>
-          <dd className="font-mono font-medium tabular-nums text-slate-700 dark:text-slate-300">{revisadas}</dd>
+          <dd className="font-mono font-medium tabular-nums text-ink-2">{revisadas}</dd>
         </div>
         <div className="flex gap-1.5">
           <dt>{t("humanoPendentes")}</dt>
-          <dd className="font-mono font-medium tabular-nums text-slate-700 dark:text-slate-300">{revisao.pendentes}</dd>
+          <dd className="font-mono font-medium tabular-nums text-ink-2">{revisao.pendentes}</dd>
         </div>
         {revisao.medianaMs !== null && (
           <div className="flex gap-1.5">
             <dt>{t("humanoMediana")}</dt>
-            <dd className="font-mono font-medium tabular-nums text-slate-700 dark:text-slate-300">
+            <dd className="font-mono font-medium tabular-nums text-ink-2">
               {formatarDuracao(revisao.medianaMs, locale)}
             </dd>
           </div>
@@ -130,17 +130,17 @@ function MotivosDeRevisaoLista({ motivos }: { motivos: MotivosDeRevisao }) {
 
   return (
     <div className="flex min-w-0 flex-col gap-3">
-      <h3 className="text-sm font-medium text-slate-800 dark:text-slate-200">{t("motivosTitulo")}</h3>
+      <h3 className="text-sm font-medium text-ink-2">{t("motivosTitulo")}</h3>
       <ul className="flex flex-col gap-2.5">
         {linhas.map((linha) => (
           <li key={linha.chave} className="grid grid-cols-[minmax(0,16rem)_minmax(0,1fr)_auto] items-center gap-x-3 text-sm">
-            <span className="leading-snug text-slate-700 dark:text-slate-300">{linha.rotulo}</span>
-            <div aria-hidden className="h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-              <div className="h-full rounded-full bg-primary" style={{ width: `${(linha.n / total) * 100}%` }} />
+            <span className="leading-snug text-ink-2">{linha.rotulo}</span>
+            <div aria-hidden className="h-2 overflow-hidden rounded-full bg-sunken">
+              <div className="h-full rounded-full bg-brand" style={{ width: `${(linha.n / total) * 100}%` }} />
             </div>
-            <span className="text-right font-mono tabular-nums text-slate-800 dark:text-slate-200">
+            <span className="text-right font-mono tabular-nums text-ink-2">
               {linha.n}
-              <span className="ml-1.5 text-xs text-slate-400 dark:text-slate-500">
+              <span className="ml-1.5 text-xs text-ink-muted">
                 {formatarPorcentagem(linha.n / total, locale)}
               </span>
             </span>

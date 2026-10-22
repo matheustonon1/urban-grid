@@ -50,7 +50,7 @@ export function ThemeToggle() {
       type="button"
       onClick={alternar}
       aria-label={t("alternarTema")}
-      className="relative rounded-lg p-2 text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+      className="relative rounded-md p-1.5 text-ink-2 sm:p-2 transition-colors hover:bg-sunken hover:text-ink"
     >
       <Sun
         className="h-5 w-5 rotate-0 opacity-100 transition-all duration-300 dark:-rotate-90 dark:scale-0 dark:opacity-0"

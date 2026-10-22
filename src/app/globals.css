@@ -2,54 +2,304 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ==========================================================================
+   Identidade: "sinalização urbana + planta".
+   Papel azul-acinzentado e tinta quase preta (planta técnica), azul de placa
+   como única cor interativa e amarelo de obra como acento raro (marca-texto,
+   estado "ao vivo", faixa de obra). Superfícies planas com fio de 1px - sombra
+   só em quem flutua (menus, diálogos).
+
+   Tokens SEMÂNTICOS (paper, surface, ink, line, brand, signal e os estados):
+   viram `bg-surface`, `text-ink-muted`, `border-line`... e já trocam sozinhos
+   no escuro, sem `dark:` duplicado em cada elemento. Cor nova = token novo
+   aqui, com par claro/escuro.
+   ========================================================================== */
+
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --primary: #1d4ed8;
-  --primary-dark: #1e40af;
-  /* Terracota - contraponto quente ao azul, usado com moderação (placas
-     de sinalização urbana, não mais um gradiente "SaaS" no botão
-     principal). */
-  --accent: #c2410c;
-  --accent-dark: #9a3412;
+  color-scheme: light;
+
+  --paper: #f2f4f7;
+  --surface: #ffffff;
+  --sunken: #e9edf2;
+  --line: #d9dfe7;
+  --line-strong: #b9c2cf;
+
+  --ink: #0e1520;
+  --ink-2: #2c3645;
+  --ink-muted: #5a6676;
+  --ink-faint: #8793a3;
+
+  /* Azul de placa de orientação: contraste 7:1 sobre branco. */
+  --brand: #0a52c4;
+  --brand-strong: #083f9b;
+  --brand-soft: #e3ecfb;
+  --brand-ink: #0a3f91;
+  --on-brand: #ffffff;
+
+  /* Amarelo de obra. Como PREENCHIMENTO (texto escuro por cima, --on-signal);
+     --signal-ink é a versão legível quando precisa ser texto sobre claro. */
+  --signal: #ffc20e;
+  --signal-soft: #fff4cc;
+  --signal-ink: #8a5b00;
+  --on-signal: #0e1520;
+
+  --ok-soft: #e2f5e9;
+  --ok-ink: #0f6b3a;
+  --warn-soft: #fdf0d0;
+  --warn-ink: #7a4a00;
+  --danger: #b42318;
+  --on-danger: #ffffff;
+  --danger-soft: #fde8e8;
+  --danger-ink: #a31d1d;
+  --progress-soft: #ffe9dc;
+  --progress-ink: #9a3a0a;
 }
 
 .dark {
-  --background: #020617;
-  --foreground: #f1f5f9;
-  --primary: #60a5fa;
-  --primary-dark: #93c5fd;
-  --accent: #fb923c;
-  --accent-dark: #fdba74;
+  color-scheme: dark;
+
+  --paper: #0b0f16;
+  --surface: #121823;
+  --sunken: #18202d;
+  --line: #243042;
+  --line-strong: #33425a;
+
+  --ink: #edf1f7;
+  --ink-2: #c5cedb;
+  --ink-muted: #93a0b3;
+  --ink-faint: #67748a;
+
+  --brand: #7ea6ff;
+  --brand-strong: #a9c3ff;
+  --brand-soft: #14264a;
+  --brand-ink: #a9c4ff;
+  --on-brand: #07142e;
+
+  --signal: #ffcc33;
+  --signal-soft: #2e2506;
+  --signal-ink: #ffd666;
+  --on-signal: #0e1520;
+
+  --ok-soft: #0f2a1c;
+  --ok-ink: #6fd49a;
+  --warn-soft: #2d2108;
+  --warn-ink: #f0c05a;
+  --danger: #ff8a8a;
+  --on-danger: #2b0a0a;
+  --danger-soft: #331314;
+  --danger-ink: #ff9b9b;
+  --progress-soft: #33190a;
+  --progress-ink: #ffa66b;
+}
+
+/* Faixas escuras que ficam escuras nos DOIS temas (painel das telas de entrada,
+   faixa de chamada da home): `night` e `chalk` não trocam no .dark. */
+@theme {
+  --color-night: #0e1520;
+  --color-chalk: #f2f4f7;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-primary: var(--primary);
-  --color-primary-dark: var(--primary-dark);
-  --color-accent: var(--accent);
-  --color-accent-dark: var(--accent-dark);
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-sunken: var(--sunken);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-ink: var(--brand-ink);
+  --color-on-brand: var(--on-brand);
+
+  --color-signal: var(--signal);
+  --color-signal-soft: var(--signal-soft);
+  --color-signal-ink: var(--signal-ink);
+  --color-on-signal: var(--on-signal);
+
+  --color-ok-soft: var(--ok-soft);
+  --color-ok-ink: var(--ok-ink);
+  --color-warn-soft: var(--warn-soft);
+  --color-warn-ink: var(--warn-ink);
+  --color-danger: var(--danger);
+  --color-on-danger: var(--on-danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-ink: var(--danger-ink);
+  --color-progress-soft: var(--progress-soft);
+  --color-progress-ink: var(--progress-ink);
+
+  /* Apelidos dos nomes antigos: telas ainda não migradas (text-primary,
+     bg-accent...) continuam coerentes com a identidade nova. */
+  --color-background: var(--paper);
+  --color-foreground: var(--ink);
+  --color-primary: var(--brand);
+  --color-primary-dark: var(--brand-strong);
+  --color-accent: var(--signal-ink);
+  --color-accent-dark: var(--signal-ink);
+
   --font-sans: var(--font-plex-sans);
   --font-mono: var(--font-plex-mono);
   --font-display: var(--font-display);
 }
 
-h1,
-h2,
-h3 {
-  font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
-  letter-spacing: -0.01em;
+/* As escalas slate e blue do Tailwind foram REDEFINIDAS para a paleta do
+   projeto: as telas que ainda usam `text-slate-500`/`bg-blue-700` herdam o
+   azul-acinzentado e o azul-placa em vez do cinza/azul padrão. "slate" aqui é
+   a escala neutra do Urban Grid, não a do Tailwind. Em código novo, prefira os
+   tokens semânticos acima. */
+@theme {
+  --color-slate-50: #f6f8fa;
+  --color-slate-100: #edf0f4;
+  --color-slate-200: #d9dfe7;
+  --color-slate-300: #b9c2cf;
+  --color-slate-400: #8793a3;
+  --color-slate-500: #5a6676;
+  --color-slate-600: #434e5e;
+  --color-slate-700: #2c3645;
+  --color-slate-800: #18202d;
+  --color-slate-900: #121823;
+  --color-slate-950: #0b0f16;
+
+  --color-blue-50: #eef4ff;
+  --color-blue-100: #dde8ff;
+  --color-blue-200: #c2d5ff;
+  --color-blue-300: #9db9ff;
+  --color-blue-400: #8db3ff;
+  --color-blue-500: #4a7ae8;
+  --color-blue-600: #1f63d6;
+  --color-blue-700: #0a52c4;
+  --color-blue-800: #083f9b;
+  --color-blue-900: #0a3377;
+  --color-blue-950: #0a1f4d;
 }
 
-body {
-  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
-  background-color: var(--background);
-  color: var(--foreground);
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease;
+@layer base {
+  html {
+    /* O cabeçalho é fixo no topo: âncoras e foco não podem parar atrás dele. */
+    scroll-padding-top: 5rem;
+  }
+
+  body {
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    background-color: var(--paper);
+    color: var(--ink);
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background: var(--signal);
+    color: var(--on-signal);
+  }
+
+  /* Foco sempre visível e igual em tudo que recebe teclado; as classes
+     focus-visible: de cada componente só ajustam o que for diferente. */
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
 }
+
+/* --------------------------------------------------------------------------
+   Utilitários de identidade
+   -------------------------------------------------------------------------- */
+
+/* Kicker técnico: mono pequeno em caixa alta (protocolo, índice, legenda). */
+@utility kicker {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  line-height: 1rem;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+/* Marca-texto de obra atrás de uma palavra do título. */
+@utility marca-texto {
+  background-image: linear-gradient(transparent 62%, var(--signal) 62% 92%, transparent 92%);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  padding-inline: 0.12em;
+  margin-inline: -0.12em;
+}
+
+/* Faixa de obra (listras amarelo/tinta): usar fina e raramente - é o único
+   ornamento "gritado" do projeto. */
+@utility faixa-obra {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--signal) 0 10px,
+    var(--color-night) 10px 20px
+  );
+}
+
+/* Quadrícula de planta: quarteirões de 40px, avenida a cada 160px. Fica
+   parada (nada de grade "deslizando") e some em degradê pra não competir com o
+   texto. */
+@utility bg-planta {
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--brand) 13%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--brand) 13%, transparent) 1px, transparent 1px),
+    linear-gradient(color-mix(in srgb, var(--brand) 6%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--brand) 6%, transparent) 1px, transparent 1px);
+  background-size:
+    160px 160px,
+    160px 160px,
+    40px 40px,
+    40px 40px;
+  -webkit-mask-image: radial-gradient(ellipse 80% 70% at 30% 0%, black, transparent);
+  mask-image: radial-gradient(ellipse 80% 70% at 30% 0%, black, transparent);
+}
+
+/* A mesma quadrícula, em linhas claras, para fundo escuro (painel de entrada). */
+@utility bg-planta-clara {
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--color-chalk) 14%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--color-chalk) 14%, transparent) 1px, transparent 1px),
+    linear-gradient(color-mix(in srgb, var(--color-chalk) 6%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--color-chalk) 6%, transparent) 1px, transparent 1px);
+  background-size:
+    160px 160px,
+    160px 160px,
+    40px 40px,
+    40px 40px;
+  -webkit-mask-image: radial-gradient(ellipse 90% 80% at 20% 100%, black, transparent);
+  mask-image: radial-gradient(ellipse 90% 80% at 20% 100%, black, transparent);
+}
+
+/* Continua rolável (arrastar/gesto/scroll do trackpad), só sem a barra de
+   rolagem visível - tiras horizontais de abas que só rolam em telas bem
+   estreitas. */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Animação
+   -------------------------------------------------------------------------- */
 
 @keyframes fade-in {
   from {
@@ -73,71 +323,6 @@ body {
   }
 }
 
-@keyframes float {
-  0%,
-  100% {
-    transform: translate(-50%, 0) scale(1);
-  }
-  33% {
-    transform: translate(calc(-50% + 1.5rem), 1.5rem) scale(1.08);
-  }
-  66% {
-    transform: translate(calc(-50% - 2rem), 2.5rem) scale(0.94);
-  }
-}
-
-@keyframes float-alt {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-  40% {
-    transform: translate(-2rem, 2rem) scale(1.12);
-  }
-  75% {
-    transform: translate(1.5rem, -1.5rem) scale(0.92);
-  }
-}
-
-@keyframes grid-drift {
-  from {
-    background-position: 0 0;
-  }
-  to {
-    background-position: 56px 56px;
-  }
-}
-
-@keyframes icon-pop {
-  from {
-    opacity: 0;
-    transform: scale(0.4) rotate(-40deg);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) rotate(0deg);
-  }
-}
-
-@keyframes city-grid-drift {
-  from {
-    background-position:
-      0 0,
-      0 0,
-      0 0,
-      0 0;
-  }
-  to {
-    /* 40px = um quarteirão inteiro da grade menor - o laço fecha sem
-       "pulo" visível quando volta pro início. */
-    background-position:
-      40px 40px,
-      40px 40px,
-      40px 40px,
-      40px 40px;
-  }
-}
-
 .animate-fade-in {
   animation: fade-in 0.35s ease-out both;
 }
@@ -146,97 +331,19 @@ body {
   animation: pop-in 0.15s ease-out both;
 }
 
-.animate-float {
-  animation: float 12s ease-in-out infinite;
-}
-
-.animate-float-alt {
-  animation: float-alt 10s ease-in-out infinite;
-}
-
-.animate-grid-drift {
-  animation: grid-drift 25s linear infinite;
-}
-
-.animate-icon-pop {
-  animation: icon-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-}
-
-/* Bem lento e sutil de propósito - é textura ambiente, não algo pra
-   chamar atenção pra si mesmo. */
-.animate-city-grid-drift {
-  animation: city-grid-drift 50s linear infinite;
-}
-
-.bg-dot-grid {
-  background-image: radial-gradient(circle, rgba(100, 116, 139, 0.35) 1px, transparent 1px);
-  background-size: 28px 28px;
-  -webkit-mask-image: radial-gradient(ellipse 60% 55% at 50% 0%, black, transparent);
-  mask-image: radial-gradient(ellipse 60% 55% at 50% 0%, black, transparent);
-}
-
-.dark .bg-dot-grid {
-  background-image: radial-gradient(circle, rgba(148, 163, 184, 0.18) 1px, transparent 1px);
-}
-
-/* Grade de linhas (quarteirão/planta baixa) no lugar do padrão de pontos -
-   remete ao nome do produto em vez de ser um fundo genérico. Uma linha em
-   cada 4 é levemente mais forte, pra sugerir avenidas entre quarteirões
-   sem virar ruído visual. */
-.bg-city-grid {
-  background-image:
-    linear-gradient(rgba(29, 78, 216, 0.14) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(29, 78, 216, 0.14) 1px, transparent 1px),
-    linear-gradient(rgba(29, 78, 216, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(29, 78, 216, 0.05) 1px, transparent 1px);
-  background-size:
-    160px 160px,
-    160px 160px,
-    40px 40px,
-    40px 40px;
-  -webkit-mask-image: radial-gradient(ellipse 75% 65% at 50% 0%, black, transparent);
-  mask-image: radial-gradient(ellipse 75% 65% at 50% 0%, black, transparent);
-}
-
-.dark .bg-city-grid {
-  background-image:
-    linear-gradient(rgba(96, 165, 250, 0.16) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(96, 165, 250, 0.16) 1px, transparent 1px),
-    linear-gradient(rgba(96, 165, 250, 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(96, 165, 250, 0.07) 1px, transparent 1px);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in,
-  .animate-pop-in,
-  .animate-float,
-  .animate-float-alt,
-  .animate-grid-drift,
-  .animate-city-grid-drift,
-  .animate-icon-pop {
+  .animate-pop-in {
     animation: none;
   }
 }
 
-/* Evita que a troca de tema dispare a transicao de cor/sombra de cada
-   elemento da pagina ao mesmo tempo (dezenas de cards, botoes e inputs
-   com transition-colors) - sem isso, alternar o tema em paginas com
-   muitos elementos causa uma "lagada" visivel. */
+/* Evita que a troca de tema dispare a transição de cor/sombra de cada
+   elemento da página ao mesmo tempo (dezenas de cartões, botões e campos com
+   transition-colors) - sem isso, alternar o tema em páginas com muitos
+   elementos causa uma "lagada" visível. */
 .theme-switching,
 .theme-switching * {
   transition: none !important;
   animation-play-state: paused !important;
-}
-
-/* Continua rolável (arrastar/gesto/scroll do trackpad), só sem a barra
-   de rolagem visível - usado em tiras horizontais de abas que só
-   precisam rolar em telas bem estreitas (em telas normais, tudo cabe
-   numa linha só). */
-.scrollbar-none {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.scrollbar-none::-webkit-scrollbar {
-  display: none;
 }

@@ -103,10 +103,10 @@ export default async function DenunciasPage({ searchParams }: PageProps<"/denunc
           <div key={denuncia.id} className={`flex flex-col gap-4 ${cartao}`}>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-sunken px-2.5 py-0.5 text-xs font-medium text-ink-2">
                   {denuncia.alvoTipo === "COMENTARIO" ? t("tipoComentario") : t("tipoReclamacao")}
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700 dark:bg-red-950 dark:text-red-400">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-danger-soft px-2.5 py-0.5 text-xs font-medium text-danger-ink">
                   <Flag className="h-3 w-3" aria-hidden />
                   {tMotivo(denuncia.motivo)}
                 </span>
@@ -117,7 +117,7 @@ export default async function DenunciasPage({ searchParams }: PageProps<"/denunc
             {reclamacao && (
               <Link
                 href={`/reclamacoes/${reclamacao.protocolo}`}
-                className="text-lg leading-snug font-semibold text-slate-900 hover:text-primary dark:text-slate-100"
+                className="text-lg leading-snug font-semibold text-ink hover:text-brand"
               >
                 {reclamacao.titulo}
               </Link>
@@ -126,7 +126,7 @@ export default async function DenunciasPage({ searchParams }: PageProps<"/denunc
 
             {comentario && (
               <>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
+                <p className="text-sm text-ink-muted">
                   {t("comentarioDe", {
                     autor: comentario.autor.name ?? comentario.autor.email,
                   })}
@@ -134,7 +134,7 @@ export default async function DenunciasPage({ searchParams }: PageProps<"/denunc
                 <p className={blocoCitacao}>“{comentario.texto}”</p>
                 <Link
                   href={`/reclamacoes/${comentario.reclamacao.protocolo}`}
-                  className="text-sm text-primary hover:underline"
+                  className="text-sm text-brand hover:underline"
                 >
                   {t("comentarioEm", { titulo: comentario.reclamacao.titulo })}
                 </Link>
@@ -142,17 +142,17 @@ export default async function DenunciasPage({ searchParams }: PageProps<"/denunc
             )}
 
             {!alvoExiste && (
-              <p className="font-medium text-slate-400 dark:text-slate-500">
+              <p className="font-medium text-ink-muted">
                 {t("conteudoRemovido")}
               </p>
             )}
 
-            <div className="flex flex-col gap-2 rounded-lg border border-slate-200 p-3.5 dark:border-slate-800">
-              <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+            <div className="flex flex-col gap-2 rounded-lg border border-line p-3.5">
+              <div className="flex items-center gap-2 text-sm text-ink-muted">
                 <AvatarIniciais nome={nomeDenunciante} />
                 <span>
                   {t("denunciadoPor")}{" "}
-                  <span className="font-medium text-slate-900 dark:text-slate-100">
+                  <span className="font-medium text-ink">
                     {nomeDenunciante}
                   </span>{" "}
                   {t("em")}{" "}
@@ -162,13 +162,13 @@ export default async function DenunciasPage({ searchParams }: PageProps<"/denunc
                 </span>
               </div>
               {denuncia.descricao && (
-                <p className="text-sm text-slate-600 italic dark:text-slate-300">
+                <p className="text-sm text-ink-2 italic">
                   “{denuncia.descricao}”
                 </p>
               )}
             </div>
 
-            <div className="flex flex-wrap items-center gap-2 border-t border-slate-200 pt-4 dark:border-slate-800">
+            <div className="flex flex-wrap items-center gap-2 border-t border-line pt-4">
               <form action={marcarProcedente.bind(null, denuncia.id)}>
                 <button type="submit" className={botaoPrimario}>
                   {denuncia.alvoTipo === "COMENTARIO"

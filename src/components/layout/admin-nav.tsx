@@ -83,9 +83,9 @@ export function AdminNav({
       // sobra), então "centralizar" não corta nada e a rolagem continua
       // alcançando as duas pontas. "relative" faz o nav ser o offsetParent
       // dos links, pro cálculo de auto-scroll abaixo ser preciso.
-      className="scrollbar-none relative mb-2 overflow-x-auto border-b border-slate-200 pb-3 dark:border-slate-800"
+      className="scrollbar-none relative mb-2 overflow-x-auto border-b border-line"
     >
-      <div className="flex w-max min-w-full flex-nowrap justify-center gap-1">
+      <div className="flex w-max min-w-full flex-nowrap justify-start gap-1">
         {itens.map((item) => {
           // "/moderacao" não pode marcar como ativo em "/moderacao/comentarios" -
           // por isso o item raiz exige correspondência exata, os demais aceitam
@@ -101,21 +101,17 @@ export function AdminNav({
               href={item.href}
               ref={ativo ? ativoRef : undefined}
               aria-current={ativo ? "page" : undefined}
-              className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1.5 text-sm font-medium transition-colors ${
+              className={`-mb-px inline-flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-3 text-sm font-medium transition-colors ${
                 ativo
-                  ? "bg-primary text-white"
-                  : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+                  ? "border-brand text-ink"
+                  : "border-transparent text-ink-muted hover:border-line-strong hover:text-ink"
               }`}
             >
               <item.icone className="h-3.5 w-3.5" aria-hidden />
               {t(item.chave)}
               {(pendentes[item.chave] ?? 0) > 0 && (
                 <span
-                  className={`rounded-full px-1.5 text-xs leading-5 font-semibold tabular-nums ${
-                    ativo
-                      ? "bg-white/25 text-white"
-                      : "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
-                  }`}
+                  className="rounded-[4px] bg-signal px-1.5 text-xs leading-5 font-bold text-on-signal tabular-nums"
                 >
                   <span aria-hidden>{pendentes[item.chave] > 99 ? "99+" : pendentes[item.chave]}</span>
                   <span className="sr-only"> {t("pendentes", { count: pendentes[item.chave] })}</span>

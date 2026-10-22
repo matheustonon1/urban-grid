@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useId, useState } from "react";
+import { Search } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { useFecharAoInteragirFora } from "@/hooks/useFecharAoInteragirFora";
@@ -25,6 +26,7 @@ export function SeletorCidade({
   defaultValue = null,
   placeholder = "Cidade",
   required = false,
+  variante = "campo",
   onSelecionar,
   onMudar,
 }: {
@@ -33,6 +35,8 @@ export function SeletorCidade({
   defaultValue?: CidadeResultado | null;
   placeholder?: string;
   required?: boolean;
+  // "cabecalho": campo mais baixo, com lupa, pra barra do topo.
+  variante?: "campo" | "cabecalho";
   onSelecionar?: (cidade: CidadeResultado) => void;
   // Avisa toda mudança de valor, inclusive quando a pessoa começa a digitar
   // e a cidade escolhida deixa de valer (null) - quem precisa saber se há
@@ -123,6 +127,12 @@ export function SeletorCidade({
 
   return (
     <div ref={containerRef} className="relative">
+      {variante === "cabecalho" && (
+        <Search
+          className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-ink-muted"
+          aria-hidden
+        />
+      )}
       <input
         id={id}
         type="text"
@@ -146,7 +156,7 @@ export function SeletorCidade({
           onMudar?.(null);
         }}
         onFocus={() => setAberto(true)}
-        className={`w-full ${campoInput}`}
+        className={`w-full ${campoInput} ${variante === "cabecalho" ? "bg-sunken/60 py-2 pl-9" : ""}`}
       />
       <input type="hidden" name={name} value={selecionada?.id ?? ""} />
 
@@ -154,7 +164,7 @@ export function SeletorCidade({
         <ul
           id={listboxId}
           role="listbox"
-          className="animate-pop-in absolute z-10 mt-1 max-h-60 w-full origin-top overflow-auto rounded-lg border border-slate-200 bg-white shadow-md dark:border-slate-700 dark:bg-slate-900"
+          className="animate-pop-in absolute z-10 mt-1 max-h-60 w-full origin-top overflow-auto rounded-lg border border-line bg-surface shadow-md"
         >
           {resultados.map((cidade, indice) => {
             const novoGrupo = cidade.estadoNome !== resultados[indice - 1]?.estadoNome;
@@ -164,7 +174,7 @@ export function SeletorCidade({
                 {novoGrupo && cidade.estadoNome && (
                   <p
                     role="presentation"
-                    className="bg-slate-50 px-3 py-1 text-xs font-medium text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+                    className="bg-sunken px-3 py-1 text-xs font-medium text-ink-muted"
                   >
                     {cidade.estadoNome}
                   </p>
@@ -176,8 +186,8 @@ export function SeletorCidade({
                   tabIndex={-1}
                   aria-selected={selecionada?.id === cidade.id}
                   onClick={() => selecionar(cidade)}
-                  className={`block w-full px-3 py-2 text-left text-sm text-slate-800 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 ${
-                    indice === indiceAtivo ? "bg-slate-100 dark:bg-slate-800" : ""
+                  className={`block w-full px-3 py-2 text-left text-sm text-ink-2 hover:bg-sunken ${
+                    indice === indiceAtivo ? "bg-sunken" : ""
                   }`}
                 >
                   {formatar(cidade)}
@@ -189,9 +199,9 @@ export function SeletorCidade({
       )}
 
       {aberto && !buscando && !selecionada && query.trim().length >= 2 && resultados.length === 0 && (
-        <div className="animate-pop-in absolute z-10 mt-1 w-full origin-top rounded-lg border border-slate-200 bg-white p-3 text-sm text-slate-500 shadow-md dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
+        <div className="animate-pop-in absolute z-10 mt-1 w-full origin-top rounded-lg border border-line bg-surface p-3 text-sm text-ink-muted shadow-md">
           {t("naoEncontrou")}{" "}
-          <Link href="/cidades/solicitar" className="text-primary underline">
+          <Link href="/cidades/solicitar" className="font-medium text-brand underline">
             {t("solicitarAqui")}
           </Link>
         </div>

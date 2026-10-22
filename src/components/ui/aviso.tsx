@@ -3,18 +3,15 @@ import { CircleAlert, Info, TriangleAlert } from "lucide-react";
 
 const TONS = {
   erro: {
-    caixa:
-      "border-red-200 bg-red-50 text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-300",
+    caixa: "border-danger-ink/30 bg-danger-soft text-danger-ink",
     icone: CircleAlert,
   },
   atencao: {
-    caixa:
-      "border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-300",
+    caixa: "border-warn-ink/30 bg-warn-soft text-warn-ink",
     icone: TriangleAlert,
   },
   info: {
-    caixa:
-      "border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-300",
+    caixa: "border-line bg-sunken/70 text-ink-2",
     icone: Info,
   },
 } as const;
@@ -37,7 +34,8 @@ export function Aviso({
 
   return (
     <div
-      className={`flex flex-wrap items-center gap-x-4 gap-y-2.5 rounded-lg border px-3.5 py-3 text-sm ${caixa}`}
+      role={tom === "erro" ? "alert" : undefined}
+      className={`flex flex-wrap items-center gap-x-4 gap-y-2.5 rounded-md border px-3.5 py-3 text-sm ${caixa}`}
     >
       <div className="flex min-w-0 flex-1 items-start gap-2.5">
         <Icone className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />

@@ -60,17 +60,17 @@ export default async function TransparenciaPage() {
       <PainelNumeros itens={resumo} />
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+        <h2 className="text-lg font-semibold text-ink">
           {t("rankingTitulo")}
         </h2>
-        <p className="text-sm text-slate-500 dark:text-slate-400">{t("rankingNota")}</p>
+        <p className="text-sm text-ink-muted">{t("rankingNota")}</p>
 
         {ranking.length === 0 ? (
           <EstadoVazio icone={Building2} titulo={t("semDados")} />
         ) : (
           <div className={`overflow-x-auto p-0 ${cartao}`}>
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50/70 text-xs text-slate-500 dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-400">
+              <thead className="border-b border-line bg-sunken/60 text-xs text-ink-muted">
                 <tr>
                   <th scope="col" className="px-4 py-2 font-medium">{t("colOrgao")}</th>
                   <th scope="col" className="px-4 py-2 font-medium">{t("colRespondidas")}</th>
@@ -85,13 +85,13 @@ export default async function TransparenciaPage() {
                   return (
                     <tr
                       key={orgao.id}
-                      className="border-b border-slate-100 transition-colors last:border-0 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/40"
+                      className="border-b border-line transition-colors last:border-0 hover:bg-sunken/40"
                     >
                       <th scope="row" className="px-4 py-3 font-normal">
-                        <Link href={`/orgaos/${orgao.id}`} className="font-medium text-primary hover:underline">
+                        <Link href={`/orgaos/${orgao.id}`} className="font-medium text-brand hover:underline">
                           {orgao.sigla ?? orgao.nome}
                         </Link>
-                        <span className="block text-xs text-slate-500 dark:text-slate-400">
+                        <span className="block text-xs text-ink-muted">
                           {orgao.cidade.nome}
                         </span>
                       </th>

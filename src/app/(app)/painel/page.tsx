@@ -94,7 +94,7 @@ export default async function PainelPage({ searchParams }: PageProps<"/painel">)
       )}
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+        <h2 className="text-lg font-semibold text-ink">
           {t("minhasReclamacoes")}
         </h2>
 
@@ -107,21 +107,21 @@ export default async function PainelPage({ searchParams }: PageProps<"/painel">)
             {novaReclamacao}
           </EstadoVazio>
         ) : (
-          <ul className={`divide-y divide-slate-200 overflow-hidden p-0 dark:divide-slate-800 ${cartao}`}>
+          <ul className={`divide-y divide-line overflow-hidden p-0 ${cartao}`}>
             {reclamacoes.map((reclamacao) => (
               <li key={reclamacao.id}>
                 <Link
                   href={`/reclamacoes/${reclamacao.protocolo}`}
-                  className="group flex items-center gap-4 px-4 py-3.5 transition-colors hover:bg-slate-50 focus-visible:bg-slate-50 dark:hover:bg-slate-800/50 dark:focus-visible:bg-slate-800/50"
+                  className="group flex items-center gap-4 px-4 py-3.5 transition-colors hover:bg-sunken/50 focus-visible:bg-sunken/50"
                 >
                   <div className="flex min-w-0 flex-1 flex-col gap-1">
                     <div className="sm:hidden">
                       <StatusBadge status={reclamacao.status} />
                     </div>
-                    <p className="line-clamp-2 font-medium text-slate-900 group-hover:text-primary sm:line-clamp-1 dark:text-slate-100">
+                    <p className="line-clamp-2 font-medium text-ink group-hover:text-brand sm:line-clamp-1">
                       {reclamacao.titulo}
                     </p>
-                    <p className="flex flex-wrap items-center gap-x-2 text-xs text-slate-500 dark:text-slate-400">
+                    <p className="flex flex-wrap items-center gap-x-2 text-xs text-ink-muted">
                       <span className="font-mono">{reclamacao.protocolo}</span>
                       <span aria-hidden>·</span>
                       <span>{formatarTempoRelativo(reclamacao.createdAt, locale)}</span>
@@ -137,7 +137,7 @@ export default async function PainelPage({ searchParams }: PageProps<"/painel">)
                     <StatusBadge status={reclamacao.status} />
                   </div>
                   <ChevronRight
-                    className="h-4 w-4 shrink-0 text-slate-300 transition-transform group-hover:translate-x-0.5 group-hover:text-primary dark:text-slate-600"
+                    className="h-4 w-4 shrink-0 text-ink-faint transition-transform group-hover:translate-x-0.5 group-hover:text-brand"
                     aria-hidden
                   />
                 </Link>

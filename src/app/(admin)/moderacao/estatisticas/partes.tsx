@@ -25,11 +25,11 @@ export function SecaoEstatistica({
         <div className="flex min-w-0 flex-col gap-0.5">
           <h2
             id={`${id}-titulo`}
-            className="font-display text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100"
+            className="font-display text-lg font-semibold tracking-tight text-ink"
           >
             {titulo}
           </h2>
-          {descricao && <p className="max-w-prose text-sm text-slate-500 dark:text-slate-400">{descricao}</p>}
+          {descricao && <p className="max-w-prose text-sm text-ink-muted">{descricao}</p>}
         </div>
         {lateral}
       </header>
@@ -50,12 +50,12 @@ export function VerComoTabela({
   const t = useTranslations("Estatisticas");
   return (
     <details className="group text-sm">
-      <summary className="inline-flex cursor-pointer items-center gap-1.5 rounded text-slate-500 hover:text-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary dark:text-slate-400 dark:hover:text-slate-200">
+      <summary className="inline-flex cursor-pointer items-center gap-1.5 rounded text-ink-muted hover:text-ink-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
         {t("verComoTabela")}
       </summary>
-      <div className="mt-3 max-h-72 overflow-auto rounded-lg border border-slate-200 dark:border-slate-800">
+      <div className="mt-3 max-h-72 overflow-auto rounded-lg border border-line">
         <table className="w-full text-left text-xs tabular-nums">
-          <thead className="sticky top-0 bg-slate-50 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+          <thead className="sticky top-0 bg-sunken text-ink-muted">
             <tr>
               {cabecalhos.map((cabecalho, i) => (
                 <th key={cabecalho} scope="col" className={`px-3 py-2 font-medium ${i > 0 ? "text-right" : ""}`}>
@@ -64,13 +64,13 @@ export function VerComoTabela({
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+          <tbody className="divide-y divide-line">
             {linhas.map((linha, i) => (
               <tr key={i}>
                 {linha.map((celula, j) => (
                   <td
                     key={j}
-                    className={`px-3 py-1.5 text-slate-700 dark:text-slate-300 ${j > 0 ? "text-right font-mono" : ""}`}
+                    className={`px-3 py-1.5 text-ink-2 ${j > 0 ? "text-right font-mono" : ""}`}
                   >
                     {celula}
                   </td>
@@ -84,7 +84,7 @@ export function VerComoTabela({
   );
 }
 
-export const COR_FALHA = "bg-slate-400 dark:bg-slate-500";
+export const COR_FALHA = "bg-ink-faint";
 
 // Legenda das decisões da IA (e, se houver, das falhas), na mesma ordem e com
 // as mesmas cores das barras: cor identifica, o texto nomeia.
@@ -98,7 +98,7 @@ export function LegendaDecisoes({ comFalhas = false }: { comFalhas?: boolean }) 
     ...(comFalhas ? [{ chave: "FALHA", cor: COR_FALHA, rotulo: tEst("falhaDaIA") }] : []),
   ];
   return (
-    <ul className="flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-slate-700 dark:text-slate-300">
+    <ul className="flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-ink-2">
       {itens.map((item) => (
         <li key={item.chave} className="flex items-center gap-1.5">
           <span aria-hidden className={`h-2.5 w-2.5 rounded-sm ${item.cor}`} />

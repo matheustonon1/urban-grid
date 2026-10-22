@@ -26,18 +26,18 @@ export function SecaoFormulario({
       <header className="flex items-start gap-3">
         <span
           aria-hidden
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-50 font-mono text-sm font-semibold text-blue-700 dark:bg-blue-500/15 dark:text-blue-300"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-ink font-mono text-sm font-medium text-paper"
         >
           {numero}
         </span>
         <div className="flex min-w-0 flex-col gap-0.5">
           <h2
             id={`${id}-titulo`}
-            className="font-display text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100"
+            className="font-display text-lg font-semibold tracking-tight text-ink"
           >
             {titulo}
           </h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400">{descricao}</p>
+          <p className="text-sm text-ink-muted">{descricao}</p>
         </div>
       </header>
       <div className="flex flex-col gap-4">{children}</div>

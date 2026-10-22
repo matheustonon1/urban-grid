@@ -5,9 +5,9 @@ const ORDEM: DecisaoModeracao[] = ["APROVAR", "ENCAMINHAR_REVISAO", "REPROVAR"];
 
 // Exportada: gráficos de estatísticas usam as mesmas cores pra mesma decisão.
 export const COR_DECISAO: Record<DecisaoModeracao, string> = {
-  APROVAR: "bg-green-600 dark:bg-green-500",
-  ENCAMINHAR_REVISAO: "bg-amber-500",
-  REPROVAR: "bg-red-600 dark:bg-red-500",
+  APROVAR: "bg-ok-ink",
+  ENCAMINHAR_REVISAO: "bg-warn-ink",
+  REPROVAR: "bg-danger-ink",
 };
 
 // Distribuição das decisões da IA numa barra única empilhada (parte de um
@@ -33,7 +33,7 @@ export function BarraDecisoes({
       <div
         role="img"
         aria-label={partes.map((p) => `${t(p.decisao)}: ${p.quantidade} (${p.pct}%)`).join(", ")}
-        className="flex h-2.5 gap-px overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"
+        className="flex h-2.5 gap-px overflow-hidden rounded-full bg-sunken"
       >
         {partes.map(
           ({ decisao, quantidade }) =>
@@ -52,12 +52,12 @@ export function BarraDecisoes({
           .map(({ decisao, quantidade, pct }) => (
             <li
               key={decisao}
-              className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300"
+              className="flex items-center gap-1.5 text-ink-2"
             >
               <span aria-hidden className={`h-2 w-2 rounded-full ${COR_DECISAO[decisao]}`} />
               {t(decisao)}
               <span className="font-mono font-medium tabular-nums">{quantidade}</span>
-              <span className="text-slate-400 dark:text-slate-500">({pct}%)</span>
+              <span className="text-ink-muted">({pct}%)</span>
             </li>
           ))}
       </ul>

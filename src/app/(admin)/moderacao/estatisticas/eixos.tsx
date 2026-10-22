@@ -24,23 +24,23 @@ export function EixosQueDisparam({ grupos }: { grupos: GrupoDeEixos[] }) {
       <div className="grid gap-x-10 gap-y-7 lg:grid-cols-2">
         {grupos.map(({ tipo, corte, dados }) => (
           <div key={tipo} className="flex min-w-0 flex-col gap-3">
-            <h3 className="text-sm font-medium text-slate-800 dark:text-slate-200">
+            <h3 className="text-sm font-medium text-ink-2">
               {tipo === "RECLAMACAO"
                 ? t("eixosReclamacoes", { corte: formatarNumero(corte, locale, 2) })
                 : t("eixosComentarios", { corte: formatarNumero(corte, locale, 2) })}
             </h3>
             {dados.every((eixo) => eixo.amostra === 0) ? (
-              <p className="text-sm text-slate-500 dark:text-slate-400">{t("semDados")}</p>
+              <p className="text-sm text-ink-muted">{t("semDados")}</p>
             ) : (
               <ul className="flex flex-col gap-3">
                 {dados.map((eixo) => (
                   <li key={eixo.eixo} className="grid grid-cols-[8.5rem_minmax(0,1fr)_auto] items-center gap-x-3">
                     <div className="flex min-w-0 flex-col">
-                      <span className="text-sm leading-snug text-slate-700 dark:text-slate-300">
+                      <span className="text-sm leading-snug text-ink-2">
                         {t(eixo.eixo)}
                       </span>
                       {eixo.mediaRisco !== null && (
-                        <span className="text-xs text-slate-400 dark:text-slate-500">
+                        <span className="text-xs text-ink-muted">
                           {t("eixoMedia", { valor: formatarNumero(eixo.mediaRisco, locale, 2) })}
                         </span>
                       )}
@@ -48,16 +48,16 @@ export function EixosQueDisparam({ grupos }: { grupos: GrupoDeEixos[] }) {
                     <div
                       role="img"
                       aria-label={`${t(eixo.eixo)}: ${formatarPorcentagem(eixo.taxa, locale)} (${eixo.disparos}/${eixo.amostra})`}
-                      className="h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800"
+                      className="h-2 overflow-hidden rounded-full bg-sunken"
                     >
                       <div
-                        className="h-full rounded-full bg-primary"
+                        className="h-full rounded-full bg-brand"
                         style={{ width: `${(eixo.taxa ?? 0) * 100}%` }}
                       />
                     </div>
-                    <span className="text-right font-mono text-sm tabular-nums text-slate-800 dark:text-slate-200">
+                    <span className="text-right font-mono text-sm tabular-nums text-ink-2">
                       {formatarPorcentagem(eixo.taxa, locale)}
-                      <span className="block text-xs text-slate-400 dark:text-slate-500">
+                      <span className="block text-xs text-ink-muted">
                         {eixo.disparos}/{eixo.amostra}
                       </span>
                     </span>
@@ -66,7 +66,7 @@ export function EixosQueDisparam({ grupos }: { grupos: GrupoDeEixos[] }) {
               </ul>
             )}
             {tipo === "RECLAMACAO" && dados.some((eixo) => eixo.eixo === "coerenciaTextoImagem" && eixo.amostra > 0) && (
-              <p className="text-xs text-slate-500 dark:text-slate-400">{t("eixoCoerenciaNota")}</p>
+              <p className="text-xs text-ink-muted">{t("eixoCoerenciaNota")}</p>
             )}
           </div>
         ))}

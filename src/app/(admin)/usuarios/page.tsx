@@ -51,7 +51,7 @@ export default async function UsuariosPage({ searchParams }: PageProps<"/usuario
         </label>
         <div className="relative flex-1">
           <Search
-            className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400"
+            className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-ink-muted"
             aria-hidden
           />
           <input
@@ -69,11 +69,11 @@ export default async function UsuariosPage({ searchParams }: PageProps<"/usuario
       </form>
 
       {termo.length > 0 && termo.length < 2 && (
-        <p className="text-sm text-slate-500 dark:text-slate-400">{t("digiteMais")}</p>
+        <p className="text-sm text-ink-muted">{t("digiteMais")}</p>
       )}
 
       {!buscando && termo.length === 0 && usuarios.length > 0 && (
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+        <h2 className="text-lg font-semibold text-ink">
           {t("equipe")} ({usuarios.length})
         </h2>
       )}
@@ -89,10 +89,10 @@ export default async function UsuariosPage({ searchParams }: PageProps<"/usuario
         >
           <AvatarIniciais nome={usuario.name ?? usuario.email} />
           <div className="min-w-0 flex-1">
-            <p className="font-medium text-slate-900 dark:text-slate-100">
+            <p className="font-medium text-ink">
               {usuario.name ?? usuario.email}
             </p>
-            <p className="text-sm text-slate-500 dark:text-slate-400">{usuario.email}</p>
+            <p className="text-sm text-ink-muted">{usuario.email}</p>
           </div>
           {usuario.id === session.user.id ? (
             // Sem select aqui: o papel atual aparece como selo (nas outras
@@ -100,7 +100,7 @@ export default async function UsuariosPage({ searchParams }: PageProps<"/usuario
             // pra não espremer o e-mail.
             <div className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 pl-11">
               <Selo tom={TOM_PAPEL[usuario.papel]}>{tPapel(usuario.papel)}</Selo>
-              <p className="text-xs italic text-slate-400 dark:text-slate-500">{t("vocêMesmo")}</p>
+              <p className="text-xs italic text-ink-muted">{t("vocêMesmo")}</p>
             </div>
           ) : (
             <form

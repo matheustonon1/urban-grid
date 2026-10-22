@@ -549,6 +549,12 @@
     "pt-BR": "Português",
     "en": "English"
   },
+  "Auth": {
+    "painelTitulo": "Every problem in the city deserves a protocol number.",
+    "ponto1": "Every complaint is public and can be followed from start to finish.",
+    "ponto2": "The responsible agency answers officially, and the answer stays on record.",
+    "ponto3": "The person who reported it confirms whether the problem was really solved."
+  },
   "Header": {
     "reclamacoes": "Complaints",
     "entrar": "Log in",
@@ -556,7 +562,9 @@
     "buscarCidade": "Search city...",
     "buscarCidadeAbrir": "Search city",
     "buscarCidadeFechar": "Close city search",
-    "transparencia": "Transparency"
+    "transparencia": "Transparency",
+    "principal": "Main navigation",
+    "pularConteudo": "Skip to content"
   },
   "Notificacoes": {
     "titulo": "Notifications",
@@ -572,10 +580,19 @@
   },
   "Footer": {
     "tcc": "Urban Grid — Capstone Project",
-    "termos": "Terms of Use and Privacy Policy"
+    "termos": "Terms of Use and Privacy Policy",
+    "descricao": "A public platform for urban complaints: every problem gets a protocol number, the agency's answer stays on record, and the person who reported it confirms whether it was solved.",
+    "navegacao": "Footer",
+    "participe": "Get involved",
+    "incluirCidade": "Add my city",
+    "acessoOrgaos": "Access for public agencies"
   },
   "Home": {
     "badge": "AI-assisted content moderation",
+    "titulo": "Report the problem in your neighborhood and follow it until it is <marca>solved</marca>.",
+    "abrirFicha": "Open this complaint",
+    "etapas": "Complaint stages",
+    "numeros": "The platform in numbers",
     "subtitulo": "Report urban problems in your city, track the responsible department's official response, and confirm when the problem is truly resolved.",
     "verReclamacoes": "View public complaints",
     "criarConta": "Create account",
@@ -587,13 +604,13 @@
     "statIndice": "resolution rate",
     "comoFunciona": "How it works",
     "comoFuncionaSub": "From filing to confirmation, every step is public and auditable.",
-    "passo1Titulo": "1. Report",
+    "passo1Titulo": "Report",
     "passo1Desc": "Describe the urban problem in your neighborhood — potholes, lighting, garbage collection, and more — with photos if you'd like.",
-    "passo2Titulo": "2. AI moderation",
+    "passo2Titulo": "AI moderation",
     "passo2Desc": "Every complaint goes through automated content checks before going live publicly.",
-    "passo3Titulo": "3. Department responds",
+    "passo3Titulo": "Department responds",
     "passo3Desc": "The responsible department responds officially and updates the problem's status.",
-    "passo4Titulo": "4. You confirm",
+    "passo4Titulo": "You confirm",
     "passo4Desc": "Rate whether the problem was truly resolved — your rating feeds into the city's public index.",
     "acontecendoAgora": "Happening now",
     "acontecendoAgoraSub": "The most recent complaints filed on the platform, in real time.",
@@ -625,8 +642,9 @@
   "Cadastro": {
     "tituloOrgao": "Request access as a department",
     "descOrgao": "A department account can officially respond to complaints in your city. An administrator reviews every request before granting access.",
-    "ariaOrgaoSelecionado": "Public department signup selected. Click to switch to personal signup",
-    "ariaPessoaSelecionado": "Personal signup selected. Click to switch to public department access request",
+    "tipoDeConta": "Account type",
+    "tipoPessoa": "I am a citizen",
+    "tipoOrgao": "I am a public agency",
     "nomeCompleto": "Full name",
     "email": "Email",
     "cpf": "National ID (CPF)",
@@ -647,12 +665,14 @@
     "erroCpfDuplicado": "An account with this national ID already exists.",
     "erroEmailDuplicado": "An account with this email already exists.",
     "erroLoginAutomatico": "Account created, but automatic login failed. Please log in.",
-    "nomeOrgaoPlaceholder": "Department name (e.g., Public Works Department)",
-    "sigla": "Acronym (optional)",
+    "nomeOrgao": "Agency name",
+    "nomeOrgaoExemplo": "E.g., Public Works Department",
+    "siglaRotulo": "Acronym",
+    "opcional": "optional",
     "cidade": "City",
     "seuNomeCompleto": "Your full name",
     "emailInstitucional": "Institutional email",
-    "telefoneOpcional": "Phone (optional)",
+    "telefone": "Phone",
     "enviarSolicitacao": "Submit request",
     "solicitacaoEnviadaTitulo": "Request submitted!",
     "voltarInicio": "Back to home",
@@ -685,6 +705,15 @@
     "erroLinkInvalido": "This link isn't valid for a password reset.",
     "erroLinkUsado": "This link has already been used or is no longer valid.",
     "senhaRedefinida": "Password reset! Log in to continue."
+  },
+  "ConfirmarEmail": {
+    "atualizado": "Email updated!",
+    "linkInvalidoTitulo": "Invalid or expired link",
+    "linkInvalido": "Invalid or expired link.",
+    "confirmado": "Email confirmed! Use the new address to log in.",
+    "emUso": "This email is now in use by another account. Request a new change.",
+    "expirado": "This link has expired. Request a new change under 'My account'.",
+    "irParaLogin": "Go to login"
   },
   "VerificarEmail": {
     "verificado": "Email verified!",

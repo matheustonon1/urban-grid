@@ -171,9 +171,9 @@ export default async function EstatisticasModeracaoPage({
           <div className="flex flex-col gap-6">
             {porTipo.map(({ tipo, resumo: r }) => (
               <div key={tipo} className="flex flex-col gap-2.5">
-                <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                <p className="text-sm font-medium text-ink-2">
                   {tipo === "RECLAMACAO" ? t("reclamacoes") : t("comentarios")}{" "}
-                  <span className="font-mono tabular-nums text-slate-500 dark:text-slate-400">({r.validas})</span>
+                  <span className="font-mono tabular-nums text-ink-muted">({r.validas})</span>
                 </p>
                 <BarraDecisoes
                   contagens={{
@@ -183,7 +183,7 @@ export default async function EstatisticasModeracaoPage({
                   }}
                 />
                 {r.falhas > 0 && (
-                  <p className="text-xs text-slate-500 dark:text-slate-400">{t("falhasForaDaConta", { count: r.falhas })}</p>
+                  <p className="text-xs text-ink-muted">{t("falhasForaDaConta", { count: r.falhas })}</p>
                 )}
               </div>
             ))}

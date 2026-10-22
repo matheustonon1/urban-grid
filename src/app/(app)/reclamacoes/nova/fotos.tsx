@@ -111,24 +111,24 @@ export function FotosReclamacao({
           setArrastando(false);
           adicionar(Array.from(evento.dataTransfer.files));
         }}
-        className={`flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed px-4 py-7 text-center transition-colors has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-primary ${
+        className={`flex cursor-pointer flex-col items-center gap-2 rounded-lg border-2 border-dashed px-4 py-7 text-center transition-colors has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-brand ${
           arrastando
-            ? "border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-500/10"
-            : "border-slate-300 bg-slate-50/60 hover:border-blue-400 hover:bg-blue-50/50 dark:border-slate-700 dark:bg-slate-900/40 dark:hover:border-blue-400 dark:hover:bg-blue-500/5"
+            ? "border-brand bg-brand-soft"
+            : "border-line-strong bg-sunken/50 hover:border-brand hover:bg-brand-soft/50"
         } ${cheio ? "pointer-events-none opacity-60" : ""}`}
       >
-        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-blue-700 shadow-sm ring-1 ring-slate-200 dark:bg-slate-800 dark:text-blue-300 dark:ring-slate-700">
+        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-surface text-brand shadow-sm ring-1 ring-line">
           <ImagePlus className="h-5 w-5" aria-hidden />
         </span>
-        <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
+        <span className="text-sm font-medium text-ink-2">
           {arquivos.length > 0
             ? t("fotosSelecionadas", { count: arquivos.length })
             : t("adicionarFotos")}
         </span>
-        <span className="text-xs text-slate-500 dark:text-slate-400">
+        <span className="text-xs text-ink-muted">
           {arrastando ? t("solteParaAdicionar") : cheio ? t("limiteDeFotos") : t("arrasteOuClique")}
         </span>
-        <span className="text-xs text-slate-400 dark:text-slate-500">{t("ateCincoFotos")}</span>
+        <span className="text-xs text-ink-muted">{t("ateCincoFotos")}</span>
         <input
           ref={inputRef}
           id="imagens-input"
@@ -157,7 +157,7 @@ export function FotosReclamacao({
                 <button
                   type="button"
                   onClick={() => setAmpliada(url)}
-                  className="block h-full w-full overflow-hidden rounded-lg border border-slate-200 transition hover:border-primary dark:border-slate-700 dark:hover:border-blue-400"
+                  className="block h-full w-full overflow-hidden rounded-lg border border-line transition hover:border-brand"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element -- preview local via object URL, não é ativo do Next */}
                   <img src={url} alt="" className="h-full w-full object-cover" />
@@ -166,13 +166,13 @@ export function FotosReclamacao({
                   type="button"
                   onClick={() => remover(indice)}
                   aria-label={t("removerFoto")}
-                  className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-slate-700 text-white shadow transition hover:bg-red-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
+                  className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-night/80 text-chalk shadow transition hover:bg-danger hover:text-on-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-danger"
                 >
                   <X className="h-3.5 w-3.5" aria-hidden />
                 </button>
               </div>
-              <p className="truncate text-xs text-slate-500 dark:text-slate-400">
-                <span className="text-slate-700 dark:text-slate-300">{arquivos[indice].name}</span>
+              <p className="truncate text-xs text-ink-muted">
+                <span className="text-ink-2">{arquivos[indice].name}</span>
                 <span className="font-mono tabular-nums"> · {formatarTamanho(arquivos[indice].size)}</span>
               </p>
             </li>
@@ -180,7 +180,7 @@ export function FotosReclamacao({
         </ul>
       )}
 
-      <p className="flex items-start gap-2 text-xs text-slate-500 dark:text-slate-400">
+      <p className="flex items-start gap-2 text-xs text-ink-muted">
         <ScanFace className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
         <span>{t("avisoDesfoque")}</span>
       </p>
@@ -202,7 +202,7 @@ export function FotosReclamacao({
               type="button"
               onClick={() => setAmpliada(null)}
               aria-label={t("fecharImagem")}
-              className="absolute -top-3 -right-3 flex h-8 w-8 items-center justify-center rounded-full bg-white text-slate-900 shadow-lg hover:bg-slate-100"
+              className="absolute -top-3 -right-3 flex h-8 w-8 items-center justify-center rounded-full bg-chalk text-night shadow-lg hover:bg-chalk/90"
             >
               <X className="h-4 w-4" aria-hidden />
             </button>

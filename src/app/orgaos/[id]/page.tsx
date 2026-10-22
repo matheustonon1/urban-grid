@@ -57,14 +57,14 @@ export default async function OrgaoPage({ params }: PageProps<"/orgaos/[id]">) {
         descricao={
           <>
             {orgao.sigla && `${orgao.sigla} · `}
-            <Link href={`/cidades/${orgao.cidade.slug}`} className="text-primary hover:underline">
+            <Link href={`/cidades/${orgao.cidade.slug}`} className="text-brand hover:underline">
               {orgao.cidade.nome}
             </Link>
           </>
         }
         acoes={
           <>
-            <span className="text-sm text-slate-500 dark:text-slate-400">
+            <span className="text-sm text-ink-muted">
               {t("reclamacoesRespondidas", { count: metricas.totalRespondidas })}
             </span>
             <span
@@ -98,7 +98,7 @@ export default async function OrgaoPage({ params }: PageProps<"/orgaos/[id]">) {
       />
 
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+        <h2 className="text-lg font-semibold text-ink">
           {t("respostasRecentes")}
         </h2>
 
@@ -110,21 +110,21 @@ export default async function OrgaoPage({ params }: PageProps<"/orgaos/[id]">) {
               <li key={resposta.id}>
                 <Link
                   href={`/reclamacoes/${resposta.reclamacao.protocolo}`}
-                  className="group flex flex-col gap-2 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-blue-400/50"
+                  className="group flex flex-col gap-2 rounded-lg border border-line bg-surface p-4 transition-colors hover:border-ink-faint"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <p className="font-semibold leading-snug text-slate-900 transition-colors group-hover:text-primary dark:text-slate-100">
+                    <p className="font-semibold leading-snug text-ink transition-colors group-hover:text-brand">
                       {resposta.reclamacao.titulo}
                     </p>
                     <StatusBadge status={resposta.reclamacao.status} />
                   </div>
-                  <p className="line-clamp-3 text-sm text-slate-600 dark:text-slate-300">
+                  <p className="line-clamp-3 text-sm text-ink-2">
                     {resposta.texto}
                   </p>
                   <time
                     dateTime={resposta.createdAt.toISOString()}
                     title={formatarDataHora(resposta.createdAt, locale)}
-                    className="text-xs text-slate-400 dark:text-slate-500"
+                    className="text-xs text-ink-muted"
                   >
                     {formatarTempoRelativo(resposta.createdAt, locale)}
                   </time>

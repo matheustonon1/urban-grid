@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
+import { PaginaAuth } from "@/components/ui/pagina-auth";
 import { prisma } from "@/lib/prisma";
-import { botaoPrimario, cartao } from "@/lib/estilos";
+import { botaoPrimario } from "@/lib/estilos";
 
 export default async function VerificarEmailPage({
   params,
@@ -43,18 +44,13 @@ export default async function VerificarEmailPage({
   }
 
   return (
-    <main className="animate-fade-in flex flex-1 flex-col items-center justify-center gap-4 p-8">
-      <div className={`flex w-full max-w-sm flex-col items-center gap-3 text-center ${cartao}`}>
-        <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-          {valido ? t("verificado") : t("linkInvalido")}
-        </h1>
-        <p className="text-sm text-slate-600 dark:text-slate-400">
-          {valido ? t("verificadoDesc") : t("linkInvalidoDesc")}
-        </p>
-        <Link href="/painel" className={botaoPrimario}>
-          {t("irParaPainel")}
-        </Link>
-      </div>
-    </main>
+    <PaginaAuth
+      titulo={valido ? t("verificado") : t("linkInvalido")}
+      descricao={valido ? t("verificadoDesc") : t("linkInvalidoDesc")}
+    >
+      <Link href="/painel" className={`${botaoPrimario} w-full py-3`}>
+        {t("irParaPainel")}
+      </Link>
+    </PaginaAuth>
   );
 }

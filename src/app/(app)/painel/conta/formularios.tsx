@@ -21,7 +21,7 @@ function Rotulo({ children, htmlFor }: { children: string; htmlFor: string }) {
   return (
     <label
       htmlFor={htmlFor}
-      className="text-sm font-medium text-slate-700 dark:text-slate-300"
+      className="text-sm font-medium text-ink-2"
     >
       {children}
     </label>
@@ -38,7 +38,7 @@ export function BotaoReenviarVerificacao() {
         {t("reenviarVerificacao")}
       </button>
       {state?.mensagem && (
-        <p role="status" className="text-sm text-slate-600 dark:text-slate-400">
+        <p role="status" className="text-sm text-ink-muted">
           {state.mensagem}
         </p>
       )}
@@ -72,8 +72,8 @@ export function FormularioPerfil({
   return (
     <form action={action} className={`flex flex-col gap-3 ${cartao}`}>
       <div className="flex items-center gap-2">
-        <User className="h-5 w-5 text-slate-400 dark:text-slate-500" aria-hidden />
-        <h2 className="font-semibold text-slate-900 dark:text-slate-100">{t("dadosPessoais")}</h2>
+        <User className="h-5 w-5 text-ink-muted" aria-hidden />
+        <h2 className="font-semibold text-ink">{t("dadosPessoais")}</h2>
       </div>
 
       <div className="flex flex-col gap-1">
@@ -87,7 +87,7 @@ export function FormularioPerfil({
           className={campoInput}
         />
         {state?.erros?.telefone && (
-          <p className="text-sm text-red-600 dark:text-red-400">{state.erros.telefone[0]}</p>
+          <p className="text-sm text-danger-ink">{state.erros.telefone[0]}</p>
         )}
       </div>
 
@@ -98,14 +98,14 @@ export function FormularioPerfil({
           placeholder={t("cidadePadrao")}
           defaultValue={cidadePadrao}
         />
-        <p className="text-xs text-slate-500 dark:text-slate-400">{t("cidadePadraoDesc")}</p>
+        <p className="text-xs text-ink-muted">{t("cidadePadraoDesc")}</p>
         {state?.erros?.cidadeId && (
-          <p className="text-sm text-red-600 dark:text-red-400">{state.erros.cidadeId[0]}</p>
+          <p className="text-sm text-danger-ink">{state.erros.cidadeId[0]}</p>
         )}
       </div>
 
       {state?.mensagem && (
-        <p className="text-sm text-slate-600 dark:text-slate-400">{state.mensagem}</p>
+        <p className="text-sm text-ink-muted">{state.mensagem}</p>
       )}
 
       <button type="submit" disabled={pending} className={`${botaoPrimario} w-fit`}>
@@ -122,13 +122,13 @@ export function FormularioPreferenciasNotificacao({ notificarPorEmail }: { notif
   return (
     <form action={action} className={`flex flex-col gap-3 ${cartao}`}>
       <div className="flex items-center gap-2">
-        <Bell className="h-5 w-5 text-slate-400 dark:text-slate-500" aria-hidden />
-        <h2 className="font-semibold text-slate-900 dark:text-slate-100">
+        <Bell className="h-5 w-5 text-ink-muted" aria-hidden />
+        <h2 className="font-semibold text-ink">
           {t("preferenciasNotificacao")}
         </h2>
       </div>
 
-      <label className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
+      <label className="flex items-start gap-2 text-sm text-ink-2">
         <input
           type="checkbox"
           name="notificarPorEmail"
@@ -139,7 +139,7 @@ export function FormularioPreferenciasNotificacao({ notificarPorEmail }: { notif
       </label>
 
       {state?.mensagem && (
-        <p className="text-sm text-slate-600 dark:text-slate-400">{state.mensagem}</p>
+        <p className="text-sm text-ink-muted">{state.mensagem}</p>
       )}
 
       <button type="submit" disabled={pending} className={`${botaoPrimario} w-fit`}>
@@ -156,8 +156,8 @@ export function FormularioSenha() {
   return (
     <form action={action} className={`flex flex-col gap-3 ${cartao}`}>
       <div className="flex items-center gap-2">
-        <Lock className="h-5 w-5 text-slate-400 dark:text-slate-500" aria-hidden />
-        <h2 className="font-semibold text-slate-900 dark:text-slate-100">{t("alterarSenha")}</h2>
+        <Lock className="h-5 w-5 text-ink-muted" aria-hidden />
+        <h2 className="font-semibold text-ink">{t("alterarSenha")}</h2>
       </div>
 
       <div className="flex flex-col gap-1">
@@ -169,7 +169,7 @@ export function FormularioSenha() {
           className={campoInput}
         />
         {state?.erros?.senhaAtual && (
-          <p className="text-sm text-red-600 dark:text-red-400">{state.erros.senhaAtual[0]}</p>
+          <p className="text-sm text-danger-ink">{state.erros.senhaAtual[0]}</p>
         )}
       </div>
 
@@ -183,7 +183,7 @@ export function FormularioSenha() {
           className={campoInput}
         />
         {state?.erros?.novaSenha && (
-          <p className="text-sm text-red-600 dark:text-red-400">{state.erros.novaSenha[0]}</p>
+          <p className="text-sm text-danger-ink">{state.erros.novaSenha[0]}</p>
         )}
       </div>
 
@@ -196,14 +196,14 @@ export function FormularioSenha() {
           className={campoInput}
         />
         {state?.erros?.confirmarNovaSenha && (
-          <p className="text-sm text-red-600 dark:text-red-400">
+          <p className="text-sm text-danger-ink">
             {state.erros.confirmarNovaSenha[0]}
           </p>
         )}
       </div>
 
       {state?.mensagem && (
-        <p className="text-sm text-slate-600 dark:text-slate-400">{state.mensagem}</p>
+        <p className="text-sm text-ink-muted">{state.mensagem}</p>
       )}
 
       <button type="submit" disabled={pending} className={`${botaoPrimario} w-fit`}>
@@ -220,10 +220,10 @@ export function FormularioTrocaEmail({ emailAtual }: { emailAtual: string }) {
   return (
     <form action={action} className={`flex flex-col gap-3 ${cartao}`}>
       <div className="flex items-center gap-2">
-        <Mail className="h-5 w-5 text-slate-400 dark:text-slate-500" aria-hidden />
-        <h2 className="font-semibold text-slate-900 dark:text-slate-100">{t("trocarEmail")}</h2>
+        <Mail className="h-5 w-5 text-ink-muted" aria-hidden />
+        <h2 className="font-semibold text-ink">{t("trocarEmail")}</h2>
       </div>
-      <p className="text-sm text-slate-500 dark:text-slate-400">
+      <p className="text-sm text-ink-muted">
         {t("emailAtual")} <span className="font-medium">{emailAtual}</span>. {t("trocaEmailDesc")}
       </p>
 
@@ -236,7 +236,7 @@ export function FormularioTrocaEmail({ emailAtual }: { emailAtual: string }) {
           className={campoInput}
         />
         {state?.erros?.novoEmail && (
-          <p className="text-sm text-red-600 dark:text-red-400">{state.erros.novoEmail[0]}</p>
+          <p className="text-sm text-danger-ink">{state.erros.novoEmail[0]}</p>
         )}
       </div>
 
@@ -249,12 +249,12 @@ export function FormularioTrocaEmail({ emailAtual }: { emailAtual: string }) {
           className={campoInput}
         />
         {state?.erros?.senhaAtual && (
-          <p className="text-sm text-red-600 dark:text-red-400">{state.erros.senhaAtual[0]}</p>
+          <p className="text-sm text-danger-ink">{state.erros.senhaAtual[0]}</p>
         )}
       </div>
 
       {state?.mensagem && (
-        <p className="text-sm text-slate-600 dark:text-slate-400">{state.mensagem}</p>
+        <p className="text-sm text-ink-muted">{state.mensagem}</p>
       )}
 
       <button type="submit" disabled={pending} className={`${botaoPrimario} w-fit`}>
@@ -271,13 +271,13 @@ export function FormularioExclusao() {
   return (
     <form
       action={action}
-      className="flex flex-col gap-3 rounded-lg border border-red-200 bg-red-50/50 p-4 dark:border-red-900 dark:bg-red-950/30"
+      className="flex flex-col gap-3 rounded-lg border border-danger-ink/30 bg-danger-soft/50 p-4"
     >
       <div className="flex items-center gap-2">
-        <Trash2 className="h-5 w-5 text-red-600 dark:text-red-400" aria-hidden />
-        <h2 className="font-semibold text-red-800 dark:text-red-400">{t("excluirConta")}</h2>
+        <Trash2 className="h-5 w-5 text-danger-ink" aria-hidden />
+        <h2 className="font-semibold text-danger-ink">{t("excluirConta")}</h2>
       </div>
-      <p className="text-sm text-red-700 dark:text-red-400">{t("excluirContaDesc")}</p>
+      <p className="text-sm text-danger-ink">{t("excluirContaDesc")}</p>
 
       <div className="flex flex-col gap-1">
         <Rotulo htmlFor="exclusao-senha">{t("confirmeSuaSenha")}</Rotulo>
@@ -288,17 +288,17 @@ export function FormularioExclusao() {
           className={campoInput}
         />
         {state?.erros?.senhaAtual && (
-          <p className="text-sm text-red-600 dark:text-red-400">{state.erros.senhaAtual[0]}</p>
+          <p className="text-sm text-danger-ink">{state.erros.senhaAtual[0]}</p>
         )}
       </div>
       {state?.mensagem && (
-        <p className="text-sm text-red-600 dark:text-red-400">{state.mensagem}</p>
+        <p className="text-sm text-danger-ink">{state.mensagem}</p>
       )}
 
       <button
         type="submit"
         disabled={pending}
-        className="w-fit rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-800 active:scale-95 disabled:opacity-50 disabled:active:scale-100 dark:bg-red-600 dark:hover:bg-red-500"
+        className="w-fit rounded-md bg-danger px-4 py-2.5 text-sm font-semibold text-on-danger transition hover:brightness-90 active:translate-y-px disabled:opacity-50 disabled:active:translate-y-0"
       >
         {t("excluirMinhaConta")}
       </button>

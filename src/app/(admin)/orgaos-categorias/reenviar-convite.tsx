@@ -32,7 +32,7 @@ export function ReenviarConvite({
         type="submit"
         disabled={pendente}
         aria-busy={pendente}
-        className="flex w-fit items-center gap-1.5 text-left text-xs text-primary hover:underline disabled:opacity-60"
+        className="flex w-fit items-center gap-1.5 text-left text-xs text-brand hover:underline disabled:opacity-60"
       >
         {pendente && <LoaderCircle className="h-3 w-3 animate-spin" aria-hidden />}
         {pendente ? t("reenviandoConvite") : t("reenviarConvite", { email })}
@@ -40,7 +40,7 @@ export function ReenviarConvite({
 
       <div role="status" aria-live="polite">
         {estado?.status === "enviado" && (
-          <p className="flex items-start gap-1.5 text-xs text-green-700 dark:text-green-400">
+          <p className="flex items-start gap-1.5 text-xs text-ok-ink">
             <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={3} aria-hidden />
             {t("conviteEnviado", { email })}
           </p>

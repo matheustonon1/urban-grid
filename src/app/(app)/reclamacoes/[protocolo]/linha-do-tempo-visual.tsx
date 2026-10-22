@@ -22,27 +22,27 @@ export function LinhaDoTempoVisual({
             {!ultimo && (
               <span
                 aria-hidden
-                className="absolute top-5 bottom-0 left-1.25 w-px bg-slate-200 dark:bg-slate-800"
+                className="absolute top-5 bottom-0 left-1.25 w-px bg-line"
               />
             )}
             <span
               aria-hidden
               className={`relative mt-1.5 h-2.75 w-2.75 shrink-0 rounded-full border-2 ${
                 ultimo
-                  ? "border-primary bg-primary"
-                  : "border-slate-300 bg-background dark:border-slate-600"
+                  ? "border-brand bg-brand"
+                  : "border-line-strong bg-paper"
               }`}
             />
             <div className="flex min-w-0 flex-col gap-0.5">
-              <p className="font-medium text-slate-900 dark:text-slate-100">{evento.titulo}</p>
+              <p className="font-medium text-ink">{evento.titulo}</p>
               <time
                 dateTime={evento.data.toISOString()}
-                className="text-xs tabular-nums text-slate-500 dark:text-slate-400"
+                className="text-xs tabular-nums text-ink-muted"
               >
                 {formatarDataHora(evento.data, locale)}
               </time>
               {evento.descricao && (
-                <p className="mt-1 text-sm text-slate-700 dark:text-slate-300">{evento.descricao}</p>
+                <p className="mt-1 text-sm text-ink-2">{evento.descricao}</p>
               )}
             </div>
           </li>
