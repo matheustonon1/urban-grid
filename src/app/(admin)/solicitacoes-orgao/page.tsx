@@ -78,7 +78,7 @@ export default async function SolicitacoesOrgaoPage({
             {t("enviadoEm")} {formatarDataHora(solicitacao.createdAt, locale)}
           </p>
 
-          <div className="flex items-start gap-2">
+          <div className="flex flex-wrap items-start gap-2">
             <form action={aprovarSolicitacao.bind(null, solicitacao.id)}>
               <button type="submit" className={botaoPrimario}>
                 {t("aprovar")}
@@ -87,7 +87,7 @@ export default async function SolicitacoesOrgaoPage({
 
             <form
               action={rejeitarSolicitacao.bind(null, solicitacao.id)}
-              className="flex flex-1 gap-2"
+              className="flex min-w-0 basis-full gap-2 sm:flex-1 sm:basis-0"
             >
               <textarea
                 name="motivo"

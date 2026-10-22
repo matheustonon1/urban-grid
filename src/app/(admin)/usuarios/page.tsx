@@ -95,14 +95,13 @@ export default async function UsuariosPage({ searchParams }: PageProps<"/usuario
             <p className="text-sm text-slate-500 dark:text-slate-400">{usuario.email}</p>
           </div>
           {usuario.id === session.user.id ? (
-            <>
-              {/* Sem select aqui: o papel atual aparece como selo (nas outras
-                  linhas o próprio select já mostra o papel). */}
+            // Sem select aqui: o papel atual aparece como selo (nas outras
+            // linhas o próprio select já mostra o papel). Numa linha própria,
+            // pra não espremer o e-mail.
+            <div className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 pl-11">
               <Selo tom={TOM_PAPEL[usuario.papel]}>{tPapel(usuario.papel)}</Selo>
-              <p className="w-full pl-11 text-xs italic text-slate-400 dark:text-slate-500">
-                {t("vocêMesmo")}
-              </p>
-            </>
+              <p className="text-xs italic text-slate-400 dark:text-slate-500">{t("vocêMesmo")}</p>
+            </div>
           ) : (
             <form
               action={alterarPapelUsuario.bind(null, usuario.id)}

@@ -99,10 +99,10 @@ export default async function ContaPage() {
         </div>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[12rem_minmax(0,1fr)] lg:items-start">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[12rem_minmax(0,1fr)] lg:items-start">
         {/* Navegação por seções: coluna fixa no desktop, faixa rolável no celular.
             São âncoras simples (sem JS): cada grupo abaixo tem o id correspondente. */}
-        <nav aria-label={t("navegacaoSecoes")} className="lg:sticky lg:top-20">
+        <nav aria-label={t("navegacaoSecoes")} className="min-w-0 lg:sticky lg:top-20">
           <ul className="-mx-6 flex gap-1.5 overflow-x-auto px-6 pb-1 sm:-mx-8 sm:px-8 lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0 lg:pb-0">
             {SECOES.map(({ id, chave, perigo }) => (
               <li key={id} className="shrink-0">
