@@ -7,6 +7,7 @@ import { exigirSessao } from "@/lib/seguranca/sessao";
 import { Aviso } from "@/components/ui/aviso";
 import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
 import { EstadoVazio } from "@/components/ui/estado-vazio";
+import { BotaoAcao, FormularioAcao } from "@/components/ui/formulario-acao";
 import { PainelNumeros } from "@/components/ui/painel-numeros";
 import { Secao } from "@/components/ui/secao";
 import { StatusBadge } from "@/components/reclamacao/status-badge";
@@ -88,11 +89,9 @@ export default async function PainelPage({ searchParams }: PageProps<"/painel">)
         <Aviso
           tom="atencao"
           acao={
-            <form action={reenviarVerificacao}>
-              <button type="submit" className={botaoSecundario}>
-                {t("reenviarVerificacao")}
-              </button>
-            </form>
+            <FormularioAcao action={reenviarVerificacao}>
+              <BotaoAcao className={botaoSecundario}>{t("reenviarVerificacao")}</BotaoAcao>
+            </FormularioAcao>
           }
         >
           {t("emailNaoVerificado")}

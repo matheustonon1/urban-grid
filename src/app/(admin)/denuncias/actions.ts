@@ -1,9 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
+import { exigirConfirmacaoDeSenha } from "@/lib/acoes/confirmarSenha";
+import { falha, informacao, sucesso, type ResultadoAcao } from "@/lib/acoes/resultado";
 import { criarNotificacao } from "@/lib/notificacoes";
+import { formatarData } from "@/lib/util/formatarData";
 
 import { exigirModerador } from "../moderacao/exigir-moderador";
 import { exigirAdmin } from "../solicitacoes-orgao/exigir-admin";
@@ -14,16 +18,14 @@ async function buscarDenunciaAberta(denunciaId: string) {
   });
 }
 
-export async function marcarImprocedente(denunciaId: string) {
+export async function marcarImprocedente(denunciaId: string): Promise<ResultadoAcao> {
   const session = await exigirModerador();
+  const t = await getTranslations("Denuncias");
 
-  const denuncia = await buscarDenunciaAberta(denunciaId);
-  if (!denuncia) {
-    return;
-  }
-
-  await prisma.denuncia.update({
-    where: { id: denuncia.id },
+  // Status ABERTA na condição: se outra pessoa já decidiu esta denúncia entre a
+  // página carregar e o clique, count vem 0 e nada é sobrescrito.
+  const atualizacao = await prisma.denuncia.updateMany({
+    where: { id: denunciaId, status: "ABERTA" },
     data: {
       status: "IMPROCEDENTE",
       analisadoPorId: session.user.id,
@@ -32,7 +34,39 @@ export async function marcarImprocedente(denunciaId: string) {
   });
 
   revalidatePath("/denuncias");
+
+  return atualizacao.count === 0 ? informacao(t("jaAnalisada")) : sucesso(t("improcedenteOk"));
 }
+
+type Denuncia = { id: string; alvoId: string; alvoTipo: string };
+
+// Quem postou o conteúdo denunciado. banirAutor() precisa saber ANTES de decidir
+// qualquer coisa - para recusar o banimento de um admin (ou de si mesmo) sem ter
+// fechado a denúncia como procedente.
+async function buscarAutorDoAlvo(denuncia: Denuncia) {
+  const autor = { select: { id: true, name: true, email: true, papel: true } } as const;
+
+  if (denuncia.alvoTipo === "RECLAMACAO") {
+    const reclamacao = await prisma.reclamacao.findUnique({
+      where: { id: denuncia.alvoId },
+      select: { autor },
+    });
+    return reclamacao?.autor ?? null;
+  }
+  if (denuncia.alvoTipo === "COMENTARIO") {
+    const comentario = await prisma.comentario.findUnique({
+      where: { id: denuncia.alvoId },
+      select: { autor },
+    });
+    return comentario?.autor ?? null;
+  }
+  return null;
+}
+
+type Resolucao =
+  | { estado: "ok"; autorId: string; tipo: "RECLAMACAO" | "COMENTARIO" }
+  | { estado: "ja-analisada" }
+  | { estado: "sem-alvo" };
 
 // Compartilhado por marcarProcedente() e banirAutor() - banir o autor é,
 // no mínimo, concordar que a denúncia procede (e normalmente mais grave
@@ -41,32 +75,40 @@ export async function marcarImprocedente(denunciaId: string) {
 // postou. Sem isto, banirAutor() deixava a denúncia em ABERTA pra sempre,
 // reaparecendo na fila mesmo com o problema já resolvido.
 //
-// Retorna o autorId de quem postou o conteúdo denunciado - banirAutor()
-// precisa disso e não do resto (reclamação ou comentário completos), então
-// devolve só o que é comum aos dois tipos de alvo em vez de um union type
-// que cada chamador teria que desmembrar de novo.
+// A denúncia só é fechada se AINDA estiver aberta (updateMany dentro da mesma
+// transação do efeito no alvo): dois moderadores clicando juntos não arquivam
+// duas vezes nem mandam duas notificações.
 async function resolverComoProcedente(
-  denuncia: { id: string; alvoId: string; alvoTipo: string },
+  denuncia: Denuncia,
   moderadorId: string
-): Promise<{ autorId: string } | null> {
+): Promise<Resolucao> {
+  const fechar = (tx: Pick<typeof prisma, "denuncia">) =>
+    tx.denuncia.updateMany({
+      where: { id: denuncia.id, status: "ABERTA" },
+      data: { status: "PROCEDENTE", analisadoPorId: moderadorId, analisadoEm: new Date() },
+    });
+
   if (denuncia.alvoTipo === "RECLAMACAO") {
     const reclamacao = await prisma.reclamacao.findUnique({
       where: { id: denuncia.alvoId },
     });
     if (!reclamacao) {
-      return null;
+      return { estado: "sem-alvo" };
     }
 
-    await prisma.$transaction([
-      prisma.denuncia.update({
-        where: { id: denuncia.id },
-        data: { status: "PROCEDENTE", analisadoPorId: moderadorId, analisadoEm: new Date() },
-      }),
-      prisma.reclamacao.update({
+    const decidida = await prisma.$transaction(async (tx) => {
+      if ((await fechar(tx)).count === 0) {
+        return false;
+      }
+      await tx.reclamacao.update({
         where: { id: reclamacao.id },
         data: { status: "ARQUIVADA" },
-      }),
-    ]);
+      });
+      return true;
+    });
+    if (!decidida) {
+      return { estado: "ja-analisada" };
+    }
 
     await criarNotificacao({
       userId: reclamacao.autorId,
@@ -80,7 +122,7 @@ async function resolverComoProcedente(
     revalidatePath("/reclamacoes");
     revalidatePath(`/reclamacoes/${reclamacao.protocolo}`);
 
-    return { autorId: reclamacao.autorId };
+    return { estado: "ok", autorId: reclamacao.autorId, tipo: "RECLAMACAO" };
   }
 
   if (denuncia.alvoTipo === "COMENTARIO") {
@@ -89,23 +131,26 @@ async function resolverComoProcedente(
       include: { reclamacao: { select: { protocolo: true } } },
     });
     if (!comentario) {
-      return null;
+      return { estado: "sem-alvo" };
     }
 
-    await prisma.$transaction([
-      prisma.denuncia.update({
-        where: { id: denuncia.id },
-        data: { status: "PROCEDENTE", analisadoPorId: moderadorId, analisadoEm: new Date() },
-      }),
+    const decidida = await prisma.$transaction(async (tx) => {
+      if ((await fechar(tx)).count === 0) {
+        return false;
+      }
       // Mesmo campo que a fila de moderação por IA usa pra esconder um
       // comentário (statusModeracao !== "APROVADO" não aparece na
       // reclamação) - uma denúncia procedente tem o mesmo efeito prático
       // de uma reprovação por IA, só que decidida por uma pessoa.
-      prisma.comentario.update({
+      await tx.comentario.update({
         where: { id: comentario.id },
         data: { statusModeracao: "REPROVADO" },
-      }),
-    ]);
+      });
+      return true;
+    });
+    if (!decidida) {
+      return { estado: "ja-analisada" };
+    }
 
     await criarNotificacao({
       userId: comentario.autorId,
@@ -117,23 +162,34 @@ async function resolverComoProcedente(
 
     revalidatePath(`/reclamacoes/${comentario.reclamacao.protocolo}`);
 
-    return { autorId: comentario.autorId };
+    return { estado: "ok", autorId: comentario.autorId, tipo: "COMENTARIO" };
   }
 
-  return null;
+  return { estado: "sem-alvo" };
 }
 
-export async function marcarProcedente(denunciaId: string) {
+export async function marcarProcedente(denunciaId: string): Promise<ResultadoAcao> {
   const session = await exigirModerador();
+  const t = await getTranslations("Denuncias");
 
   const denuncia = await buscarDenunciaAberta(denunciaId);
   if (!denuncia) {
-    return;
+    return informacao(t("jaAnalisada"));
   }
 
-  await resolverComoProcedente(denuncia, session.user.id);
+  const resolucao = await resolverComoProcedente(denuncia, session.user.id);
 
   revalidatePath("/denuncias");
+
+  if (resolucao.estado === "ja-analisada") {
+    return informacao(t("jaAnalisada"));
+  }
+  if (resolucao.estado === "sem-alvo") {
+    return falha(t("erroConteudoRemovido"));
+  }
+  return sucesso(
+    t(resolucao.tipo === "RECLAMACAO" ? "procedenteReclamacaoOk" : "procedenteComentarioOk")
+  );
 }
 
 const DIAS_BANIMENTO: Record<string, number> = {
@@ -142,29 +198,71 @@ const DIAS_BANIMENTO: Record<string, number> = {
   permanente: 100 * 365,
 };
 
-export async function banirAutor(denunciaId: string, formData: FormData) {
+const DIA_MS = 24 * 60 * 60 * 1000;
+
+// Banir é a ação mais pesada desta tela: o diálogo de confirmação descreve o
+// efeito e, no banimento permanente, pede a senha de quem está agindo (conferida
+// aqui, não só na tela). Recusa banir um administrador ou a própria conta, e
+// nunca ENCURTA um banimento que já vale por mais tempo.
+export async function banirAutor(denunciaId: string, formData: FormData): Promise<ResultadoAcao> {
   const session = await exigirAdmin();
+  const t = await getTranslations("Denuncias");
+  const locale = await getLocale();
 
   const denuncia = await buscarDenunciaAberta(denunciaId);
   if (!denuncia) {
-    return;
+    return informacao(t("jaAnalisada"));
   }
 
   const duracao = String(formData.get("duracao"));
   const dias = DIAS_BANIMENTO[duracao];
   if (!dias) {
-    return;
+    return falha(t("erroDuracaoInvalida"));
   }
 
-  const resolvido = await resolverComoProcedente(denuncia, session.user.id);
-  if (!resolvido) {
-    return;
+  const autor = await buscarAutorDoAlvo(denuncia);
+  if (!autor) {
+    return falha(t("erroConteudoRemovido"));
   }
+  if (autor.id === session.user.id) {
+    return falha(t("erroBanirProprio"));
+  }
+  if (autor.papel === "ADMIN") {
+    return falha(t("erroBanirAdmin"));
+  }
+
+  if (duracao === "permanente") {
+    const senhaErrada = await exigirConfirmacaoDeSenha(session.user.id, formData);
+    if (senhaErrada) {
+      return senhaErrada;
+    }
+  }
+
+  const resolucao = await resolverComoProcedente(denuncia, session.user.id);
+  revalidatePath("/denuncias");
+  if (resolucao.estado === "ja-analisada") {
+    return informacao(t("jaAnalisada"));
+  }
+  if (resolucao.estado === "sem-alvo") {
+    return falha(t("erroConteudoRemovido"));
+  }
+
+  const atual = await prisma.user.findUnique({
+    where: { id: autor.id },
+    select: { banidoAte: true },
+  });
+  const novoFim = new Date(Date.now() + dias * DIA_MS);
+  const fim = atual?.banidoAte && atual.banidoAte > novoFim ? atual.banidoAte : novoFim;
 
   await prisma.user.update({
-    where: { id: resolvido.autorId },
-    data: { banidoAte: new Date(Date.now() + dias * 24 * 60 * 60 * 1000) },
+    where: { id: autor.id },
+    data: { banidoAte: fim },
   });
 
-  revalidatePath("/denuncias");
+  const nome = autor.name ?? autor.email;
+  return sucesso(
+    duracao === "permanente"
+      ? t("banidoPermanenteOk", { nome })
+      : t("banidoOk", { nome, data: formatarData(fim, locale) })
+  );
 }

@@ -22,6 +22,7 @@ import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
 import { EstadoVazio } from "@/components/ui/estado-vazio";
 import { Secao } from "@/components/ui/secao";
 import { Campo } from "@/components/formulario/campo";
+import { BotaoAcao, FormularioAcao } from "@/components/ui/formulario-acao";
 
 import { responderReclamacao } from "../reclamacoes/[protocolo]/actions";
 import { exigirOrgao } from "../reclamacoes/[protocolo]/exigir-orgao";
@@ -138,8 +139,9 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
                 </header>
                 <p className="leading-relaxed text-ink-2">{reclamacao.descricao}</p>
 
-                <form
+                <FormularioAcao
                   action={responderReclamacao.bind(null, reclamacao.id, reclamacao.protocolo)}
+                  limparAoSucesso
                   className="flex flex-col gap-4 border-t border-line pt-4"
                 >
                   <Campo id={`resposta-${reclamacao.id}`} rotulo={tResp("respostaOficial")}>
@@ -178,10 +180,8 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
                       />
                     </Campo>
                   </div>
-                  <button type="submit" className={`${botaoPrimario} w-fit`}>
-                    {tResp("enviarResposta")}
-                  </button>
-                </form>
+                  <BotaoAcao className={`${botaoPrimario} w-fit`}>{tResp("enviarResposta")}</BotaoAcao>
+                </FormularioAcao>
               </article>
             ))}
 

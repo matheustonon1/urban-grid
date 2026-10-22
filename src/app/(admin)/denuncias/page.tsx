@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { AvatarIniciais } from "@/components/ui/avatar-iniciais";
 import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
 import { EstadoVazio } from "@/components/ui/estado-vazio";
+import { BotaoAcao, FormularioAcao } from "@/components/ui/formulario-acao";
 import { Etiqueta } from "@/components/ui/etiqueta";
 import { Paginacao } from "@/components/ui/paginacao";
 import { ResumoLateral } from "@/components/ui/resumo-lateral";
@@ -66,7 +67,13 @@ export default async function DenunciasPage({ searchParams }: PageProps<"/denunc
     idsReclamacao.length
       ? prisma.reclamacao.findMany({
           where: { id: { in: idsReclamacao } },
-          select: { id: true, protocolo: true, titulo: true, descricao: true },
+          select: {
+            id: true,
+            protocolo: true,
+            titulo: true,
+            descricao: true,
+            autor: { select: { name: true, email: true } },
+          },
         })
       : Promise.resolve([]),
     // MIDIA fica de fora por enquanto - nada no app cria denúncia com esse
@@ -111,6 +118,9 @@ export default async function DenunciasPage({ searchParams }: PageProps<"/denunc
               const comentario =
                 denuncia.alvoTipo === "COMENTARIO" ? comentarioPorId.get(denuncia.alvoId) : undefined;
               const alvoExiste = Boolean(reclamacao ?? comentario);
+              // Quem postou o conteúdo denunciado: é quem o diálogo de banimento nomeia.
+              const autorAlvo = reclamacao?.autor ?? comentario?.autor;
+              const nomeAutor = autorAlvo ? (autorAlvo.name ?? autorAlvo.email) : "";
               const nomeDenunciante = denuncia.denunciante.name ?? denuncia.denunciante.email;
 
               return (
@@ -173,23 +183,55 @@ export default async function DenunciasPage({ searchParams }: PageProps<"/denunc
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2 border-t border-line pt-5">
-                    <form action={marcarProcedente.bind(null, denuncia.id)}>
-                      <button type="submit" className={botaoPrimario}>
-                        {denuncia.alvoTipo === "COMENTARIO"
-                          ? t("procedenteComentario")
-                          : t("procedenteReclamacao")}
-                      </button>
-                    </form>
-                    <form action={marcarImprocedente.bind(null, denuncia.id)}>
-                      <button type="submit" className={botaoSecundario}>
-                        {t("improcedente")}
-                      </button>
-                    </form>
+                    {/* Sem o conteúdo (já removido), "procedente" e banir não têm no que
+                        agir: só resta fechar a denúncia como improcedente. */}
+                    {alvoExiste && (
+                      <FormularioAcao
+                        action={marcarProcedente.bind(null, denuncia.id)}
+                        confirmacao={
+                          denuncia.alvoTipo === "COMENTARIO"
+                            ? {
+                                titulo: t("confirmarComentarioTitulo"),
+                                descricao: t("confirmarComentarioDescricao"),
+                                confirmar: t("confirmarComentarioBotao"),
+                                tom: "perigo",
+                              }
+                            : {
+                                titulo: t("confirmarReclamacaoTitulo"),
+                                descricao: t("confirmarReclamacaoDescricao"),
+                                confirmar: t("confirmarReclamacaoBotao"),
+                                tom: "perigo",
+                              }
+                        }
+                      >
+                        <BotaoAcao className={botaoPrimario}>
+                          {denuncia.alvoTipo === "COMENTARIO"
+                            ? t("procedenteComentario")
+                            : t("procedenteReclamacao")}
+                        </BotaoAcao>
+                      </FormularioAcao>
+                    )}
+                    <FormularioAcao action={marcarImprocedente.bind(null, denuncia.id)}>
+                      <BotaoAcao className={botaoSecundario}>{t("improcedente")}</BotaoAcao>
+                    </FormularioAcao>
 
-                    {ehAdmin && (
-                      <form
+                    {ehAdmin && alvoExiste && (
+                      <FormularioAcao
                         action={banirAutor.bind(null, denuncia.id)}
                         className="flex items-center gap-2 sm:ml-auto"
+                        confirmacao={{
+                          titulo: t("confirmarBanirTitulo", { nome: nomeAutor }),
+                          // {duracao} é o campo do formulário: o diálogo troca pelo rótulo da opção marcada.
+                          descricao: t("confirmarBanirDescricao", { duracao: "{duracao}" }),
+                          detalhes: [
+                            t("confirmarBanirDetalheConteudo"),
+                            t("confirmarBanirDetalheReverter"),
+                          ],
+                          confirmar: t("confirmarBanirBotao"),
+                          tom: "perigo",
+                          // Banimento permanente pede a senha de quem está banindo.
+                          senha: { campo: "duracao", valor: "permanente" },
+                        }}
                       >
                         <select
                           name="duracao"
@@ -201,10 +243,8 @@ export default async function DenunciasPage({ searchParams }: PageProps<"/denunc
                           <option value="30">{t("trintaDias")}</option>
                           <option value="permanente">{t("permanente")}</option>
                         </select>
-                        <button type="submit" className={botaoPerigo}>
-                          {t("banirAutor")}
-                        </button>
-                      </form>
+                        <BotaoAcao className={botaoPerigo}>{t("banirAutor")}</BotaoAcao>
+                      </FormularioAcao>
                     )}
                   </div>
                 </article>

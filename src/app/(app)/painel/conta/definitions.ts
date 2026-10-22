@@ -1,6 +1,8 @@
 import * as z from "zod";
 import type { getTranslations } from "next-intl/server";
 
+import type { TomRetorno } from "@/lib/acoes/resultado";
+
 type T = Awaited<ReturnType<typeof getTranslations>>;
 
 // Telefone e cidade padrão são editáveis aqui - nome não é um campo que o
@@ -20,8 +22,13 @@ export type PerfilFormState =
   | {
       erros?: { telefone?: string[]; cidadeId?: string[] };
       mensagem?: string;
+      // Sem `tipo`, a mensagem é um erro (o caso comum); sucesso e info são marcados.
+      tipo?: TomRetorno;
     }
   | undefined;
+
+// Ações que só devolvem uma frase (preferências, reenviar verificação).
+export type MensagemFormState = { mensagem?: string; tipo?: TomRetorno } | undefined;
 
 export function criarTrocaEmailSchema(t: T) {
   return z.object({
@@ -34,6 +41,8 @@ export type TrocaEmailFormState =
   | {
       erros?: { novoEmail?: string[]; senhaAtual?: string[] };
       mensagem?: string;
+      // Sem `tipo`, a mensagem é um erro (o caso comum); sucesso e info são marcados.
+      tipo?: TomRetorno;
     }
   | undefined;
 
@@ -58,6 +67,8 @@ export type SenhaFormState =
         confirmarNovaSenha?: string[];
       };
       mensagem?: string;
+      // Sem `tipo`, a mensagem é um erro (o caso comum); sucesso e info são marcados.
+      tipo?: TomRetorno;
     }
   | undefined;
 
@@ -74,6 +85,8 @@ export type SenhaAtualFormState =
   | {
       erros?: { senhaAtual?: string[] };
       mensagem?: string;
+      // Sem `tipo`, a mensagem é um erro (o caso comum); sucesso e info são marcados.
+      tipo?: TomRetorno;
     }
   | undefined;
 
@@ -87,6 +100,8 @@ export type ConfirmarTotpFormState =
   | {
       erros?: { codigo?: string[] };
       mensagem?: string;
+      // Sem `tipo`, a mensagem é um erro (o caso comum); sucesso e info são marcados.
+      tipo?: TomRetorno;
       codigosBackup?: string[];
     }
   | undefined;

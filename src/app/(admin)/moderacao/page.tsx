@@ -8,6 +8,7 @@ import { AvatarIniciais } from "@/components/ui/avatar-iniciais";
 import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
 import { EstadoVazio } from "@/components/ui/estado-vazio";
 import { Etiqueta, type TomEtiqueta } from "@/components/ui/etiqueta";
+import { BotaoAcao, FormularioAcao } from "@/components/ui/formulario-acao";
 import { FormularioRejeicao } from "@/components/ui/formulario-rejeicao";
 import { Paginacao } from "@/components/ui/paginacao";
 import { ResumoLateral } from "@/components/ui/resumo-lateral";
@@ -210,16 +211,15 @@ export default async function ModeracaoPage({ searchParams }: PageProps<"/modera
                   {blurPendente && <Aviso tom="erro">{t("desfoquePendenteDesc")}</Aviso>}
 
                   <div className="grid gap-4 border-t border-line pt-5 sm:grid-cols-[auto_1fr] sm:items-end">
-                    <form action={aprovarReclamacao.bind(null, reclamacao.id)}>
-                      <button
-                        type="submit"
-                        disabled={blurPendente}
-                        title={blurPendente ? t("desfoquePendenteTitulo") : undefined}
+                    <FormularioAcao action={aprovarReclamacao.bind(null, reclamacao.id)}>
+                      <BotaoAcao
+                        desabilitado={blurPendente}
+                        titulo={blurPendente ? t("desfoquePendenteTitulo") : undefined}
                         className={`${botaoPrimario} w-full sm:w-auto`}
                       >
                         {t("aprovar")}
-                      </button>
-                    </form>
+                      </BotaoAcao>
+                    </FormularioAcao>
 
                     <FormularioRejeicao
                       id={`motivo-${reclamacao.id}`}

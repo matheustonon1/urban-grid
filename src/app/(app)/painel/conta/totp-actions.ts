@@ -94,6 +94,7 @@ export async function confirmarTotp(
   revalidatePath("/painel/conta");
 
   return {
+    tipo: "sucesso",
     mensagem: t("ativadaMensagem"),
     codigosBackup,
   };
@@ -140,7 +141,7 @@ export async function desativarTotp(
 
   revalidatePath("/painel/conta");
 
-  return { mensagem: t("desativadaMensagem") };
+  return { tipo: "sucesso", mensagem: t("desativadaMensagem") };
 }
 
 // Os códigos de backup só são mostrados uma vez (na ativação) e cada um
@@ -189,5 +190,5 @@ export async function regenerarCodigosBackup(
 
   revalidatePath("/painel/conta");
 
-  return { mensagem: t("novosCodigosGerados"), codigosBackup };
+  return { tipo: "sucesso", mensagem: t("novosCodigosGerados"), codigosBackup };
 }

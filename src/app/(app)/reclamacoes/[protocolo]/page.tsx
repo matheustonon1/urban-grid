@@ -13,6 +13,7 @@ import { PlacaProtocolo } from "@/components/reclamacao/placa-protocolo";
 import { RespostaOficial } from "@/components/reclamacao/resposta-oficial";
 import { StatusBadge } from "@/components/reclamacao/status-badge";
 import { Aviso } from "@/components/ui/aviso";
+import { BotaoAcao, FormularioAcao } from "@/components/ui/formulario-acao";
 import { AvatarIniciais } from "@/components/ui/avatar-iniciais";
 import { Secao } from "@/components/ui/secao";
 import {
@@ -181,16 +182,15 @@ export default async function ReclamacaoPage({
   // a entrar; o autor não confirma a própria reclamação.
   const acaoConfirmar = session?.user ? (
     !ehAutor && (
-      <form action={alternarConfirmacao.bind(null, reclamacao.id, protocolo)}>
-        <button
-          type="submit"
-          aria-pressed={jaConfirmou}
+      <FormularioAcao action={alternarConfirmacao.bind(null, reclamacao.id, protocolo)}>
+        <BotaoAcao
+          pressionado={jaConfirmou}
           className={`${jaConfirmou ? botaoSecundario : botaoPrimario} w-full`}
         >
           {jaConfirmou && <Check className="h-4 w-4" aria-hidden />}
           {t("tambemSofro")}
-        </button>
-      </form>
+        </BotaoAcao>
+      </FormularioAcao>
     )
   ) : (
     <Link
@@ -306,7 +306,7 @@ export default async function ReclamacaoPage({
               </Aviso>
             )}
             {reclamacao.status === "REJEITADA" && ehAutor && !reclamacao.emRecurso && (
-              <form
+              <FormularioAcao
                 action={contestarRejeicao.bind(null, reclamacao.id, protocolo)}
                 className={`flex flex-col gap-4 ${painelSuave}`}
               >
@@ -321,10 +321,8 @@ export default async function ReclamacaoPage({
                     className={campoInput}
                   />
                 </Campo>
-                <button type="submit" className={`${botaoSecundario} w-fit`}>
-                  {t("contestarRejeicao")}
-                </button>
-              </form>
+                <BotaoAcao className={`${botaoSecundario} w-fit`}>{t("contestarRejeicao")}</BotaoAcao>
+              </FormularioAcao>
             )}
             {reclamacao.status === "REJEITADA" && ehAutor && reclamacao.emRecurso && (
               <Aviso tom="info">{t("jaContestou")}</Aviso>
@@ -375,8 +373,9 @@ export default async function ReclamacaoPage({
           )}
 
           {podeResponder && (
-            <form
+            <FormularioAcao
               action={responderReclamacao.bind(null, reclamacao.id, protocolo)}
+              limparAoSucesso
               className={`flex flex-col gap-5 ${cartaoSecao}`}
             >
               <h2 className="text-xl font-extrabold tracking-tight text-ink">
@@ -404,16 +403,14 @@ export default async function ReclamacaoPage({
                   <input id="resposta-prazo" type="date" name="prazoEstimado" className={campoInput} />
                 </Campo>
               </div>
-              <button type="submit" className={`${botaoPrimario} w-fit`}>
-                {t("enviarResposta")}
-              </button>
-            </form>
+              <BotaoAcao className={`${botaoPrimario} w-fit`}>{t("enviarResposta")}</BotaoAcao>
+            </FormularioAcao>
           )}
 
           {podeAvaliar && (
-            <form
+            <FormularioAcao
               action={avaliarReclamacao.bind(null, reclamacao.id, protocolo)}
-              aria-labelledby="avaliacao-titulo"
+              rotuloId="avaliacao-titulo"
               className={`flex flex-col gap-5 ${cartaoSecao}`}
             >
               <h2 id="avaliacao-titulo" className="text-xl font-extrabold tracking-tight text-ink">
@@ -446,16 +443,15 @@ export default async function ReclamacaoPage({
               <Campo id="avaliacao-comentario" rotulo={t("comentarioOpcional")}>
                 <textarea id="avaliacao-comentario" name="comentario" rows={2} className={campoInput} />
               </Campo>
-              <button type="submit" className={`${botaoPrimario} w-fit`}>
-                {t("enviarAvaliacao")}
-              </button>
-            </form>
+              <BotaoAcao className={`${botaoPrimario} w-fit`}>{t("enviarAvaliacao")}</BotaoAcao>
+            </FormularioAcao>
           )}
 
           <Secao id="comentarios" titulo={t("comentarios")} contador={comentarios.length}>
             {session?.user ? (
-              <form
+              <FormularioAcao
                 action={criarComentario.bind(null, reclamacao.id, protocolo)}
+                limparAoSucesso
                 className="flex flex-col gap-3"
               >
                 <Campo id="comentario-novo" rotulo={t("deixeComentario")}>
@@ -469,10 +465,8 @@ export default async function ReclamacaoPage({
                     className={campoInput}
                   />
                 </Campo>
-                <button type="submit" className={`${botaoPrimario} w-fit`}>
-                  {t("comentar")}
-                </button>
-              </form>
+                <BotaoAcao className={`${botaoPrimario} w-fit`}>{t("comentar")}</BotaoAcao>
+              </FormularioAcao>
             ) : (
               <p className={`text-sm ${painelSuave}`}>
                 <Link
@@ -517,8 +511,10 @@ export default async function ReclamacaoPage({
                               <summary className="inline-flex w-fit cursor-pointer list-none items-center text-xs font-semibold text-brand hover:underline">
                                 {t("responder")}
                               </summary>
-                              <form
+                              <FormularioAcao
                                 action={criarComentario.bind(null, reclamacao.id, protocolo)}
+                                limparAoSucesso
+                                recolherAoSucesso
                                 className="animate-fade-in mt-3 flex flex-col gap-3"
                               >
                                 <input type="hidden" name="paiId" value={comentario.id} />
@@ -533,10 +529,10 @@ export default async function ReclamacaoPage({
                                     className={campoInput}
                                   />
                                 </Campo>
-                                <button type="submit" className={`${botaoSecundario} w-fit`}>
+                                <BotaoAcao className={`${botaoSecundario} w-fit`}>
                                   {t("responder")}
-                                </button>
-                              </form>
+                                </BotaoAcao>
+                              </FormularioAcao>
                             </details>
 
                             {comentario.autor.id !== session.user.id && (

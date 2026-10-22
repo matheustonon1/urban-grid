@@ -6,6 +6,7 @@ import "./globals.css";
 
 import { Rodape } from "@/components/layout/rodape";
 import { SiteHeader } from "@/components/layout/site-header";
+import { AvisosProvider } from "@/components/ui/avisos";
 
 // Archivo nos títulos: grotesca de placa de rua, firme e sem enfeite. IBM Plex
 // Sans no corpo (legibilidade alta, associada a serviços digitais públicos) e
@@ -65,19 +66,23 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="flex min-h-full flex-col">
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <a
-            href="#conteudo"
-            className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:bg-ink focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-paper"
-          >
-            {t("pularConteudo")}
-          </a>
-          <SiteHeader />
-          {/* Alvo do "pular para o conteúdo". Cada página tem o próprio <main>;
-              este contêiner só dá o ponto de foco e mantém o rodapé embaixo. */}
-          <div id="conteudo" tabIndex={-1} className="flex flex-1 flex-col outline-none">
-            {children}
-          </div>
-          <Rodape />
+          {/* Avisos flutuantes (confirmação e erro das ações) vivem aqui, acima das
+              páginas: a ação revalida a lista e o cartão que a gerou some. */}
+          <AvisosProvider>
+            <a
+              href="#conteudo"
+              className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:bg-ink focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-paper"
+            >
+              {t("pularConteudo")}
+            </a>
+            <SiteHeader />
+            {/* Alvo do "pular para o conteúdo". Cada página tem o próprio <main>;
+                este contêiner só dá o ponto de foco e mantém o rodapé embaixo. */}
+            <div id="conteudo" tabIndex={-1} className="flex flex-1 flex-col outline-none">
+              {children}
+            </div>
+            <Rodape />
+          </AvisosProvider>
         </NextIntlClientProvider>
       </body>
     </html>

@@ -1,6 +1,8 @@
 import { getTranslations } from "next-intl/server";
 
 import { Campo } from "@/components/formulario/campo";
+import { BotaoAcao, FormularioAcao } from "@/components/ui/formulario-acao";
+import type { ResultadoAcao } from "@/lib/acoes/resultado";
 import { botaoPrimario, botaoSecundario, campoInput, painelSuave } from "@/lib/estilos";
 
 const MOTIVOS_DENUNCIA = [
@@ -25,7 +27,7 @@ export async function FormularioDenuncia({
   // comentário/resposta sem competir visualmente com o texto.
   estilo = "link",
 }: {
-  action: (formData: FormData) => void | Promise<void>;
+  action: (formData: FormData) => Promise<ResultadoAcao>;
   // Prefixo único dos ids dos campos (há um formulário por comentário na página).
   id: string;
   estilo?: "botao" | "link";
@@ -44,7 +46,12 @@ export async function FormularioDenuncia({
       >
         {t("denunciar")}
       </summary>
-      <form action={action} className={`animate-fade-in mt-3 flex flex-col gap-4 ${painelSuave}`}>
+      <FormularioAcao
+        action={action}
+        limparAoSucesso
+        recolherAoSucesso
+        className={`animate-fade-in mt-3 flex flex-col gap-4 ${painelSuave}`}
+      >
         <Campo id={`${id}-motivo`} rotulo={t("motivo")}>
           <select id={`${id}-motivo`} name="motivo" required defaultValue="" className={campoInput}>
             <option value="" disabled>
@@ -69,10 +76,8 @@ export async function FormularioDenuncia({
           />
           <span>{t("declaracaoBoaFe")}</span>
         </label>
-        <button type="submit" className={`${botaoPrimario} w-fit`}>
-          {t("enviarDenuncia")}
-        </button>
-      </form>
+        <BotaoAcao className={`${botaoPrimario} w-fit`}>{t("enviarDenuncia")}</BotaoAcao>
+      </FormularioAcao>
     </details>
   );
 }

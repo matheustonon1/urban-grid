@@ -25,6 +25,7 @@ import {
   criarSenhaAtualSchema,
   criarSenhaSchema,
   criarTrocaEmailSchema,
+  type MensagemFormState,
   type PerfilFormState,
   type SenhaAtualFormState,
   type SenhaFormState,
@@ -59,7 +60,7 @@ export async function atualizarPerfil(
   revalidatePath("/painel/conta");
   revalidatePath("/painel");
 
-  return { mensagem: t("dadosAtualizados") };
+  return { tipo: "sucesso", mensagem: t("dadosAtualizados") };
 }
 
 // Só afeta os e-mails de "status mudou" (ver TIPOS_COM_EMAIL em
@@ -68,9 +69,9 @@ export async function atualizarPerfil(
 // nunca para de ser criada. Antes desta ação, não existia nenhum jeito de
 // desligar esses e-mails além de nunca verificar o e-mail da conta.
 export async function atualizarPreferenciasNotificacao(
-  _state: { mensagem?: string } | undefined,
+  _state: MensagemFormState,
   formData: FormData
-): Promise<{ mensagem?: string }> {
+): Promise<NonNullable<MensagemFormState>> {
   const t = await getTranslations("Conta");
   const session = await exigirSessao();
 
@@ -81,13 +82,13 @@ export async function atualizarPreferenciasNotificacao(
 
   revalidatePath("/painel/conta");
 
-  return { mensagem: t("preferenciasAtualizadas") };
+  return { tipo: "sucesso", mensagem: t("preferenciasAtualizadas") };
 }
 
 // Mesma regra de reenviarVerificacao() em painel/actions.ts, mas devolvendo
 // um estado pra "Minha conta" mostrar o resultado - aquela é usada direto
 // como `<form action>` no painel, que só aceita retorno void.
-export async function reenviarVerificacaoEmail(): Promise<{ mensagem?: string }> {
+export async function reenviarVerificacaoEmail(): Promise<NonNullable<MensagemFormState>> {
   const t = await getTranslations("Conta");
   const session = await exigirSessao();
 
@@ -99,7 +100,7 @@ export async function reenviarVerificacaoEmail(): Promise<{ mensagem?: string }>
     return {};
   }
   if (usuario.emailVerified) {
-    return { mensagem: t("emailJaVerificado") };
+    return { tipo: "info", mensagem: t("emailJaVerificado") };
   }
   // Cada clique manda um e-mail de verdade (cota do provedor) - sem limite,
   // o botão podia ser martelado. Escopo compartilhado com o reenvio do
@@ -115,7 +116,7 @@ export async function reenviarVerificacaoEmail(): Promise<{ mensagem?: string }>
     locale: idiomaOuPadrao(usuario.idioma),
   });
 
-  return { mensagem: t("verificacaoReenviada", { email: usuario.email }) };
+  return { tipo: "sucesso", mensagem: t("verificacaoReenviada", { email: usuario.email }) };
 }
 
 // Não existe tabela de sessões (a estratégia é JWT), mas o callback jwt em
@@ -192,7 +193,7 @@ export async function solicitarTrocaEmail(
   // independente do e-mail novo ter recebido o link ou não.
   await alertarTrocaEmailSolicitada(usuario.id, novoEmail);
 
-  return { mensagem: t("linkConfirmacaoEnviado", { email: novoEmail }) };
+  return { tipo: "sucesso", mensagem: t("linkConfirmacaoEnviado", { email: novoEmail }) };
 }
 
 export async function alterarSenha(

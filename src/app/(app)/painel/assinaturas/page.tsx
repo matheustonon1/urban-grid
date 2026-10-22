@@ -7,6 +7,7 @@ import { exigirSessao } from "@/lib/seguranca/sessao";
 import { metadataDaPagina } from "@/lib/metadata";
 import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
 import { EstadoVazio } from "@/components/ui/estado-vazio";
+import { BotaoAcao, FormularioAcao } from "@/components/ui/formulario-acao";
 import { Secao } from "@/components/ui/secao";
 
 import { cancelarAssinatura } from "./actions";
@@ -55,14 +56,11 @@ export default async function AssinaturasPage() {
                         {assinatura.categoria?.nome ?? t("todasCategorias")}
                       </span>
                     </div>
-                    <form action={cancelarAssinatura.bind(null, assinatura.id)}>
-                      <button
-                        type="submit"
-                        className="rounded-md px-2.5 py-1.5 text-sm font-semibold text-danger-ink hover:bg-danger-soft"
-                      >
+                    <FormularioAcao action={cancelarAssinatura.bind(null, assinatura.id)}>
+                      <BotaoAcao className="inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm font-semibold text-danger-ink hover:bg-danger-soft disabled:opacity-60">
                         {t("cancelar")}
-                      </button>
-                    </form>
+                      </BotaoAcao>
+                    </FormularioAcao>
                   </li>
                 ))}
               </ul>

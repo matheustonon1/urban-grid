@@ -5,6 +5,7 @@ import { Prisma } from "@prisma/client";
 import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
+import { atencao, falha, informacao, sucesso, type ResultadoAcao } from "@/lib/acoes/resultado";
 import {
   criarTokenVerificacao,
   enviarEmailAcessoOrgao,
@@ -15,14 +16,15 @@ import { idiomaOuPadrao } from "@/i18n/config";
 import { criarRejeitarSolicitacaoSchema } from "./definitions";
 import { exigirAdmin } from "./exigir-admin";
 
-export async function aprovarSolicitacao(solicitacaoId: string) {
+export async function aprovarSolicitacao(solicitacaoId: string): Promise<ResultadoAcao> {
   const session = await exigirAdmin();
+  const t = await getTranslations("SolicitacoesOrgao");
 
   const solicitacao = await prisma.solicitacaoOrgao.findUnique({
     where: { id: solicitacaoId },
   });
   if (!solicitacao || solicitacao.status !== "PENDENTE") {
-    return;
+    return informacao(t("jaDecidida"));
   }
 
   const usuarioExistente = await prisma.user.findUnique({
@@ -32,7 +34,7 @@ export async function aprovarSolicitacao(solicitacaoId: string) {
     // E-mail já virou conta por outro caminho entre o pedido e agora -
     // não sobrescreve uma conta existente. Fica pendente pra um admin
     // resolver manualmente (rejeitar, ou o solicitante usar outro e-mail).
-    return;
+    return falha(t("erroEmailJaTemConta", { email: solicitacao.email }));
   }
 
   const agora = new Date();
@@ -93,11 +95,14 @@ export async function aprovarSolicitacao(solicitacaoId: string) {
     });
 
   if (!resultado.ok) {
-    return;
+    // Perdeu a corrida (outra aprovação/rejeição entrou antes) ou o e-mail virou
+    // conta no meio do caminho - nos dois casos nada foi criado por esta ação.
+    revalidatePath("/solicitacoes-orgao");
+    return informacao(t("jaDecidida"));
   }
 
   const token = await criarTokenVerificacao(solicitacao.email);
-  await enviarEmailAcessoOrgao({
+  const envio = await enviarEmailAcessoOrgao({
     email: solicitacao.email,
     token,
     nomeOrgao: solicitacao.nomeOrgao,
@@ -105,23 +110,39 @@ export async function aprovarSolicitacao(solicitacaoId: string) {
   });
 
   revalidatePath("/solicitacoes-orgao");
+
+  // A conta já foi criada de qualquer jeito: se o e-mail não saiu, o admin
+  // precisa saber agora (e para onde ir), não descobrir dias depois que a pessoa
+  // nunca recebeu o link.
+  const params = { orgao: solicitacao.nomeOrgao, email: solicitacao.email };
+  if (envio.status === "falhou") {
+    return atencao(t("aprovadaEmailFalhou", { ...params, motivo: envio.motivo }));
+  }
+  if (envio.status === "simulado") {
+    return atencao(t("aprovadaSimulado", params));
+  }
+  return sucesso(t("aprovadaEnviado", params));
 }
 
-export async function rejeitarSolicitacao(solicitacaoId: string, formData: FormData) {
+export async function rejeitarSolicitacao(
+  solicitacaoId: string,
+  formData: FormData
+): Promise<ResultadoAcao> {
   const session = await exigirAdmin();
+  const t = await getTranslations("SolicitacoesOrgao");
 
   const validado = criarRejeitarSolicitacaoSchema(await getTranslations("Moderacao")).safeParse({
     motivo: formData.get("motivo"),
   });
   if (!validado.success) {
-    return;
+    return falha(validado.error.issues[0]?.message ?? t("jaDecidida"));
   }
 
   const solicitacao = await prisma.solicitacaoOrgao.findUnique({
     where: { id: solicitacaoId },
   });
   if (!solicitacao || solicitacao.status !== "PENDENTE") {
-    return;
+    return informacao(t("jaDecidida"));
   }
 
   // updateMany com status:PENDENTE na condição - mesma guarda atômica de
@@ -137,14 +158,19 @@ export async function rejeitarSolicitacao(solicitacaoId: string, formData: FormD
     },
   });
   if (atualizacao.count === 0) {
-    return;
+    return informacao(t("jaDecidida"));
   }
 
-  await enviarEmailSolicitacaoRejeitada({
+  const envio = await enviarEmailSolicitacaoRejeitada({
     email: solicitacao.email,
     motivo: validado.data.motivo,
     locale: idiomaOuPadrao(solicitacao.idioma),
   });
 
   revalidatePath("/solicitacoes-orgao");
+
+  if (envio.status === "falhou") {
+    return atencao(t("rejeitadaEmailFalhou", { email: solicitacao.email, motivo: envio.motivo }));
+  }
+  return sucesso(t("rejeitadaOk", { email: solicitacao.email }));
 }

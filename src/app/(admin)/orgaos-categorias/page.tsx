@@ -20,6 +20,7 @@ import {
 } from "@/lib/estilos";
 import { metadataDaPagina } from "@/lib/metadata";
 import { EstadoVazio } from "@/components/ui/estado-vazio";
+import { BotaoAcao, FormularioAcao } from "@/components/ui/formulario-acao";
 import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
 import { Selo } from "@/components/ui/selo";
 
@@ -112,11 +113,25 @@ export default async function OrgaosCategoriasPage({
                     ))}
                   </div>
 
-                  <form action={alternarAtivoOrgao.bind(null, orgao.id, !orgao.ativo)}>
-                    <button type="submit" className={orgao.ativo ? botaoPerigo : botaoSecundario}>
+                  <FormularioAcao
+                    action={alternarAtivoOrgao.bind(null, orgao.id, !orgao.ativo)}
+                    // Só desativar pede confirmação: reativar devolve o que se tirou.
+                    confirmacao={
+                      orgao.ativo
+                        ? {
+                            titulo: t("confirmarDesativarTitulo", { nome: orgao.nome }),
+                            descricao: t("confirmarDesativarDescricao"),
+                            detalhes: [t("confirmarDesativarDetalhe")],
+                            confirmar: t("confirmarDesativarBotao"),
+                            tom: "perigo",
+                          }
+                        : undefined
+                    }
+                  >
+                    <BotaoAcao className={orgao.ativo ? botaoPerigo : botaoSecundario}>
                       {orgao.ativo ? t("desativar") : t("reativar")}
-                    </button>
-                  </form>
+                    </BotaoAcao>
+                  </FormularioAcao>
                 </div>
 
                 <div className="flex flex-col gap-3 border-t border-line pt-4">
@@ -128,7 +143,7 @@ export default async function OrgaosCategoriasPage({
                       />
                       {t("editarDados")}
                     </summary>
-                    <form
+                    <FormularioAcao
                       action={atualizarDadosOrgao.bind(null, orgao.id)}
                       className="animate-fade-in mt-4 flex flex-col gap-4"
                     >
@@ -162,10 +177,8 @@ export default async function OrgaosCategoriasPage({
                           className={campoInput}
                         />
                       </Campo>
-                      <button type="submit" className={`${botaoSecundario} w-fit`}>
-                        {t("salvarDados")}
-                      </button>
-                    </form>
+                      <BotaoAcao className={`${botaoSecundario} w-fit`}>{t("salvarDados")}</BotaoAcao>
+                    </FormularioAcao>
                   </details>
 
                   <details className="group text-sm">
@@ -181,7 +194,7 @@ export default async function OrgaosCategoriasPage({
                             total: categorias.length,
                           })}
                     </summary>
-                    <form
+                    <FormularioAcao
                       action={atualizarCategoriasOrgao.bind(null, orgao.id)}
                       className="animate-fade-in mt-4 flex flex-col gap-4"
                     >
@@ -203,10 +216,8 @@ export default async function OrgaosCategoriasPage({
                         ))}
                       </div>
 
-                      <button type="submit" className={`${botaoPrimario} w-fit`}>
-                        {t("salvar")}
-                      </button>
-                    </form>
+                      <BotaoAcao className={`${botaoPrimario} w-fit`}>{t("salvar")}</BotaoAcao>
+                    </FormularioAcao>
                   </details>
                 </div>
               </article>

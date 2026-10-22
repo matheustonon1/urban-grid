@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
+import { atencao, falha, sucesso, type ResultadoAcao } from "@/lib/acoes/resultado";
 import { criarNotificacao } from "@/lib/notificacoes";
 import { precisaVerificarEmail } from "@/lib/conta/verificacao";
 import { moderarComentario } from "@/lib/moderacao/comentario";
@@ -19,15 +20,16 @@ export async function criarComentario(
   reclamacaoId: string,
   protocolo: string,
   formData: FormData
-) {
+): Promise<ResultadoAcao> {
   const session = await exigirSessao();
+  const t = await getTranslations("ReclamacaoDetalhe");
 
-  const validado = criarComentarioSchema(await getTranslations("ReclamacaoDetalhe")).safeParse({
+  const validado = criarComentarioSchema(t).safeParse({
     texto: formData.get("texto"),
     paiId: formData.get("paiId"),
   });
   if (!validado.success) {
-    return;
+    return falha(validado.error.issues[0]?.message ?? t("erroComentarioIndisponivel"));
   }
 
   const [usuario, reclamacao] = await Promise.all([
@@ -36,7 +38,7 @@ export async function criarComentario(
   ]);
 
   if (!reclamacao) {
-    return;
+    return falha(t("erroComentarioIndisponivel"));
   }
 
   // Mesma regra de acesso da página: visível ao público, ou ao autor e a
@@ -50,7 +52,7 @@ export async function criarComentario(
     !ehModerador &&
     !(STATUS_PUBLICOS as readonly string[]).includes(reclamacao.status)
   ) {
-    return;
+    return falha(t("erroComentarioIndisponivel"));
   }
 
   if (usuario && precisaVerificarEmail(usuario)) {
@@ -65,7 +67,7 @@ export async function criarComentario(
       where: { id: validado.data.paiId },
     });
     if (!pai || pai.reclamacaoId !== reclamacaoId || pai.paiId) {
-      return;
+      return falha(t("erroComentarioIndisponivel"));
     }
   }
 
@@ -75,7 +77,7 @@ export async function criarComentario(
     where: { autorId: session.user.id, createdAt: { gte: inicioDoDia } },
   });
   if (comentariosHoje >= LIMITE_COMENTARIOS_DIA) {
-    return;
+    return falha(t("erroLimiteComentarios"));
   }
 
   const comentario = await prisma.comentario.create({
@@ -113,4 +115,10 @@ export async function criarComentario(
   }
 
   revalidatePath(`/reclamacoes/${protocolo}`);
+
+  // Reprovado pela moderação automática o comentário fica oculto: sem este aviso
+  // a pessoa enviava, nada aparecia e ela não tinha como saber por quê.
+  return decisao === "APROVAR"
+    ? sucesso(t("comentarioPublicado"))
+    : atencao(t("comentarioReprovado"));
 }

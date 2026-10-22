@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
+import { falha, informacao, sucesso, type ResultadoAcao } from "@/lib/acoes/resultado";
 import { criarNotificacao } from "@/lib/notificacoes";
 
 import { criarRejeitarSchema } from "./definitions";
@@ -21,14 +22,15 @@ async function buscarLogPendente(reclamacaoId: string) {
   });
 }
 
-export async function aprovarReclamacao(reclamacaoId: string) {
+export async function aprovarReclamacao(reclamacaoId: string): Promise<ResultadoAcao> {
   const session = await exigirModerador();
+  const t = await getTranslations("Moderacao");
 
   const reclamacao = await prisma.reclamacao.findUnique({
     where: { id: reclamacaoId },
   });
   if (!reclamacao || reclamacao.status !== "AGUARDANDO_REVISAO") {
-    return;
+    return informacao(t("jaDecidida"));
   }
 
   // Se o desfoque de rosto/placa falhou em alguma mídia (statusModeracao
@@ -40,7 +42,7 @@ export async function aprovarReclamacao(reclamacaoId: string) {
     where: { reclamacaoId, statusModeracao: "REVISAO_HUMANA", urlTratada: null },
   });
   if (midiaComBlurPendente) {
-    return;
+    return falha(t("erroDesfoque"));
   }
 
   const agora = new Date();
@@ -71,7 +73,7 @@ export async function aprovarReclamacao(reclamacaoId: string) {
   });
 
   if (!aplicado) {
-    return;
+    return informacao(t("jaDecidida"));
   }
 
   await criarNotificacao({
@@ -86,26 +88,29 @@ export async function aprovarReclamacao(reclamacaoId: string) {
   revalidatePath("/moderacao");
   revalidatePath("/reclamacoes");
   revalidatePath(`/reclamacoes/${reclamacao.protocolo}`);
+
+  return sucesso(t("aprovadaOk"));
 }
 
 export async function rejeitarReclamacao(
   reclamacaoId: string,
   formData: FormData
-) {
+): Promise<ResultadoAcao> {
   const session = await exigirModerador();
+  const t = await getTranslations("Moderacao");
 
-  const validado = criarRejeitarSchema(await getTranslations("Moderacao")).safeParse({
+  const validado = criarRejeitarSchema(t).safeParse({
     motivo: formData.get("motivo"),
   });
   if (!validado.success) {
-    return;
+    return falha(validado.error.issues[0]?.message ?? t("erroMotivoCurto"));
   }
 
   const reclamacao = await prisma.reclamacao.findUnique({
     where: { id: reclamacaoId },
   });
   if (!reclamacao || reclamacao.status !== "AGUARDANDO_REVISAO") {
-    return;
+    return informacao(t("jaDecidida"));
   }
 
   const agora = new Date();
@@ -130,7 +135,7 @@ export async function rejeitarReclamacao(
   });
 
   if (!aplicado) {
-    return;
+    return informacao(t("jaDecidida"));
   }
 
   await criarNotificacao({
@@ -145,4 +150,6 @@ export async function rejeitarReclamacao(
   revalidatePath("/moderacao");
   revalidatePath("/reclamacoes");
   revalidatePath(`/reclamacoes/${reclamacao.protocolo}`);
+
+  return sucesso(t("rejeitadaOk"));
 }

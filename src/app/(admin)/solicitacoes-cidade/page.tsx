@@ -16,6 +16,7 @@ import {
 } from "@/lib/estilos";
 import { metadataDaPagina } from "@/lib/metadata";
 import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
+import { BotaoAcao, FormularioAcao } from "@/components/ui/formulario-acao";
 import { FormularioRejeicao } from "@/components/ui/formulario-rejeicao";
 import { ResumoLateral } from "@/components/ui/resumo-lateral";
 import { Secao } from "@/components/ui/secao";
@@ -89,9 +90,21 @@ export default async function SolicitacoesCidadePage({
                 </p>
 
                 <div className="mt-2 flex flex-col gap-5 border-t border-line pt-5">
-                  <form
+                  <FormularioAcao
                     action={aprovarSolicitacaoCidade.bind(null, solicitacao.id)}
                     className="flex flex-col gap-3 sm:flex-row sm:items-end"
+                    confirmacao={{
+                      titulo: t("confirmarAprovarTitulo", { cidade: solicitacao.nomeCidade }),
+                      // {codigoIbge} é o campo do formulário: o diálogo mostra o que foi digitado.
+                      descricao: t("confirmarAprovarDescricao", {
+                        cidade: solicitacao.nomeCidade,
+                        uf: solicitacao.uf,
+                        codigoIbge: "{codigoIbge}",
+                      }),
+                      detalhes: [t("confirmarAprovarDetalhe")],
+                      confirmar: t("confirmarAprovarBotao"),
+                      tom: "primario",
+                    }}
                   >
                     <div className="sm:w-64">
                       <Campo id={`ibge-${solicitacao.id}`} rotulo={t("codigoIbgePlaceholder")}>
@@ -107,16 +120,20 @@ export default async function SolicitacoesCidadePage({
                         />
                       </Campo>
                     </div>
-                    <button type="submit" className={botaoPrimario}>
-                      {t("aprovar")}
-                    </button>
-                  </form>
+                    <BotaoAcao className={botaoPrimario}>{t("aprovar")}</BotaoAcao>
+                  </FormularioAcao>
 
                   <FormularioRejeicao
                     id={`motivo-${solicitacao.id}`}
                     action={rejeitarSolicitacaoCidade.bind(null, solicitacao.id)}
                     rotulo={t("motivoRejeicaoPlaceholder")}
                     botao={t("rejeitar")}
+                    confirmacao={{
+                      titulo: t("confirmarRejeitarTitulo", { cidade: solicitacao.nomeCidade }),
+                      descricao: t("confirmarRejeitarDescricao", { email: solicitacao.email }),
+                      confirmar: t("confirmarRejeitarBotao"),
+                      tom: "perigo",
+                    }}
                   />
                 </div>
               </article>

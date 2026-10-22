@@ -114,8 +114,8 @@ export async function enviarEmailCidadeAprovada({
   email: string;
   nomeCidade: string;
   locale?: Idioma;
-}) {
-  await enviarEmail({
+}): Promise<ResultadoEnvio> {
+  return enviarEmail({
     to: email,
     ...(await montarEmailCidadeAprovada({ nomeCidade, locale })),
   });
@@ -129,8 +129,8 @@ export async function enviarEmailSolicitacaoCidadeRejeitada({
   email: string;
   motivo: string;
   locale?: Idioma;
-}) {
-  await enviarEmail({
+}): Promise<ResultadoEnvio> {
+  return enviarEmail({
     to: email,
     ...(await montarEmailSolicitacaoCidadeRejeitada({ motivo, locale })),
   });
@@ -144,8 +144,8 @@ export async function enviarEmailSolicitacaoRejeitada({
   email: string;
   motivo: string;
   locale?: Idioma;
-}) {
-  await enviarEmail({
+}): Promise<ResultadoEnvio> {
+  return enviarEmail({
     to: email,
     ...(await montarEmailSolicitacaoRejeitada({ motivo, locale })),
   });

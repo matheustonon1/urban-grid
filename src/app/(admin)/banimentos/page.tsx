@@ -9,6 +9,7 @@ import { botaoSecundario, colunaLateral, colunaPrincipal, grade, pagina } from "
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/util/paginacao";
 import { metadataDaPagina } from "@/lib/metadata";
 import { EstadoVazio } from "@/components/ui/estado-vazio";
+import { BotaoAcao, FormularioAcao } from "@/components/ui/formulario-acao";
 import { AvatarIniciais } from "@/components/ui/avatar-iniciais";
 import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
 import { formatarDataHora } from "@/lib/util/formatarData";
@@ -81,11 +82,18 @@ export default async function BanimentosPage({ searchParams }: PageProps<"/banim
                         </p>
                       </div>
 
-                      <form action={reverterBanimento.bind(null, usuario.id)}>
-                        <button type="submit" className={botaoSecundario}>
-                          {t("reverter")}
-                        </button>
-                      </form>
+                      <FormularioAcao
+                        action={reverterBanimento.bind(null, usuario.id)}
+                        confirmacao={{
+                          titulo: t("confirmarTitulo", { nome: usuario.name ?? usuario.email }),
+                          descricao: t("confirmarDescricao"),
+                          detalhes: [t("confirmarDetalhe")],
+                          confirmar: t("confirmarBotao"),
+                          tom: "primario",
+                        }}
+                      >
+                        <BotaoAcao className={botaoSecundario}>{t("reverter")}</BotaoAcao>
+                      </FormularioAcao>
                     </li>
                   );
                 })}

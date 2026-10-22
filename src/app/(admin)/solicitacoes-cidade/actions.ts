@@ -5,6 +5,7 @@ import { Prisma } from "@prisma/client";
 import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
+import { atencao, falha, informacao, sucesso, type ResultadoAcao } from "@/lib/acoes/resultado";
 import { enviarEmailCidadeAprovada, enviarEmailSolicitacaoCidadeRejeitada } from "@/lib/email";
 import { idiomaOuPadrao } from "@/i18n/config";
 import { slugificar } from "@/lib/util/slug";
@@ -12,28 +13,30 @@ import { slugificar } from "@/lib/util/slug";
 import { criarAprovarSolicitacaoCidadeSchema, criarRejeitarSolicitacaoCidadeSchema } from "./definitions";
 import { exigirAdmin } from "../solicitacoes-orgao/exigir-admin";
 
-export async function aprovarSolicitacaoCidade(solicitacaoId: string, formData: FormData) {
+export async function aprovarSolicitacaoCidade(
+  solicitacaoId: string,
+  formData: FormData
+): Promise<ResultadoAcao> {
   const session = await exigirAdmin();
+  const t = await getTranslations("SolicitacoesCidade");
 
-  const validado = criarAprovarSolicitacaoCidadeSchema(
-    await getTranslations("SolicitacoesCidade")
-  ).safeParse({
+  const validado = criarAprovarSolicitacaoCidadeSchema(t).safeParse({
     codigoIbge: formData.get("codigoIbge"),
   });
   if (!validado.success) {
-    return;
+    return falha(validado.error.issues[0]?.message ?? t("erroCodigoIbge"));
   }
 
   const solicitacao = await prisma.solicitacaoCidade.findUnique({ where: { id: solicitacaoId } });
   if (!solicitacao || solicitacao.status !== "PENDENTE") {
-    return;
+    return informacao(t("jaDecidida"));
   }
 
   const estado = await prisma.estado.findUnique({ where: { uf: solicitacao.uf } });
   if (!estado) {
     // Não deveria acontecer - uf já vem restrita à lista fixa de UFs no
     // envio da solicitação (ver UFS_BRASIL em cidades/solicitar/definitions.ts).
-    return;
+    return falha(t("erroCidadeDuplicada"));
   }
 
   const agora = new Date();
@@ -51,7 +54,7 @@ export async function aprovarSolicitacaoCidade(solicitacaoId: string, formData: 
         data: { status: "APROVADA", analisadoPorId: session.user.id, analisadoEm: agora },
       });
       if (atualizacao.count === 0) {
-        return { ok: false as const };
+        return { ok: false as const, motivo: "decidida" as const };
       }
 
       await tx.cidade.create({
@@ -67,37 +70,50 @@ export async function aprovarSolicitacaoCidade(solicitacaoId: string, formData: 
     })
     .catch((erro) => {
       if (erro instanceof Prisma.PrismaClientKnownRequestError && erro.code === "P2002") {
-        return { ok: false as const };
+        return { ok: false as const, motivo: "duplicada" as const };
       }
       throw erro;
     });
 
   if (!resultado.ok) {
-    return;
+    revalidatePath("/solicitacoes-cidade");
+    return resultado.motivo === "duplicada"
+      ? falha(t("erroCidadeDuplicada"))
+      : informacao(t("jaDecidida"));
   }
 
-  await enviarEmailCidadeAprovada({
+  const envio = await enviarEmailCidadeAprovada({
     email: solicitacao.email,
     nomeCidade: solicitacao.nomeCidade,
     locale: idiomaOuPadrao(solicitacao.idioma),
   });
 
   revalidatePath("/solicitacoes-cidade");
+
+  const params = { cidade: solicitacao.nomeCidade, email: solicitacao.email };
+  if (envio.status === "falhou") {
+    return atencao(t("aprovadaEmailFalhou", { ...params, motivo: envio.motivo }));
+  }
+  return sucesso(t("aprovadaOk", params));
 }
 
-export async function rejeitarSolicitacaoCidade(solicitacaoId: string, formData: FormData) {
+export async function rejeitarSolicitacaoCidade(
+  solicitacaoId: string,
+  formData: FormData
+): Promise<ResultadoAcao> {
   const session = await exigirAdmin();
+  const t = await getTranslations("SolicitacoesCidade");
 
   const validado = criarRejeitarSolicitacaoCidadeSchema(await getTranslations("Moderacao")).safeParse(
     { motivo: formData.get("motivo") }
   );
   if (!validado.success) {
-    return;
+    return falha(validado.error.issues[0]?.message ?? t("jaDecidida"));
   }
 
   const solicitacao = await prisma.solicitacaoCidade.findUnique({ where: { id: solicitacaoId } });
   if (!solicitacao || solicitacao.status !== "PENDENTE") {
-    return;
+    return informacao(t("jaDecidida"));
   }
 
   // updateMany com status:PENDENTE na condição - mesma guarda atômica de
@@ -112,14 +128,19 @@ export async function rejeitarSolicitacaoCidade(solicitacaoId: string, formData:
     },
   });
   if (atualizacao.count === 0) {
-    return;
+    return informacao(t("jaDecidida"));
   }
 
-  await enviarEmailSolicitacaoCidadeRejeitada({
+  const envio = await enviarEmailSolicitacaoCidadeRejeitada({
     email: solicitacao.email,
     motivo: validado.data.motivo,
     locale: idiomaOuPadrao(solicitacao.idioma),
   });
 
   revalidatePath("/solicitacoes-cidade");
+
+  if (envio.status === "falhou") {
+    return atencao(t("rejeitadaEmailFalhou", { email: solicitacao.email, motivo: envio.motivo }));
+  }
+  return sucesso(t("rejeitadaOk", { email: solicitacao.email }));
 }

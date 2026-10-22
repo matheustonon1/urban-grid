@@ -1,7 +1,14 @@
 import type { ReactNode } from "react";
-import { CircleAlert, Info, TriangleAlert } from "lucide-react";
+import { CircleAlert, CircleCheck, Info, TriangleAlert } from "lucide-react";
 
-const TONS = {
+// Exportado: o aviso flutuante (avisos.tsx) usa a mesma cor e o mesmo ícone por
+// tom, então um sucesso parece o mesmo sucesso dentro de um formulário ou no canto
+// da tela.
+export const TONS_AVISO = {
+  sucesso: {
+    caixa: "border-ok-ink/30 bg-ok-soft text-ok-ink",
+    icone: CircleCheck,
+  },
   erro: {
     caixa: "border-danger-ink/30 bg-danger-soft text-danger-ink",
     icone: CircleAlert,
@@ -16,25 +23,29 @@ const TONS = {
   },
 } as const;
 
-// Aviso em linha, com ícone: o tom (erro/atenção/info) é dado pelo ícone E
+export type TomAviso = keyof typeof TONS_AVISO;
+
+// Aviso em linha, com ícone: o tom (sucesso/erro/atenção/info) é dado pelo ícone E
 // pela cor - nunca só pela cor. Substitui os <p> soltos em vermelho/âmbar.
+// Erro anuncia como alerta; sucesso e info, como status (leitor de tela lê sem
+// interromper o que a pessoa estava lendo).
 export function Aviso({
   tom = "info",
   acao,
   children,
 }: {
-  tom?: keyof typeof TONS;
+  tom?: TomAviso;
   // Botão/link opcional, à direita (embaixo em tela estreita). Fica fora do
   // bloco ícone + texto, pra o ícone acompanhar a PRIMEIRA linha do texto em
   // vez de se alinhar ao topo de uma caixa que o botão deixou mais alta.
   acao?: ReactNode;
   children: ReactNode;
 }) {
-  const { caixa, icone: Icone } = TONS[tom];
+  const { caixa, icone: Icone } = TONS_AVISO[tom];
 
   return (
     <div
-      role={tom === "erro" ? "alert" : undefined}
+      role={tom === "erro" ? "alert" : tom === "sucesso" ? "status" : undefined}
       className={`flex flex-wrap items-center gap-x-4 gap-y-2.5 rounded-md border px-3.5 py-3 text-sm ${caixa}`}
     >
       <div className="flex min-w-0 flex-1 items-start gap-2.5">

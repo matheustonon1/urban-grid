@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { SeletorCidade } from "@/components/formulario/cidade-combobox";
 import { botaoPrimario, botaoSecundario, campoInput, cartaoSecao } from "@/lib/estilos";
 import { CabecalhoCartao } from "@/components/ui/cabecalho-cartao";
+import { MensagemForm } from "@/components/formulario/mensagem-form";
 
 import {
   alterarSenha,
@@ -38,11 +39,7 @@ export function BotaoReenviarVerificacao() {
       <button type="submit" disabled={pending} className={botaoSecundario}>
         {t("reenviarVerificacao")}
       </button>
-      {state?.mensagem && (
-        <p role="status" className="text-sm text-ink-muted">
-          {state.mensagem}
-        </p>
-      )}
+      <MensagemForm estado={state} />
     </form>
   );
 }
@@ -102,9 +99,7 @@ export function FormularioPerfil({
         )}
       </div>
 
-      {state?.mensagem && (
-        <p className="text-sm text-ink-muted">{state.mensagem}</p>
-      )}
+      <MensagemForm estado={state} />
 
       <button type="submit" disabled={pending} className={`${botaoPrimario} w-fit`}>
         {t("salvarDados")}
@@ -131,9 +126,7 @@ export function FormularioPreferenciasNotificacao({ notificarPorEmail }: { notif
         <span>{t("notificarPorEmailDesc")}</span>
       </label>
 
-      {state?.mensagem && (
-        <p className="text-sm text-ink-muted">{state.mensagem}</p>
-      )}
+      <MensagemForm estado={state} />
 
       <button type="submit" disabled={pending} className={`${botaoPrimario} w-fit`}>
         {t("salvarDados")}
@@ -192,9 +185,7 @@ export function FormularioSenha() {
         )}
       </div>
 
-      {state?.mensagem && (
-        <p className="text-sm text-ink-muted">{state.mensagem}</p>
-      )}
+      <MensagemForm estado={state} />
 
       <button type="submit" disabled={pending} className={`${botaoPrimario} w-fit`}>
         {t("alterarSenha")}
@@ -240,9 +231,7 @@ export function FormularioTrocaEmail({ emailAtual }: { emailAtual: string }) {
         )}
       </div>
 
-      {state?.mensagem && (
-        <p className="text-sm text-ink-muted">{state.mensagem}</p>
-      )}
+      <MensagemForm estado={state} />
 
       <button type="submit" disabled={pending} className={`${botaoPrimario} w-fit`}>
         {t("enviarLinkConfirmacao")}
@@ -275,9 +264,7 @@ export function FormularioExclusao() {
           <p className="text-sm text-danger-ink">{state.erros.senhaAtual[0]}</p>
         )}
       </div>
-      {state?.mensagem && (
-        <p className="text-sm text-danger-ink">{state.mensagem}</p>
-      )}
+      <MensagemForm estado={state} />
 
       <button
         type="submit"

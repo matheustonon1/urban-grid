@@ -22,6 +22,11 @@ export const botaoSecundario = `${botaoBase} border border-line-strong bg-surfac
 // secundário neutro.
 export const botaoPerigo = `${botaoBase} border border-danger-ink/40 bg-surface text-danger-ink hover:bg-danger-soft focus-visible:outline-danger-ink`;
 
+// Confirmar uma ação destrutiva (banir, desativar, arquivar): vermelho cheio,
+// só dentro do diálogo de confirmação - na tela ela fica no contorno de
+// `botaoPerigo`, que pesa menos.
+export const botaoPerigoSolido = `${botaoBase} bg-danger text-on-danger hover:brightness-90 focus-visible:outline-danger-ink`;
+
 export const campoInput =
   "rounded-md border border-line-strong bg-surface px-3 py-2.5 text-sm text-ink placeholder:text-ink-muted transition-colors focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/25 disabled:opacity-60";
 

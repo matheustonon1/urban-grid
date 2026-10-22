@@ -7,6 +7,7 @@ import { AvatarIniciais } from "@/components/ui/avatar-iniciais";
 import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
 import { DecisaoBadge } from "@/components/moderacao/decisao-badge";
 import { EstadoVazio } from "@/components/ui/estado-vazio";
+import { BotaoAcao, FormularioAcao } from "@/components/ui/formulario-acao";
 import { Paginacao } from "@/components/ui/paginacao";
 import { ResumoLateral } from "@/components/ui/resumo-lateral";
 import { Secao } from "@/components/ui/secao";
@@ -137,16 +138,12 @@ export default async function ModeracaoComentariosPage({
                   </div>
 
                   <div className="flex flex-wrap gap-2 border-t border-line pt-5">
-                    <form action={aprovarComentarioReprovado.bind(null, comentario.id)}>
-                      <button type="submit" className={botaoPrimario}>
-                        {t("aprovarMesmoAssim")}
-                      </button>
-                    </form>
-                    <form action={confirmarRejeicaoComentario.bind(null, comentario.id)}>
-                      <button type="submit" className={botaoPerigo}>
-                        {t("confirmarRejeicao")}
-                      </button>
-                    </form>
+                    <FormularioAcao action={aprovarComentarioReprovado.bind(null, comentario.id)}>
+                      <BotaoAcao className={botaoPrimario}>{t("aprovarMesmoAssim")}</BotaoAcao>
+                    </FormularioAcao>
+                    <FormularioAcao action={confirmarRejeicaoComentario.bind(null, comentario.id)}>
+                      <BotaoAcao className={botaoPerigo}>{t("confirmarRejeicao")}</BotaoAcao>
+                    </FormularioAcao>
                   </div>
                 </article>
               );

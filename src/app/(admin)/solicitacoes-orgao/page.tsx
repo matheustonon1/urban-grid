@@ -15,6 +15,7 @@ import {
 } from "@/lib/estilos";
 import { metadataDaPagina } from "@/lib/metadata";
 import { EstadoVazio } from "@/components/ui/estado-vazio";
+import { BotaoAcao, FormularioAcao } from "@/components/ui/formulario-acao";
 import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
 import { FormularioRejeicao } from "@/components/ui/formulario-rejeicao";
 import { ResumoLateral } from "@/components/ui/resumo-lateral";
@@ -94,17 +95,34 @@ export default async function SolicitacoesOrgaoPage({
                 </p>
 
                 <div className="mt-2 grid gap-4 border-t border-line pt-5 sm:grid-cols-[auto_1fr] sm:items-end">
-                  <form action={aprovarSolicitacao.bind(null, solicitacao.id)}>
-                    <button type="submit" className={`${botaoPrimario} w-full sm:w-auto`}>
-                      {t("aprovar")}
-                    </button>
-                  </form>
+                  <FormularioAcao
+                    action={aprovarSolicitacao.bind(null, solicitacao.id)}
+                    confirmacao={{
+                      titulo: t("confirmarAprovarTitulo", { orgao: solicitacao.nomeOrgao }),
+                      descricao: t("confirmarAprovarDescricao", {
+                        responsavel: solicitacao.nomeResponsavel,
+                        email: solicitacao.email,
+                        cidade: solicitacao.cidade.nome,
+                      }),
+                      detalhes: [t("confirmarAprovarDetalheEmail"), t("confirmarAprovarDetalheResposta")],
+                      confirmar: t("confirmarAprovarBotao"),
+                      tom: "primario",
+                    }}
+                  >
+                    <BotaoAcao className={`${botaoPrimario} w-full sm:w-auto`}>{t("aprovar")}</BotaoAcao>
+                  </FormularioAcao>
 
                   <FormularioRejeicao
                     id={`motivo-${solicitacao.id}`}
                     action={rejeitarSolicitacao.bind(null, solicitacao.id)}
                     rotulo={t("motivoRejeicaoPlaceholder")}
                     botao={t("rejeitar")}
+                    confirmacao={{
+                      titulo: t("confirmarRejeitarTitulo", { orgao: solicitacao.nomeOrgao }),
+                      descricao: t("confirmarRejeitarDescricao", { email: solicitacao.email }),
+                      confirmar: t("confirmarRejeitarBotao"),
+                      tom: "perigo",
+                    }}
                   />
                 </div>
               </article>

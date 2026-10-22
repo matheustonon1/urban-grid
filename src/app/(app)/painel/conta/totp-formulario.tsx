@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 
 import { botaoPrimario, botaoSecundario, campoInput, cartaoSecao } from "@/lib/estilos";
 import { CabecalhoCartao } from "@/components/ui/cabecalho-cartao";
+import { MensagemForm } from "@/components/formulario/mensagem-form";
 
 import {
   cancelarConfiguracaoTotp,
@@ -173,11 +174,7 @@ export function FormularioTotp({
                 {stateRegenerar.erros.senhaAtual[0]}
               </p>
             )}
-            {stateRegenerar?.mensagem && !stateRegenerar.codigosBackup && (
-              <p className="text-sm text-ink-muted">
-                {stateRegenerar.mensagem}
-              </p>
-            )}
+            {!stateRegenerar?.codigosBackup && <MensagemForm estado={stateRegenerar} />}
             <p className="text-xs text-ink-muted">{t("gerarNovosCodigosDesc")}</p>
             <button
               type="submit"
@@ -209,11 +206,7 @@ export function FormularioTotp({
               </p>
             )}
           </div>
-          {stateDesativar?.mensagem && (
-            <p className="text-sm text-ink-muted">
-              {stateDesativar.mensagem}
-            </p>
-          )}
+          <MensagemForm estado={stateDesativar} />
           <button
             type="submit"
             disabled={pendingDesativar}
@@ -284,11 +277,7 @@ export function FormularioTotp({
               {stateConfirmar.erros.codigo[0]}
             </p>
           )}
-          {stateConfirmar?.mensagem && (
-            <p className="text-sm text-ink-muted">
-              {stateConfirmar.mensagem}
-            </p>
-          )}
+          <MensagemForm estado={stateConfirmar} />
           <button
             type="submit"
             disabled={pendingConfirmar}

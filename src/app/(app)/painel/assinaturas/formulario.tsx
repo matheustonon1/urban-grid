@@ -63,6 +63,7 @@ export function FormularioNovaAssinatura({ categorias }: { categorias: Categoria
       </div>
 
       {state?.erro && <Aviso tom="erro">{state.erro}</Aviso>}
+      {state?.sucesso && <Aviso tom="sucesso">{state.sucesso}</Aviso>}
 
       <button type="submit" disabled={pending} className={`${botaoPrimario} w-full`}>
         {t("assinar")}

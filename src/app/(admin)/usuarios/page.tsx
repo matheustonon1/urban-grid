@@ -6,6 +6,7 @@ import { Campo } from "@/components/formulario/campo";
 import { AvatarIniciais } from "@/components/ui/avatar-iniciais";
 import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
 import { EstadoVazio } from "@/components/ui/estado-vazio";
+import { BotaoAcao, FormularioAcao } from "@/components/ui/formulario-acao";
 import { ResumoLateral } from "@/components/ui/resumo-lateral";
 import { Secao } from "@/components/ui/secao";
 import { Selo } from "@/components/ui/selo";
@@ -130,9 +131,25 @@ export default async function UsuariosPage({ searchParams }: PageProps<"/usuario
                         <p className="text-xs text-ink-muted italic">{t("vocêMesmo")}</p>
                       </div>
                     ) : (
-                      <form
+                      <FormularioAcao
                         action={alterarPapelUsuario.bind(null, usuario.id)}
                         className="flex w-full items-center gap-2 sm:w-auto"
+                        confirmacao={{
+                          titulo: t("confirmarTitulo", { nome: usuario.name ?? usuario.email }),
+                          // {papel} é o campo do formulário: o diálogo troca pelo rótulo da opção marcada.
+                          descricao: t("confirmarDescricao", {
+                            nome: usuario.name ?? usuario.email,
+                            atual: tPapel(usuario.papel),
+                            papel: "{papel}",
+                          }),
+                          detalhes: [t("detalheModerador"), t("detalheAdmin"), t("detalheCidadao")],
+                          confirmar: t("confirmarBotao", { papel: "{papel}" }),
+                          tom: "primario",
+                          // Sem mudança de papel não há o que confirmar: o servidor responde "nada foi alterado".
+                          soSeMudar: "papel",
+                          // Muda o que a conta pode fazer: pede a senha de quem está alterando.
+                          senha: true,
+                        }}
                       >
                         <select
                           name="papel"
@@ -146,10 +163,8 @@ export default async function UsuariosPage({ searchParams }: PageProps<"/usuario
                             </option>
                           ))}
                         </select>
-                        <button type="submit" className={botaoSecundario}>
-                          {t("salvar")}
-                        </button>
-                      </form>
+                        <BotaoAcao className={botaoSecundario}>{t("salvar")}</BotaoAcao>
+                      </FormularioAcao>
                     )}
                   </li>
                 ))}
