@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
-import { containerPagina } from "@/lib/estilos";
+import { containerLargo } from "@/lib/estilos";
 import { exigirSessao } from "@/lib/sessao";
 import { metadataDaPagina } from "@/lib/metadata";
 import { CabecalhoPagina } from "@/components/cabecalho-pagina";
@@ -30,7 +30,7 @@ export default async function NovaReclamacaoPage() {
     : null;
 
   return (
-    <main className={`${containerPagina} max-w-xl`}>
+    <main className={containerLargo}>
       <CabecalhoPagina titulo={t("tituloPagina")} descricao={t("subtitulo")} />
       <NovaReclamacaoForm categorias={categorias} cidadePadrao={cidadePadrao} />
     </main>

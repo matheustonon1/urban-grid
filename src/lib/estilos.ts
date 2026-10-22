@@ -7,8 +7,20 @@ export const botaoSecundario =
 export const campoInput =
   "rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500";
 
+// Campo com erro de validação: mesmo campo, borda e foco em vermelho. É uma
+// constante própria (e não campoInput + border-red) porque duas classes de
+// borda no mesmo elemento brigam pela ordem do CSS gerado, não pela ordem
+// em que aparecem no className.
+export const campoInputInvalido =
+  "rounded-lg border border-red-400 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500 dark:border-red-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-red-500";
+
 export const cartao =
   "rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition-colors dark:border-slate-800 dark:bg-slate-900";
+
+// Cartão de seção de página (etapa de formulário, bloco de estatística): mais
+// respiro que `cartao`, que serve a itens de lista.
+export const cartaoSecao =
+  "rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 dark:border-slate-800 dark:bg-slate-900";
 
 export const cartaoDestaque =
   "w-full rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-xl shadow-slate-900/5 backdrop-blur-sm transition-colors dark:border-slate-800 dark:bg-slate-900/80 dark:shadow-black/20";

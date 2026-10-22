@@ -26,6 +26,7 @@ export function SeletorCidade({
   placeholder = "Cidade",
   required = false,
   onSelecionar,
+  onMudar,
 }: {
   id?: string;
   name?: string;
@@ -33,6 +34,11 @@ export function SeletorCidade({
   placeholder?: string;
   required?: boolean;
   onSelecionar?: (cidade: CidadeResultado) => void;
+  // Avisa toda mudança de valor, inclusive quando a pessoa começa a digitar
+  // e a cidade escolhida deixa de valer (null) - quem precisa saber se há
+  // uma cidade válida agora (progresso do formulário) não pode esperar só
+  // pelo onSelecionar.
+  onMudar?: (cidade: CidadeResultado | null) => void;
 }) {
   const [query, setQuery] = useState(
     defaultValue ? formatar(defaultValue) : ""
@@ -55,6 +61,7 @@ export function SeletorCidade({
     setAberto(false);
     setIndiceAtivo(-1);
     onSelecionar?.(cidade);
+    onMudar?.(cidade);
   }
 
   function aoTeclar(evento: React.KeyboardEvent<HTMLInputElement>) {
@@ -136,6 +143,7 @@ export function SeletorCidade({
           setQuery(evento.target.value);
           setSelecionada(null);
           setAberto(true);
+          onMudar?.(null);
         }}
         onFocus={() => setAberto(true)}
         className={`w-full ${campoInput}`}
