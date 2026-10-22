@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { prisma } from "@/lib/prisma";
 
-import { criarAdminTeste, emailTeste, limparDadosTeste } from "./helpers";
+import { confirmarDialogo, criarAdminTeste, emailTeste, limparDadosTeste } from "./helpers";
 
 test.afterAll(async () => {
   await limparDadosTeste();
@@ -33,6 +33,7 @@ test("solicita acesso como órgão, admin aprova, define senha e loga", async ({
   await page.goto("/solicitacoes-orgao");
   await expect(page.getByText(emailOrgao)).toBeVisible();
   await page.click('button:has-text("Aprovar")');
+  await confirmarDialogo(page, "Aprovar e enviar acesso");
 
   await expect
     .poll(async () => {

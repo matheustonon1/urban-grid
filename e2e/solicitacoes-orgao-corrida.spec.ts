@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { prisma } from "@/lib/prisma";
 
-import { criarAdminTeste, emailTeste, limparDadosTeste } from "./helpers";
+import { confirmarDialogo, criarAdminTeste, emailTeste, limparDadosTeste } from "./helpers";
 
 let emailOrgaoCriado: string | undefined;
 
@@ -62,9 +62,15 @@ test("aprovar duas solicitações com o mesmo e-mail ao mesmo tempo não cria du
   // na constraint única de User.email. A correção precisa desfazer por
   // completo a transação da perdedora (ela volta a PENDENTE) em vez de
   // deixar a solicitação marcada como aprovada sem nenhuma conta criada.
+  // "Aprovar" agora abre um diálogo de confirmação em cada página: abre os dois e
+  // confirma juntos, que é o que mantém a disputa pela mesma conta.
   await Promise.all([
     cartaoA.getByRole("button", { name: "Aprovar" }).click(),
     cartaoB.getByRole("button", { name: "Aprovar" }).click(),
+  ]);
+  await Promise.all([
+    confirmarDialogo(paginaA, "Aprovar e enviar acesso"),
+    confirmarDialogo(paginaB, "Aprovar e enviar acesso"),
   ]);
   await paginaA.waitForTimeout(1500);
 

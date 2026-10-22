@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 import {
   apagarLogsDeModeracao,
+  confirmarDialogo,
   criarAdminTeste,
   criarCidadaoTeste,
   criarReclamacaoTeste,
@@ -70,6 +71,7 @@ test("denunciar um comentário e marcar procedente remove o comentário e avisa 
 
   const cartaoDenuncia = page.locator(`text=${textoComentario}`).locator("..");
   await cartaoDenuncia.getByRole("button", { name: "Procedente (remover comentário)" }).click();
+  await confirmarDialogo(page, "Remover comentário");
   // Espera o card sumir da fila (só lista status ABERTA) em vez de um
   // tempo fixo - sob carga (suíte inteira rodando), o server action podia
   // não ter terminado ainda nos 500ms, e a asserção no banco corria antes
@@ -120,6 +122,7 @@ test("banir autor a partir de uma denúncia de comentário reprova o comentário
 
   const cartaoDenuncia = page.locator(`text=${textoComentario}`).locator("..");
   await cartaoDenuncia.getByRole("button", { name: "Banir autor" }).click();
+  await confirmarDialogo(page, "Banir conta");
   // Mesmo motivo do wait equivalente no teste anterior - espera o efeito
   // de verdade (card sai da fila) em vez de confiar num tempo fixo.
   await expect(page.getByText(textoComentario)).toHaveCount(0);

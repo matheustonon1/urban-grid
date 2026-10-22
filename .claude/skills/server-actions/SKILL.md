@@ -38,6 +38,38 @@ Ordem fixa, nessa sequência:
 6. **`revalidatePath`** das páginas que mostram o dado.
 7. **Retorno de estado** (`{ mensagem }` / `{ erros }`), nunca exceção para erro
    esperado. Texto sempre vindo de `getTranslations` — ver a skill `ux-writing`.
+   Botão que muda dados devolve `ResultadoAcao` (ver "Retorno e confirmação").
+
+## Retorno e confirmação (ações de botão)
+
+Toda action de botão — moderar, administrar, responder, denunciar, avaliar — devolve
+um `ResultadoAcao` (`lib/acoes/resultado.ts`): `sucesso()`, `falha()`, `atencao()`,
+`informacao()`. **Nunca `return;` mudo**: "outra pessoa já decidiu", "esse nome já
+existe" e "o e-mail não saiu" são resposta, não silêncio.
+
+- **Tela:** `<FormularioAcao action={acao.bind(null, id)}>` + `<BotaoAcao>`
+  (`components/ui/formulario-acao.tsx`). Mostra o retorno como aviso flutuante
+  (`AvisosProvider`, no layout raiz — sobrevive ao cartão que some na revalidação),
+  desabilita o botão enquanto roda e, com `limparAoSucesso` / `recolherAoSucesso`,
+  zera o campo ou fecha o `<details>`. Formulário com `useActionState` próprio
+  (login, Minha conta) continua com `{ mensagem, tipo }` + `MensagemForm`.
+- **Confirmação:** passe `confirmacao={{ titulo, descricao, detalhes, confirmar,
+  tom, soSeMudar, senha }}`. Peça diálogo quando a ação **muda o acesso de alguém,
+  notifica terceiros ou não se desfaz sozinha** (banir, reverter banimento, mudar
+  papel, desativar órgão, aprovar/rejeitar solicitação, arquivar/remover por
+  denúncia). Decisões de fila de alto volume (aprovar/rejeitar reclamação, comentário)
+  não pedem: o motivo digitado já é a fricção. `{campo}` no texto vira o rótulo da
+  opção marcada; para o ICU deixar passar, passe `{ campo: "{campo}" }` ao `t()`.
+- **Senha de quem age** (`senha: true`, ou `{ campo, valor }` para só um valor — banimento
+  permanente) quando muda privilégio: o servidor chama
+  `exigirConfirmacaoDeSenha(session.user.id, formData)` ANTES de gravar. O diálogo é
+  UX; **a checagem de verdade é a do servidor** (mesmo contador de tentativas do login).
+  Erro corrigível sem sair do diálogo → `falhaNoDialogo()`.
+- Mudança de privilégio avisa a pessoa afetada (`criarNotificacao` com
+  `CONTA_SEGURANCA`) e recusa o que não faz sentido (mudar o próprio papel, banir
+  administrador ou a si mesmo, encurtar um banimento que já vale mais).
+- Retorno que depende de e-mail diz se ele **saiu**: `enviarEmail*` devolve
+  `ResultadoEnvio` e a action vira `atencao()` se `falhou`/`simulado`.
 
 ## Corrida (TOCTOU) — o erro que mais custou caro
 

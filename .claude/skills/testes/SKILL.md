@@ -63,6 +63,18 @@ entra na conta falha por timeout** — parece regressão e não é.
 - Corrida: abra vários `Page`/contextos e dispare com `Promise.all`
   (`moderacao-corrida.spec.ts`, `solicitacoes-orgao-corrida.spec.ts` são o modelo).
 
+## Ações com diálogo de confirmação e aviso na tela
+
+Banir, reverter banimento, mudar papel, desativar órgão e aprovar/rejeitar solicitação
+abrem um `<dialog>` (FormularioAcao). No spec: clique o botão da tela e depois
+`confirmarDialogo(page, "<rótulo do botão que confirma>", senha?)` (`e2e/helpers.ts`) —
+o rótulo é o do diálogo, não o que o abriu. Em corrida (`Promise.all`), abra os dois
+diálogos e confirme juntos. O resultado aparece em `role="status"`/`role="alert"`:
+asserte o texto do aviso em vez de `waitForTimeout`. Com e-mail real configurado, o
+envio para `example.com` falha e o aviso vira "…, mas o e-mail não saiu": asserte só o
+começo ("Solicitação rejeitada", "Cidade X criada"). `e2e/confirmacoes-acoes.spec.ts`
+é o modelo (senha errada, Esc/Cancelar, servidor recusando).
+
 ## Armadilhas que já custaram horas
 
 1. **Limite por IP em memória.** O servidor guarda contadores (ex.: 5 pedidos de

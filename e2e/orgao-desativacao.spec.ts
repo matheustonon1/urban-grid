@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 import { prisma } from "@/lib/prisma";
 
 import {
+  confirmarDialogo,
   criarAdminTeste,
   criarCidadaoTeste,
   criarOrgaoTeste,
@@ -33,7 +34,8 @@ test("desativar um órgão bloqueia resposta oficial, reativar libera de novo", 
   await page.goto("/orgaos-categorias");
   const cartaoOrgao = page.locator(`text=${orgao.nome}`).locator("..").locator("..");
   await cartaoOrgao.getByRole("button", { name: "Desativar" }).click();
-  await page.waitForTimeout(500);
+  await confirmarDialogo(page, "Desativar órgão");
+  await expect(page.getByText(/foi desativado/)).toBeVisible();
 
   const orgaoDesativado = await prisma.orgao.findUniqueOrThrow({ where: { id: orgao.id } });
   expect(orgaoDesativado.ativo).toBe(false);
@@ -57,7 +59,9 @@ test("desativar um órgão bloqueia resposta oficial, reativar libera de novo", 
   await page.goto("/orgaos-categorias");
   const cartaoOrgaoInativo = page.locator(`text=${orgao.nome}`).locator("..").locator("..");
   await cartaoOrgaoInativo.getByRole("button", { name: "Reativar" }).click();
-  await page.waitForTimeout(500);
+  // Espera o retorno da ação (não um tempo fixo): sair da página com a ação ainda
+  // em voo deixa a resposta reemitir o cookie de sessão depois do clearCookies.
+  await expect(page.getByText(/foi reativado/)).toBeVisible();
 
   const orgaoReativado = await prisma.orgao.findUniqueOrThrow({ where: { id: orgao.id } });
   expect(orgaoReativado.ativo).toBe(true);
@@ -67,7 +71,7 @@ test("desativar um órgão bloqueia resposta oficial, reativar libera de novo", 
   await page.goto(`/reclamacoes/${reclamacao.protocolo}`);
   await page.fill('textarea[name="texto"]', "Resposta depois de reativar o órgão.");
   await page.click('button:has-text("Enviar resposta")');
-  await page.waitForTimeout(500);
+  await expect(page.getByText("Resposta oficial enviada. O autor foi avisado.")).toBeVisible();
 
   const respostasFinais = await prisma.respostaOficial.count({
     where: { reclamacaoId: reclamacao.id },

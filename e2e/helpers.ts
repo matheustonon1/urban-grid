@@ -7,6 +7,18 @@ import { prisma } from "@/lib/prisma";
 import { hashCpf } from "@/lib/seguranca/cpf";
 import { decifrarSegredoTotp } from "@/lib/seguranca/totp";
 
+// Confirma o diálogo que as ações protegidas abrem (FormularioAcao): `botao` é o
+// rótulo do botão que confirma (não o que abriu o diálogo) e `senha` só entra
+// quando o diálogo pede a senha de quem está agindo.
+export async function confirmarDialogo(page: Page, botao: string | RegExp, senha?: string) {
+  const dialogo = page.getByRole("dialog");
+  await dialogo.waitFor({ state: "visible" });
+  if (senha !== undefined) {
+    await dialogo.locator('input[name="senhaConfirmacao"]').fill(senha);
+  }
+  await dialogo.getByRole("button", { name: botao }).click();
+}
+
 // Prefixo comum a todo dado criado pelos testes E2E - facilita limpar
 // tudo de uma vez caso algum teste quebre antes do próprio afterEach.
 export const PREFIXO_TESTE = "e2e-teste";

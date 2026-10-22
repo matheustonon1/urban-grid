@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
-import { criarAdminTeste, criarCidadaoTeste, limparDadosTeste } from "./helpers";
+import { confirmarDialogo, criarAdminTeste, criarCidadaoTeste, limparDadosTeste } from "./helpers";
 
 // Varredura automática de acessibilidade (axe-core) nas telas principais, nos
 // dois temas. Pega o que máquina consegue pegar - contraste, campo sem rótulo,
@@ -91,6 +91,33 @@ for (const tema of TEMAS) {
     await entrar(page, email, senha);
 
     await page.goto("/moderacao", { waitUntil: "networkidle" });
+    expect(await violacoesGraves(page)).toEqual([]);
+  });
+}
+
+// Diálogo de confirmação (com o erro de senha dentro dele) e o aviso flutuante que
+// vem depois: são camadas novas por cima da página e precisam passar na varredura
+// com o fundo inerte, nos dois temas.
+for (const tema of TEMAS) {
+  test(`diálogo de confirmação e aviso flutuante, tema ${tema}`, async ({ page }) => {
+    await escolherTema(page, tema);
+    const { email, senha } = await criarAdminTeste();
+    const { email: emailAlvo } = await criarCidadaoTeste();
+    await entrar(page, email, senha);
+
+    await page.goto(`/usuarios?q=${encodeURIComponent(emailAlvo)}`);
+    const linha = page.locator("li", { hasText: emailAlvo });
+    await linha.locator('select[name="papel"]').selectOption("MODERADOR");
+    await linha.getByRole("button", { name: "Salvar" }).click();
+    await page.getByRole("dialog").waitFor();
+    expect(await violacoesGraves(page)).toEqual([]);
+
+    await confirmarDialogo(page, "Alterar para Moderador", "senha-errada-123");
+    await page.getByRole("dialog").getByRole("alert").waitFor();
+    expect(await violacoesGraves(page)).toEqual([]);
+
+    await confirmarDialogo(page, "Alterar para Moderador", senha);
+    await page.getByText(/alterado para Moderador/).waitFor();
     expect(await violacoesGraves(page)).toEqual([]);
   });
 }

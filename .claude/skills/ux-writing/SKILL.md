@@ -53,6 +53,18 @@ no botão. "Excluir minha conta" / "Manter conta" — nunca "Sim" / "Não" / "OK
 **Sucesso:** diga o que mudou, em uma linha, e onde ver.
 > "Dados atualizados."
 
+**Retorno de ação (aviso flutuante):** nomeie o objeto e a consequência; se algo
+ficou pela metade, diga o que e onde resolver. Quando não houve efeito, é informação,
+não erro, e termina com "Nada foi alterado."
+> "Papel de Ana alterado para Moderador."
+> "Solicitação aprovada, mas o e-mail para x@y.gov não saiu: … Use \"Reenviar convite\" em Categorias."
+> "Outra pessoa já decidiu esta reclamação. Nada foi alterado."
+
+**Diálogo de confirmação:** título é a pergunta com o nome do alvo ("Banir a conta
+de Ana?"); a descrição diz o que muda agora; `detalhes` lista consequências (uma por
+linha); o botão repete o verbo ("Banir conta", "Alterar para Moderador") e o
+cancelamento é "Cancelar". Senha: "Sua senha" + por que se pede.
+
 **Carregando:** `Comum.carregando` (anunciado por `role="status"`); evite "Aguarde...".
 
 **Botão primário:** verbo + objeto. "Registrar reclamação", "Criar conta",

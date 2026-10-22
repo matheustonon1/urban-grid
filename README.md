@@ -328,7 +328,7 @@ urban-grid/
 │   │   ├── termos/          # Termos de Uso e Política de Privacidade
 │   │   └── api/             # rotas de API (busca de cidade, consulta de CEP)
 │   ├── components/
-│   │   ├── ui/              # blocos base: marca, cabeçalho de página, seção com régua, resumo lateral, aviso, etiqueta de estado, estado vazio, esqueleto, moldura das telas de entrada
+│   │   ├── ui/              # blocos base: marca, cabeçalho de página, seção com régua, resumo lateral, aviso (em linha e flutuante), formulário de ação com diálogo de confirmação, etiqueta de estado, estado vazio, esqueleto, moldura das telas de entrada
 │   │   ├── layout/          # cabeçalho fixo, rodapé, menu do usuário, sino, tema, idioma, abas do admin
 │   │   ├── formulario/      # campo com rótulo e erro, combobox de cidade, termos, troca de tipo de cadastro
 │   │   ├── reclamacao/      # cartão de reclamação, badge de status, categorias, denúncia
@@ -340,6 +340,7 @@ urban-grid/
 │   │   ├── estilos.ts       # classes compartilhadas (botões, campos, cartões, estrutura de página em grade de 12 colunas)
 │   │   ├── metadata.ts      # título de aba por página
 │   │   ├── seguranca/       # CPF (hash), TOTP + códigos de backup, limite de tentativas, Turnstile, limite por IP, guard de sessão
+│   │   ├── acoes/           # retorno padrão das Server Actions (`ResultadoAcao`) e reautenticação por senha em ações que mudam acesso
 │   │   ├── conta/           # identificador (e-mail/CPF), verificação de e-mail, senha atual, exportação de dados (LGPD)
 │   │   ├── email/           # tokens, templates, layout HTML, envio (Resend) e prévia - ver o index.ts
 │   │   ├── notificacoes/    # notificações in-app + e-mail e resumo semanal por assinatura

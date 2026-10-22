@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { prisma } from "@/lib/prisma";
 
-import { criarAdminTeste, criarCidadaoTeste, limparDadosTeste } from "./helpers";
+import { confirmarDialogo, criarAdminTeste, criarCidadaoTeste, limparDadosTeste } from "./helpers";
 
 test.afterAll(async () => {
   await limparDadosTeste();
@@ -34,7 +34,8 @@ test("admin promove cidadão a moderador e depois rebaixa de volta", async ({ pa
   const cartao = page.locator(`text=${email}`).locator("..").locator("..");
   await cartao.locator('select[name="papel"]').selectOption("MODERADOR");
   await cartao.getByRole("button", { name: "Salvar" }).click();
-  await page.waitForTimeout(500);
+  await confirmarDialogo(page, "Alterar para Moderador", senhaAdmin);
+  await expect(page.getByText(/Papel de .* alterado para Moderador/)).toBeVisible();
 
   const usuarioPromovido = await prisma.user.findUniqueOrThrow({ where: { id: usuario.id } });
   expect(usuarioPromovido.papel).toBe("MODERADOR");
@@ -52,7 +53,8 @@ test("admin promove cidadão a moderador e depois rebaixa de volta", async ({ pa
   const cartaoDeNovo = page.locator(`text=${email}`).locator("..").locator("..");
   await cartaoDeNovo.locator('select[name="papel"]').selectOption("CIDADAO");
   await cartaoDeNovo.getByRole("button", { name: "Salvar" }).click();
-  await page.waitForTimeout(500);
+  await confirmarDialogo(page, "Alterar para Cidadão", senhaAdmin);
+  await expect(page.getByText(/Papel de .* alterado para Cidadão/)).toBeVisible();
 
   const usuarioRebaixado = await prisma.user.findUniqueOrThrow({ where: { id: usuario.id } });
   expect(usuarioRebaixado.papel).toBe("CIDADAO");
