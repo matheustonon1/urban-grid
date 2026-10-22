@@ -1,4 +1,5 @@
 import { generate } from "otplib";
+import type { Page } from "@playwright/test";
 import bcrypt from "bcryptjs";
 import type { Prisma } from "@prisma/client";
 
@@ -132,6 +133,19 @@ export async function gerarCodigoTotpAtual(
   return generate({ secret: segredo, epoch });
 }
 
+// Espera o React terminar de hidratar o elemento: ele pendura __reactProps$...
+// no nó do DOM nesse momento. Interagir antes disso é uma corrida: o React
+// reescreve valores de campos controlados mexidos à mão (um POST forjado via
+// evaluate, por exemplo) e eventos disparados antes de existir ouvinte se
+// perdem. O HTML do servidor já está na tela quando o `goto` volta, mas isso
+// não quer dizer que a página já responde.
+export async function aguardarHidratacao(page: Page, seletor: string) {
+  await page.waitForFunction((sel) => {
+    const elemento = document.querySelector(sel);
+    return !!elemento && Object.keys(elemento).some((chave) => chave.startsWith("__reactProps$"));
+  }, seletor);
+}
+
 export async function criarReclamacaoTeste(
   autorId: string,
   overrides?: {
@@ -235,7 +249,15 @@ export async function limparDadosTeste() {
     // User que aponta pro Órgão, não o contrário), então um filtro
     // estreito demais deixava esses órgãos órfãos pra sempre, poluindo
     // a lista de /orgaos-categorias a cada rodada de teste.
-    await prisma.orgao.deleteMany({ where: { nome: { contains: "E2E" } } });
+    // "Órgão Corrida ..." também: solicitacoes-orgao-corrida.spec.ts aprova
+    // solicitações pela UI e o órgão nasce com o nome digitado, sem "E2E".
+    // Sem isto, cada rodada deixava dois órgãos pra trás; com a lista
+    // paginada em 20, o órgão desativado de orgao-desativacao.spec.ts
+    // (que vai pro fim da lista) acabava na página 2 e o teste não achava
+    // o botão "Reativar".
+    await prisma.orgao.deleteMany({
+      where: { OR: [{ nome: { contains: "E2E" } }, { nome: { startsWith: "Órgão Corrida" } }] },
+    });
 
     await prisma.solicitacaoOrgao.deleteMany({
       where: { email: { contains: PREFIXO_TESTE } },

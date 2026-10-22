@@ -47,13 +47,23 @@ test("solicita acesso como órgão, admin aprova, define senha e loga", async ({
   // teste sem domínio verificado no Resend) - o token já foi criado
   // antes da tentativa de envio, então buscamos ele direto no banco,
   // como um teste automatizado tem que fazer (não há inbox pra ler).
-  const registro = await prisma.verificationToken.findFirstOrThrow({
-    where: { identifier: emailOrgao },
-    orderBy: { expires: "desc" },
-  });
+  // Com poll: a solicitação vira APROVADA numa transação e o token só é
+  // criado depois, ao montar o e-mail - ler logo ao ver APROVADA era uma
+  // corrida.
+  let token = "";
+  await expect
+    .poll(async () => {
+      const registro = await prisma.verificationToken.findFirst({
+        where: { identifier: emailOrgao },
+        orderBy: { expires: "desc" },
+      });
+      token = registro?.token ?? "";
+      return token;
+    })
+    .not.toBe("");
 
   await page.context().clearCookies();
-  await page.goto(`/orgao/definir-senha/${registro.token}`);
+  await page.goto(`/orgao/definir-senha/${token}`);
   await expect(page.getByText("Bem-vindo(a)")).toBeVisible();
 
   const senha = "SenhaForte123";

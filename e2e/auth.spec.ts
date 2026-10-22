@@ -49,6 +49,11 @@ test.describe("cadastro e login", () => {
     await page.click('button[type="submit"]');
     await page.waitForURL(/\/painel$/);
 
+    // O cadastro loga automaticamente - sem isto, /login redireciona
+    // direto pro painel (usuário já autenticado) e o formulário de login
+    // usado no loop abaixo nunca chega a aparecer.
+    await page.context().clearCookies();
+
     for (let tentativa = 1; tentativa <= 5; tentativa++) {
       await page.goto("/login");
       await page.fill('input[name="identificador"]', email);

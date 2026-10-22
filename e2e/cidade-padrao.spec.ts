@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { prisma } from "@/lib/prisma";
 
-import { criarCidadaoTeste, limparDadosTeste } from "./helpers";
+import { aguardarHidratacao, criarCidadaoTeste, limparDadosTeste } from "./helpers";
 
 test.afterAll(async () => {
   await limparDadosTeste();
@@ -114,6 +114,9 @@ test("não grava uma cidade padrão que não existe", async ({ page }) => {
 
   await page.goto("/painel/conta");
   const perfil = page.locator("form:has(#perfil-cidade)");
+  // Sem esperar a hidratação, o React reescreve o campo escondido (de volta pra
+  // vazio) depois de forjado, e o envio passa como "sem cidade padrão".
+  await aguardarHidratacao(page, 'form:has(#perfil-cidade) input[type="hidden"][name="cidadeId"]');
   // Simula um POST forjado: o campo escondido com um id que não é de cidade nenhuma.
   await perfil
     .locator('input[type="hidden"][name="cidadeId"]')
