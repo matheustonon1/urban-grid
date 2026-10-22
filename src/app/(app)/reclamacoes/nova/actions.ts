@@ -232,6 +232,24 @@ export async function criarReclamacao(
     regioesSensiveis = resultado.regioesSensiveis;
   } catch (erro) {
     console.error("Falha na moderação automática:", erro);
+    // moderarReclamacao() já tem seu próprio fallback pra falha do Gemini
+    // (manda pra AGUARDANDO_REVISAO), mas esse catch cobre uma falha fora
+    // dali - ex.: erro ao gravar LogModeracao ou atualizar a reclamação no
+    // meio do processamento. Sem isto, a reclamação ficava presa em
+    // EM_MODERACAO pra sempre: invisível na fila de moderação (que só
+    // lista AGUARDANDO_REVISAO) e sem nenhum jeito do autor ou de um
+    // moderador saberem que algo deu errado.
+    try {
+      await prisma.reclamacao.update({
+        where: { id: reclamacao.id },
+        data: { status: "AGUARDANDO_REVISAO" },
+      });
+    } catch (erroFallback) {
+      console.error(
+        "Falha ao mover reclamação para revisão humana após erro de moderação:",
+        erroFallback
+      );
+    }
   }
 
   const regioesPorMidia = new Map<number, typeof regioesSensiveis>();
