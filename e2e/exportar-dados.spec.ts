@@ -101,7 +101,7 @@ test("exportação devolve só os dados de quem pediu, sem credenciais", async (
 });
 
 test("sem sessão, a exportação manda pro login em vez de devolver dados", async () => {
-  const contexto = await request.newContext({ baseURL: "http://localhost:3000" });
+  const contexto = await request.newContext({ baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:3000" });
   const resposta = await contexto.get("/painel/conta/exportar", { maxRedirects: 0 });
 
   expect([307, 308]).toContain(resposta.status());

@@ -70,7 +70,7 @@ test("excluir a conta apaga o 2FA, as notificações e os links pendentes - não
   await page.goto("/painel/conta");
   await page.fill("#exclusao-senha", senha);
   await page.click('button:has-text("Excluir minha conta")');
-  await page.waitForURL(/^http:\/\/localhost:3000\/$/);
+  await page.waitForURL(/^https?:\/\/[^/]+\/$/);
 
   const depois = await prisma.user.findUniqueOrThrow({ where: { id: usuario.id } });
   expect(depois.ativo).toBe(false);

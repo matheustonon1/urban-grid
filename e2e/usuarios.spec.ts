@@ -8,6 +8,14 @@ test.afterAll(async () => {
   await limparDadosTeste();
 });
 
+// Num build de produção, os <Link> da página pré-buscam rotas e a resposta de um
+// prefetch ainda em voo reemite o cookie de sessão DEPOIS do clearCookies() (no
+// `npm run dev` não há prefetch). Sair da página antes cancela esses pedidos.
+async function sairDaSessao(page: import("@playwright/test").Page) {
+  await page.goto("about:blank");
+  await page.context().clearCookies();
+}
+
 async function login(page: import("@playwright/test").Page, email: string, senha: string) {
   await page.goto("/login");
   await page.fill('input[name="identificador"]', email);
@@ -33,12 +41,12 @@ test("admin promove cidadão a moderador e depois rebaixa de volta", async ({ pa
 
   // Confirma que o papel novo realmente destranca a área de moderador,
   // não só que o campo mudou no banco.
-  await page.context().clearCookies();
+  await sairDaSessao(page);
   await login(page, email, senha);
   await page.goto("/moderacao");
   await expect(page).toHaveURL(/\/moderacao$/);
 
-  await page.context().clearCookies();
+  await sairDaSessao(page);
   await login(page, emailAdmin, senhaAdmin);
   await page.goto(`/usuarios?q=${encodeURIComponent(email)}`);
   const cartaoDeNovo = page.locator(`text=${email}`).locator("..").locator("..");
