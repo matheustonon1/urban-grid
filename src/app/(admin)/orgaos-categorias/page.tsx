@@ -23,8 +23,8 @@ import {
   alternarAtivoOrgao,
   atualizarCategoriasOrgao,
   atualizarDadosOrgao,
-  reenviarConviteOrgao,
 } from "./actions";
+import { ReenviarConvite } from "./reenviar-convite";
 
 export const generateMetadata = metadataDaPagina("OrgaosCategorias");
 
@@ -91,11 +91,12 @@ export default async function OrgaosCategoriasPage({
                 {orgao.email && ` · ${orgao.email}`}
               </p>
               {orgao.responsaveis.map((responsavel) => (
-                <form key={responsavel.id} action={reenviarConviteOrgao.bind(null, responsavel.id)}>
-                  <button type="submit" className="mt-1 text-xs text-primary hover:underline">
-                    {t("reenviarConvite", { email: responsavel.email })}
-                  </button>
-                </form>
+                <ReenviarConvite
+                  key={responsavel.id}
+                  userId={responsavel.id}
+                  email={responsavel.email}
+                  mostrarDica={process.env.NODE_ENV !== "production"}
+                />
               ))}
             </div>
 

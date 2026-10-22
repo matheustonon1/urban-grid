@@ -1,4 +1,4 @@
-import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Evita bater no provedor de e-mail de verdade. enviarEmail() (em email.ts)
 // só entra no caminho de rede quando RESEND_API_KEY está setada - o valor
@@ -9,21 +9,38 @@ vi.stubEnv("RESEND_API_KEY", "re_teste_fake");
 
 const enviosCapturados: Array<{ to: string; subject: string; html: string }> = [];
 
+// O que o "provedor" responde na próxima chamada (e se ele explode, como numa
+// queda de rede): cada teste ajusta, e o beforeEach volta ao caminho feliz.
+const comportamentoDoProvedor: {
+  erro: { message: string } | null;
+  lancar: Error | null;
+} = { erro: null, lancar: null };
+
 vi.mock("resend", () => ({
   Resend: vi.fn().mockImplementation(() => ({
     emails: {
       send: vi.fn(async (parametros: { to: string; subject: string; html: string }) => {
         enviosCapturados.push(parametros);
-        return { data: { id: "teste" }, error: null };
+        if (comportamentoDoProvedor.lancar) throw comportamentoDoProvedor.lancar;
+        return comportamentoDoProvedor.erro
+          ? { data: null, error: comportamentoDoProvedor.erro }
+          : { data: { id: "teste" }, error: null };
       }),
     },
   })),
 }));
 
-import { esc, enviarEmailResumoSemanal, enviarEmailVerificacao } from "./email";
+import {
+  enviarEmailAcessoOrgao,
+  esc,
+  enviarEmailResumoSemanal,
+  enviarEmailVerificacao,
+} from "./email";
 
 beforeEach(() => {
   enviosCapturados.length = 0;
+  comportamentoDoProvedor.erro = null;
+  comportamentoDoProvedor.lancar = null;
 });
 
 afterAll(() => {
@@ -66,6 +83,50 @@ describe("enviarEmailVerificacao (idioma)", () => {
     expect(enviosCapturados[0].subject).toBe("Confirm your e-mail — Urban Grid");
     expect(enviosCapturados[0].html).toContain("Verify e-mail");
     expect(enviosCapturados[0].html).not.toContain("Confirme seu e-mail");
+  });
+});
+
+describe("resultado do envio (enviarEmailAcessoOrgao)", () => {
+  const convite = { email: "orgao@exemplo.com", token: "abc", nomeOrgao: "Secretaria de Obras" };
+
+  // O log de falha é esperado aqui; não polui a saída do teste. Restaura só
+  // estes dois espiões (restoreAllMocks também zeraria o mock do Resend).
+  let espiaoErro: ReturnType<typeof vi.spyOn>;
+  let espiaoLog: ReturnType<typeof vi.spyOn>;
+  beforeEach(() => {
+    espiaoErro = vi.spyOn(console, "error").mockImplementation(() => {});
+    espiaoLog = vi.spyOn(console, "log").mockImplementation(() => {});
+  });
+  afterEach(() => {
+    espiaoErro.mockRestore();
+    espiaoLog.mockRestore();
+    vi.stubEnv("RESEND_API_KEY", "re_teste_fake");
+  });
+
+  it("'enviado' quando o provedor aceita", async () => {
+    expect(await enviarEmailAcessoOrgao(convite)).toEqual({ status: "enviado" });
+    expect(enviosCapturados).toHaveLength(1);
+  });
+
+  it("'falhou' com a mensagem do provedor quando ele recusa (ex.: remetente de teste do Resend)", async () => {
+    comportamentoDoProvedor.erro = {
+      message: "You can only send testing emails to your own email address.",
+    };
+    expect(await enviarEmailAcessoOrgao(convite)).toEqual({
+      status: "falhou",
+      motivo: "You can only send testing emails to your own email address.",
+    });
+  });
+
+  it("'falhou' quando a chamada ao provedor explode (queda de rede)", async () => {
+    comportamentoDoProvedor.lancar = new Error("fetch failed");
+    expect(await enviarEmailAcessoOrgao(convite)).toEqual({ status: "falhou", motivo: "fetch failed" });
+  });
+
+  it("'simulado' quando não há RESEND_API_KEY: nada é enviado, o corpo vai pro log", async () => {
+    vi.stubEnv("RESEND_API_KEY", "");
+    expect(await enviarEmailAcessoOrgao(convite)).toEqual({ status: "simulado" });
+    expect(enviosCapturados).toHaveLength(0);
   });
 });
 

@@ -8,7 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { criarTokenVerificacao, enviarEmailAcessoOrgao } from "@/lib/email";
 import { idiomaOuPadrao } from "@/i18n/config";
 
-import { criarAtualizarDadosOrgaoSchema } from "./definitions";
+import { criarAtualizarDadosOrgaoSchema, type EstadoConvite } from "./definitions";
 import { exigirAdmin } from "../solicitacoes-orgao/exigir-admin";
 
 // Nome/sigla/e-mail vêm direto do que o cidadão digitou no formulário de
@@ -94,7 +94,12 @@ export async function atualizarCategoriasOrgao(orgaoId: string, formData: FormDa
 // logar ainda. criarTokenVerificacao() já invalida o token antigo ao
 // criar um novo, então reenviar não deixa dois links válidos ao mesmo
 // tempo.
-export async function reenviarConviteOrgao(userId: string) {
+//
+// Devolve o que aconteceu com o envio (não só "feito"): o provedor de e-mail
+// pode recusar (ex.: o remetente de teste do Resend só entrega pro e-mail da
+// própria conta) e, sem isto, o admin clicava, nada aparecia e o e-mail
+// simplesmente não chegava.
+export async function reenviarConviteOrgao(userId: string): Promise<EstadoConvite> {
   await exigirAdmin();
 
   const usuario = await prisma.user.findUnique({
@@ -102,11 +107,11 @@ export async function reenviarConviteOrgao(userId: string) {
     include: { orgao: true },
   });
   if (!usuario || usuario.papel !== "ORGAO" || usuario.senhaHash || !usuario.orgao) {
-    return;
+    return { status: "indisponivel" };
   }
 
   const token = await criarTokenVerificacao(usuario.email);
-  await enviarEmailAcessoOrgao({
+  return enviarEmailAcessoOrgao({
     email: usuario.email,
     token,
     nomeOrgao: usuario.orgao.nome,

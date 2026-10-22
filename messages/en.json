@@ -504,7 +504,13 @@
     "convitePendente": "Invite pending",
     "reenviarConvite": "Resend invite to {email}",
     "atendeTodasResumo": "Serves all categories",
-    "atendeResumo": "Serves {count} of {total} categories"
+    "atendeResumo": "Serves {count} of {total} categories",
+    "reenviandoConvite": "Sending…",
+    "conviteEnviado": "Invitation sent to {email}. If it does not arrive, check the spam folder.",
+    "conviteSimulado": "Email sending is not configured: the invitation link only went to the server log.",
+    "conviteFalhou": "Could not send the invitation to {email}: {motivo}",
+    "conviteFalhouDica": "Resend's test sender only delivers to the email of its own account. To send to other addresses, verify a domain in Resend and set RESEND_FROM_EMAIL in .env. In development, the invitation link is in the server log.",
+    "conviteIndisponivel": "This contact has already set a password (or no longer exists): there is no invitation to resend."
   },
   "SolicitacoesOrgao": {
     "titulo": "Department access requests",

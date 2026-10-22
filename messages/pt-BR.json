@@ -504,7 +504,13 @@
     "convitePendente": "Convite pendente",
     "reenviarConvite": "Reenviar convite para {email}",
     "atendeTodasResumo": "Atende todas as categorias",
-    "atendeResumo": "Atende {count} de {total} categorias"
+    "atendeResumo": "Atende {count} de {total} categorias",
+    "reenviandoConvite": "Enviando…",
+    "conviteEnviado": "Convite enviado para {email}. Se não chegar, olhe a caixa de spam.",
+    "conviteSimulado": "O envio de e-mail não está configurado: o link do convite foi apenas para o log do servidor.",
+    "conviteFalhou": "Não foi possível enviar o convite para {email}: {motivo}",
+    "conviteFalhouDica": "O remetente de teste do Resend só entrega para o e-mail da própria conta dele. Para enviar a outros endereços, verifique um domínio no Resend e defina RESEND_FROM_EMAIL no .env. Em desenvolvimento, o link do convite está no log do servidor.",
+    "conviteIndisponivel": "Este responsável já definiu a senha (ou não existe mais): não há convite a reenviar."
   },
   "SolicitacoesOrgao": {
     "titulo": "Solicitações de acesso como órgão",
