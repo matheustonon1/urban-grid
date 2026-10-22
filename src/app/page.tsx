@@ -15,12 +15,12 @@ import { getTranslations } from "next-intl/server";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { CategoriaIcon } from "@/components/categoria-icon";
-import { StatusBadge } from "@/components/status-badge";
-import { Revelar } from "@/components/revelar";
+import { CategoriaIcon } from "@/components/reclamacao/categoria-icon";
+import { StatusBadge } from "@/components/reclamacao/status-badge";
+import { Revelar } from "@/components/ui/revelar";
 import { botaoPrimario, botaoSecundario, cartao } from "@/lib/estilos";
-import { calcularMetricasOrgao, classificarIndice } from "@/lib/reputacaoOrgao";
-import { STATUS_PUBLICOS } from "@/lib/statusPublicos";
+import { calcularMetricasOrgao, classificarIndice } from "@/lib/orgaos/reputacaoOrgao";
+import { STATUS_PUBLICOS } from "@/lib/reclamacoes/statusPublicos";
 
 export default async function Home() {
   const session = await auth();

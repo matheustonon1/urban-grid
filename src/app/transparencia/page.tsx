@@ -4,12 +4,12 @@ import { Building2 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
-import { CabecalhoPagina } from "@/components/cabecalho-pagina";
-import { EstadoVazio } from "@/components/estado-vazio";
-import { PainelNumeros } from "@/components/painel-numeros";
+import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
+import { EstadoVazio } from "@/components/ui/estado-vazio";
+import { PainelNumeros } from "@/components/ui/painel-numeros";
 import { cartao, containerLargo } from "@/lib/estilos";
-import { calcularMetricasOrgao, classificarIndice } from "@/lib/reputacaoOrgao";
-import { STATUS_PUBLICOS } from "@/lib/statusPublicos";
+import { calcularMetricasOrgao, classificarIndice } from "@/lib/orgaos/reputacaoOrgao";
+import { STATUS_PUBLICOS } from "@/lib/reclamacoes/statusPublicos";
 
 const LIMITE_ORGAOS = 100;
 

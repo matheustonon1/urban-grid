@@ -137,7 +137,7 @@ describe("enviarResumosSemanaisPendentes", () => {
   });
 
   it("processa todas as assinaturas mesmo atravessando mais de um lote (loteamento não perde nem duplica)", async () => {
-    // TAMANHO_DO_LOTE em resumoSemanal.ts é 10 - 12 assinaturas cobre
+    // TAMANHO_DO_LOTE em notificacoes/resumoSemanal.ts é 10 - 12 assinaturas cobre
     // um lote cheio mais um lote parcial, o ponto mais provável de um
     // off-by-one na divisão em fatias.
     const total = 12;

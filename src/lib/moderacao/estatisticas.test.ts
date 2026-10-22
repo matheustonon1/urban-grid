@@ -20,7 +20,7 @@ import {
   variacaoRelativa,
   volumePorPeriodo,
   type LogEstatistica,
-} from "./estatisticasModeracao";
+} from "./estatisticas";
 
 function log(parcial: Partial<LogEstatistica> = {}): LogEstatistica {
   return {

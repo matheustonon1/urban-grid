@@ -1,4 +1,4 @@
-import { EsqueletoListaGenerica } from "@/components/esqueleto";
+import { EsqueletoListaGenerica } from "@/components/ui/esqueleto";
 import { containerMedio } from "@/lib/estilos";
 
 export default function Loading() {

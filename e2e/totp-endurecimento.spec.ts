@@ -8,7 +8,7 @@ import {
   gerarSegredoTotp,
   prepararCodigosBackup,
   reservarTimeStepTotp,
-} from "@/lib/totp";
+} from "@/lib/seguranca/totp";
 
 import { criarCidadaoTeste, limparDadosTeste } from "./helpers";
 

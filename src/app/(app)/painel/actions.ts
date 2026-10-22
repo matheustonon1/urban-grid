@@ -6,9 +6,9 @@ import { signOut } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { criarTokenVerificacao, enviarEmailVerificacao } from "@/lib/email";
 import { idiomaOuPadrao } from "@/i18n/config";
-import { exigirSessao } from "@/lib/sessao";
-import { excedeuLimitePorIp } from "@/lib/rateLimitMemoria";
-import { ESCOPO_REENVIO_VERIFICACAO } from "@/lib/verificacao";
+import { exigirSessao } from "@/lib/seguranca/sessao";
+import { excedeuLimitePorIp } from "@/lib/seguranca/rateLimitMemoria";
+import { ESCOPO_REENVIO_VERIFICACAO } from "@/lib/conta/verificacao";
 
 export async function sair() {
   await signOut({ redirectTo: "/" });

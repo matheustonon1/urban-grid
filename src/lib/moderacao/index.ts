@@ -3,7 +3,7 @@ import * as z from "zod";
 
 import { prisma } from "@/lib/prisma";
 import { criarNotificacao } from "@/lib/notificacoes";
-import { LIMITE_REPROVACAO, LIMITE_REVISAO } from "@/lib/pontuacoes";
+import { LIMITE_REPROVACAO, LIMITE_REVISAO } from "@/lib/moderacao/pontuacoes";
 
 import { getGeminiClient } from "./gemini";
 
@@ -160,7 +160,7 @@ export async function gerarConteudoComRetry(
 
 // Chama o Gemini (com retry) e faz o parse/validação da resposta - parte
 // mecânica idêntica entre moderarReclamacao() e moderarComentario()
-// (moderacaoComentario.ts): JSON.parse, revalidação com zod (o
+// (lib/moderacao/comentario.ts): JSON.parse, revalidação com zod (o
 // responseSchema do Gemini não garante limites como score entre 0 e 1),
 // e extração dos metadados de uso. Erra sempre lançando (nunca retorna
 // um resultado parcial) - cada chamador decide sozinho o fallback

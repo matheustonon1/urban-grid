@@ -6,7 +6,7 @@ import {
   criarTokenTrocaEmail,
   criarTokenVerificacao,
 } from "@/lib/email";
-import { cifrarSegredoTotp, gerarCodigosBackup, gerarSegredoTotp, prepararCodigosBackup } from "@/lib/totp";
+import { cifrarSegredoTotp, gerarCodigosBackup, gerarSegredoTotp, prepararCodigosBackup } from "@/lib/seguranca/totp";
 
 import { criarCidadaoTeste, emailTeste, limparDadosTeste } from "./helpers";
 

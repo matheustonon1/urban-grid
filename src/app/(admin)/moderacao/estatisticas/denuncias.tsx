@@ -1,7 +1,7 @@
 import { useLocale, useTranslations } from "next-intl";
 
-import type { ResumoDenuncias } from "@/lib/estatisticasModeracao";
-import { formatarDuracao, formatarPorcentagem } from "@/lib/formatarEstatistica";
+import type { ResumoDenuncias } from "@/lib/moderacao/estatisticas";
+import { formatarDuracao, formatarPorcentagem } from "@/lib/util/formatarEstatistica";
 
 import { SecaoEstatistica } from "./partes";
 

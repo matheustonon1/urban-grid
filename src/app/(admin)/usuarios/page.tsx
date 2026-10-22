@@ -2,10 +2,10 @@ import { Search, SearchX } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
-import { AvatarIniciais } from "@/components/avatar-iniciais";
-import { CabecalhoPagina } from "@/components/cabecalho-pagina";
-import { EstadoVazio } from "@/components/estado-vazio";
-import { Selo } from "@/components/selo";
+import { AvatarIniciais } from "@/components/ui/avatar-iniciais";
+import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
+import { EstadoVazio } from "@/components/ui/estado-vazio";
+import { Selo } from "@/components/ui/selo";
 import { botaoPrimario, botaoSecundario, campoInput, cartao, containerPagina } from "@/lib/estilos";
 import { metadataDaPagina } from "@/lib/metadata";
 

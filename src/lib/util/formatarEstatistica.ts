@@ -1,4 +1,4 @@
-import type { Granularidade } from "@/lib/estatisticasModeracao";
+import type { Granularidade } from "@/lib/moderacao/estatisticas";
 
 // Formatadores da página de estatísticas, todos com o locale por parâmetro.
 

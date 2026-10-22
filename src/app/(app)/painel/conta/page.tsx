@@ -7,9 +7,9 @@ import {
   gerarQrCodeTotp,
   gerarUriTotp,
   QUANTIDADE_CODIGOS_BACKUP,
-} from "@/lib/totp";
-import { iniciaisDoNome } from "@/lib/texto";
-import { exigirSessao } from "@/lib/sessao";
+} from "@/lib/seguranca/totp";
+import { iniciaisDoNome } from "@/lib/util/texto";
+import { exigirSessao } from "@/lib/seguranca/sessao";
 import { metadataDaPagina } from "@/lib/metadata";
 
 import {

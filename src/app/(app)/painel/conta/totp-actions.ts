@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
-import { verificarSenhaAtual } from "@/lib/senhaAtual";
+import { verificarSenhaAtual } from "@/lib/conta/senhaAtual";
 import {
   cifrarSegredoTotp,
   codigoTotpValido,
@@ -12,8 +12,8 @@ import {
   gerarCodigosBackup,
   gerarSegredoTotp,
   prepararCodigosBackup,
-} from "@/lib/totp";
-import { exigirSessao } from "@/lib/sessao";
+} from "@/lib/seguranca/totp";
+import { exigirSessao } from "@/lib/seguranca/sessao";
 
 import {
   criarConfirmarTotpSchema,

@@ -1,7 +1,7 @@
 import { useLocale, useTranslations } from "next-intl";
 
-import type { DisparoPorEixo } from "@/lib/estatisticasModeracao";
-import { formatarNumero, formatarPorcentagem } from "@/lib/formatarEstatistica";
+import type { DisparoPorEixo } from "@/lib/moderacao/estatisticas";
+import { formatarNumero, formatarPorcentagem } from "@/lib/util/formatarEstatistica";
 
 import { SecaoEstatistica } from "./partes";
 

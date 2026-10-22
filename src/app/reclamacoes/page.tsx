@@ -3,13 +3,13 @@ import { Plus, SearchX } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
-import { CabecalhoPagina } from "@/components/cabecalho-pagina";
-import { CartaoReclamacao } from "@/components/cartao-reclamacao";
-import { EstadoVazio } from "@/components/estado-vazio";
-import { Paginacao } from "@/components/paginacao";
-import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
+import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
+import { CartaoReclamacao } from "@/components/reclamacao/cartao-reclamacao";
+import { EstadoVazio } from "@/components/ui/estado-vazio";
+import { Paginacao } from "@/components/ui/paginacao";
+import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/util/paginacao";
 import { botaoPrimario, containerMedio } from "@/lib/estilos";
-import { STATUS_PUBLICOS } from "@/lib/statusPublicos";
+import { STATUS_PUBLICOS } from "@/lib/reclamacoes/statusPublicos";
 import { metadataDaPagina } from "@/lib/metadata";
 
 import { FiltroReclamacoes } from "./filtro";

@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { Bell, Lock, LogOut, Mail, Trash2, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { SeletorCidade } from "@/components/cidade-combobox";
+import { SeletorCidade } from "@/components/formulario/cidade-combobox";
 import { botaoPrimario, botaoSecundario, campoInput, cartao } from "@/lib/estilos";
 
 import {

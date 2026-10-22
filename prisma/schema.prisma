@@ -159,7 +159,7 @@ model User {
   banidoAte DateTime?
 
   // Desliga só os e-mails de "status mudou" (ver TIPOS_COM_EMAIL em
-  // lib/notificacoes.ts) - a notificação no sininho continua sendo
+  // lib/notificacoes/index.ts) - a notificação no sininho continua sendo
   // criada de qualquer forma. Não afeta alertas de segurança (senha
   // alterada, troca de e-mail solicitada), que sempre saem por e-mail
   // independente disto - nem o resumo semanal, que já é opt-in por si só
@@ -311,7 +311,7 @@ model Categoria {
 }
 
 // Assinatura de "resumo semanal por e-mail" de uma cidade (com categoria
-// opcional) - ver src/lib/resumoSemanal.ts, disparado pelo cron em
+// opcional) - ver src/lib/notificacoes/resumoSemanal.ts, disparado pelo cron em
 // api/cron/resumo-semanal. categoriaId nulo = todas as categorias da
 // cidade.
 model AssinaturaCidade {

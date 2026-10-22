@@ -4,15 +4,15 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { CircleCheck, MessageSquareText } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
-import { StatusBadge } from "@/components/status-badge";
-import { Paginacao } from "@/components/paginacao";
-import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
+import { StatusBadge } from "@/components/reclamacao/status-badge";
+import { Paginacao } from "@/components/ui/paginacao";
+import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/util/paginacao";
 import { botaoPrimario, campoInput, cartao, containerPagina } from "@/lib/estilos";
-import { calcularMetricasOrgao, classificarIndice } from "@/lib/reputacaoOrgao";
+import { calcularMetricasOrgao, classificarIndice } from "@/lib/orgaos/reputacaoOrgao";
 import { metadataDaPagina } from "@/lib/metadata";
-import { CabecalhoPagina } from "@/components/cabecalho-pagina";
-import { EstadoVazio } from "@/components/estado-vazio";
-import { PainelNumeros } from "@/components/painel-numeros";
+import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
+import { EstadoVazio } from "@/components/ui/estado-vazio";
+import { PainelNumeros } from "@/components/ui/painel-numeros";
 
 import { responderReclamacao } from "../reclamacoes/[protocolo]/actions";
 import { exigirOrgao } from "../reclamacoes/[protocolo]/exigir-orgao";
@@ -36,7 +36,7 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
   });
 
   // categoriasIds null = orgao sem categoria atribuida, atende qualquer
-  // uma da cidade (ver orgaoAtendeCategoria em lib/orgaoCategoria.ts).
+  // uma da cidade (ver orgaoAtendeCategoria em lib/orgaos/orgaoCategoria.ts).
   const categoriaIds =
     orgao && orgao.categorias.length > 0 ? orgao.categorias.map((c) => c.id) : null;
 

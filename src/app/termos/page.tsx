@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 
-import { TermosConteudo } from "@/components/termos-conteudo";
+import { TermosConteudo } from "@/components/formulario/termos-conteudo";
 import { containerPagina } from "@/lib/estilos";
 import { metadataDaPagina } from "@/lib/metadata";
 

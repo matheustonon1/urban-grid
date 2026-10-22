@@ -1,4 +1,4 @@
-import { LIMITE_REPROVACAO, LIMITE_REVISAO, nivelPontuacao, type NivelPontuacao } from "@/lib/pontuacoes";
+import { LIMITE_REPROVACAO, LIMITE_REVISAO, nivelPontuacao, type NivelPontuacao } from "@/lib/moderacao/pontuacoes";
 
 // Cálculos da página de estatísticas de moderação, sem tocar no banco: o
 // carregador (carregarEstatisticasModeracao) só busca as linhas e entrega a

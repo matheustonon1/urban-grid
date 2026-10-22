@@ -2,9 +2,9 @@ import { Type } from "@google/genai";
 import * as z from "zod";
 
 import { prisma } from "@/lib/prisma";
-import { LIMITE_REPROVACAO_COMENTARIO } from "@/lib/pontuacoes";
+import { LIMITE_REPROVACAO_COMENTARIO } from "@/lib/moderacao/pontuacoes";
 
-import { gerarAnaliseModeracao } from "./moderacao";
+import { gerarAnaliseModeracao } from "./index";
 
 const MODELO = "gemini-3.6-flash";
 const VERSAO_PROMPT = "v1";

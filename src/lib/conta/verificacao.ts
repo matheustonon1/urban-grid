@@ -12,7 +12,7 @@ export function precisaVerificarEmail(usuario: {
 }
 
 // Escopo do limite de reenvio do e-mail de verificação (ver
-// rateLimitMemoria.ts). Compartilhado entre o botão do painel e o de "Minha
+// seguranca/rateLimitMemoria.ts). Compartilhado entre o botão do painel e o de "Minha
 // conta" pra um não ser caminho de burla do outro; fica aqui porque um
 // arquivo "use server" só pode exportar funções.
 export const ESCOPO_REENVIO_VERIFICACAO = "reenvio-verificacao";

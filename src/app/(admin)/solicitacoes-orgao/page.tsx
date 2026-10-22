@@ -3,14 +3,14 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { CircleCheck } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
-import { Paginacao } from "@/components/paginacao";
-import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
+import { Paginacao } from "@/components/ui/paginacao";
+import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/util/paginacao";
 import { botaoPerigo, botaoPrimario, campoInput, cartao, containerPagina } from "@/lib/estilos";
 import { metadataDaPagina } from "@/lib/metadata";
-import { EstadoVazio } from "@/components/estado-vazio";
-import { CabecalhoPagina } from "@/components/cabecalho-pagina";
-import { Selo } from "@/components/selo";
-import { formatarDataHora } from "@/lib/formatarData";
+import { EstadoVazio } from "@/components/ui/estado-vazio";
+import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
+import { Selo } from "@/components/ui/selo";
+import { formatarDataHora } from "@/lib/util/formatarData";
 
 import { aprovarSolicitacao, rejeitarSolicitacao } from "./actions";
 import { exigirAdmin } from "./exigir-admin";

@@ -4,7 +4,7 @@ import { Resend } from "resend";
 import { createTranslator } from "use-intl";
 
 import { prisma } from "@/lib/prisma";
-import { montarUrl } from "@/lib/url";
+import { montarUrl } from "@/lib/util/url";
 import { IDIOMA_PADRAO, type Idioma } from "@/i18n/config";
 
 // E-mail não tem cookie de navegação de quem vai ler (quem dispara nem
@@ -15,7 +15,7 @@ import { IDIOMA_PADRAO, type Idioma } from "@/i18n/config";
 // createTranslator (use-intl) em vez de next-intl/server, que depende de
 // request scope.
 async function tradutor(locale: Idioma) {
-  const mensagens = (await import(`../../messages/${locale}.json`)).default;
+  const mensagens = (await import(`../../../messages/${locale}.json`)).default;
   return createTranslator({ locale, messages: mensagens, namespace: "Email" });
 }
 
@@ -494,7 +494,7 @@ export async function enviarEmailNotificacao({
 }
 
 // Resumo semanal de uma assinatura (cidade + categoria opcional) - ver
-// src/lib/resumoSemanal.ts. total já vem calculado por quem chama; aqui só
+// src/lib/notificacoes/resumoSemanal.ts. total já vem calculado por quem chama; aqui só
 // escolhe a mensagem certa (singular/plural, com/sem categoria) e monta o
 // e-mail. nomeCategoria vem de fora já traduzido pelo idioma de destino
 // (nome de categoria não é conteúdo bilíngue - ver comentário lá).

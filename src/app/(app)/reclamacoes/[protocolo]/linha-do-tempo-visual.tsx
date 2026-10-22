@@ -1,4 +1,4 @@
-import { formatarDataHora } from "@/lib/formatarData";
+import { formatarDataHora } from "@/lib/util/formatarData";
 
 import type { EventoTimeline } from "./linha-do-tempo";
 

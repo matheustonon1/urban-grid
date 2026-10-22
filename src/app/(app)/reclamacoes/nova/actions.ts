@@ -6,12 +6,12 @@ import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import { finalizarPublicacaoAprovada, moderarReclamacao } from "@/lib/moderacao";
-import { gerarProtocolo } from "@/lib/protocolo";
-import { uploadImagem } from "@/lib/storage";
-import { aplicarBlur, calcularPhash, distanciaHamming, extrairExif } from "@/lib/imagem";
-import { analisarImagemReal, mimeTypeDoFormato, type ImagemAnalisada } from "@/lib/validarImagem";
-import { MAX_IMAGENS, MAX_TAMANHO_BYTES, TIPOS_ACEITOS } from "@/lib/limitesImagemReclamacao";
-import { exigirSessao } from "@/lib/sessao";
+import { gerarProtocolo } from "@/lib/reclamacoes/protocolo";
+import { uploadImagem } from "@/lib/imagens/storage";
+import { aplicarBlur, calcularPhash, distanciaHamming, extrairExif } from "@/lib/imagens/imagem";
+import { analisarImagemReal, mimeTypeDoFormato, type ImagemAnalisada } from "@/lib/imagens/validarImagem";
+import { MAX_IMAGENS, MAX_TAMANHO_BYTES, TIPOS_ACEITOS } from "@/lib/reclamacoes/limitesImagem";
+import { exigirSessao } from "@/lib/seguranca/sessao";
 
 import { criarNovaReclamacaoSchema, type NovaReclamacaoFormState } from "./definitions";
 
@@ -81,9 +81,9 @@ export async function criarReclamacao(
     arquivosValidados.push({ buffer, analise });
   }
 
-  // Content-Type salvo no Blob público (ver uploadImagem em lib/storage.ts)
+  // Content-Type salvo no Blob público (ver uploadImagem em lib/imagens/storage.ts)
   // e no registro de Midia - construído a partir do formato detectado acima
-  // (ver lib/validarImagem.ts), não do arquivo.type que o navegador mandou.
+  // (ver lib/imagens/validarImagem.ts), não do arquivo.type que o navegador mandou.
   // Sem isso, a validação de formato de cima não tinha efeito nenhum no que
   // realmente fica servido: um JPEG de verdade com arquivo.type adulterado
   // pra "image/webp" ainda saía do storage como webp.

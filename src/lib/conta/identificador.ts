@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { hashCpf, normalizarCpf } from "@/lib/cpf";
+import { hashCpf, normalizarCpf } from "@/lib/seguranca/cpf";
 
 // "E-mail ou CPF" - detecta qual dos dois foi digitado e busca o usuário.
 // Compartilhado entre auth.ts (login de verdade) e login/actions.ts

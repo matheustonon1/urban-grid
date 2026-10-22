@@ -4,8 +4,8 @@ import { startTransition, useActionState, useEffect, useRef, useState } from "re
 import { Check, CircleAlert, LoaderCircle, Send } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { Aviso } from "@/components/aviso";
-import { SeletorCidade } from "@/components/cidade-combobox";
+import { Aviso } from "@/components/ui/aviso";
+import { SeletorCidade } from "@/components/formulario/cidade-combobox";
 import { botaoPrimario, campoInput, campoInputInvalido } from "@/lib/estilos";
 
 import { Campo, descritoPor } from "./campo";

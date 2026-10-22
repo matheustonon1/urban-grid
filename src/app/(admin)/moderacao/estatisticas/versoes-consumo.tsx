@@ -1,8 +1,8 @@
 import { useLocale, useTranslations } from "next-intl";
 
-import type { Consumo, LinhaVersao } from "@/lib/estatisticasModeracao";
-import { formatarData } from "@/lib/formatarData";
-import { formatarLatencia, formatarNumero, formatarPorcentagem } from "@/lib/formatarEstatistica";
+import type { Consumo, LinhaVersao } from "@/lib/moderacao/estatisticas";
+import { formatarData } from "@/lib/util/formatarData";
+import { formatarLatencia, formatarNumero, formatarPorcentagem } from "@/lib/util/formatarEstatistica";
 
 import { SecaoEstatistica } from "./partes";
 

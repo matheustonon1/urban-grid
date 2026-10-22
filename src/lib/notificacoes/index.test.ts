@@ -25,7 +25,7 @@ vi.mock("@/lib/prisma", () => ({
 }));
 
 const { prisma } = await import("@/lib/prisma");
-const { criarNotificacao } = await import("./notificacoes");
+const { criarNotificacao } = await import("./index");
 
 beforeEach(() => {
   enviosCapturados.length = 0;

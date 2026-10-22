@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 import QRCode from "qrcode";
 
 import { prisma } from "@/lib/prisma";
-import { criarContadorDeFalhas } from "@/lib/contadorFalhas";
+import { criarContadorDeFalhas } from "@/lib/seguranca/contadorFalhas";
 
 const NOME_EMISSOR = "Urban Grid";
 export const QUANTIDADE_CODIGOS_BACKUP = 8;

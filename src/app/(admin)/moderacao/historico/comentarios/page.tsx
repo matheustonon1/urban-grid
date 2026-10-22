@@ -3,15 +3,15 @@ import { History, UserCheck } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
-import { CabecalhoPagina } from "@/components/cabecalho-pagina";
-import { DecisaoBadge } from "@/components/decisao-badge";
-import { EstadoVazio } from "@/components/estado-vazio";
-import { Paginacao } from "@/components/paginacao";
-import { ChipsPontuacao, PontuacoesIA } from "@/components/pontuacoes-ia";
-import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
+import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
+import { DecisaoBadge } from "@/components/moderacao/decisao-badge";
+import { EstadoVazio } from "@/components/ui/estado-vazio";
+import { Paginacao } from "@/components/ui/paginacao";
+import { ChipsPontuacao, PontuacoesIA } from "@/components/moderacao/pontuacoes-ia";
+import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/util/paginacao";
 import { botaoSecundario, cartao, containerPagina } from "@/lib/estilos";
-import { formatarDataHora } from "@/lib/formatarData";
-import { rotuloVersaoPrompt } from "@/lib/texto";
+import { formatarDataHora } from "@/lib/util/formatarData";
+import { rotuloVersaoPrompt } from "@/lib/util/texto";
 import { metadataDaPagina } from "@/lib/metadata";
 
 import { exigirModerador } from "../../exigir-moderador";

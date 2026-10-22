@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
-import { CadastroTipoSwitch } from "@/components/cadastro-tipo-switch";
+import { CadastroTipoSwitch } from "@/components/formulario/cadastro-tipo-switch";
 
 export default async function CadastroPage({
   searchParams,

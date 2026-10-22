@@ -1,14 +1,14 @@
 import { BarChart3 } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 
-import { Aviso } from "@/components/aviso";
-import { BarraDecisoes } from "@/components/barra-decisoes";
-import { CabecalhoPagina } from "@/components/cabecalho-pagina";
-import { EstadoVazio } from "@/components/estado-vazio";
+import { Aviso } from "@/components/ui/aviso";
+import { BarraDecisoes } from "@/components/moderacao/barra-decisoes";
+import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
+import { EstadoVazio } from "@/components/ui/estado-vazio";
 import {
   carregarEstatisticasModeracao,
   LIMITE_LINHAS_ESTATISTICAS,
-} from "@/lib/carregarEstatisticasModeracao";
+} from "@/lib/moderacao/carregarEstatisticas";
 import {
   consumoDoModelo,
   disparosPorEixo,
@@ -27,11 +27,11 @@ import {
   variacaoPontos,
   variacaoRelativa,
   volumePorPeriodo,
-} from "@/lib/estatisticasModeracao";
+} from "@/lib/moderacao/estatisticas";
 import { containerLargo } from "@/lib/estilos";
-import { formatarNumero, formatarPorcentagem, formatarVariacao } from "@/lib/formatarEstatistica";
+import { formatarNumero, formatarPorcentagem, formatarVariacao } from "@/lib/util/formatarEstatistica";
 import { metadataDaPagina } from "@/lib/metadata";
-import { LIMITE_REPROVACAO_COMENTARIO } from "@/lib/pontuacoes";
+import { LIMITE_REPROVACAO_COMENTARIO } from "@/lib/moderacao/pontuacoes";
 
 import { exigirModerador } from "../exigir-moderador";
 import { DenunciasDoPeriodo } from "./denuncias";

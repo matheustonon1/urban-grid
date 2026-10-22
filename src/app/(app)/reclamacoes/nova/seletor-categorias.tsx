@@ -1,6 +1,6 @@
 "use client";
 
-import { CategoriaIcon } from "@/components/categoria-icon";
+import { CategoriaIcon } from "@/components/reclamacao/categoria-icon";
 
 import { MensagemErro, idDica } from "./campo";
 

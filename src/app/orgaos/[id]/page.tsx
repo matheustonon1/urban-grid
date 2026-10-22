@@ -6,15 +6,15 @@ import { MessageSquareText } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
-import { Aviso } from "@/components/aviso";
-import { CabecalhoPagina } from "@/components/cabecalho-pagina";
-import { EstadoVazio } from "@/components/estado-vazio";
-import { PainelNumeros } from "@/components/painel-numeros";
-import { StatusBadge } from "@/components/status-badge";
+import { Aviso } from "@/components/ui/aviso";
+import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
+import { EstadoVazio } from "@/components/ui/estado-vazio";
+import { PainelNumeros } from "@/components/ui/painel-numeros";
+import { StatusBadge } from "@/components/reclamacao/status-badge";
 import { containerMedio } from "@/lib/estilos";
-import { formatarDataHora } from "@/lib/formatarData";
-import { calcularMetricasOrgao, classificarIndice } from "@/lib/reputacaoOrgao";
-import { formatarTempoRelativo } from "@/lib/tempo-relativo";
+import { formatarDataHora } from "@/lib/util/formatarData";
+import { calcularMetricasOrgao, classificarIndice } from "@/lib/orgaos/reputacaoOrgao";
+import { formatarTempoRelativo } from "@/lib/util/tempo-relativo";
 
 // Mesma consulta pra página e pro generateMetadata, uma ida ao banco só.
 const buscarOrgao = cache((id: string) =>

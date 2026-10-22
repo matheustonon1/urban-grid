@@ -5,7 +5,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import "./globals.css";
 
-import { SiteHeader } from "@/components/site-header";
+import { SiteHeader } from "@/components/layout/site-header";
 
 // Space Grotesk nos títulos (geométrica, técnica - remete a planta/grade
 // urbana, combina com o nome do produto) + IBM Plex Sans no corpo

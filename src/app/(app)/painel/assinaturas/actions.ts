@@ -5,7 +5,7 @@ import { Prisma } from "@prisma/client";
 import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
-import { exigirSessao } from "@/lib/sessao";
+import { exigirSessao } from "@/lib/seguranca/sessao";
 
 // Sentinel de categoriaChave pra "todas as categorias" - precisa bater com
 // o default da coluna no schema.prisma (AssinaturaCidade.categoriaChave).

@@ -7,14 +7,14 @@ import { getTranslations } from "next-intl/server";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { CabecalhoPagina } from "@/components/cabecalho-pagina";
-import { CartaoReclamacao } from "@/components/cartao-reclamacao";
-import { CategoriaIcon } from "@/components/categoria-icon";
-import { EstadoVazio } from "@/components/estado-vazio";
-import { Paginacao } from "@/components/paginacao";
+import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
+import { CartaoReclamacao } from "@/components/reclamacao/cartao-reclamacao";
+import { CategoriaIcon } from "@/components/reclamacao/categoria-icon";
+import { EstadoVazio } from "@/components/ui/estado-vazio";
+import { Paginacao } from "@/components/ui/paginacao";
 import { botaoPrimario, campoInput, cartao, containerMedio, rotuloSecao } from "@/lib/estilos";
-import { calcularMetricasOrgao, classificarIndice } from "@/lib/reputacaoOrgao";
-import { STATUS_PUBLICOS } from "@/lib/statusPublicos";
+import { calcularMetricasOrgao, classificarIndice } from "@/lib/orgaos/reputacaoOrgao";
+import { STATUS_PUBLICOS } from "@/lib/reclamacoes/statusPublicos";
 
 import { SeguirCidade } from "./seguir-cidade";
 

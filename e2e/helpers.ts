@@ -4,8 +4,8 @@ import bcrypt from "bcryptjs";
 import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
-import { hashCpf } from "@/lib/cpf";
-import { decifrarSegredoTotp } from "@/lib/totp";
+import { hashCpf } from "@/lib/seguranca/cpf";
+import { decifrarSegredoTotp } from "@/lib/seguranca/totp";
 
 // Prefixo comum a todo dado criado pelos testes E2E - facilita limpar
 // tudo de uma vez caso algum teste quebre antes do próprio afterEach.

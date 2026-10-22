@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 
-import { COR_DECISAO } from "@/components/barra-decisoes";
+import { COR_DECISAO } from "@/components/moderacao/barra-decisoes";
 import { cartaoSecao } from "@/lib/estilos";
 
 // Bloco de uma estatística: título, uma linha do que ela mede e o conteúdo.

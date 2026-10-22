@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { Search, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { SeletorCategoria } from "@/components/categoria-select";
-import { SeletorCidade } from "@/components/cidade-combobox";
+import { SeletorCategoria } from "@/components/reclamacao/categoria-select";
+import { SeletorCidade } from "@/components/formulario/cidade-combobox";
 import { botaoPrimario, campoInput, cartao } from "@/lib/estilos";
 
 interface Categoria {

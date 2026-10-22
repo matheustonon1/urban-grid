@@ -7,9 +7,9 @@ import { getLocale, getTranslations } from "next-intl/server";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { Aviso } from "@/components/aviso";
-import { StatusBadge } from "@/components/status-badge";
-import { FormularioDenuncia } from "@/components/formulario-denuncia";
+import { Aviso } from "@/components/ui/aviso";
+import { StatusBadge } from "@/components/reclamacao/status-badge";
+import { FormularioDenuncia } from "@/components/reclamacao/formulario-denuncia";
 import {
   botaoPrimario,
   botaoSecundario,
@@ -18,11 +18,11 @@ import {
   containerLargo,
   painelSuave,
 } from "@/lib/estilos";
-import { formatarDataHora } from "@/lib/formatarData";
-import { orgaoAtendeCategoria } from "@/lib/orgaoCategoria";
-import { STATUS_PUBLICOS } from "@/lib/statusPublicos";
-import { iniciaisDoNome } from "@/lib/texto";
-import { formatarTempoRelativo } from "@/lib/tempo-relativo";
+import { formatarDataHora } from "@/lib/util/formatarData";
+import { orgaoAtendeCategoria } from "@/lib/orgaos/orgaoCategoria";
+import { STATUS_PUBLICOS } from "@/lib/reclamacoes/statusPublicos";
+import { iniciaisDoNome } from "@/lib/util/texto";
+import { formatarTempoRelativo } from "@/lib/util/tempo-relativo";
 
 import {
   alternarConfirmacao,

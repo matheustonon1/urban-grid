@@ -3,8 +3,8 @@ import { Building2 } from "lucide-react";
 import { ChevronRight } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
-import { Paginacao } from "@/components/paginacao";
-import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
+import { Paginacao } from "@/components/ui/paginacao";
+import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/util/paginacao";
 import {
   botaoPerigo,
   botaoPrimario,
@@ -14,9 +14,9 @@ import {
   containerPagina,
 } from "@/lib/estilos";
 import { metadataDaPagina } from "@/lib/metadata";
-import { EstadoVazio } from "@/components/estado-vazio";
-import { CabecalhoPagina } from "@/components/cabecalho-pagina";
-import { Selo } from "@/components/selo";
+import { EstadoVazio } from "@/components/ui/estado-vazio";
+import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
+import { Selo } from "@/components/ui/selo";
 
 import { exigirAdmin } from "../solicitacoes-orgao/exigir-admin";
 import {

@@ -1,4 +1,4 @@
-import { Esqueleto, EsqueletoPagina } from "@/components/esqueleto";
+import { Esqueleto, EsqueletoPagina } from "@/components/ui/esqueleto";
 import { cartao, containerLargo } from "@/lib/estilos";
 
 // Mesma estrutura da página (cabeçalho + coluna principal + resumo lateral),

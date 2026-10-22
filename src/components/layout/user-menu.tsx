@@ -21,7 +21,7 @@ import { useTranslations } from "next-intl";
 
 import { sair } from "@/app/(app)/painel/actions";
 import { useFecharAoInteragirFora } from "@/hooks/useFecharAoInteragirFora";
-import { iniciaisDoNome } from "@/lib/texto";
+import { iniciaisDoNome } from "@/lib/util/texto";
 
 function ItemMenu({
   href,

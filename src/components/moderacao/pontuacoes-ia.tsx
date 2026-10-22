@@ -1,9 +1,9 @@
 // Pontuações da moderação por IA, uma barra por eixo, para o moderador
 // bater o olho no que motivou o encaminhamento. Os cortes são os do próprio
-// pipeline (lib/pontuacoes, usado por decidir() em lib/moderacao): >= 0,75
+// pipeline (lib/moderacao/pontuacoes, usado por decidir() em lib/moderacao): >= 0,75
 // reprova, >= 0,4 manda pra revisão humana - antes eram cinco linhas de texto
 // com o mesmo peso, e o eixo que causou o alerta se perdia entre os normais.
-import { nivelPontuacao as nivel } from "@/lib/pontuacoes";
+import { nivelPontuacao as nivel } from "@/lib/moderacao/pontuacoes";
 
 type Pontuacao = {
   rotulo: string;

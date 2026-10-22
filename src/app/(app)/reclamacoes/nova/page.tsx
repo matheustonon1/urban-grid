@@ -2,9 +2,9 @@ import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import { containerLargo } from "@/lib/estilos";
-import { exigirSessao } from "@/lib/sessao";
+import { exigirSessao } from "@/lib/seguranca/sessao";
 import { metadataDaPagina } from "@/lib/metadata";
-import { CabecalhoPagina } from "@/components/cabecalho-pagina";
+import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
 
 import { NovaReclamacaoForm } from "./form";
 

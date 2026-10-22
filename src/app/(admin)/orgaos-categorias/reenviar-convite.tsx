@@ -4,7 +4,7 @@ import { useActionState } from "react";
 import { Check, LoaderCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { Aviso } from "@/components/aviso";
+import { Aviso } from "@/components/ui/aviso";
 
 import { reenviarConviteOrgao } from "./actions";
 

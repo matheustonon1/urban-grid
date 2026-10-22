@@ -5,9 +5,9 @@ import bcrypt from "bcryptjs";
 import { getTranslations } from "next-intl/server";
 
 import { signIn } from "@/auth";
-import { gastarTempoDeComparacao } from "@/lib/hashFalso";
-import { buscarUsuarioPorIdentificador } from "@/lib/identificador";
-import { usuarioBloqueadoPorLogin } from "@/lib/loginSeguranca";
+import { gastarTempoDeComparacao } from "@/lib/seguranca/hashFalso";
+import { buscarUsuarioPorIdentificador } from "@/lib/conta/identificador";
+import { usuarioBloqueadoPorLogin } from "@/lib/seguranca/loginSeguranca";
 
 export type LoginFormState =
   | {

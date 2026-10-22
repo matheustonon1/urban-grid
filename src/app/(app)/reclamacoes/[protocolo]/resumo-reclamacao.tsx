@@ -4,9 +4,9 @@ import type { StatusReclamacao } from "@prisma/client";
 import { CalendarDays, MapPin, Users, type LucideIcon } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
-import { CategoriaIcon } from "@/components/categoria-icon";
+import { CategoriaIcon } from "@/components/reclamacao/categoria-icon";
 import { cartao, rotuloSecao } from "@/lib/estilos";
-import { formatarData } from "@/lib/formatarData";
+import { formatarData } from "@/lib/util/formatarData";
 
 import { ProgressoStatus } from "./progresso-status";
 

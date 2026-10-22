@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Search, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { SeletorCidade } from "./cidade-combobox";
+import { SeletorCidade } from "@/components/formulario/cidade-combobox";
 
 export function BuscaCidadeHeader() {
   const t = useTranslations("Header");

@@ -3,8 +3,8 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
-import { SeletorCategoria } from "@/components/categoria-select";
-import { SeletorCidade } from "@/components/cidade-combobox";
+import { SeletorCategoria } from "@/components/reclamacao/categoria-select";
+import { SeletorCidade } from "@/components/formulario/cidade-combobox";
 import { botaoPrimario, cartao } from "@/lib/estilos";
 
 import { criarAssinatura } from "./actions";

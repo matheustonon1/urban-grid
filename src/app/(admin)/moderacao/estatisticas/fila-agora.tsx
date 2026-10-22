@@ -2,8 +2,8 @@ import Link from "next/link";
 import { ArrowRight, Check } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
-import type { IdadesDaFila } from "@/lib/estatisticasModeracao";
-import { formatarDuracao } from "@/lib/formatarEstatistica";
+import type { IdadesDaFila } from "@/lib/moderacao/estatisticas";
+import { formatarDuracao } from "@/lib/util/formatarEstatistica";
 
 import { SecaoEstatistica } from "./partes";
 

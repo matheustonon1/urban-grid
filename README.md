@@ -495,7 +495,7 @@ Como a plataforma lida com reclamações sobre a cidade — incluindo, indiretam
 - Limite de solicitações por IP/hora em endpoints públicos e não autenticados que gravam no banco (cadastro de conta, solicitação de acesso de órgão).
 - Todo campo de texto livre em formulários tem tamanho máximo validado via Zod (não só mínimo) — evita payloads desproporcionais e custo desnecessário com a API de IA.
 - Cabeçalhos HTTP de segurança (`next.config.ts`): Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Referrer-Policy e Permissions-Policy em todas as rotas.
-- Moderação por IA (`lib/moderacao`, `lib/moderacaoComentario`): o texto do usuário é isolado no prompt por marcadores explícitos com instrução para nunca seguir comandos embutidos nele (mitiga prompt injection), e a resposta do modelo é revalidada com Zod (não só o `responseSchema` do Gemini) — qualquer score fora de 0-1 ou formato inesperado falha para revisão humana em vez de aprovar por engano ou travar a reclamação sem rastro.
+- Moderação por IA (`lib/moderacao`, `lib/moderacao/comentario`): o texto do usuário é isolado no prompt por marcadores explícitos com instrução para nunca seguir comandos embutidos nele (mitiga prompt injection), e a resposta do modelo é revalidada com Zod (não só o `responseSchema` do Gemini) — qualquer score fora de 0-1 ou formato inesperado falha para revisão humana em vez de aprovar por engano ou travar a reclamação sem rastro.
 - DDoS volumétrico (inundação de tráfego na camada de rede) não é algo que código de aplicação resolve sozinho — isso depende de proteção na borda (Cloudflare, WAF do provedor de hospedagem, etc.); o que este projeto controla é o abuso a nível de aplicação (força bruta, spam de formulário, payloads grandes).
 
 ---

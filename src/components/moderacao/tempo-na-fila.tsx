@@ -1,8 +1,8 @@
 import { Clock } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
-import { formatarDataHora } from "@/lib/formatarData";
-import { formatarTempoRelativo } from "@/lib/tempo-relativo";
+import { formatarDataHora } from "@/lib/util/formatarData";
+import { formatarTempoRelativo } from "@/lib/util/tempo-relativo";
 
 const HORAS_ATENCAO = 24;
 const HORAS_URGENTE = 72;

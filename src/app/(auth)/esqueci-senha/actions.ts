@@ -5,7 +5,7 @@ import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import { criarTokenRedefinicaoSenha, enviarEmailRedefinicaoSenha } from "@/lib/email";
-import { excedeuLimitePorIp } from "@/lib/rateLimitMemoria";
+import { excedeuLimitePorIp } from "@/lib/seguranca/rateLimitMemoria";
 import { idiomaOuPadrao } from "@/i18n/config";
 
 import { criarEsqueciSenhaSchema, type EsqueciSenhaFormState } from "./definitions";

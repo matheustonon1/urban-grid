@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useActionState } from "react";
 import { useTranslations } from "next-intl";
 
-import { SeletorCidade } from "@/components/cidade-combobox";
-import { TermosModal } from "@/components/termos-modal";
+import { SeletorCidade } from "@/components/formulario/cidade-combobox";
+import { TermosModal } from "@/components/formulario/termos-modal";
 import { botaoPrimario, botaoSecundario, campoInput, cartaoDestaque, linkSutil } from "@/lib/estilos";
 
 import { solicitarOrgao } from "./actions";

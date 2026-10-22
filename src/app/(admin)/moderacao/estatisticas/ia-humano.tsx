@@ -1,17 +1,17 @@
 import { useLocale, useTranslations } from "next-intl";
 
-import { Aviso } from "@/components/aviso";
-import { COR_DECISAO } from "@/components/barra-decisoes";
+import { Aviso } from "@/components/ui/aviso";
+import { COR_DECISAO } from "@/components/moderacao/barra-decisoes";
 import {
   LIMITE_REVISAO,
   type MotivosDeRevisao,
   type RevisaoHumana,
-} from "@/lib/estatisticasModeracao";
+} from "@/lib/moderacao/estatisticas";
 import {
   formatarDuracao,
   formatarNumero,
   formatarPorcentagem,
-} from "@/lib/formatarEstatistica";
+} from "@/lib/util/formatarEstatistica";
 
 import { SecaoEstatistica } from "./partes";
 

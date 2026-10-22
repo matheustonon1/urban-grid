@@ -4,9 +4,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ImagePlus, ScanFace, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { Aviso } from "@/components/aviso";
+import { Aviso } from "@/components/ui/aviso";
 import { useFecharAoInteragirFora } from "@/hooks/useFecharAoInteragirFora";
-import { MAX_IMAGENS, MAX_TAMANHO_BYTES, TIPOS_ACEITOS } from "@/lib/limitesImagemReclamacao";
+import { MAX_IMAGENS, MAX_TAMANHO_BYTES, TIPOS_ACEITOS } from "@/lib/reclamacoes/limitesImagem";
 
 function formatarTamanho(bytes: number) {
   return bytes >= 1024 * 1024

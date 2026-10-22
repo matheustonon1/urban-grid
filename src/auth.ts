@@ -4,13 +4,13 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 
 import { prisma } from "@/lib/prisma";
-import { gastarTempoDeComparacao } from "@/lib/hashFalso";
-import { buscarUsuarioPorIdentificador } from "@/lib/identificador";
+import { gastarTempoDeComparacao } from "@/lib/seguranca/hashFalso";
+import { buscarUsuarioPorIdentificador } from "@/lib/conta/identificador";
 import {
   registrarFalhaLogin,
   resetarFalhasLogin,
   usuarioBloqueadoPorLogin,
-} from "@/lib/loginSeguranca";
+} from "@/lib/seguranca/loginSeguranca";
 import {
   codigoTotpValido,
   consumirCodigoBackup,
@@ -19,7 +19,7 @@ import {
   reservarTimeStepTotp,
   resetarFalhasTotp,
   usuarioBloqueadoPorTotp,
-} from "@/lib/totp";
+} from "@/lib/seguranca/totp";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),

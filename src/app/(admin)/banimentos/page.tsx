@@ -2,14 +2,14 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { CircleCheck } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
-import { Paginacao } from "@/components/paginacao";
+import { Paginacao } from "@/components/ui/paginacao";
 import { botaoSecundario, cartao, containerPagina } from "@/lib/estilos";
-import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
+import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/util/paginacao";
 import { metadataDaPagina } from "@/lib/metadata";
-import { EstadoVazio } from "@/components/estado-vazio";
-import { AvatarIniciais } from "@/components/avatar-iniciais";
-import { CabecalhoPagina } from "@/components/cabecalho-pagina";
-import { formatarDataHora } from "@/lib/formatarData";
+import { EstadoVazio } from "@/components/ui/estado-vazio";
+import { AvatarIniciais } from "@/components/ui/avatar-iniciais";
+import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
+import { formatarDataHora } from "@/lib/util/formatarData";
 
 import { exigirAdmin } from "../solicitacoes-orgao/exigir-admin";
 import { reverterBanimento } from "./actions";

@@ -3,12 +3,12 @@ import { CircleCheck, Flag } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
-import { AvatarIniciais } from "@/components/avatar-iniciais";
-import { CabecalhoPagina } from "@/components/cabecalho-pagina";
-import { EstadoVazio } from "@/components/estado-vazio";
-import { Paginacao } from "@/components/paginacao";
-import { TempoNaFila } from "@/components/tempo-na-fila";
-import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
+import { AvatarIniciais } from "@/components/ui/avatar-iniciais";
+import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
+import { EstadoVazio } from "@/components/ui/estado-vazio";
+import { Paginacao } from "@/components/ui/paginacao";
+import { TempoNaFila } from "@/components/moderacao/tempo-na-fila";
+import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/util/paginacao";
 import {
   blocoCitacao,
   botaoPerigo,
@@ -18,7 +18,7 @@ import {
   cartao,
   containerPagina,
 } from "@/lib/estilos";
-import { formatarDataHora } from "@/lib/formatarData";
+import { formatarDataHora } from "@/lib/util/formatarData";
 import { metadataDaPagina } from "@/lib/metadata";
 
 import { exigirModerador } from "../moderacao/exigir-moderador";

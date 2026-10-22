@@ -1,6 +1,6 @@
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-// Evita bater no provedor de e-mail de verdade. enviarEmail() (em email.ts)
+// Evita bater no provedor de e-mail de verdade. enviarEmail() (em lib/email)
 // só entra no caminho de rede quando RESEND_API_KEY está setada - o valor
 // real varia se o .env é carregado ou não pelo runner de teste (vitest não
 // carrega .env por padrão), então fixa aqui em vez de depender do ambiente:
@@ -35,7 +35,7 @@ import {
   esc,
   enviarEmailResumoSemanal,
   enviarEmailVerificacao,
-} from "./email";
+} from "./index";
 
 beforeEach(() => {
   enviosCapturados.length = 0;

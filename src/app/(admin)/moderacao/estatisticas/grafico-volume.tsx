@@ -1,8 +1,8 @@
 import { useLocale, useTranslations } from "next-intl";
 
-import { COR_DECISAO } from "@/components/barra-decisoes";
-import { maximoLegivel, type BucketVolume, type Granularidade } from "@/lib/estatisticasModeracao";
-import { formatarBucket } from "@/lib/formatarEstatistica";
+import { COR_DECISAO } from "@/components/moderacao/barra-decisoes";
+import { maximoLegivel, type BucketVolume, type Granularidade } from "@/lib/moderacao/estatisticas";
+import { formatarBucket } from "@/lib/util/formatarEstatistica";
 
 import { COR_FALHA, LegendaDecisoes, SecaoEstatistica, VerComoTabela } from "./partes";
 

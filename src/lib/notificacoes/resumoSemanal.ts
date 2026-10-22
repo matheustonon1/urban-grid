@@ -2,10 +2,10 @@ import type { AssinaturaCidade, Categoria, Cidade, User } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { enviarEmailResumoSemanal } from "@/lib/email";
-import { montarUrl } from "@/lib/url";
+import { montarUrl } from "@/lib/util/url";
 import { idiomaOuPadrao } from "@/i18n/config";
-import { nomeCategoriaTraduzido } from "@/lib/categoriaI18n";
-import { STATUS_PUBLICOS } from "@/lib/statusPublicos";
+import { nomeCategoriaTraduzido } from "@/lib/reclamacoes/categoriaI18n";
+import { STATUS_PUBLICOS } from "@/lib/reclamacoes/statusPublicos";
 
 export const INTERVALO_RESUMO_MS = 7 * 24 * 60 * 60 * 1000;
 

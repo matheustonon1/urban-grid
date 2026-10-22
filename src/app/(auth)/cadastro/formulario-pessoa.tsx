@@ -5,7 +5,7 @@ import Link from "next/link";
 import Script from "next/script";
 import { useTranslations } from "next-intl";
 
-import { TermosModal } from "@/components/termos-modal";
+import { TermosModal } from "@/components/formulario/termos-modal";
 import { botaoPrimario, campoInput, cartaoDestaque, linkSutil } from "@/lib/estilos";
 
 import { cadastrar } from "./actions";

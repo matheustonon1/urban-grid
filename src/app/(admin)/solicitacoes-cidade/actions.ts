@@ -7,7 +7,7 @@ import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { enviarEmailCidadeAprovada, enviarEmailSolicitacaoCidadeRejeitada } from "@/lib/email";
 import { idiomaOuPadrao } from "@/i18n/config";
-import { slugificar } from "@/lib/slug";
+import { slugificar } from "@/lib/util/slug";
 
 import { criarAprovarSolicitacaoCidadeSchema, criarRejeitarSolicitacaoCidadeSchema } from "./definitions";
 import { exigirAdmin } from "../solicitacoes-orgao/exigir-admin";

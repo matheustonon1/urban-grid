@@ -4,7 +4,7 @@ import {
   type DenunciaEstatistica,
   type LogEstatistica,
   type Periodo,
-} from "@/lib/estatisticasModeracao";
+} from "@/lib/moderacao/estatisticas";
 
 const MS_DIA = 86_400_000;
 
@@ -74,7 +74,7 @@ export async function carregarEstatisticasModeracao(
       orderBy: { createdAt: "desc" },
       take: LIMITE_LINHAS,
     }),
-    // Mesmos critérios das filas de verdade (ver lib/pendenciasModeracao.ts).
+    // Mesmos critérios das filas de verdade (ver lib/moderacao/pendencias.ts).
     prisma.reclamacao.findMany({
       where: { status: "AGUARDANDO_REVISAO" },
       select: { updatedAt: true },

@@ -5,7 +5,7 @@ import {
   registrarFalhaLogin,
   resetarFalhasLogin,
   usuarioBloqueadoPorLogin,
-} from "@/lib/loginSeguranca";
+} from "@/lib/seguranca/loginSeguranca";
 
 // - "indisponivel": conta sem senha (ex.: já anonimizada) - nada a comparar.
 // - "bloqueada": excedeu o limite de tentativas; nem compara.

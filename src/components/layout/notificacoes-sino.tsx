@@ -6,7 +6,7 @@ import { Bell } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { useFecharAoInteragirFora } from "@/hooks/useFecharAoInteragirFora";
-import { formatarTempoRelativo } from "@/lib/tempo-relativo";
+import { formatarTempoRelativo } from "@/lib/util/tempo-relativo";
 
 import { marcarNotificacaoLida, marcarTodasLidas } from "./notificacoes-actions";
 

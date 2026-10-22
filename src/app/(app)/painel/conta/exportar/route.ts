@@ -1,5 +1,5 @@
-import { montarExportacaoDados } from "@/lib/exportarDados";
-import { exigirSessao } from "@/lib/sessao";
+import { montarExportacaoDados } from "@/lib/conta/exportarDados";
+import { exigirSessao } from "@/lib/seguranca/sessao";
 
 // GET de propósito (é um link de download, não um formulário), mas só
 // devolve os dados de quem está logado - o id vem da sessão, nunca da URL.

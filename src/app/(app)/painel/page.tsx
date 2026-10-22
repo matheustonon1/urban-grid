@@ -3,17 +3,17 @@ import { ChevronRight, FilePlus, Plus, Users } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
-import { exigirSessao } from "@/lib/sessao";
-import { Aviso } from "@/components/aviso";
-import { CabecalhoPagina } from "@/components/cabecalho-pagina";
-import { EstadoVazio } from "@/components/estado-vazio";
-import { PainelNumeros } from "@/components/painel-numeros";
-import { StatusBadge } from "@/components/status-badge";
-import { Paginacao } from "@/components/paginacao";
-import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
+import { exigirSessao } from "@/lib/seguranca/sessao";
+import { Aviso } from "@/components/ui/aviso";
+import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
+import { EstadoVazio } from "@/components/ui/estado-vazio";
+import { PainelNumeros } from "@/components/ui/painel-numeros";
+import { StatusBadge } from "@/components/reclamacao/status-badge";
+import { Paginacao } from "@/components/ui/paginacao";
+import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/util/paginacao";
 import { botaoPrimario, botaoSecundario, cartao, containerMedio } from "@/lib/estilos";
 import { metadataDaPagina } from "@/lib/metadata";
-import { formatarTempoRelativo } from "@/lib/tempo-relativo";
+import { formatarTempoRelativo } from "@/lib/util/tempo-relativo";
 
 import { reenviarVerificacao } from "./actions";
 

@@ -1,4 +1,4 @@
-import { iniciaisDoNome } from "@/lib/texto";
+import { iniciaisDoNome } from "@/lib/util/texto";
 
 // Círculo com as iniciais da pessoa. Decorativo (aria-hidden): o nome já
 // aparece em texto ao lado, repetir seria ruído pra leitor de tela.

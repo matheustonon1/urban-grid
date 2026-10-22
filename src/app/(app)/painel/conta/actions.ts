@@ -15,10 +15,10 @@ import {
   enviarEmailVerificacao,
 } from "@/lib/email";
 import { idiomaOuPadrao } from "@/i18n/config";
-import { exigirSessao } from "@/lib/sessao";
-import { excedeuLimitePorIp } from "@/lib/rateLimitMemoria";
-import { verificarSenhaAtual } from "@/lib/senhaAtual";
-import { ESCOPO_REENVIO_VERIFICACAO } from "@/lib/verificacao";
+import { exigirSessao } from "@/lib/seguranca/sessao";
+import { excedeuLimitePorIp } from "@/lib/seguranca/rateLimitMemoria";
+import { verificarSenhaAtual } from "@/lib/conta/senhaAtual";
+import { ESCOPO_REENVIO_VERIFICACAO } from "@/lib/conta/verificacao";
 
 import {
   criarPerfilSchema,
@@ -63,7 +63,7 @@ export async function atualizarPerfil(
 }
 
 // Só afeta os e-mails de "status mudou" (ver TIPOS_COM_EMAIL em
-// lib/notificacoes.ts) - alertas de segurança (senha alterada, troca de
+// lib/notificacoes/index.ts) - alertas de segurança (senha alterada, troca de
 // e-mail solicitada) continuam saindo sempre, e a notificação no sininho
 // nunca para de ser criada. Antes desta ação, não existia nenhum jeito de
 // desligar esses e-mails além de nunca verificar o e-mail da conta.
@@ -297,7 +297,7 @@ export async function excluirConta(
     prisma.notificacao.deleteMany({ where: { userId: usuario.id } }),
     apagarTokensPendentes(usuario.id, usuario.email),
     // ativo=false já impede o cron de resumo semanal de mandar e-mail pra
-    // cá (ver filtro em resumoSemanal.ts), mas a assinatura em si ficaria
+    // cá (ver filtro em lib/notificacoes/resumoSemanal.ts), mas a assinatura em si ficaria
     // órfã no banco pra sempre sem isso - ninguém nunca mais vai cancelá-la
     // pela tela, já que a conta não loga mais.
     prisma.assinaturaCidade.deleteMany({ where: { userId: usuario.id } }),

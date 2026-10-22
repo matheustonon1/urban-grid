@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
-import { PERIODOS, type ChavePeriodo } from "@/lib/estatisticasModeracao";
+import { PERIODOS, type ChavePeriodo } from "@/lib/moderacao/estatisticas";
 
 const ROTULOS: Record<ChavePeriodo, "periodo7" | "periodo30" | "periodo90" | "periodoTodos"> = {
   "7": "periodo7",

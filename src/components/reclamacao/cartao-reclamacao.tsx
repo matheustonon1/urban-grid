@@ -3,10 +3,10 @@ import type { StatusReclamacao } from "@prisma/client";
 import { Users } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
-import { CategoriaIcon } from "@/components/categoria-icon";
-import { StatusBadge } from "@/components/status-badge";
-import { formatarDataHora } from "@/lib/formatarData";
-import { formatarTempoRelativo } from "@/lib/tempo-relativo";
+import { CategoriaIcon } from "@/components/reclamacao/categoria-icon";
+import { StatusBadge } from "@/components/reclamacao/status-badge";
+import { formatarDataHora } from "@/lib/util/formatarData";
+import { formatarTempoRelativo } from "@/lib/util/tempo-relativo";
 
 // Cartão de reclamação da lista pública e do feed da cidade (eram duas
 // implementações parecidas, mas diferentes: uma sem descrição, outra com).

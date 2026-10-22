@@ -15,15 +15,15 @@ import {
 import { getLocale, getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
-import { CabecalhoPagina } from "@/components/cabecalho-pagina";
-import { EstadoVazio } from "@/components/estado-vazio";
-import { Paginacao } from "@/components/paginacao";
-import { marcarNotificacaoLida, marcarTodasLidas } from "@/components/notificacoes-actions";
-import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
-import { formatarDataHora } from "@/lib/formatarData";
-import { formatarTempoRelativo } from "@/lib/tempo-relativo";
+import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
+import { EstadoVazio } from "@/components/ui/estado-vazio";
+import { Paginacao } from "@/components/ui/paginacao";
+import { marcarNotificacaoLida, marcarTodasLidas } from "@/components/layout/notificacoes-actions";
+import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/util/paginacao";
+import { formatarDataHora } from "@/lib/util/formatarData";
+import { formatarTempoRelativo } from "@/lib/util/tempo-relativo";
 import { botaoSecundario, cartao, containerPagina } from "@/lib/estilos";
-import { exigirSessao } from "@/lib/sessao";
+import { exigirSessao } from "@/lib/seguranca/sessao";
 import { metadataDaPagina } from "@/lib/metadata";
 
 export const generateMetadata = metadataDaPagina("Notificacoes");

@@ -3,10 +3,10 @@ import { Rss } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
 import { cartao, containerPagina } from "@/lib/estilos";
-import { exigirSessao } from "@/lib/sessao";
+import { exigirSessao } from "@/lib/seguranca/sessao";
 import { metadataDaPagina } from "@/lib/metadata";
-import { CabecalhoPagina } from "@/components/cabecalho-pagina";
-import { EstadoVazio } from "@/components/estado-vazio";
+import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
+import { EstadoVazio } from "@/components/ui/estado-vazio";
 
 import { cancelarAssinatura } from "./actions";
 import { FormularioNovaAssinatura } from "./formulario";

@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
-import { AdminNav } from "@/components/admin-nav";
-import { contarPendenciasModeracao } from "@/lib/pendenciasModeracao";
+import { AdminNav } from "@/components/layout/admin-nav";
+import { contarPendenciasModeracao } from "@/lib/moderacao/pendencias";
 
 // Só UI compartilhada (o menu) - cada página e cada server action desta
 // área continuam com seu próprio guard (exigirModerador/exigirAdmin),

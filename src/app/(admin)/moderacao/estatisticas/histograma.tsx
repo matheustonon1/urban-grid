@@ -1,13 +1,13 @@
 import { useLocale, useTranslations } from "next-intl";
 
-import { COR_DECISAO } from "@/components/barra-decisoes";
+import { COR_DECISAO } from "@/components/moderacao/barra-decisoes";
 import {
   LIMITE_REPROVACAO,
   LIMITE_REVISAO,
   maximoLegivel,
   type FaixaHistograma,
-} from "@/lib/estatisticasModeracao";
-import { formatarNumero, formatarPorcentagem } from "@/lib/formatarEstatistica";
+} from "@/lib/moderacao/estatisticas";
+import { formatarNumero, formatarPorcentagem } from "@/lib/util/formatarEstatistica";
 
 import { SecaoEstatistica, VerComoTabela } from "./partes";
 

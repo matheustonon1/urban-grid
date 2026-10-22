@@ -1,6 +1,6 @@
-import { criarContadorDeFalhas } from "@/lib/contadorFalhas";
+import { criarContadorDeFalhas } from "@/lib/seguranca/contadorFalhas";
 
-// Contador de força bruta na SENHA - separado do de TOTP (lib/totp.ts),
+// Contador de força bruta na SENHA - separado do de TOTP (lib/seguranca/totp.ts),
 // que só entra em jogo depois que a senha já foi aceita. Sem isto, uma
 // conta sem 2FA ativo podia ter a senha testada indefinidamente (o
 // bcrypt.compare atrasa cada tentativa, mas não impede um script

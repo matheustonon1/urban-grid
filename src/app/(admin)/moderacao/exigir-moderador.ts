@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { exigirSessao } from "@/lib/sessao";
+import { exigirSessao } from "@/lib/seguranca/sessao";
 
 export async function exigirModerador() {
   const session = await exigirSessao();

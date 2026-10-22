@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 import { prisma } from "@/lib/prisma";
-import { cifrarSegredoTotp, gerarSegredoTotp } from "@/lib/totp";
+import { cifrarSegredoTotp, gerarSegredoTotp } from "@/lib/seguranca/totp";
 
 import { criarCidadaoTeste, limparDadosTeste } from "./helpers";
 

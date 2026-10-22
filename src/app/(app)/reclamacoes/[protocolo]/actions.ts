@@ -6,10 +6,10 @@ import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import { criarNotificacao } from "@/lib/notificacoes";
-import { orgaoAtendeCategoria } from "@/lib/orgaoCategoria";
-import { precisaVerificarEmail } from "@/lib/verificacao";
-import { STATUS_PUBLICOS } from "@/lib/statusPublicos";
-import { exigirSessao } from "@/lib/sessao";
+import { orgaoAtendeCategoria } from "@/lib/orgaos/orgaoCategoria";
+import { precisaVerificarEmail } from "@/lib/conta/verificacao";
+import { STATUS_PUBLICOS } from "@/lib/reclamacoes/statusPublicos";
+import { exigirSessao } from "@/lib/seguranca/sessao";
 
 import {
   criarAvaliacaoSchema,

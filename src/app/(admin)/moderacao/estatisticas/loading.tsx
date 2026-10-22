@@ -1,4 +1,4 @@
-import { Esqueleto, EsqueletoCabecalho, EsqueletoPagina } from "@/components/esqueleto";
+import { Esqueleto, EsqueletoCabecalho, EsqueletoPagina } from "@/components/ui/esqueleto";
 import { containerLargo } from "@/lib/estilos";
 
 export default function Loading() {

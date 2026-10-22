@@ -15,7 +15,7 @@ interface Categoria {
 }
 
 // Popover próprio em vez do <select> nativo, pelo mesmo motivo do
-// SeletorIdioma (components/seletor-idioma.tsx): o menu nativo do
+// SeletorIdioma (components/layout/seletor-idioma.tsx): o menu nativo do
 // navegador destoa do resto da UI.
 export function SeletorCategoria({
   name = "categoriaId",
