@@ -24,11 +24,14 @@ Tradução dos tokens mais comuns (confira em `lib/estilos.ts`):
 
 | shadcn | Urban Grid |
 | --- | --- |
-| `bg-muted` | `bg-slate-100 dark:bg-slate-800` |
-| `text-muted-foreground` | `text-slate-500 dark:text-slate-400` |
-| `border-border` / `border-input` | `border-slate-200 dark:border-slate-800` (ou `campoInput`) |
-| `bg-card` | `bg-white dark:bg-slate-900` (ou `cartao`) |
-| `bg-primary text-primary-foreground` | `botaoPrimario` |
+| `bg-background` | `bg-paper` |
+| `bg-muted` | `bg-sunken` |
+| `text-foreground` / `text-muted-foreground` | `text-ink` / `text-ink-muted` |
+| `border-border` / `border-input` | `border-line` (ou `campoInput`) |
+| `bg-card` | `bg-surface` (ou `cartao`) |
+| `bg-primary text-primary-foreground` | `botaoPrimario` (`bg-brand text-on-brand`) |
+| `bg-destructive` | `botaoPerigo` / tokens `danger-*` |
+| `bg-accent` | `bg-signal text-on-signal` (amarelo de obra, uso raro) |
 | `cn(...)` / `cva(...)` | template string ou constante em `lib/estilos.ts` |
 | Dialog/Popover/Accordion do Radix | `<details>`, `<dialog>` ou o hook `useFecharAoInteragirFora`, como já é feito no projeto |
 

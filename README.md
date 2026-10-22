@@ -49,7 +49,7 @@ A validação factual é delegada a um mecanismo de **corroboração comunitári
 | Camada | Tecnologia |
 |---|---|
 | Front-end | React via Next.js (App Router), TypeScript |
-| Estilização | Tailwind CSS (design system próprio, sem biblioteca de componentes) |
+| Estilização | Tailwind CSS v4 com design system próprio (tokens semânticos claro/escuro em `globals.css`, sem biblioteca de componentes); fontes Archivo, IBM Plex Sans e IBM Plex Mono |
 | Back-end | Next.js Route Handlers e Server Actions |
 | Banco de dados | MySQL 8.4 |
 | ORM | Prisma 6 |
@@ -58,9 +58,9 @@ A validação factual é delegada a um mecanismo de **corroboração comunitári
 | Armazenamento de imagem | Vercel Blob |
 | Processamento de imagem | sharp (redimensionamento/desfoque), blockhash-core (hash perceptual), exifr (metadados EXIF) |
 | Autenticação em duas etapas | otplib (TOTP) + qrcode (QR code de configuração) |
-| Envio de e-mail | Resend (opcional — sem chave configurada, o link de verificação fica no log do servidor) |
+| Envio de e-mail | Resend (opcional — sem chave configurada, o texto do e-mail, com o link, fica no log do servidor). Layout próprio de e-mail (HTML de tabelas, modo escuro, versão em texto) em `src/lib/email/` |
 | Antifake no cadastro | Cloudflare Turnstile (opcional) |
-| Testes | Vitest (unitários) + Playwright (verificação end-to-end ad hoc durante o desenvolvimento) |
+| Testes | Vitest (unitários) + Playwright (end-to-end) + axe-core (varredura de acessibilidade) |
 | Infraestrutura local | Docker Compose |
 
 As versões do Prisma estão fixadas propositalmente. A CLI passou por reestruturação em versões posteriores, com mudança de comandos e de formato de configuração. Fixar a versão garante reprodutibilidade do ambiente ao longo do desenvolvimento e na avaliação do trabalho.
@@ -208,6 +208,7 @@ npm run start    # executa o build
 npm run lint     # verificação de código
 npm test         # testes unitários (Vitest)
 npm run test:e2e # testes end-to-end (Playwright) - ver seção abaixo
+npm run email:previa # gera o HTML de todos os e-mails em .email-previa/ (abra no navegador)
 ```
 
 ### Banco de dados
@@ -272,6 +273,18 @@ npx playwright test e2e/totp.spec.ts    # roda só um arquivo
 npx playwright show-report              # abre o relatório da última execução
 ```
 
+Também é possível rodar a suíte contra um **build de produção em outra porta**, sem
+mexer no `npm run dev` aberto (mais estável e zera os limites por IP em memória):
+
+```bash
+npx next build
+AUTH_TRUST_HOST=true npx next start -p 3001    # AUTH_TRUST_HOST é obrigatório fora do dev
+PLAYWRIGHT_BASE_URL=http://localhost:3001 npx playwright test
+```
+
+`e2e/acessibilidade.spec.ts` faz uma varredura axe-core nas telas principais, em claro e
+escuro, e falha em violação grave (contraste, campo sem rótulo, landmark duplicado).
+
 Rodam com 1 worker (`playwright.config.ts`) de propósito: os testes
 escrevem no mesmo banco compartilhado, então paralelismo entre arquivos
 causaria corrida (ex.: dois testes usando a fila de `/moderacao` ao
@@ -314,33 +327,60 @@ urban-grid/
 │   │   ├── reclamacoes/     # feed público global (busca por cidade/palavra-chave)
 │   │   ├── termos/          # Termos de Uso e Política de Privacidade
 │   │   └── api/             # rotas de API (busca de cidade, consulta de CEP)
-│   ├── components/          # UI compartilhada (header, menus, badges, combobox de cidade, tema, modal de termos)
+│   ├── components/
+│   │   ├── ui/              # blocos base: marca, cabeçalho de página, aviso, etiqueta de estado, estado vazio, esqueleto, moldura das telas de entrada
+│   │   ├── layout/          # cabeçalho fixo, rodapé, menu do usuário, sino, tema, idioma, abas do admin
+│   │   ├── formulario/      # campo com rótulo e erro, combobox de cidade, termos, troca de tipo de cadastro
+│   │   ├── reclamacao/      # cartão de reclamação, badge de status, categorias, denúncia
+│   │   └── moderacao/       # decisões, pontuações da IA, tempo na fila
+│   ├── hooks/               # hooks compartilhados (fechar menu ao clicar fora / Esc)
+│   ├── i18n/                # idiomas (pt-BR/en), cookie e mensagens; teste de paridade das chaves
 │   ├── lib/
 │   │   ├── prisma.ts        # instância única do Prisma Client
-│   │   ├── auth.ts          # configuração do Auth.js
-│   │   ├── moderacao/       # pipeline de moderação por IA (texto + imagem)
-│   │   ├── moderacaoComentario.ts # moderação de comentários (mais leve que a de reclamações)
-│   │   ├── pontuacoes.ts    # cortes de pontuação da IA (revisão, reprovação), numa fonte só
-│   │   ├── estatisticasModeracao.ts # cálculos puros do dashboard (percentis, séries, taxas, IA × humano)
-│   │   ├── carregarEstatisticasModeracao.ts # leitura das análises e filas para o dashboard
-│   │   ├── formatarEstatistica.ts # porcentagem, duração e variação no idioma ativo
-│   │   ├── imagem.ts        # phash, EXIF e desfoque de rosto/placa
-│   │   ├── storage.ts       # upload para o Vercel Blob
-│   │   ├── cpf.ts           # validação e hash do CPF
-│   │   ├── totp.ts          # segredo TOTP cifrado, QR code e códigos de backup do 2FA
-│   │   ├── email.ts         # token e envio (Resend, opcional) do e-mail de verificação
-│   │   ├── notificacoes.ts  # notificações in-app + e-mail (eventos-chave) via email.ts
-│   │   ├── identificador.ts # busca de usuário por e-mail ou CPF
-│   │   ├── verificacao.ts   # regra de e-mail obrigatório p/ confirmar e denunciar
-│   │   ├── turnstile.ts     # verificação antifake do Cloudflare Turnstile
-│   │   ├── protocolo.ts     # geração do número de protocolo (UG-AAAA-NNNNNNN)
-│   │   ├── tempo-relativo.ts # formatação de datas relativas ("há 2 dias")
-│   │   └── reputacaoOrgao.ts # métricas e selo de reputação por órgão
+│   │   ├── estilos.ts       # classes compartilhadas (botões, campos, cartões, contêineres)
+│   │   ├── metadata.ts      # título de aba por página
+│   │   ├── seguranca/       # CPF (hash), TOTP + códigos de backup, limite de tentativas, Turnstile, limite por IP, guard de sessão
+│   │   ├── conta/           # identificador (e-mail/CPF), verificação de e-mail, senha atual, exportação de dados (LGPD)
+│   │   ├── email/           # tokens, templates, layout HTML, envio (Resend) e prévia - ver o index.ts
+│   │   ├── notificacoes/    # notificações in-app + e-mail e resumo semanal por assinatura
+│   │   ├── moderacao/       # pipeline de IA (texto + imagem), comentários, cortes de pontuação, estatísticas e filas
+│   │   ├── imagens/         # phash, EXIF, desfoque de rosto/placa, validação por conteúdo, upload (Vercel Blob)
+│   │   ├── reclamacoes/     # protocolo (UG-AAAA-NNNNNNN), status públicos, limites de imagem, categorias traduzidas
+│   │   ├── orgaos/          # categorias atendidas por órgão, métricas e selo de reputação
+│   │   └── util/            # datas e números formatados, tempo relativo, paginação, slug, URL base
 │   └── types/
-├── public/
+├── e2e/                     # testes end-to-end (Playwright) e helpers de dados de teste
+├── messages/                # textos pt-BR e en (inclui o namespace Email)
+├── .claude/skills/          # skills do projeto (design, UX, backend, testes) - ver "Skills do projeto"
 ├── docker-compose.yml
 └── .env.example
 ```
+
+---
+
+## Design e skills do projeto
+
+A interface segue a identidade **"sinalização urbana + planta"**: papel azul-acinzentado e
+tinta quase preta, azul de placa como única cor interativa, amarelo de obra como acento raro,
+títulos em Archivo e protocolos/números em IBM Plex Mono. Todas as cores são tokens semânticos
+(`paper`, `surface`, `ink`, `line`, `brand`, `signal`...) que trocam sozinhos no modo escuro -
+ver `src/app/globals.css`. Os e-mails usam a mesma identidade (`src/lib/email/layout.ts`) e
+saem com versão em texto; `npm run email:previa` mostra todos nos dois idiomas.
+
+O repositório traz **skills** para quem desenvolve com o Claude Code (pasta `.claude/skills/`):
+
+| Skill | Para quê |
+|---|---|
+| `frontend-design` | identidade visual, tokens, componentes base, tiques a evitar |
+| `ux-writing` | tom de voz, vocabulário fixo, mensagens, i18n pt-BR/en |
+| `acessibilidade` | WCAG 2.2 AA: contraste, foco, formulários, teclado, varredura axe |
+| `email-transacional` | arquitetura e regras de e-mail (tabelas, modo escuro, Outlook, segurança) |
+| `verificacao-visual` | screenshots em claro/escuro/375px e script de captura |
+| `server-actions` | padrões de Server Actions, guards, validação, corrida |
+| `prisma-mysql` | schema, migrations, consultas, MySQL/TiDB |
+| `seguranca-app` | LGPD, login/2FA, CSP, upload, e-mail, moderação por IA |
+| `testes` | Vitest, Playwright, armadilhas de teste |
+| `21st-dev`, `reactbits`, `uiverse` | como adaptar componentes de catálogos externos |
 
 ---
 

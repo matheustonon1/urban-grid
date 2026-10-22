@@ -18,22 +18,23 @@ em outro lugar.
 - **Não rode `shadcn init`** nem comandos que dependam dele sem perguntar. Este
   projeto não tem `components.json` nem `src/lib/utils.ts` (`cn`), e o `init` costuma
   reescrever o CSS global com tokens próprios (`--primary`, `--background`…) que
-  colidem com os do projeto.
+  colidem com os do projeto (aqui os tokens são `--paper`, `--surface`, `--ink`, `--brand`…).
 
 ## 2. Traduzir pro vocabulário do projeto
 
-- **Cores**: só tokens (`primary`, `accent`, `background`, `foreground`) e a escala
-  `slate-*`. Nada de hex solto, nem `gray`/`zinc`/`neutral` puros misturados.
-- **Dark mode**: variante `dark:` — no projeto é a classe `.dark` no `<html>`
-  (`@custom-variant dark` em `globals.css`), não `prefers-color-scheme`. Toda cor
-  nova precisa do par claro/escuro.
+- **Cores**: só os tokens semânticos de `globals.css` (`paper`, `surface`, `sunken`,
+  `line`, `ink`, `ink-2`, `ink-muted`, `brand`, `signal`, `ok/warn/danger/progress-*`).
+  Nada de hex solto, nem `gray`/`zinc`/`neutral`/`blue-*` misturados.
+- **Dark mode**: os tokens já trocam sozinhos quando o `<html>` ganha a classe `.dark`
+  (não é `prefers-color-scheme`), então **não escreva `dark:` por cima**. Cor nova =
+  token novo em `globals.css` com valor claro e escuro.
 - **Estilos prontos**: use `botaoPrimario`, `botaoSecundario`, `campoInput`, `cartao`
   etc. de `src/lib/estilos.ts` em vez de colar o botão/cartão do catálogo. Se a
   variante nova merece existir, vira constante nesse arquivo.
 - **Fontes**: nunca importe a fonte do exemplo. `font-display`, `font-sans`,
   `font-mono` (números e dados em `font-mono tabular-nums`, como no resto do site).
 - **Tailwind v4**: não há `tailwind.config`. Keyframes e tokens novos vão em
-  `src/app/globals.css`, junto de `fade-in`, `pop-in`, `float`…
+  `src/app/globals.css`, junto de `fade-in` e `pop-in`.
 - **Texto**: nada de string literal ("Click me", "Get started"). Tudo por next-intl,
   com a mesma chave em `messages/pt-BR.json` **e** `messages/en.json`. Conteúdo de
   demonstração é sempre do domínio (buraco na rua, poste apagado), nunca lorem ipsum.

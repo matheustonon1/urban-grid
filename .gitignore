@@ -48,18 +48,34 @@ next-env.d.ts
 /src/generated/prisma
 
 # claude code - permissões e config local da ferramenta, não é código do projeto.
-# Exceção: as skills de design do front-end ficam versionadas de propósito,
-# pra sobreviver a um clone novo do repo e documentar o processo. Git não
-# deixa reincluir um arquivo cujo diretório pai esteja ignorado - por isso
-# cada nível abaixo de .claude/ precisa da própria negação em vez de só
+# Exceção: as skills do projeto (design, UX, backend, testes) ficam versionadas
+# de propósito, pra sobreviver a um clone novo do repo e documentar o processo.
+# Git não deixa reincluir um arquivo cujo diretório pai esteja ignorado - por
+# isso cada nível abaixo de .claude/ precisa da própria negação em vez de só
 # negar o arquivo final. Skill nova de projeto = mais uma linha aqui.
 .claude/*
 !.claude/skills/
 .claude/skills/*
+# UI/UX
 !.claude/skills/frontend-design/
 !.claude/skills/reactbits/
 !.claude/skills/21st-dev/
 !.claude/skills/uiverse/
+!.claude/skills/ux-writing/
+!.claude/skills/acessibilidade/
+!.claude/skills/email-transacional/
+!.claude/skills/verificacao-visual/
+# backend e qualidade
+!.claude/skills/server-actions/
+!.claude/skills/prisma-mysql/
+!.claude/skills/seguranca-app/
+!.claude/skills/testes/
+
+# prévias geradas por `npm run email:previa` (HTML dos e-mails, só pra olhar)
+/.email-previa/
+
+# capturas de tela da revisão visual (skill verificacao-visual)
+/.capturas/
 
 # starter baixado do TiDB Cloud pra pegar a string de conexão - não é
 # parte do projeto, tem seu próprio repositório git

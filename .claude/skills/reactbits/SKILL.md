@@ -57,8 +57,9 @@ traz `gsap` + `@gsap/react`). Leia `dependencies` **antes** de decidir:
 
 ## Adaptar
 
-- Muitas props de cor recebem hex. Passe os valores do tema (`--primary`, `--accent`
-  e as variantes dark de `globals.css`), não os do exemplo, e troque junto com o tema.
+- Muitas props de cor recebem hex. Passe os valores do tema (`--brand`, `--signal`,
+  `--ink`… de `globals.css`, que já têm variante `.dark`), não os do exemplo, e troque junto
+  com o tema.
 - Texto vem por next-intl; o `text` do exemplo não fica no código.
 - Tire do arquivo o que o projeto não usa (props, variantes, comentários de demo).
 
