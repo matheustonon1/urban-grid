@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { CategoriaIcon } from "@/components/categoria-icon";
 import { StatusBadge } from "@/components/status-badge";
@@ -22,6 +23,9 @@ import { calcularMetricasOrgao, classificarIndice } from "@/lib/reputacaoOrgao";
 import { STATUS_PUBLICOS } from "@/lib/statusPublicos";
 
 export default async function Home() {
+  const session = await auth();
+  const logado = Boolean(session?.user);
+
   const t = await getTranslations("Home");
   const tSelo = await getTranslations("Selo");
 
@@ -127,13 +131,21 @@ export default async function Home() {
                 aria-hidden
               />
             </Link>
-            <Link href="/cadastro" className={`${botaoSecundario} px-6 py-3 text-base`}>
-              {t("criarConta")}
-            </Link>
+            {logado ? (
+              <Link href="/painel" className={`${botaoSecundario} px-6 py-3 text-base`}>
+                {t("irParaPainel")}
+              </Link>
+            ) : (
+              <Link href="/cadastro" className={`${botaoSecundario} px-6 py-3 text-base`}>
+                {t("criarConta")}
+              </Link>
+            )}
           </div>
-          <Link href="/login" className="text-sm text-primary underline">
-            {t("jaTemConta")}
-          </Link>
+          {!logado && (
+            <Link href="/login" className="text-sm text-primary underline">
+              {t("jaTemConta")}
+            </Link>
+          )}
         </div>
 
         {totalReclamacoes > 0 && (
@@ -323,39 +335,43 @@ export default async function Home() {
         </section>
       )}
 
-      <section className="flex w-full flex-col items-center gap-4 border-t border-slate-200 px-6 py-16 text-center sm:px-8 dark:border-slate-800">
-        <Revelar className="flex flex-col items-center gap-4">
-          <MapPin className="h-8 w-8 text-primary" aria-hidden />
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            {t("prontoParticipar")}
-          </h2>
-          <p className="max-w-md text-sm text-slate-600 dark:text-slate-400">
-            {t("prontoParticiparSub")}
-          </p>
+      {!logado && (
+        <section className="flex w-full flex-col items-center gap-4 border-t border-slate-200 px-6 py-16 text-center sm:px-8 dark:border-slate-800">
+          <Revelar className="flex flex-col items-center gap-4">
+            <MapPin className="h-8 w-8 text-primary" aria-hidden />
+            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+              {t("prontoParticipar")}
+            </h2>
+            <p className="max-w-md text-sm text-slate-600 dark:text-slate-400">
+              {t("prontoParticiparSub")}
+            </p>
 
-          <div className="mt-4 grid w-full max-w-3xl gap-4 sm:grid-cols-2">
-            <div className={`flex flex-col items-center gap-3 text-center ${cartao}`}>
-              <IdCard className="h-7 w-7 text-primary dark:text-blue-400" aria-hidden />
-              <p className="font-semibold text-slate-900 dark:text-slate-100">
-                {t("souCidadao")}
-              </p>
-              <p className="text-sm text-slate-600 dark:text-slate-400">{t("souCidadaoDesc")}</p>
-              <Link href="/cadastro" className={`${botaoPrimario} mt-1`}>
-                {t("criarContaGratuita")}
-              </Link>
-            </div>
+            <div className="mt-4 grid w-full max-w-3xl gap-4 sm:grid-cols-2">
+              <div className={`flex flex-col items-center gap-3 text-center ${cartao}`}>
+                <IdCard className="h-7 w-7 text-primary dark:text-blue-400" aria-hidden />
+                <p className="font-semibold text-slate-900 dark:text-slate-100">
+                  {t("souCidadao")}
+                </p>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  {t("souCidadaoDesc")}
+                </p>
+                <Link href="/cadastro" className={`${botaoPrimario} mt-1`}>
+                  {t("criarContaGratuita")}
+                </Link>
+              </div>
 
-            <div className={`flex flex-col items-center gap-3 text-center ${cartao}`}>
-              <Landmark className="h-7 w-7 text-primary dark:text-blue-400" aria-hidden />
-              <p className="font-semibold text-slate-900 dark:text-slate-100">{t("souOrgao")}</p>
-              <p className="text-sm text-slate-600 dark:text-slate-400">{t("souOrgaoDesc")}</p>
-              <Link href="/cadastro?tipo=orgao" className={`${botaoSecundario} mt-1`}>
-                {t("solicitarAcesso")}
-              </Link>
+              <div className={`flex flex-col items-center gap-3 text-center ${cartao}`}>
+                <Landmark className="h-7 w-7 text-primary dark:text-blue-400" aria-hidden />
+                <p className="font-semibold text-slate-900 dark:text-slate-100">{t("souOrgao")}</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400">{t("souOrgaoDesc")}</p>
+                <Link href="/cadastro?tipo=orgao" className={`${botaoSecundario} mt-1`}>
+                  {t("solicitarAcesso")}
+                </Link>
+              </div>
             </div>
-          </div>
-        </Revelar>
-      </section>
+          </Revelar>
+        </section>
+      )}
     </main>
   );
 }

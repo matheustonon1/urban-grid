@@ -1,8 +1,16 @@
+import { redirect } from "next/navigation";
+
+import { auth } from "@/auth";
 import { CadastroTipoSwitch } from "@/components/cadastro-tipo-switch";
 
 export default async function CadastroPage({
   searchParams,
 }: PageProps<"/cadastro">) {
+  const session = await auth();
+  if (session?.user) {
+    redirect("/painel");
+  }
+
   const { tipo } = await searchParams;
   const tipoInicial = tipo === "orgao" ? "orgao" : "pessoa";
 
