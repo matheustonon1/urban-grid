@@ -46,6 +46,17 @@ export const linkSutil =
 // mesmo eixo de 6xl, com o respiro lateral de sempre.
 export const containerSite = "mx-auto w-full max-w-6xl px-4 sm:px-8";
 
+// Estrutura de toda página: um eixo só (o do cabeçalho e do rodapé, 6xl), título
+// à esquerda, e o conteúdo numa grade de 12 colunas. Página de leitura/ação usa
+// 8 + 4 (principal + lateral fixa); lista com filtros usa 3 + 9.
+export const pagina =
+  "mx-auto flex w-full max-w-6xl flex-1 flex-col gap-10 px-4 py-8 sm:px-8 sm:py-12";
+export const grade = "grid gap-10 lg:grid-cols-12 lg:items-start";
+export const colunaPrincipal = "flex min-w-0 flex-col gap-10 lg:col-span-8";
+export const colunaLateral = "flex flex-col gap-6 lg:sticky lg:top-24 lg:col-span-4";
+export const colunaFiltros = "flex flex-col gap-6 lg:sticky lg:top-24 lg:col-span-3";
+export const colunaResultados = "flex min-w-0 flex-col gap-6 lg:col-span-9";
+
 export const containerPagina = "mx-auto flex w-full max-w-2xl flex-1 flex-col gap-5 p-6 sm:p-8";
 
 // Páginas com mais coisa pra mostrar (lista, painel, cidade) respiram em 3xl;

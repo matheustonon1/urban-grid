@@ -22,6 +22,7 @@
     "ORGAO": "Public department"
   },
   "Conta": {
+    "kicker": "My account",
     "titulo": "My account",
     "dadosPessoais": "Personal data",
     "telefone": "Phone",
@@ -124,6 +125,8 @@
     "erroMuitasTentativas": "Too many incorrect password attempts. Wait a few minutes and try again."
   },
   "Painel": {
+    "kicker": "My area",
+    "atalhos": "Shortcuts",
     "titulo": "Dashboard",
     "emailNaoVerificado": "Your email hasn't been verified yet.",
     "reenviarVerificacao": "Resend verification email",
@@ -175,6 +178,7 @@
     "metaDescricao": "Public complaints, responsible agencies and resolution rates for {cidade}."
   },
   "OrgaoDetalhe": {
+    "kicker": "Public agency",
     "orgaoInativo": "Inactive department",
     "reclamacoesRespondidas": "{count, plural, one {# complaint answered} other {# complaints answered}}",
     "resolvidas": "Resolved",
@@ -185,6 +189,8 @@
     "nenhumaResposta": "This department hasn't publicly responded to any complaint yet."
   },
   "Assinaturas": {
+    "kicker": "Weekly summary",
+    "rotuloCategoria": "Category",
     "titulo": "Subscriptions",
     "subtitulo": "Get an e-mail summary whenever new complaints show up in the cities you follow.",
     "nova": "Follow a city",
@@ -200,10 +206,11 @@
     "erroJaAssina": "You already follow this city/category combination."
   },
   "PainelOrgao": {
+    "kicker": "Agency panel",
     "titulo": "Department dashboard",
     "atende": "Covers: {categorias}",
     "atendeTodas": "Covers all categories in this city (no specific category assigned).",
-    "suaReputacao": "your public reputation",
+    "suaReputacao": "Your public reputation",
     "verComoOsCidadaosVeem": "See how citizens see it",
     "resolvidas": "Resolved",
     "tempoMedioResposta": "Average response time",
@@ -264,6 +271,8 @@
     "alternarTema": "Toggle light/dark theme"
   },
   "AdminNav": {
+    "kickerModeracao": "Moderation",
+    "kickerAdmin": "Administration",
     "moderacao": "Moderation",
     "comentarios": "Comments",
     "denuncias": "Reports",
@@ -276,6 +285,13 @@
     "pendentes": "{count, plural, one {# pending} other {# pending}}"
   },
   "Moderacao": {
+    "resumoRotulo": "Awaiting review",
+    "resumoRecursos": "Author appeals",
+    "resumoOutras": "Sent by the AI or without analysis",
+    "guiaTitulo": "How to read the analysis",
+    "guiaOk": "below {limite}: no alert",
+    "guiaRevisao": "{limite} or more: needs human review",
+    "guiaReprova": "{limite} or more: rejects",
     "titulo": "Moderation queue",
     "verHistorico": "View full history",
     "nenhumaPendente": "No complaints awaiting review.",
@@ -306,6 +322,7 @@
     "naFilaDesde": "In queue since {data}"
   },
   "ModeracaoComentarios": {
+    "resumoRotulo": "Awaiting a second opinion",
     "titulo": "Comments rejected by AI",
     "descricao": "A rejected comment is hidden right away - this queue is for fixing cases where the AI got it wrong, reviewed after the fact.",
     "nenhumPendente": "No rejected comments pending review.",
@@ -439,6 +456,9 @@
     "volumePicoSemana": "Peak: {total} in the week of {data}"
   },
   "HistoricoModeracao": {
+    "secaoDecisoes": "Decisions",
+    "resumoRotulo": "Recorded decisions",
+    "resumoRevisadas": "Reviewed by a person",
     "titulo": "Moderation history",
     "historicoComentarios": "Comment history",
     "decisoesDesc": "Automated and human decisions, most recent first",
@@ -466,6 +486,8 @@
     "emReclamacao": "on \"{titulo}\""
   },
   "Denuncias": {
+    "duracaoBanimento": "Ban duration",
+    "resumoRotulo": "Open",
     "titulo": "Reports",
     "nenhumaEmAberto": "No open reports.",
     "conteudoRemovido": "(content removed)",
@@ -487,6 +509,10 @@
     "tipoComentario": "Comment"
   },
   "OrgaosCategorias": {
+    "secaoOrgaos": "Registered agencies",
+    "resumoAtivos": "Active",
+    "resumoInativos": "Inactive",
+    "resumoConvites": "Pending invitations",
     "titulo": "Categories by department",
     "descricao": "Sets which complaint categories each department sees and can respond to. A department with no category marked still handles any complaint in its city (default behavior).",
     "salvar": "Save",
@@ -513,6 +539,9 @@
     "conviteIndisponivel": "This contact has already set a password (or no longer exists): there is no invitation to resend."
   },
   "SolicitacoesOrgao": {
+    "secaoPendentes": "Pending",
+    "resumoRotulo": "Awaiting review",
+    "resumoDecididas": "Already decided",
     "titulo": "Department access requests",
     "nenhumaPendente": "No pending requests.",
     "responsavel": "Contact:",
@@ -567,6 +596,7 @@
     "pularConteudo": "Skip to content"
   },
   "Notificacoes": {
+    "kicker": "My area",
     "titulo": "Notifications",
     "botaoAria": "{count, plural, =0 {Notifications} one {Notifications, # unread} other {Notifications, # unread}}",
     "marcarTodasLidas": "Mark all as read",
@@ -723,6 +753,7 @@
     "irParaPainel": "Go to dashboard"
   },
   "NovaReclamacao": {
+    "kicker": "New complaint",
     "tituloPagina": "New complaint",
     "sobreProblema": "About the problem",
     "titulo": "Title",
@@ -840,6 +871,11 @@
     "enviarDenuncia": "Submit report",
     "pessoasConfirmaram": "{count, plural, one {# person confirmed} other {# people confirmed}} this problem.",
     "linhaDoTempo": "Timeline",
+    "respostasOficiais": "Official answers",
+    "novoStatusRotulo": "New status",
+    "prazoRotulo": "Estimated deadline",
+    "statusRotulo": "Complaint status",
+    "opcional": "optional",
     "responderComoOrgao": "Respond as department",
     "respostaOficial": "Official response",
     "manterStatus": "Keep current status",
@@ -887,8 +923,12 @@
   },
   "Reclamacoes": {
     "titulo": "Public complaints",
+    "filtros": "Filters",
+    "rotuloBusca": "Keyword",
+    "rotuloCidade": "City",
+    "rotuloCategoria": "Category",
     "buscarPalavraChave": "Search by keyword...",
-    "buscarCidadeEstado": "Search by city or state...",
+    "buscarCidadeEstado": "City or state...",
     "todasCategorias": "All categories",
     "filtrar": "Filter",
     "filtrosAtivos": "Active filters:",
@@ -917,6 +957,7 @@
     "erroCredenciaisOuCodigoInvalidos": "Invalid email/national ID, password, or code."
   },
   "Transparencia": {
+    "kicker": "Public data",
     "titulo": "Transparency",
     "subtitulo": "Public data on complaints and the performance of the responsible agencies.",
     "publicas": "Public complaints",
@@ -1030,6 +1071,8 @@
     }
   },
   "Banimentos": {
+    "secaoContas": "Suspended accounts",
+    "resumoPermanentes": "Permanent bans",
     "titulo": "Active bans",
     "descricao": "Accounts currently suspended. Reverting restores access immediately.",
     "nenhumBanido": "No banned accounts at the moment.",
@@ -1059,6 +1102,9 @@
     "solicitarAqui": "Request it here"
   },
   "SolicitacoesCidade": {
+    "secaoPendentes": "Pending",
+    "resumoRotulo": "Awaiting review",
+    "resumoDecididas": "Already decided",
     "titulo": "New city requests",
     "nenhumaPendente": "No pending requests.",
     "solicitadoPor": "Requested by",
@@ -1077,9 +1123,14 @@
     "resumoPendentes": "{count, plural, =0 {No pending requests} one {# request awaiting review} other {# requests awaiting review}}"
   },
   "Usuarios": {
+    "papelDe": "Role of {nome}",
+    "buscarRotulo": "Search by email or name",
+    "resultados": "Search results",
+    "resumoRotulo": "Team",
+    "resumoAdmins": "Administrators",
+    "resumoModeradores": "Moderators",
     "titulo": "Users",
     "descricao": "Search by email or name to promote to moderator/admin, or demote back to citizen. Agency accounts do not show up here.",
-    "buscarPlaceholder": "Search by email or name...",
     "buscar": "Search",
     "digiteMais": "Type at least 2 characters.",
     "nenhumEncontrado": "No users found.",

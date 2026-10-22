@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 
-import { cartao } from "@/lib/estilos";
+import { cartao, colunaLateral, colunaPrincipal, grade, pagina } from "@/lib/estilos";
 
 // Bloco cinza pulsante - o "esqueleto" do que vai aparecer. A animação some
 // com prefers-reduced-motion (motion-reduce:), sem depender de lista manual
@@ -39,9 +39,9 @@ export async function EsqueletoPagina({
 
 export function EsqueletoCabecalho({ comDescricao = true }: { comDescricao?: boolean }) {
   return (
-    <div className="flex flex-col gap-2">
-      <Esqueleto className="h-8 w-56" />
-      {comDescricao && <Esqueleto className="h-4 w-80 max-w-full" />}
+    <div className="flex flex-col gap-3 border-b-2 border-line pb-6">
+      <Esqueleto className="h-10 w-72 max-w-full" />
+      {comDescricao && <Esqueleto className="h-5 w-96 max-w-full" />}
     </div>
   );
 }
@@ -68,23 +68,39 @@ export function EsqueletoCartoes({ quantidade = 5 }: { quantidade?: number }) {
   );
 }
 
-// Esqueleto genérico de página de lista: cabeçalho, faixa de números
-// opcional e cartões. `container` é a MESMA classe de largura que a página
-// real usa - é o que impede o conteúdo de "pular" de largura ao chegar.
+// Régua + título de uma `Secao`, ainda sem conteúdo.
+export function EsqueletoSecao() {
+  return (
+    <div className="border-b-2 border-line pb-2.5">
+      <Esqueleto className="h-6 w-48 max-w-full" />
+    </div>
+  );
+}
+
+// Esqueleto genérico de página de lista: cabeçalho, uma seção com cartões e,
+// por padrão, a coluna lateral (8 + 4, a mesma grade das páginas de verdade -
+// é o que impede o conteúdo de "pular" de largura ao chegar).
 export function EsqueletoListaGenerica({
-  container,
-  comNumeros = false,
+  lateral = true,
   quantidade = 4,
 }: {
-  container: string;
-  comNumeros?: boolean;
+  lateral?: boolean;
   quantidade?: number;
 }) {
   return (
-    <EsqueletoPagina className={container}>
+    <EsqueletoPagina className={pagina}>
       <EsqueletoCabecalho />
-      {comNumeros && <Esqueleto className="h-20 w-full rounded-lg" />}
-      <EsqueletoCartoes quantidade={quantidade} />
+      <div className={grade}>
+        <div className={colunaPrincipal}>
+          <EsqueletoSecao />
+          <EsqueletoCartoes quantidade={quantidade} />
+        </div>
+        {lateral && (
+          <div className={colunaLateral}>
+            <Esqueleto className="h-56 w-full rounded-lg" />
+          </div>
+        )}
+      </div>
     </EsqueletoPagina>
   );
 }

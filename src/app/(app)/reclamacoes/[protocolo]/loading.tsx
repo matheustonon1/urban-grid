@@ -1,19 +1,19 @@
 import { Esqueleto, EsqueletoPagina } from "@/components/ui/esqueleto";
-import { cartao, containerLargo } from "@/lib/estilos";
+import { cartaoSecao, colunaLateral, colunaPrincipal, grade, pagina } from "@/lib/estilos";
 
 // Mesma estrutura da página (cabeçalho + coluna principal + resumo lateral),
 // pra nada pular de lugar quando o conteúdo chega.
 export default function Loading() {
   return (
-    <EsqueletoPagina className={containerLargo}>
-      <div className="flex flex-col gap-3">
+    <EsqueletoPagina className={pagina}>
+      <div className="flex flex-col gap-4 border-b-2 border-line pb-6">
         <Esqueleto className="h-4 w-40" />
-        <Esqueleto className="h-9 w-3/4" />
-        <Esqueleto className="h-6 w-56" />
+        <Esqueleto className="h-12 w-3/4" />
+        <Esqueleto className="h-7 w-64" />
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
-        <div className={`flex flex-col gap-5 lg:order-last ${cartao}`}>
+      <div className={grade}>
+        <div className={`${colunaLateral} lg:order-last ${cartaoSecao}`}>
           <Esqueleto className="h-4 w-20" />
           <Esqueleto className="h-10 w-full" />
           <Esqueleto className="h-4 w-2/3" />
@@ -22,7 +22,7 @@ export default function Loading() {
           <Esqueleto className="h-10 w-full" />
         </div>
 
-        <div className="flex flex-col gap-3">
+        <div className={colunaPrincipal}>
           <Esqueleto className="h-4 w-full" />
           <Esqueleto className="h-4 w-full" />
           <Esqueleto className="h-4 w-5/6" />

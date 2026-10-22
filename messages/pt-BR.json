@@ -22,6 +22,7 @@
     "ORGAO": "Órgão público"
   },
   "Conta": {
+    "kicker": "Minha conta",
     "titulo": "Minha conta",
     "dadosPessoais": "Dados pessoais",
     "telefone": "Telefone",
@@ -124,6 +125,8 @@
     "erroMuitasTentativas": "Muitas tentativas de senha incorretas. Aguarde alguns minutos e tente de novo."
   },
   "Painel": {
+    "kicker": "Minha área",
+    "atalhos": "Atalhos",
     "titulo": "Painel",
     "emailNaoVerificado": "Seu e-mail ainda não foi verificado.",
     "reenviarVerificacao": "Reenviar e-mail de verificação",
@@ -175,6 +178,7 @@
     "metaDescricao": "Reclamações públicas, órgãos responsáveis e índices de resolução de {cidade}."
   },
   "OrgaoDetalhe": {
+    "kicker": "Órgão público",
     "orgaoInativo": "Órgão inativo",
     "reclamacoesRespondidas": "{count, plural, =0 {Nenhuma reclamação respondida} one {# reclamação respondida} other {# reclamações respondidas}}",
     "resolvidas": "Resolvidas",
@@ -185,6 +189,8 @@
     "nenhumaResposta": "Este órgão ainda não respondeu nenhuma reclamação publicamente."
   },
   "Assinaturas": {
+    "kicker": "Resumo semanal",
+    "rotuloCategoria": "Categoria",
     "titulo": "Assinaturas",
     "subtitulo": "Receba um resumo por e-mail quando surgirem reclamações novas nas cidades que você acompanha.",
     "nova": "Acompanhar uma cidade",
@@ -200,10 +206,11 @@
     "erroJaAssina": "Você já assina esta combinação de cidade e categoria."
   },
   "PainelOrgao": {
+    "kicker": "Painel do órgão",
     "titulo": "Painel do órgão",
     "atende": "Atende: {categorias}",
     "atendeTodas": "Atende todas as categorias desta cidade (nenhuma categoria específica atribuída).",
-    "suaReputacao": "sua reputação pública",
+    "suaReputacao": "Sua reputação pública",
     "verComoOsCidadaosVeem": "Ver como os cidadãos veem",
     "resolvidas": "Resolvidas",
     "tempoMedioResposta": "Tempo médio de resposta",
@@ -264,6 +271,8 @@
     "alternarTema": "Alternar tema claro/escuro"
   },
   "AdminNav": {
+    "kickerModeracao": "Moderação",
+    "kickerAdmin": "Administração",
     "moderacao": "Moderação",
     "comentarios": "Comentários",
     "denuncias": "Denúncias",
@@ -276,6 +285,13 @@
     "pendentes": "{count, plural, one {# pendente} other {# pendentes}}"
   },
   "Moderacao": {
+    "resumoRotulo": "Aguardando revisão",
+    "resumoRecursos": "Recursos de autores",
+    "resumoOutras": "Encaminhadas pela IA ou sem análise",
+    "guiaTitulo": "Como ler a análise",
+    "guiaOk": "abaixo de {limite}: sem alerta",
+    "guiaRevisao": "{limite} ou mais: pede revisão humana",
+    "guiaReprova": "{limite} ou mais: reprova",
     "titulo": "Fila de moderação",
     "verHistorico": "Ver histórico completo",
     "nenhumaPendente": "Nenhuma reclamação aguardando revisão.",
@@ -306,6 +322,7 @@
     "naFilaDesde": "Na fila desde {data}"
   },
   "ModeracaoComentarios": {
+    "resumoRotulo": "Aguardando segunda opinião",
     "titulo": "Comentários reprovados pela IA",
     "descricao": "Comentário reprovado é ocultado na hora - esta fila é pra corrigir casos em que a IA errou, revisando depois do fato.",
     "nenhumPendente": "Nenhum comentário reprovado pendente de revisão.",
@@ -439,6 +456,9 @@
     "volumePicoSemana": "Pico: {total} na semana de {data}"
   },
   "HistoricoModeracao": {
+    "secaoDecisoes": "Decisões",
+    "resumoRotulo": "Decisões registradas",
+    "resumoRevisadas": "Revisadas por uma pessoa",
     "titulo": "Histórico de moderação",
     "historicoComentarios": "Histórico de comentários",
     "decisoesDesc": "Decisões automáticas e humanas, mais recentes primeiro",
@@ -466,6 +486,8 @@
     "emReclamacao": "em \"{titulo}\""
   },
   "Denuncias": {
+    "duracaoBanimento": "Duração do banimento",
+    "resumoRotulo": "Em aberto",
     "titulo": "Denúncias",
     "nenhumaEmAberto": "Nenhuma denúncia em aberto.",
     "conteudoRemovido": "(conteúdo removido)",
@@ -487,6 +509,10 @@
     "tipoComentario": "Comentário"
   },
   "OrgaosCategorias": {
+    "secaoOrgaos": "Órgãos cadastrados",
+    "resumoAtivos": "Ativos",
+    "resumoInativos": "Inativos",
+    "resumoConvites": "Convites pendentes",
     "titulo": "Categorias por órgão",
     "descricao": "Define quais categorias de reclamação cada órgão vê e pode responder. Um órgão sem nenhuma categoria marcada continua atendendo qualquer reclamação da sua cidade (comportamento padrão).",
     "salvar": "Salvar",
@@ -513,6 +539,9 @@
     "conviteIndisponivel": "Este responsável já definiu a senha (ou não existe mais): não há convite a reenviar."
   },
   "SolicitacoesOrgao": {
+    "secaoPendentes": "Pendentes",
+    "resumoRotulo": "Aguardando análise",
+    "resumoDecididas": "Já decididas",
     "titulo": "Solicitações de acesso como órgão",
     "nenhumaPendente": "Nenhuma solicitação pendente.",
     "responsavel": "Responsável:",
@@ -567,6 +596,7 @@
     "pularConteudo": "Pular para o conteúdo"
   },
   "Notificacoes": {
+    "kicker": "Minha área",
     "titulo": "Notificações",
     "botaoAria": "{count, plural, =0 {Notificações} one {Notificações, # não lida} other {Notificações, # não lidas}}",
     "marcarTodasLidas": "Marcar todas como lidas",
@@ -723,6 +753,7 @@
     "irParaPainel": "Ir para o painel"
   },
   "NovaReclamacao": {
+    "kicker": "Nova reclamação",
     "tituloPagina": "Nova reclamação",
     "sobreProblema": "Sobre o problema",
     "titulo": "Título",
@@ -840,6 +871,11 @@
     "enviarDenuncia": "Enviar denúncia",
     "pessoasConfirmaram": "{count, plural, =0 {Nenhuma pessoa confirmou} one {# pessoa confirmou} other {# pessoas confirmaram}} este problema.",
     "linhaDoTempo": "Linha do tempo",
+    "respostasOficiais": "Respostas oficiais",
+    "novoStatusRotulo": "Novo status",
+    "prazoRotulo": "Prazo estimado",
+    "statusRotulo": "Status da reclamação",
+    "opcional": "opcional",
     "responderComoOrgao": "Responder como órgão",
     "respostaOficial": "Resposta oficial",
     "manterStatus": "Manter status atual",
@@ -887,8 +923,12 @@
   },
   "Reclamacoes": {
     "titulo": "Reclamações públicas",
+    "filtros": "Filtros",
+    "rotuloBusca": "Palavra-chave",
+    "rotuloCidade": "Cidade",
+    "rotuloCategoria": "Categoria",
     "buscarPalavraChave": "Buscar por palavra-chave...",
-    "buscarCidadeEstado": "Buscar por cidade ou estado...",
+    "buscarCidadeEstado": "Cidade ou estado...",
     "todasCategorias": "Todas as categorias",
     "filtrar": "Filtrar",
     "filtrosAtivos": "Filtros ativos:",
@@ -917,6 +957,7 @@
     "erroCredenciaisOuCodigoInvalidos": "E-mail/CPF, senha ou código inválidos."
   },
   "Transparencia": {
+    "kicker": "Dados públicos",
     "titulo": "Transparência",
     "subtitulo": "Dados públicos sobre reclamações e a atuação dos órgãos responsáveis.",
     "publicas": "Reclamações públicas",
@@ -1030,6 +1071,8 @@
     }
   },
   "Banimentos": {
+    "secaoContas": "Contas suspensas",
+    "resumoPermanentes": "Banimentos permanentes",
     "titulo": "Banimentos ativos",
     "descricao": "Contas com acesso suspenso no momento. Reverter libera o login imediatamente.",
     "nenhumBanido": "Nenhuma conta banida no momento.",
@@ -1059,6 +1102,9 @@
     "solicitarAqui": "Solicite aqui"
   },
   "SolicitacoesCidade": {
+    "secaoPendentes": "Pendentes",
+    "resumoRotulo": "Aguardando análise",
+    "resumoDecididas": "Já decididas",
     "titulo": "Solicitações de novas cidades",
     "nenhumaPendente": "Nenhuma solicitação pendente.",
     "solicitadoPor": "Solicitado por",
@@ -1077,9 +1123,14 @@
     "resumoPendentes": "{count, plural, =0 {Nenhuma solicitação pendente} one {# solicitação aguardando análise} other {# solicitações aguardando análise}}"
   },
   "Usuarios": {
+    "papelDe": "Papel de {nome}",
+    "buscarRotulo": "Buscar por e-mail ou nome",
+    "resultados": "Resultados da busca",
+    "resumoRotulo": "Equipe",
+    "resumoAdmins": "Administradores",
+    "resumoModeradores": "Moderadores",
     "titulo": "Usuários",
     "descricao": "Busque por e-mail ou nome pra promover a moderador/admin, ou rebaixar de volta a cidadão. Contas de órgão não aparecem aqui.",
-    "buscarPlaceholder": "Buscar por e-mail ou nome...",
     "buscar": "Buscar",
     "digiteMais": "Digite pelo menos 2 caracteres.",
     "nenhumEncontrado": "Nenhum usuário encontrado.",
