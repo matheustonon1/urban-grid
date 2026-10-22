@@ -3,6 +3,7 @@ import * as z from "zod";
 
 import { prisma } from "@/lib/prisma";
 import { criarNotificacao } from "@/lib/notificacoes";
+import { LIMITE_REPROVACAO, LIMITE_REVISAO } from "@/lib/pontuacoes";
 
 import { getGeminiClient } from "./gemini";
 
@@ -131,8 +132,8 @@ Responda apenas com o JSON solicitado. Os scores devem ser números entre 0 e 1.
 export function decidir(
   scoreGeral: number
 ): "APROVAR" | "REPROVAR" | "ENCAMINHAR_REVISAO" {
-  if (scoreGeral >= 0.75) return "REPROVAR";
-  if (scoreGeral >= 0.4) return "ENCAMINHAR_REVISAO";
+  if (scoreGeral >= LIMITE_REPROVACAO) return "REPROVAR";
+  if (scoreGeral >= LIMITE_REVISAO) return "ENCAMINHAR_REVISAO";
   return "APROVAR";
 }
 

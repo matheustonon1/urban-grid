@@ -3,7 +3,8 @@ import { useTranslations } from "next-intl";
 
 const ORDEM: DecisaoModeracao[] = ["APROVAR", "ENCAMINHAR_REVISAO", "REPROVAR"];
 
-const COR: Record<DecisaoModeracao, string> = {
+// Exportada: gráficos de estatísticas usam as mesmas cores pra mesma decisão.
+export const COR_DECISAO: Record<DecisaoModeracao, string> = {
   APROVAR: "bg-green-600 dark:bg-green-500",
   ENCAMINHAR_REVISAO: "bg-amber-500",
   REPROVAR: "bg-red-600 dark:bg-red-500",
@@ -39,7 +40,7 @@ export function BarraDecisoes({
             quantidade > 0 && (
               <div
                 key={decisao}
-                className={COR[decisao]}
+                className={COR_DECISAO[decisao]}
                 style={{ width: `${(quantidade / total) * 100}%` }}
               />
             )
@@ -53,7 +54,7 @@ export function BarraDecisoes({
               key={decisao}
               className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300"
             >
-              <span aria-hidden className={`h-2 w-2 rounded-full ${COR[decisao]}`} />
+              <span aria-hidden className={`h-2 w-2 rounded-full ${COR_DECISAO[decisao]}`} />
               {t(decisao)}
               <span className="font-mono font-medium tabular-nums">{quantidade}</span>
               <span className="text-slate-400 dark:text-slate-500">({pct}%)</span>

@@ -1,10 +1,9 @@
 // Pontuações da moderação por IA, uma barra por eixo, para o moderador
 // bater o olho no que motivou o encaminhamento. Os cortes são os do próprio
-// pipeline (decidir() em lib/moderacao): >= 0,75 reprova, >= 0,4 manda pra
-// revisão humana - antes eram cinco linhas de texto com o mesmo peso, e o
-// eixo que causou o alerta se perdia entre os que estavam normais.
-const LIMITE_REVISAO = 0.4;
-const LIMITE_REPROVACAO = 0.75;
+// pipeline (lib/pontuacoes, usado por decidir() em lib/moderacao): >= 0,75
+// reprova, >= 0,4 manda pra revisão humana - antes eram cinco linhas de texto
+// com o mesmo peso, e o eixo que causou o alerta se perdia entre os normais.
+import { nivelPontuacao as nivel } from "@/lib/pontuacoes";
 
 type Pontuacao = {
   rotulo: string;
@@ -16,13 +15,6 @@ type Pontuacao = {
   // melhor. Nela o alerta é o valor baixo.
   invertido?: boolean;
 };
-
-function nivel(valor: number, invertido: boolean): "ok" | "atencao" | "alto" {
-  const risco = invertido ? 1 - valor : valor;
-  if (risco >= LIMITE_REPROVACAO) return "alto";
-  if (risco >= LIMITE_REVISAO) return "atencao";
-  return "ok";
-}
 
 const COR_BARRA = {
   ok: "bg-slate-400 dark:bg-slate-500",

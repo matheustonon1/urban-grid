@@ -2,12 +2,12 @@ import { Type } from "@google/genai";
 import * as z from "zod";
 
 import { prisma } from "@/lib/prisma";
+import { LIMITE_REPROVACAO_COMENTARIO } from "@/lib/pontuacoes";
 
 import { gerarAnaliseModeracao } from "./moderacao";
 
 const MODELO = "gemini-3.6-flash";
 const VERSAO_PROMPT = "v1";
-const LIMIAR_REPROVACAO = 0.5;
 
 const RESPONSE_SCHEMA = {
   type: Type.OBJECT,
@@ -21,7 +21,7 @@ const RESPONSE_SCHEMA = {
 };
 
 // Revalida os limites que o responseSchema do Gemini não garante (score
-// fora de 0-1 viraria NaN e "NaN >= LIMIAR_REPROVACAO" é false, o que
+// fora de 0-1 viraria NaN e "NaN >= LIMITE_REPROVACAO_COMENTARIO" é false, o que
 // aprovaria por engano um comentário com resposta malformada).
 const ResultadoAnaliseSchema = z.object({
   scoreOfensivo: z.number().min(0).max(1),
@@ -110,7 +110,7 @@ export async function moderarComentario(
     analise.scoreSpam,
     analise.scoreDadosPessoais
   );
-  const decisao = scoreGeral >= LIMIAR_REPROVACAO ? "REPROVAR" : "APROVAR";
+  const decisao = scoreGeral >= LIMITE_REPROVACAO_COMENTARIO ? "REPROVAR" : "APROVAR";
 
   await prisma.logModeracao.create({
     data: {
