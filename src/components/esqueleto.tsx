@@ -16,7 +16,10 @@ export function Esqueleto({ className = "" }: { className?: string }) {
 
 // Moldura de todo loading.tsx: anuncia "Carregando" pra leitor de tela
 // (role=status) e mantém o mesmo container das páginas de verdade, pra
-// nada pular de lugar quando o conteúdo chega.
+// nada pular de lugar quando o conteúdo chega. É um <div>, não um <main>:
+// na troca de rota o esqueleto e a página de verdade coexistem por um
+// instante, e dois landmarks main são inválidos (e quebram quem seleciona
+// por "main").
 export async function EsqueletoPagina({
   children,
   className,
@@ -27,10 +30,10 @@ export async function EsqueletoPagina({
   const t = await getTranslations("Comum");
 
   return (
-    <main role="status" aria-busy="true" className={className}>
+    <div role="status" aria-busy="true" className={className}>
       <span className="sr-only">{t("carregando")}</span>
       {children}
-    </main>
+    </div>
   );
 }
 
