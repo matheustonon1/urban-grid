@@ -7,7 +7,13 @@ import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vites
 // sem isso, o teste passa ou falha de acordo com o que estiver fora dele.
 vi.stubEnv("RESEND_API_KEY", "re_teste_fake");
 
-const enviosCapturados: Array<{ to: string; subject: string; html: string }> = [];
+const enviosCapturados: Array<{
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
+  headers?: Record<string, string>;
+}> = [];
 
 // O que o "provedor" responde na próxima chamada (e se ele explode, como numa
 // queda de rede): cada teste ajusta, e o beforeEach volta ao caminho feliz.
@@ -19,7 +25,7 @@ const comportamentoDoProvedor: {
 vi.mock("resend", () => ({
   Resend: vi.fn().mockImplementation(() => ({
     emails: {
-      send: vi.fn(async (parametros: { to: string; subject: string; html: string }) => {
+      send: vi.fn(async (parametros: (typeof enviosCapturados)[number]) => {
         enviosCapturados.push(parametros);
         if (comportamentoDoProvedor.lancar) throw comportamentoDoProvedor.lancar;
         return comportamentoDoProvedor.erro
@@ -32,6 +38,7 @@ vi.mock("resend", () => ({
 
 import {
   enviarEmailAcessoOrgao,
+  enviarEmailCidadeAprovada,
   esc,
   enviarEmailResumoSemanal,
   enviarEmailVerificacao,
@@ -83,6 +90,40 @@ describe("enviarEmailVerificacao (idioma)", () => {
     expect(enviosCapturados[0].subject).toBe("Confirm your e-mail — Urban Grid");
     expect(enviosCapturados[0].html).toContain("Verify e-mail");
     expect(enviosCapturados[0].html).not.toContain("Confirme seu e-mail");
+  });
+});
+
+describe("o que vai para o provedor", () => {
+  it("manda a versão em texto puro junto com o HTML, com o link por extenso", async () => {
+    await enviarEmailVerificacao({ email: "pessoa@exemplo.com", token: "abc123" });
+
+    const [envio] = enviosCapturados;
+    expect(envio.text).toBeTruthy();
+    expect(envio.text).not.toMatch(/<[a-z/][^>]*>/i);
+    expect(envio.text).toContain("/verificar-email/abc123");
+    expect(envio.html).toContain("/verificar-email/abc123");
+  });
+
+  it("quebra de linha vinda de um dado (nome de cidade) não vira cabeçalho extra no assunto", async () => {
+    await enviarEmailCidadeAprovada({
+      email: "pessoa@exemplo.com",
+      nomeCidade: "Cidade\r\nBcc: invasor@exemplo.com",
+    });
+
+    expect(enviosCapturados[0].subject).not.toMatch(/[\r\n]/);
+    expect(enviosCapturados[0].subject).toContain("Cidade Bcc: invasor@exemplo.com");
+  });
+
+  it("o resumo semanal leva List-Unsubscribe apontando pras assinaturas", async () => {
+    await enviarEmailResumoSemanal({
+      email: "pessoa@exemplo.com",
+      nomeCidade: "Santa Isabel",
+      nomeCategoria: null,
+      total: 1,
+      url: "http://localhost:3000/cidades/santa-isabel",
+    });
+
+    expect(enviosCapturados[0].headers?.["List-Unsubscribe"]).toMatch(/\/painel\/assinaturas>$/);
   });
 });
 

@@ -933,51 +933,82 @@
     "colNota": "Nota"
   },
   "Email": {
+    "layout": {
+      "automatico": "Este é um e-mail automático. Não responda a esta mensagem.",
+      "linkAlternativo": "Se o botão não funcionar, copie e cole este endereço no navegador:",
+      "marca": "Urban Grid — Trabalho de Conclusão de Curso",
+      "categoria": {
+        "conta": "Sua conta",
+        "seguranca": "Segurança da conta",
+        "orgao": "Acesso de órgão",
+        "cidade": "Cidades",
+        "notificacao": "Atualização",
+        "resumo": "Resumo semanal"
+      }
+    },
     "verificacao": {
       "assunto": "Confirme seu e-mail — Urban Grid",
+      "titulo": "Confirme seu e-mail",
+      "preheader": "Falta um passo para ativar sua conta no Urban Grid.",
       "corpo": "Confirme seu e-mail para ativar sua conta e poder confirmar ou denunciar reclamações.",
       "botao": "Verificar e-mail",
       "rodape": "Se você não criou uma conta no Urban Grid, ignore este e-mail."
     },
     "acessoOrgao": {
       "assunto": "Acesso de órgão aprovado — Urban Grid",
+      "titulo": "Seu acesso como órgão foi aprovado",
+      "preheader": "Defina sua senha e comece a responder às reclamações.",
       "corpo": "Sua solicitação de acesso como {nomeOrgao} foi aprovada. Defina sua senha para começar a responder oficialmente às reclamações da sua cidade.",
       "botao": "Definir minha senha",
       "rodape": "Este link expira em 24 horas. Se você não reconhece esta solicitação, ignore este e-mail."
     },
     "redefinicaoSenha": {
       "assunto": "Redefinir sua senha — Urban Grid",
+      "titulo": "Crie uma nova senha",
+      "preheader": "O link vale por 1 hora e só pode ser usado uma vez.",
       "corpo": "Recebemos um pedido para redefinir a senha da sua conta.",
       "botao": "Criar nova senha",
       "rodape": "Este link expira em 1 hora e só pode ser usado uma vez. Se você não pediu essa redefinição, ignore este e-mail - sua senha continua a mesma."
     },
     "senhaAlterada": {
       "assunto": "Sua senha foi alterada — Urban Grid",
+      "titulo": "Sua senha foi alterada",
+      "preheader": "Se não foi você, troque a senha agora.",
       "corpo": "A senha da sua conta foi alterada agora.",
       "aviso": "Se não foi você, sua conta pode estar comprometida — troque a senha imediatamente e entre em contato com o suporte."
     },
     "confirmarTrocaEmail": {
       "assunto": "Confirme seu novo e-mail — Urban Grid",
+      "titulo": "Confirme seu novo e-mail",
+      "preheader": "Confirme para passar a entrar com este endereço.",
       "corpo": "Recebemos um pedido para trocar o e-mail de acesso da conta {emailAtual} para este endereço.",
       "botao": "Confirmar novo e-mail",
       "rodape": "Este link expira em 1 hora. Se você não pediu essa troca, ignore este e-mail - seu e-mail de acesso continua o mesmo."
     },
     "trocaEmailSolicitada": {
       "assunto": "Troca de e-mail solicitada — Urban Grid",
+      "titulo": "Pediram para trocar o e-mail da sua conta",
+      "preheader": "Se não foi você, troque sua senha agora.",
       "corpo": "Pediram a troca do e-mail de acesso da sua conta para {novoEmail}. A troca só passa a valer depois de confirmada pelo novo endereço.",
       "aviso": "Se não foi você, sua conta pode estar comprometida - troque sua senha imediatamente."
     },
     "solicitacaoRejeitada": {
       "assunto": "Solicitação de acesso como órgão — Urban Grid",
+      "titulo": "Sua solicitação não foi aprovada",
+      "preheader": "Veja o motivo informado pela administração.",
       "corpo": "Sua solicitação de acesso como órgão não foi aprovada.",
       "motivoRotulo": "Motivo:"
     },
     "notificacao": {
+      "protocolo": "Protocolo",
       "botao": "Ver reclamação",
       "rodape": "Você recebeu este e-mail porque tem uma conta no Urban Grid."
     },
     "resumoSemanal": {
       "assunto": "Resumo da semana em {cidade} — Urban Grid",
+      "titulo": "O que mudou na sua cidade",
+      "preheader": "{total, plural, one {# reclamação nova} other {# reclamações novas}} em {cidade} nos últimos dias.",
+      "numeroRotulo": "{total, plural, one {nova reclamação publicada} other {novas reclamações publicadas}}",
       "corpoSemCategoria": "{total, plural, one {Foi publicada # reclamação nova} other {Foram publicadas # reclamações novas}} em {cidade} nos últimos dias.",
       "corpoComCategoria": "{total, plural, one {Foi publicada # reclamação nova} other {Foram publicadas # reclamações novas}} de {categoria} em {cidade} nos últimos dias.",
       "botao": "Ver reclamações",
@@ -985,11 +1016,15 @@
     },
     "cidadeAprovada": {
       "assunto": "{cidade} já está disponível no Urban Grid",
+      "titulo": "Sua cidade já está no Urban Grid",
+      "preheader": "{cidade} já pode receber reclamações.",
       "corpo": "Boa notícia: {cidade} foi cadastrada e já pode receber reclamações. Obrigado por ajudar a expandir o Urban Grid.",
       "botao": "Acessar o Urban Grid"
     },
     "solicitacaoCidadeRejeitada": {
       "assunto": "Solicitação de nova cidade — Urban Grid",
+      "titulo": "Solicitação de cidade não aprovada",
+      "preheader": "Veja o motivo informado pela administração.",
       "corpo": "Sua solicitação para incluir uma nova cidade não foi aprovada.",
       "motivoRotulo": "Motivo:"
     }

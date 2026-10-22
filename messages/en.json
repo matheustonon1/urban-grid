@@ -933,51 +933,82 @@
     "colNota": "Rating"
   },
   "Email": {
+    "layout": {
+      "automatico": "This is an automated e-mail. Please do not reply to this message.",
+      "linkAlternativo": "If the button does not work, copy and paste this address into your browser:",
+      "marca": "Urban Grid — Capstone Project",
+      "categoria": {
+        "conta": "Your account",
+        "seguranca": "Account security",
+        "orgao": "Agency access",
+        "cidade": "Cities",
+        "notificacao": "Update",
+        "resumo": "Weekly summary"
+      }
+    },
     "verificacao": {
       "assunto": "Confirm your e-mail — Urban Grid",
+      "titulo": "Confirm your e-mail",
+      "preheader": "One step left to activate your Urban Grid account.",
       "corpo": "Confirm your e-mail to activate your account and be able to confirm or report complaints.",
       "botao": "Verify e-mail",
       "rodape": "If you didn't create an Urban Grid account, ignore this e-mail."
     },
     "acessoOrgao": {
       "assunto": "Agency access approved — Urban Grid",
+      "titulo": "Your agency access was approved",
+      "preheader": "Set your password and start answering complaints.",
       "corpo": "Your access request as {nomeOrgao} was approved. Set your password to start officially responding to complaints in your city.",
       "botao": "Set my password",
       "rodape": "This link expires in 24 hours. If you don't recognize this request, ignore this e-mail."
     },
     "redefinicaoSenha": {
       "assunto": "Reset your password — Urban Grid",
+      "titulo": "Create a new password",
+      "preheader": "The link is valid for 1 hour and can only be used once.",
       "corpo": "We received a request to reset your account's password.",
       "botao": "Create new password",
       "rodape": "This link expires in 1 hour and can only be used once. If you didn't request this reset, ignore this e-mail - your password stays the same."
     },
     "senhaAlterada": {
       "assunto": "Your password was changed — Urban Grid",
+      "titulo": "Your password was changed",
+      "preheader": "If this was not you, change your password now.",
       "corpo": "Your account's password was just changed.",
       "aviso": "If this wasn't you, your account may be compromised — change your password immediately and contact support."
     },
     "confirmarTrocaEmail": {
       "assunto": "Confirm your new e-mail — Urban Grid",
+      "titulo": "Confirm your new e-mail",
+      "preheader": "Confirm to start logging in with this address.",
       "corpo": "We received a request to change the login e-mail of account {emailAtual} to this address.",
       "botao": "Confirm new e-mail",
       "rodape": "This link expires in 1 hour. If you didn't request this change, ignore this e-mail - your login e-mail stays the same."
     },
     "trocaEmailSolicitada": {
       "assunto": "E-mail change requested — Urban Grid",
+      "titulo": "Someone asked to change your account e-mail",
+      "preheader": "If this was not you, change your password now.",
       "corpo": "Someone requested changing your account's login e-mail to {novoEmail}. The change only takes effect once confirmed from the new address.",
       "aviso": "If this wasn't you, your account may be compromised - change your password immediately."
     },
     "solicitacaoRejeitada": {
       "assunto": "Agency access request — Urban Grid",
+      "titulo": "Your request was not approved",
+      "preheader": "See the reason given by the administration.",
       "corpo": "Your access request as an agency was not approved.",
       "motivoRotulo": "Reason:"
     },
     "notificacao": {
+      "protocolo": "Protocol",
       "botao": "View complaint",
       "rodape": "You received this e-mail because you have an Urban Grid account."
     },
     "resumoSemanal": {
       "assunto": "This week's summary for {cidade} — Urban Grid",
+      "titulo": "What changed in your city",
+      "preheader": "{total, plural, one {# new complaint} other {# new complaints}} in {cidade} in the last few days.",
+      "numeroRotulo": "{total, plural, one {new complaint published} other {new complaints published}}",
       "corpoSemCategoria": "{total, plural, one {# new complaint was} other {# new complaints were}} published in {cidade} in the last few days.",
       "corpoComCategoria": "{total, plural, one {# new complaint was} other {# new complaints were}} published about {categoria} in {cidade} in the last few days.",
       "botao": "View complaints",
@@ -985,11 +1016,15 @@
     },
     "cidadeAprovada": {
       "assunto": "{cidade} is now available on Urban Grid",
+      "titulo": "Your city is now on Urban Grid",
+      "preheader": "{cidade} can now receive complaints.",
       "corpo": "Good news: {cidade} has been registered and can now receive complaints. Thanks for helping expand Urban Grid.",
       "botao": "Open Urban Grid"
     },
     "solicitacaoCidadeRejeitada": {
       "assunto": "New city request — Urban Grid",
+      "titulo": "City request not approved",
+      "preheader": "See the reason given by the administration.",
       "corpo": "Your request to add a new city was not approved.",
       "motivoRotulo": "Reason:"
     }
