@@ -49,6 +49,9 @@ export function AdminNav({
   const t = useTranslations("AdminNav");
   const pathname = usePathname();
   const itens = ehAdmin ? [...ITENS_MODERADOR, ...ITENS_ADMIN] : ITENS_MODERADOR;
+  // Com as nove abas do admin os ícones não cabem na largura do site (6xl):
+  // sem eles a faixa inteira aparece sem rolar, e o texto já identifica a aba.
+  const comIcones = itens.length <= 6;
   const navRef = useRef<HTMLElement>(null);
   const ativoRef = useRef<HTMLAnchorElement>(null);
 
@@ -107,7 +110,7 @@ export function AdminNav({
                   : "border-transparent text-ink-muted hover:border-line-strong hover:text-ink"
               }`}
             >
-              <item.icone className="h-3.5 w-3.5" aria-hidden />
+              {comIcones && <item.icone className="h-3.5 w-3.5" aria-hidden />}
               {t(item.chave)}
               {(pendentes[item.chave] ?? 0) > 0 && (
                 <span

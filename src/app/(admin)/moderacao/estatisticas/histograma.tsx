@@ -1,5 +1,6 @@
 import { useLocale, useTranslations } from "next-intl";
 
+import { Secao } from "@/components/ui/secao";
 import { COR_DECISAO } from "@/components/moderacao/barra-decisoes";
 import {
   LIMITE_REPROVACAO,
@@ -9,7 +10,7 @@ import {
 } from "@/lib/moderacao/estatisticas";
 import { formatarNumero, formatarPorcentagem } from "@/lib/util/formatarEstatistica";
 
-import { SecaoEstatistica, VerComoTabela } from "./partes";
+import { VerComoTabela } from "./partes";
 
 // A cor da barra é a decisão que aquela faixa de pontuação produz (mesmas
 // cores de BarraDecisoes); a zona também é nomeada em texto embaixo.
@@ -46,11 +47,11 @@ export function HistogramaPontuacoes({
   });
 
   return (
-    <SecaoEstatistica
+    <Secao
       id="pontuacoes"
       titulo={t("scoreTitulo")}
       descricao={t("scoreDescricao", { revisao: num(LIMITE_REVISAO), reprovacao: num(LIMITE_REPROVACAO) })}
-      lateral={
+      acoes={
         mediana !== null && (
           <p className="text-right text-sm text-ink-muted">
             {t("scoreMediana", { valor: num(mediana) })}
@@ -158,6 +159,6 @@ export function HistogramaPontuacoes({
         cabecalhos={[t("colFaixa"), t("colAnalises")]}
         linhas={faixas.map((f) => [faixaTexto(f), f.quantidade])}
       />
-    </SecaoEstatistica>
+    </Secao>
   );
 }

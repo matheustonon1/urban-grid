@@ -1,5 +1,6 @@
 import { useLocale, useTranslations } from "next-intl";
 
+import { Secao } from "@/components/ui/secao";
 import { Aviso } from "@/components/ui/aviso";
 import { COR_DECISAO } from "@/components/moderacao/barra-decisoes";
 import {
@@ -12,8 +13,6 @@ import {
   formatarNumero,
   formatarPorcentagem,
 } from "@/lib/util/formatarEstatistica";
-
-import { SecaoEstatistica } from "./partes";
 
 function PainelRevisao({ revisao }: { revisao: RevisaoHumana }) {
   const t = useTranslations("Estatisticas");
@@ -162,12 +161,12 @@ export function IaVersusHumano({
 }) {
   const t = useTranslations("Estatisticas");
   return (
-    <SecaoEstatistica id="humano" titulo={t("humanoTitulo")} descricao={t("humanoDescricao")}>
+    <Secao id="humano" titulo={t("humanoTitulo")} descricao={t("humanoDescricao")}>
       <div className="grid gap-4 lg:grid-cols-2">
         <PainelRevisao revisao={reclamacoes} />
         <PainelRevisao revisao={comentarios} />
       </div>
       <MotivosDeRevisaoLista motivos={motivos} />
-    </SecaoEstatistica>
+    </Secao>
   );
 }

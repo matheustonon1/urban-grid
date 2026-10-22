@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { AdminNav } from "@/components/layout/admin-nav";
 import { contarPendenciasModeracao } from "@/lib/moderacao/pendencias";
+import { containerSite } from "@/lib/estilos";
 
 // Só UI compartilhada (o menu) - cada página e cada server action desta
 // área continuam com seu próprio guard (exigirModerador/exigirAdmin),
@@ -18,12 +19,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <>
-      {/* Container próprio, separado do <main> de cada página - as páginas
-          já aplicam seu próprio containerPagina (mx-auto + padding), então
-          embrulhar tudo aqui duplicaria o espaçamento. Mais largo que o
-          conteúdo (max-w-3xl) de propósito: com 6 abas + ícones, max-w-3xl
-          não cabia numa linha só e forçava rolagem/quebra feia. */}
-      <div className="mx-auto w-full max-w-6xl px-6 pt-4 sm:px-8">
+      {/* Container próprio, separado do <main> de cada página, mas no mesmo eixo
+          (containerSite = 6xl + o respiro lateral do cabeçalho): o menu começa
+          na mesma coluna do título. O <main> aplica o respiro vertical dele. */}
+      <div className={`${containerSite} pt-4`}>
         <AdminNav ehAdmin={ehAdmin} pendentes={pendentes} />
       </div>
       {children}

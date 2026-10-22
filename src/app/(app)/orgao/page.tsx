@@ -7,12 +7,21 @@ import { prisma } from "@/lib/prisma";
 import { StatusBadge } from "@/components/reclamacao/status-badge";
 import { Paginacao } from "@/components/ui/paginacao";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/util/paginacao";
-import { botaoPrimario, campoInput, cartao, containerPagina } from "@/lib/estilos";
+import {
+  botaoPrimario,
+  campoInput,
+  cartaoSecao,
+  colunaLateral,
+  colunaPrincipal,
+  grade,
+  pagina,
+} from "@/lib/estilos";
 import { calcularMetricasOrgao, classificarIndice } from "@/lib/orgaos/reputacaoOrgao";
 import { metadataDaPagina } from "@/lib/metadata";
 import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
 import { EstadoVazio } from "@/components/ui/estado-vazio";
-import { PainelNumeros } from "@/components/ui/painel-numeros";
+import { Secao } from "@/components/ui/secao";
+import { Campo } from "@/components/formulario/campo";
 
 import { responderReclamacao } from "../reclamacoes/[protocolo]/actions";
 import { exigirOrgao } from "../reclamacoes/[protocolo]/exigir-orgao";
@@ -97,9 +106,10 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
     : null;
 
   return (
-    <main className={`${containerPagina} max-w-3xl`}>
+    <main className={pagina}>
       <CabecalhoPagina
-        titulo={`${t("titulo")}${orgao ? ` — ${orgao.nome}` : ""}`}
+        kicker={t("kicker")}
+        titulo={orgao ? orgao.nome : t("titulo")}
         descricao={
           orgao &&
           (categoriaIds
@@ -108,159 +118,191 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
         }
       />
 
-      {orgao && metricas && classificacao && (
-        <section className="flex flex-col gap-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <span
-                className={`inline-block w-fit rounded-full px-2.5 py-0.5 text-xs font-medium ${classificacao.className}`}
-              >
-                {tSelo(classificacao.chave)}
-              </span>
-              <span className="text-sm text-ink-muted">
-                {t("suaReputacao")}
-              </span>
-            </div>
-            <Link href={`/orgaos/${orgao.id}`} className="text-sm text-brand hover:underline">
-              {t("verComoOsCidadaosVeem")}
-            </Link>
-          </div>
+      <div className={grade}>
+        <div className={colunaPrincipal}>
+          <Secao id="pendentes" titulo={t("pendentesDeResposta")} contador={totalPendentes}>
+            {pendentes.length === 0 && (
+              <EstadoVazio icone={CircleCheck} titulo={t("nenhumaPendente")} />
+            )}
 
-          <PainelNumeros
-            itens={[
-              {
-                rotulo: t("resolvidas"),
-                valor: metricas.indiceResolucao !== null ? `${metricas.indiceResolucao}%` : "—",
-              },
-              {
-                rotulo: t("tempoMedioResposta"),
-                valor:
-                  metricas.tempoMedioRespostaDias !== null
-                    ? `${metricas.tempoMedioRespostaDias}d`
-                    : "—",
-              },
-              {
-                rotulo: t("notaCidadaos"),
-                valor: metricas.notaMedia !== null ? `${metricas.notaMedia}/5` : "—",
-              },
-              { rotulo: t("avaliacoesRecebidas"), valor: String(metricas.totalAvaliacoes) },
-            ]}
-          />
-        </section>
-      )}
+            {pendentes.map((reclamacao) => (
+              <article key={reclamacao.id} className={`flex flex-col gap-4 ${cartaoSecao}`}>
+                <header className="flex flex-col gap-1.5">
+                  <p className="kicker">
+                    {reclamacao.protocolo} · {reclamacao.categoria.nome}
+                  </p>
+                  <h3 className="text-lg leading-snug font-extrabold tracking-tight text-ink">
+                    {reclamacao.titulo}
+                  </h3>
+                  <p className="text-sm text-ink-muted">{reclamacao.endereco}</p>
+                </header>
+                <p className="leading-relaxed text-ink-2">{reclamacao.descricao}</p>
 
-      <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold text-ink">
-          {t("pendentesDeResposta")} {totalPendentes > 0 && `(${totalPendentes})`}
-        </h2>
-
-        {pendentes.length === 0 && (
-          <EstadoVazio icone={CircleCheck} titulo={t("nenhumaPendente")} />
-        )}
-
-        {pendentes.map((reclamacao) => (
-          <div key={reclamacao.id} className={`flex flex-col gap-2 ${cartao}`}>
-            <p className="font-medium text-ink">{reclamacao.titulo}</p>
-            <p className="text-sm text-ink-muted">
-              <span className="font-mono text-xs">{reclamacao.protocolo}</span> ·{" "}
-              {reclamacao.categoria.nome} · {reclamacao.endereco}
-            </p>
-            <p className="text-ink-2">{reclamacao.descricao}</p>
-
-            <form
-              action={responderReclamacao.bind(null, reclamacao.id, reclamacao.protocolo)}
-              className="flex flex-col gap-2"
-            >
-              <textarea
-                name="texto"
-                required
-                minLength={10}
-                placeholder={tResp("respostaOficial")}
-                rows={3}
-                className={campoInput}
-              />
-              <select name="novoStatus" defaultValue="" className={campoInput}>
-                <option value="">{tResp("manterStatus")}</option>
-                <option value="EM_ANDAMENTO">{tResp("marcarEmAndamento")}</option>
-                <option value="RESOLVIDA">{tResp("marcarResolvida")}</option>
-              </select>
-              <input type="date" name="prazoEstimado" className={campoInput} />
-              <button type="submit" className={`${botaoPrimario} w-fit`}>
-                {tResp("enviarResposta")}
-              </button>
-            </form>
-          </div>
-        ))}
-
-        <Paginacao
-          paginaAtual={paginaPendentes}
-          totalPaginas={totalPaginasPendentes}
-          basePath="/orgao"
-          paramName="pagePendentes"
-          searchParams={{
-            pageHistorico: typeof pageHistorico === "string" ? pageHistorico : undefined,
-          }}
-        />
-      </div>
-
-      <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold text-ink">
-          {t("historicoRespostas")} {totalHistorico > 0 && `(${totalHistorico})`}
-        </h2>
-
-        {historico.length === 0 && (
-          <EstadoVazio icone={MessageSquareText} titulo={t("nenhumaRespondida")} />
-        )}
-
-        {historico.map((resposta) => (
-          <Link
-            key={resposta.id}
-            href={`/reclamacoes/${resposta.reclamacao.protocolo}`}
-            className={`flex flex-col gap-2 ${cartao} transition-colors hover:border-ink-faint`}
-          >
-            <div className="flex items-center justify-between gap-2">
-              <p className="font-medium text-ink">
-                {resposta.reclamacao.titulo}
-              </p>
-              <StatusBadge status={resposta.reclamacao.status} />
-            </div>
-            <p className="text-sm text-ink-2">{resposta.texto}</p>
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-xs text-ink-muted">
-                <span className="font-mono">{resposta.reclamacao.protocolo}</span> ·{" "}
-                {resposta.createdAt.toLocaleDateString(locale)}
-              </p>
-              {resposta.reclamacao.avaliacao ? (
-                <p
-                  className={`text-xs font-medium ${
-                    resposta.reclamacao.avaliacao.resolvido
-                      ? "text-ok-ink"
-                      : "text-danger-ink"
-                  }`}
+                <form
+                  action={responderReclamacao.bind(null, reclamacao.id, reclamacao.protocolo)}
+                  className="flex flex-col gap-4 border-t border-line pt-4"
                 >
-                  {resposta.reclamacao.avaliacao.resolvido
-                    ? `✓ ${t("cidadaoConfirmou")}`
-                    : `✗ ${t("cidadaoDizNaoResolvido")}`}{" "}
-                  ({resposta.reclamacao.avaliacao.nota}/5)
-                </p>
-              ) : (
-                <p className="text-xs text-ink-muted">
-                  {t("aguardandoAvaliacao")}
-                </p>
-              )}
-            </div>
-          </Link>
-        ))}
+                  <Campo id={`resposta-${reclamacao.id}`} rotulo={tResp("respostaOficial")}>
+                    <textarea
+                      id={`resposta-${reclamacao.id}`}
+                      name="texto"
+                      required
+                      minLength={10}
+                      rows={3}
+                      className={campoInput}
+                    />
+                  </Campo>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Campo id={`status-${reclamacao.id}`} rotulo={tResp("statusRotulo")}>
+                      <select
+                        id={`status-${reclamacao.id}`}
+                        name="novoStatus"
+                        defaultValue=""
+                        className={campoInput}
+                      >
+                        <option value="">{tResp("manterStatus")}</option>
+                        <option value="EM_ANDAMENTO">{tResp("marcarEmAndamento")}</option>
+                        <option value="RESOLVIDA">{tResp("marcarResolvida")}</option>
+                      </select>
+                    </Campo>
+                    <Campo
+                      id={`prazo-${reclamacao.id}`}
+                      rotulo={tResp("prazoRotulo")}
+                      opcional={tResp("opcional")}
+                    >
+                      <input
+                        id={`prazo-${reclamacao.id}`}
+                        type="date"
+                        name="prazoEstimado"
+                        className={campoInput}
+                      />
+                    </Campo>
+                  </div>
+                  <button type="submit" className={`${botaoPrimario} w-fit`}>
+                    {tResp("enviarResposta")}
+                  </button>
+                </form>
+              </article>
+            ))}
 
-        <Paginacao
-          paginaAtual={paginaHistorico}
-          totalPaginas={totalPaginasHistorico}
-          basePath="/orgao"
-          paramName="pageHistorico"
-          searchParams={{
-            pagePendentes: typeof pagePendentes === "string" ? pagePendentes : undefined,
-          }}
-        />
+            <Paginacao
+              paginaAtual={paginaPendentes}
+              totalPaginas={totalPaginasPendentes}
+              basePath="/orgao"
+              paramName="pagePendentes"
+              searchParams={{
+                pageHistorico: typeof pageHistorico === "string" ? pageHistorico : undefined,
+              }}
+            />
+          </Secao>
+
+          <Secao id="historico" titulo={t("historicoRespostas")} contador={totalHistorico}>
+            {historico.length === 0 && (
+              <EstadoVazio icone={MessageSquareText} titulo={t("nenhumaRespondida")} />
+            )}
+
+            {historico.length > 0 && (
+              <ul className="-mt-2 divide-y divide-line">
+                {historico.map((resposta) => (
+                  <li key={resposta.id}>
+                    <Link
+                      href={`/reclamacoes/${resposta.reclamacao.protocolo}`}
+                      className="group flex flex-col gap-2 py-5 transition-colors"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <p className="font-bold text-ink group-hover:text-brand">
+                          {resposta.reclamacao.titulo}
+                        </p>
+                        <StatusBadge status={resposta.reclamacao.status} />
+                      </div>
+                      <p className="line-clamp-3 leading-relaxed text-ink-2">{resposta.texto}</p>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="kicker">
+                          {resposta.reclamacao.protocolo} ·{" "}
+                          {resposta.createdAt.toLocaleDateString(locale)}
+                        </p>
+                        {resposta.reclamacao.avaliacao ? (
+                          <p
+                            className={`text-xs font-semibold ${
+                              resposta.reclamacao.avaliacao.resolvido
+                                ? "text-ok-ink"
+                                : "text-danger-ink"
+                            }`}
+                          >
+                            {resposta.reclamacao.avaliacao.resolvido
+                              ? `✓ ${t("cidadaoConfirmou")}`
+                              : `✗ ${t("cidadaoDizNaoResolvido")}`}{" "}
+                            ({resposta.reclamacao.avaliacao.nota}/5)
+                          </p>
+                        ) : (
+                          <p className="text-xs text-ink-muted">{t("aguardandoAvaliacao")}</p>
+                        )}
+                      </div>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <Paginacao
+              paginaAtual={paginaHistorico}
+              totalPaginas={totalPaginasHistorico}
+              basePath="/orgao"
+              paramName="pageHistorico"
+              searchParams={{
+                pagePendentes: typeof pagePendentes === "string" ? pagePendentes : undefined,
+              }}
+            />
+          </Secao>
+        </div>
+
+        <aside className={colunaLateral}>
+          {orgao && metricas && classificacao && (
+            <section className={`flex flex-col gap-5 ${cartaoSecao}`}>
+              <div className="flex flex-col gap-2">
+                <span className="kicker">{t("suaReputacao")}</span>
+                <span
+                  className={`inline-block w-fit rounded-[5px] px-2.5 py-1 text-sm font-semibold ${classificacao.className}`}
+                >
+                  {tSelo(classificacao.chave)}
+                </span>
+              </div>
+
+              <dl className="flex flex-col divide-y divide-line">
+                {[
+                  {
+                    rotulo: t("resolvidas"),
+                    valor: metricas.indiceResolucao !== null ? `${metricas.indiceResolucao}%` : "—",
+                  },
+                  {
+                    rotulo: t("tempoMedioResposta"),
+                    valor:
+                      metricas.tempoMedioRespostaDias !== null
+                        ? `${metricas.tempoMedioRespostaDias}d`
+                        : "—",
+                  },
+                  {
+                    rotulo: t("notaCidadaos"),
+                    valor: metricas.notaMedia !== null ? `${metricas.notaMedia}/5` : "—",
+                  },
+                  { rotulo: t("avaliacoesRecebidas"), valor: String(metricas.totalAvaliacoes) },
+                ].map((item) => (
+                  <div key={item.rotulo} className="flex items-baseline justify-between gap-4 py-3">
+                    <dt className="text-sm text-ink-muted">{item.rotulo}</dt>
+                    <dd className="font-mono text-xl font-medium text-ink tabular-nums">{item.valor}</dd>
+                  </div>
+                ))}
+              </dl>
+
+              <Link
+                href={`/orgaos/${orgao.id}`}
+                className="text-sm font-semibold text-brand underline underline-offset-2"
+              >
+                {t("verComoOsCidadaosVeem")}
+              </Link>
+            </section>
+          )}
+        </aside>
       </div>
     </main>
   );

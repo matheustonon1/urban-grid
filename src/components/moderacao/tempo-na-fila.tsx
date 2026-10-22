@@ -30,7 +30,7 @@ export function TempoNaFila({ desde }: { desde: Date }) {
   return (
     <span
       title={titulo}
-      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${tom}`}
+      className={`inline-flex shrink-0 items-center gap-1.5 rounded-[5px] px-2 py-0.5 text-xs leading-5 font-semibold ${tom}`}
     >
       <Clock className="h-3 w-3" aria-hidden />
       <span className="sr-only">{titulo}: </span>

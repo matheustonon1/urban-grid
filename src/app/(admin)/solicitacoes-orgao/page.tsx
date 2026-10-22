@@ -5,10 +5,20 @@ import { CircleCheck } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { Paginacao } from "@/components/ui/paginacao";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/util/paginacao";
-import { botaoPerigo, botaoPrimario, campoInput, cartao, containerPagina } from "@/lib/estilos";
+import {
+  botaoPrimario,
+  cartaoSecao,
+  colunaLateral,
+  colunaPrincipal,
+  grade,
+  pagina,
+} from "@/lib/estilos";
 import { metadataDaPagina } from "@/lib/metadata";
 import { EstadoVazio } from "@/components/ui/estado-vazio";
 import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
+import { FormularioRejeicao } from "@/components/ui/formulario-rejeicao";
+import { ResumoLateral } from "@/components/ui/resumo-lateral";
+import { Secao } from "@/components/ui/secao";
 import { Selo } from "@/components/ui/selo";
 import { formatarDataHora } from "@/lib/util/formatarData";
 
@@ -21,6 +31,7 @@ export default async function SolicitacoesOrgaoPage({
   searchParams,
 }: PageProps<"/solicitacoes-orgao">) {
   const t = await getTranslations("SolicitacoesOrgao");
+  const tNav = await getTranslations("AdminNav");
   const locale = await getLocale();
   await exigirAdmin();
 
@@ -51,114 +62,122 @@ export default async function SolicitacoesOrgaoPage({
   const totalPaginasDecididas = calcularTotalPaginas(totalDecididas);
 
   return (
-    <main className={`${containerPagina} max-w-3xl`}>
+    <main className={pagina}>
       <CabecalhoPagina
+        kicker={tNav("kickerAdmin")}
         titulo={t("titulo")}
         descricao={t("resumoPendentes", { count: totalPendentes })}
       />
 
-      {pendentes.length === 0 && (
-        <EstadoVazio icone={CircleCheck} titulo={t("nenhumaPendente")} />
-      )}
+      <div className={grade}>
+        <div className={colunaPrincipal}>
+          <Secao id="pendentes" titulo={t("secaoPendentes")}>
+            {pendentes.length === 0 && (
+              <EstadoVazio icone={CircleCheck} titulo={t("nenhumaPendente")} />
+            )}
 
-      {pendentes.map((solicitacao) => (
-        <div key={solicitacao.id} className={`flex flex-col gap-2 ${cartao}`}>
-          <p className="font-medium text-ink">
-            {solicitacao.nomeOrgao}
-            {solicitacao.sigla && ` (${solicitacao.sigla})`}
-          </p>
-          <p className="text-sm text-ink-muted">
-            {solicitacao.cidade.nome} - {solicitacao.cidade.estado.uf}
-          </p>
-          <p className="text-sm text-ink-muted">
-            {t("responsavel")} {solicitacao.nomeResponsavel} · {solicitacao.email}
-            {solicitacao.telefone && ` · ${solicitacao.telefone}`}
-          </p>
-          <p className="text-xs text-ink-muted">
-            {t("enviadoEm")} {formatarDataHora(solicitacao.createdAt, locale)}
-          </p>
-
-          <div className="flex flex-wrap items-start gap-2">
-            <form action={aprovarSolicitacao.bind(null, solicitacao.id)}>
-              <button type="submit" className={botaoPrimario}>
-                {t("aprovar")}
-              </button>
-            </form>
-
-            <form
-              action={rejeitarSolicitacao.bind(null, solicitacao.id)}
-              className="flex min-w-0 basis-full gap-2 sm:flex-1 sm:basis-0"
-            >
-              <textarea
-                name="motivo"
-                required
-                minLength={10}
-                placeholder={t("motivoRejeicaoPlaceholder")}
-                rows={1}
-                className={`flex-1 ${campoInput}`}
-              />
-              <button type="submit" className={botaoPerigo}>
-                {t("rejeitar")}
-              </button>
-            </form>
-          </div>
-        </div>
-      ))}
-
-      <Paginacao
-        paginaAtual={paginaPendentes}
-        totalPaginas={totalPaginasPendentes}
-        basePath="/solicitacoes-orgao"
-        paramName="pagePendentes"
-        searchParams={{
-          pageDecididas: typeof pageDecididas === "string" ? pageDecididas : undefined,
-        }}
-      />
-
-      {decididasRecentemente.length > 0 && (
-        <div className="flex flex-col gap-2">
-          <h2 className="text-lg font-semibold text-ink">
-            {t("decididasRecentemente")} {totalDecididas > 0 && `(${totalDecididas})`}
-          </h2>
-          {decididasRecentemente.map((solicitacao) => (
-            <div key={solicitacao.id} className={`flex flex-col gap-1 ${cartao}`}>
-              <div className="flex items-center justify-between gap-2">
-                <p className="font-medium text-ink">
+            {pendentes.map((solicitacao) => (
+              <article key={solicitacao.id} className={`flex flex-col gap-3 ${cartaoSecao}`}>
+                <p className="kicker">
+                  {solicitacao.cidade.nome} - {solicitacao.cidade.estado.uf}
+                </p>
+                <h3 className="text-xl leading-snug font-extrabold tracking-tight text-ink">
                   {solicitacao.nomeOrgao}
-                  {solicitacao.sigla && ` (${solicitacao.sigla})`} · {solicitacao.cidade.nome}
+                  {solicitacao.sigla && ` (${solicitacao.sigla})`}
+                </h3>
+                <p className="text-sm text-ink-2">
+                  {t("responsavel")} {solicitacao.nomeResponsavel} · {solicitacao.email}
+                  {solicitacao.telefone && ` · ${solicitacao.telefone}`}
                 </p>
-                <Selo tom={solicitacao.status === "APROVADA" ? "sucesso" : "erro"}>
-                  {solicitacao.status === "APROVADA" ? t("aprovada") : t("rejeitada")}
-                </Selo>
-              </div>
-              <p className="text-xs text-ink-muted">
-                {solicitacao.email} · {t("por")}{" "}
-                {solicitacao.analisadoPor?.name ?? solicitacao.analisadoPor?.email ?? "—"} {t("em")}{" "}
-                {solicitacao.analisadoEm ? formatarDataHora(solicitacao.analisadoEm, locale) : "—"}
-              </p>
-              {solicitacao.motivoRejeicao && (
-                <p className="text-sm italic text-ink-muted">
-                  “{solicitacao.motivoRejeicao}”
+                <p className="text-xs text-ink-muted">
+                  {t("enviadoEm")} {formatarDataHora(solicitacao.createdAt, locale)}
                 </p>
-              )}
-            </div>
-          ))}
 
-          <Paginacao
-            paginaAtual={paginaDecididas}
-            totalPaginas={totalPaginasDecididas}
-            basePath="/solicitacoes-orgao"
-            paramName="pageDecididas"
-            searchParams={{
-              pagePendentes: typeof pagePendentes === "string" ? pagePendentes : undefined,
-            }}
-          />
+                <div className="mt-2 grid gap-4 border-t border-line pt-5 sm:grid-cols-[auto_1fr] sm:items-end">
+                  <form action={aprovarSolicitacao.bind(null, solicitacao.id)}>
+                    <button type="submit" className={`${botaoPrimario} w-full sm:w-auto`}>
+                      {t("aprovar")}
+                    </button>
+                  </form>
+
+                  <FormularioRejeicao
+                    id={`motivo-${solicitacao.id}`}
+                    action={rejeitarSolicitacao.bind(null, solicitacao.id)}
+                    rotulo={t("motivoRejeicaoPlaceholder")}
+                    botao={t("rejeitar")}
+                  />
+                </div>
+              </article>
+            ))}
+
+            <Paginacao
+              paginaAtual={paginaPendentes}
+              totalPaginas={totalPaginasPendentes}
+              basePath="/solicitacoes-orgao"
+              paramName="pagePendentes"
+              searchParams={{
+                pageDecididas: typeof pageDecididas === "string" ? pageDecididas : undefined,
+              }}
+            />
+          </Secao>
+
+          {decididasRecentemente.length > 0 && (
+            <Secao id="decididas" titulo={t("decididasRecentemente")} contador={totalDecididas}>
+              <ul className="-mt-2 divide-y divide-line">
+                {decididasRecentemente.map((solicitacao) => (
+                  <li key={solicitacao.id} className="flex flex-col gap-1.5 py-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="font-bold text-ink">
+                        {solicitacao.nomeOrgao}
+                        {solicitacao.sigla && ` (${solicitacao.sigla})`} · {solicitacao.cidade.nome}
+                      </p>
+                      <Selo tom={solicitacao.status === "APROVADA" ? "sucesso" : "erro"}>
+                        {solicitacao.status === "APROVADA" ? t("aprovada") : t("rejeitada")}
+                      </Selo>
+                    </div>
+                    <p className="text-xs text-ink-muted">
+                      {solicitacao.email} · {t("por")}{" "}
+                      {solicitacao.analisadoPor?.name ?? solicitacao.analisadoPor?.email ?? "—"}{" "}
+                      {t("em")}{" "}
+                      {solicitacao.analisadoEm
+                        ? formatarDataHora(solicitacao.analisadoEm, locale)
+                        : "—"}
+                    </p>
+                    {solicitacao.motivoRejeicao && (
+                      <p className="text-sm text-ink-2 italic">“{solicitacao.motivoRejeicao}”</p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+
+              <Paginacao
+                paginaAtual={paginaDecididas}
+                totalPaginas={totalPaginasDecididas}
+                basePath="/solicitacoes-orgao"
+                paramName="pageDecididas"
+                searchParams={{
+                  pagePendentes: typeof pagePendentes === "string" ? pagePendentes : undefined,
+                }}
+              />
+            </Secao>
+          )}
         </div>
-      )}
 
-      <Link href="/cadastro?tipo=orgao" className="text-sm text-brand underline">
-        {t("verFormularioPublico")}
-      </Link>
+        <aside className={colunaLateral}>
+          <ResumoLateral
+            rotulo={t("resumoRotulo")}
+            valor={totalPendentes}
+            itens={[{ rotulo: t("resumoDecididas"), valor: totalDecididas }]}
+          >
+            <Link
+              href="/cadastro?tipo=orgao"
+              className="w-fit text-sm font-semibold text-brand underline underline-offset-2"
+            >
+              {t("verFormularioPublico")}
+            </Link>
+          </ResumoLateral>
+        </aside>
+      </div>
     </main>
   );
 }

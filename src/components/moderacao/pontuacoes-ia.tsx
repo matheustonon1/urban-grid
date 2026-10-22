@@ -86,7 +86,7 @@ export function ChipsPontuacao({
       {alertas.map(({ rotulo, valor, n }) => (
         <li
           key={rotulo}
-          className={`inline-flex items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-medium ${
+          className={`inline-flex items-center gap-1.5 rounded-[5px] px-2 py-0.5 text-xs font-semibold ${
             n === "alto"
               ? "bg-danger-soft text-danger-ink"
               : "bg-warn-soft text-warn-ink"

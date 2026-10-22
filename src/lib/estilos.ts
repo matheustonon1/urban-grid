@@ -57,13 +57,6 @@ export const colunaLateral = "flex flex-col gap-6 lg:sticky lg:top-24 lg:col-spa
 export const colunaFiltros = "flex flex-col gap-6 lg:sticky lg:top-24 lg:col-span-3";
 export const colunaResultados = "flex min-w-0 flex-col gap-6 lg:col-span-9";
 
-export const containerPagina = "mx-auto flex w-full max-w-2xl flex-1 flex-col gap-5 p-6 sm:p-8";
-
-// Páginas com mais coisa pra mostrar (lista, painel, cidade) respiram em 3xl;
-// o detalhe da reclamação, com coluna de resumo ao lado, usa 5xl.
-export const containerMedio = "mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 p-6 sm:p-8";
-export const containerLargo = "mx-auto flex w-full max-w-5xl flex-1 flex-col gap-7 p-6 sm:p-8";
-
 // Painel secundário: informação de apoio, sem fundo branco cheio, pra não
 // competir com os cartões de conteúdo - nem tudo precisa parecer um objeto solto.
 export const painelSuave = "rounded-lg border border-line bg-sunken/60 p-4";

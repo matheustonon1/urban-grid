@@ -2,10 +2,9 @@ import Link from "next/link";
 import { ArrowRight, Check } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
+import { Secao } from "@/components/ui/secao";
 import type { IdadesDaFila } from "@/lib/moderacao/estatisticas";
 import { formatarDuracao } from "@/lib/util/formatarEstatistica";
-
-import { SecaoEstatistica } from "./partes";
 
 export interface FilaAgora {
   chave: "reclamacoes" | "comentarios" | "denuncias";
@@ -26,7 +25,7 @@ export function FilaAgora({ filas }: { filas: FilaAgora[] }) {
   const locale = useLocale();
 
   return (
-    <SecaoEstatistica id="fila" titulo={t("filaTitulo")} descricao={t("filaDescricao")}>
+    <Secao id="fila" titulo={t("filaTitulo")} descricao={t("filaDescricao")}>
       <ul className="grid gap-x-8 gap-y-5 md:grid-cols-3">
         {filas.map(({ chave, href, idades }) => (
           <li key={chave} className="flex min-w-0 flex-col gap-2.5">
@@ -86,6 +85,6 @@ export function FilaAgora({ filas }: { filas: FilaAgora[] }) {
           </li>
         ))}
       </ul>
-    </SecaoEstatistica>
+    </Secao>
   );
 }

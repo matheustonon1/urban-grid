@@ -1,13 +1,14 @@
 import { useLocale, useTranslations } from "next-intl";
 
+import { Secao } from "@/components/ui/secao";
 import { COR_DECISAO } from "@/components/moderacao/barra-decisoes";
 import { maximoLegivel, type BucketVolume, type Granularidade } from "@/lib/moderacao/estatisticas";
 import { formatarBucket } from "@/lib/util/formatarEstatistica";
 
-import { COR_FALHA, LegendaDecisoes, SecaoEstatistica, VerComoTabela } from "./partes";
+import { COR_FALHA, LegendaDecisoes, VerComoTabela } from "./partes";
 
 // Posição do balão de hover: nas pontas ele abre pro lado de dentro, pra não
-// sair do cartão.
+// sair da área do gráfico.
 function posicaoBalao(indice: number, total: number) {
   if (indice < total * 0.25) return "left-0";
   if (indice > total * 0.75) return "right-0";
@@ -43,7 +44,7 @@ export function GraficoVolume({
   const meio = buckets[Math.floor((buckets.length - 1) / 2)];
 
   return (
-    <SecaoEstatistica
+    <Secao
       id="volume"
       titulo={t("volumeTitulo")}
       descricao={t(
@@ -53,7 +54,7 @@ export function GraficoVolume({
             ? "volumeDescricaoSemana"
             : "volumeDescricaoMes"
       )}
-      lateral={
+      acoes={
         <p className="text-right text-sm text-ink-muted">
           <span className="font-mono font-medium tabular-nums text-ink">
             {t("analises", { count: totalGeral })}
@@ -174,6 +175,6 @@ export function GraficoVolume({
           b.total,
         ])}
       />
-    </SecaoEstatistica>
+    </Secao>
   );
 }

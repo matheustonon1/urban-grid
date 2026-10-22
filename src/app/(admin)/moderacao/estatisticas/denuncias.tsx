@@ -1,9 +1,8 @@
 import { useLocale, useTranslations } from "next-intl";
 
+import { Secao } from "@/components/ui/secao";
 import type { ResumoDenuncias } from "@/lib/moderacao/estatisticas";
 import { formatarDuracao, formatarPorcentagem } from "@/lib/util/formatarEstatistica";
-
-import { SecaoEstatistica } from "./partes";
 
 export function DenunciasDoPeriodo({ resumo }: { resumo: ResumoDenuncias }) {
   const t = useTranslations("Estatisticas");
@@ -20,7 +19,7 @@ export function DenunciasDoPeriodo({ resumo }: { resumo: ResumoDenuncias }) {
   const maiorMotivo = Math.max(...resumo.porMotivo.map((m) => m.quantidade), 1);
 
   return (
-    <SecaoEstatistica id="denuncias" titulo={t("denunciasTitulo")} descricao={t("denunciasDescricao")}>
+    <Secao id="denuncias" titulo={t("denunciasTitulo")} descricao={t("denunciasDescricao")}>
       {resumo.total === 0 ? (
         <p className="text-sm text-ink-muted">{t("denunciasNenhuma")}</p>
       ) : (
@@ -82,6 +81,6 @@ export function DenunciasDoPeriodo({ resumo }: { resumo: ResumoDenuncias }) {
           </div>
         </>
       )}
-    </SecaoEstatistica>
+    </Secao>
   );
 }

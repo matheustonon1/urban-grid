@@ -2,11 +2,23 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { CircleCheck } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
+import { Campo } from "@/components/formulario/campo";
 import { Paginacao } from "@/components/ui/paginacao";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/util/paginacao";
-import { botaoPerigo, botaoPrimario, campoInput, cartao, containerPagina } from "@/lib/estilos";
+import {
+  botaoPrimario,
+  campoInput,
+  cartaoSecao,
+  colunaLateral,
+  colunaPrincipal,
+  grade,
+  pagina,
+} from "@/lib/estilos";
 import { metadataDaPagina } from "@/lib/metadata";
 import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
+import { FormularioRejeicao } from "@/components/ui/formulario-rejeicao";
+import { ResumoLateral } from "@/components/ui/resumo-lateral";
+import { Secao } from "@/components/ui/secao";
 import { Selo } from "@/components/ui/selo";
 import { formatarDataHora } from "@/lib/util/formatarData";
 import { EstadoVazio } from "@/components/ui/estado-vazio";
@@ -20,6 +32,7 @@ export default async function SolicitacoesCidadePage({
   searchParams,
 }: PageProps<"/solicitacoes-cidade">) {
   const t = await getTranslations("SolicitacoesCidade");
+  const tNav = await getTranslations("AdminNav");
   const locale = await getLocale();
   await exigirAdmin();
 
@@ -49,116 +62,126 @@ export default async function SolicitacoesCidadePage({
   const totalPaginasDecididas = calcularTotalPaginas(totalDecididas);
 
   return (
-    <main className={`${containerPagina} max-w-3xl`}>
+    <main className={pagina}>
       <CabecalhoPagina
+        kicker={tNav("kickerAdmin")}
         titulo={t("titulo")}
         descricao={t("resumoPendentes", { count: totalPendentes })}
       />
 
-      {pendentes.length === 0 && (
-        <EstadoVazio icone={CircleCheck} titulo={t("nenhumaPendente")} />
-      )}
+      <div className={grade}>
+        <div className={colunaPrincipal}>
+          <Secao id="pendentes" titulo={t("secaoPendentes")}>
+            {pendentes.length === 0 && (
+              <EstadoVazio icone={CircleCheck} titulo={t("nenhumaPendente")} />
+            )}
 
-      {pendentes.map((solicitacao) => (
-        <div key={solicitacao.id} className={`flex flex-col gap-2 ${cartao}`}>
-          <p className="font-medium text-ink">
-            {solicitacao.nomeCidade} - {solicitacao.uf}
-          </p>
-          <p className="text-sm text-ink-muted">
-            {t("solicitadoPor")} {solicitacao.nomeSolicitante} · {solicitacao.email}
-          </p>
-          <p className="text-xs text-ink-muted">
-            {t("enviadoEm")} {formatarDataHora(solicitacao.createdAt, locale)}
-          </p>
-
-          <div className="flex flex-wrap items-start gap-2">
-            <form
-              action={aprovarSolicitacaoCidade.bind(null, solicitacao.id)}
-              className="flex items-center gap-2"
-            >
-              <input
-                type="text"
-                name="codigoIbge"
-                required
-                pattern="\d{7}"
-                title={t("codigoIbgeAjuda")}
-                placeholder={t("codigoIbgePlaceholder")}
-                className={`w-36 ${campoInput}`}
-              />
-              <button type="submit" className={botaoPrimario}>
-                {t("aprovar")}
-              </button>
-            </form>
-
-            <form
-              action={rejeitarSolicitacaoCidade.bind(null, solicitacao.id)}
-              className="flex flex-1 gap-2"
-            >
-              <textarea
-                name="motivo"
-                required
-                minLength={10}
-                placeholder={t("motivoRejeicaoPlaceholder")}
-                rows={1}
-                className={`flex-1 ${campoInput}`}
-              />
-              <button type="submit" className={botaoPerigo}>
-                {t("rejeitar")}
-              </button>
-            </form>
-          </div>
-        </div>
-      ))}
-
-      <Paginacao
-        paginaAtual={paginaPendentes}
-        totalPaginas={totalPaginasPendentes}
-        basePath="/solicitacoes-cidade"
-        paramName="pagePendentes"
-        searchParams={{
-          pageDecididas: typeof pageDecididas === "string" ? pageDecididas : undefined,
-        }}
-      />
-
-      {decididasRecentemente.length > 0 && (
-        <div className="flex flex-col gap-2">
-          <h2 className="text-lg font-semibold text-ink">
-            {t("decididasRecentemente")} {totalDecididas > 0 && `(${totalDecididas})`}
-          </h2>
-          {decididasRecentemente.map((solicitacao) => (
-            <div key={solicitacao.id} className={`flex flex-col gap-1 ${cartao}`}>
-              <div className="flex items-center justify-between gap-2">
-                <p className="font-medium text-ink">
+            {pendentes.map((solicitacao) => (
+              <article key={solicitacao.id} className={`flex flex-col gap-3 ${cartaoSecao}`}>
+                <h3 className="text-xl leading-snug font-extrabold tracking-tight text-ink">
                   {solicitacao.nomeCidade} - {solicitacao.uf}
+                </h3>
+                <p className="text-sm text-ink-2">
+                  {t("solicitadoPor")} {solicitacao.nomeSolicitante} · {solicitacao.email}
                 </p>
-                <Selo tom={solicitacao.status === "APROVADA" ? "sucesso" : "erro"}>
-                  {solicitacao.status === "APROVADA" ? t("aprovada") : t("rejeitada")}
-                </Selo>
-              </div>
-              <p className="text-xs text-ink-muted">
-                {solicitacao.email} · {t("por")}{" "}
-                {solicitacao.analisadoPor?.name ?? solicitacao.analisadoPor?.email ?? "—"} {t("em")}{" "}
-                {solicitacao.analisadoEm ? formatarDataHora(solicitacao.analisadoEm, locale) : "—"}
-              </p>
-              {solicitacao.motivoRejeicao && (
-                <p className="text-sm italic text-ink-muted">
-                  “{solicitacao.motivoRejeicao}”
+                <p className="text-xs text-ink-muted">
+                  {t("enviadoEm")} {formatarDataHora(solicitacao.createdAt, locale)}
                 </p>
-              )}
-            </div>
-          ))}
 
-          <Paginacao
-            paginaAtual={paginaDecididas}
-            totalPaginas={totalPaginasDecididas}
-            basePath="/solicitacoes-cidade"
-            paramName="pageDecididas"
-            searchParams={{
-              pagePendentes: typeof pagePendentes === "string" ? pagePendentes : undefined,
-            }}
-          />
+                <div className="mt-2 flex flex-col gap-5 border-t border-line pt-5">
+                  <form
+                    action={aprovarSolicitacaoCidade.bind(null, solicitacao.id)}
+                    className="flex flex-col gap-3 sm:flex-row sm:items-end"
+                  >
+                    <div className="sm:w-64">
+                      <Campo id={`ibge-${solicitacao.id}`} rotulo={t("codigoIbgePlaceholder")}>
+                        <input
+                          id={`ibge-${solicitacao.id}`}
+                          type="text"
+                          name="codigoIbge"
+                          required
+                          pattern="\d{7}"
+                          inputMode="numeric"
+                          title={t("codigoIbgeAjuda")}
+                          className={campoInput}
+                        />
+                      </Campo>
+                    </div>
+                    <button type="submit" className={botaoPrimario}>
+                      {t("aprovar")}
+                    </button>
+                  </form>
+
+                  <FormularioRejeicao
+                    id={`motivo-${solicitacao.id}`}
+                    action={rejeitarSolicitacaoCidade.bind(null, solicitacao.id)}
+                    rotulo={t("motivoRejeicaoPlaceholder")}
+                    botao={t("rejeitar")}
+                  />
+                </div>
+              </article>
+            ))}
+
+            <Paginacao
+              paginaAtual={paginaPendentes}
+              totalPaginas={totalPaginasPendentes}
+              basePath="/solicitacoes-cidade"
+              paramName="pagePendentes"
+              searchParams={{
+                pageDecididas: typeof pageDecididas === "string" ? pageDecididas : undefined,
+              }}
+            />
+          </Secao>
+
+          {decididasRecentemente.length > 0 && (
+            <Secao id="decididas" titulo={t("decididasRecentemente")} contador={totalDecididas}>
+              <ul className="-mt-2 divide-y divide-line">
+                {decididasRecentemente.map((solicitacao) => (
+                  <li key={solicitacao.id} className="flex flex-col gap-1.5 py-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="font-bold text-ink">
+                        {solicitacao.nomeCidade} - {solicitacao.uf}
+                      </p>
+                      <Selo tom={solicitacao.status === "APROVADA" ? "sucesso" : "erro"}>
+                        {solicitacao.status === "APROVADA" ? t("aprovada") : t("rejeitada")}
+                      </Selo>
+                    </div>
+                    <p className="text-xs text-ink-muted">
+                      {solicitacao.email} · {t("por")}{" "}
+                      {solicitacao.analisadoPor?.name ?? solicitacao.analisadoPor?.email ?? "—"}{" "}
+                      {t("em")}{" "}
+                      {solicitacao.analisadoEm
+                        ? formatarDataHora(solicitacao.analisadoEm, locale)
+                        : "—"}
+                    </p>
+                    {solicitacao.motivoRejeicao && (
+                      <p className="text-sm text-ink-2 italic">“{solicitacao.motivoRejeicao}”</p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+
+              <Paginacao
+                paginaAtual={paginaDecididas}
+                totalPaginas={totalPaginasDecididas}
+                basePath="/solicitacoes-cidade"
+                paramName="pageDecididas"
+                searchParams={{
+                  pagePendentes: typeof pagePendentes === "string" ? pagePendentes : undefined,
+                }}
+              />
+            </Secao>
+          )}
         </div>
-      )}
+
+        <aside className={colunaLateral}>
+          <ResumoLateral
+            rotulo={t("resumoRotulo")}
+            valor={totalPendentes}
+            itens={[{ rotulo: t("resumoDecididas"), valor: totalDecididas }]}
+          />
+        </aside>
+      </div>
     </main>
   );
 }

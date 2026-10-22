@@ -5,6 +5,7 @@ import { Aviso } from "@/components/ui/aviso";
 import { BarraDecisoes } from "@/components/moderacao/barra-decisoes";
 import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
 import { EstadoVazio } from "@/components/ui/estado-vazio";
+import { Secao } from "@/components/ui/secao";
 import {
   carregarEstatisticasModeracao,
   LIMITE_LINHAS_ESTATISTICAS,
@@ -28,7 +29,7 @@ import {
   variacaoRelativa,
   volumePorPeriodo,
 } from "@/lib/moderacao/estatisticas";
-import { containerLargo } from "@/lib/estilos";
+import { pagina } from "@/lib/estilos";
 import { formatarNumero, formatarPorcentagem, formatarVariacao } from "@/lib/util/formatarEstatistica";
 import { metadataDaPagina } from "@/lib/metadata";
 import { LIMITE_REPROVACAO_COMENTARIO } from "@/lib/moderacao/pontuacoes";
@@ -41,7 +42,6 @@ import { GraficoVolume } from "./grafico-volume";
 import { HistogramaPontuacoes } from "./histograma";
 import { IaVersusHumano } from "./ia-humano";
 import { Kpis, type Variacao } from "./kpis";
-import { SecaoEstatistica } from "./partes";
 import { SeletorPeriodo } from "./seletor-periodo";
 import { ConsumoDoModelo, VersoesDoPrompt } from "./versoes-consumo";
 
@@ -65,6 +65,7 @@ export default async function EstatisticasModeracaoPage({
   searchParams,
 }: PageProps<"/moderacao/estatisticas">) {
   const t = await getTranslations("Estatisticas");
+  const tNav = await getTranslations("AdminNav");
   const locale = await getLocale();
   await exigirModerador();
 
@@ -81,6 +82,7 @@ export default async function EstatisticasModeracaoPage({
 
   const cabecalho = (
     <CabecalhoPagina
+      kicker={tNav("kickerModeracao")}
       titulo={t("titulo")}
       descricao={t("subtitulo")}
       acoes={<SeletorPeriodo atual={periodo.chave} />}
@@ -89,7 +91,7 @@ export default async function EstatisticasModeracaoPage({
 
   if (logs.length === 0) {
     return (
-      <main className={containerLargo}>
+      <main className={pagina}>
         {cabecalho}
         <EstadoVazio
           icone={BarChart3}
@@ -147,7 +149,7 @@ export default async function EstatisticasModeracaoPage({
     .map((log) => log.scoreGeral);
 
   return (
-    <main className={containerLargo}>
+    <main className={pagina}>
       {cabecalho}
 
       {dados.truncado && (
@@ -166,8 +168,8 @@ export default async function EstatisticasModeracaoPage({
 
       <GraficoVolume buckets={buckets} granularidade={granularidade} />
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <SecaoEstatistica id="destino" titulo={t("destinoTitulo")} descricao={t("destinoDescricao")}>
+      <div className="grid gap-10 lg:grid-cols-2 lg:items-start">
+        <Secao id="destino" titulo={t("destinoTitulo")} descricao={t("destinoDescricao")}>
           <div className="flex flex-col gap-6">
             {porTipo.map(({ tipo, resumo: r }) => (
               <div key={tipo} className="flex flex-col gap-2.5">
@@ -188,7 +190,7 @@ export default async function EstatisticasModeracaoPage({
               </div>
             ))}
           </div>
-        </SecaoEstatistica>
+        </Secao>
 
         {scoresReclamacao.length > 0 && (
           <HistogramaPontuacoes
@@ -215,7 +217,7 @@ export default async function EstatisticasModeracaoPage({
         motivos={motivosDeRevisao(logs)}
       />
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-10 lg:grid-cols-2 lg:items-start">
         <DenunciasDoPeriodo resumo={resumirDenuncias(dados.denuncias)} />
         <ConsumoDoModelo consumo={consumoDoModelo(logs)} />
       </div>

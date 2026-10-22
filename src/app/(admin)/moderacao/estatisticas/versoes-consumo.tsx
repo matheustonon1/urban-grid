@@ -1,10 +1,9 @@
 import { useLocale, useTranslations } from "next-intl";
 
+import { Secao } from "@/components/ui/secao";
 import type { Consumo, LinhaVersao } from "@/lib/moderacao/estatisticas";
 import { formatarData } from "@/lib/util/formatarData";
 import { formatarLatencia, formatarNumero, formatarPorcentagem } from "@/lib/util/formatarEstatistica";
-
-import { SecaoEstatistica } from "./partes";
 
 export function VersoesDoPrompt({ linhas }: { linhas: LinhaVersao[] }) {
   const t = useTranslations("Estatisticas");
@@ -21,7 +20,7 @@ export function VersoesDoPrompt({ linhas }: { linhas: LinhaVersao[] }) {
   ];
 
   return (
-    <SecaoEstatistica id="versoes" titulo={t("versoesTitulo")} descricao={t("versoesDescricao")}>
+    <Secao id="versoes" titulo={t("versoesTitulo")} descricao={t("versoesDescricao")}>
       <div className="-mx-1 overflow-x-auto px-1">
         <table className="w-full min-w-136 text-left text-sm tabular-nums">
           <thead className="text-xs text-ink-muted">
@@ -55,7 +54,7 @@ export function VersoesDoPrompt({ linhas }: { linhas: LinhaVersao[] }) {
           </tbody>
         </table>
       </div>
-    </SecaoEstatistica>
+    </Secao>
   );
 }
 
@@ -83,7 +82,7 @@ export function ConsumoDoModelo({ consumo }: { consumo: Consumo }) {
   ];
 
   return (
-    <SecaoEstatistica id="consumo" titulo={t("consumoTitulo")} descricao={t("consumoDescricao")}>
+    <Secao id="consumo" titulo={t("consumoTitulo")} descricao={t("consumoDescricao")}>
       <div className="flex flex-col gap-5">
         {grupos.map(({ titulo, itens }) => (
           <div key={titulo} className="flex flex-col gap-2">
@@ -103,6 +102,6 @@ export function ConsumoDoModelo({ consumo }: { consumo: Consumo }) {
           </div>
         ))}
       </div>
-    </SecaoEstatistica>
+    </Secao>
   );
 }

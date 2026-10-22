@@ -28,14 +28,14 @@ export function Kpis({
   descricaoComparacao: string;
 }) {
   return (
-    <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-line bg-line shadow-sm lg:grid-cols-4">
+    <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-line bg-line lg:grid-cols-4">
       {itens.map(({ rotulo, valor, variacao, detalhe }) => {
         const Seta = variacao ? SETA[variacao.direcao] : null;
         return (
-          <div key={rotulo} className="flex flex-col gap-1 bg-surface px-4 py-4">
-            <dt className="text-xs font-medium text-ink-muted">{rotulo}</dt>
+          <div key={rotulo} className="flex flex-col gap-2 bg-surface px-5 py-5">
+            <dt className="kicker">{rotulo}</dt>
             <dd className="flex flex-col gap-1">
-              <span className="font-mono text-3xl font-semibold tabular-nums text-ink">
+              <span className="font-mono text-4xl font-medium tabular-nums text-ink">
                 {valor}
               </span>
               {variacao && Seta && (

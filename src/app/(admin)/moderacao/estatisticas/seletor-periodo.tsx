@@ -17,7 +17,7 @@ export function SeletorPeriodo({ atual }: { atual: ChavePeriodo }) {
   return (
     <nav
       aria-label={t("periodoRotulo")}
-      className="inline-flex rounded-lg border border-line bg-sunken p-0.5"
+      className="inline-flex rounded-md border border-line-strong bg-surface p-0.5"
     >
       {PERIODOS.map(({ chave }) => {
         const ativo = chave === atual;
@@ -26,10 +26,10 @@ export function SeletorPeriodo({ atual }: { atual: ChavePeriodo }) {
             key={chave}
             href={`/moderacao/estatisticas?dias=${chave}`}
             aria-current={ativo ? "true" : undefined}
-            className={`rounded-md px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand ${
+            className={`rounded-[5px] px-3 py-1.5 text-sm font-semibold whitespace-nowrap transition-colors focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-brand ${
               ativo
-                ? "bg-surface text-ink shadow-sm"
-                : "text-ink-muted hover:text-ink"
+                ? "bg-ink text-paper"
+                : "text-ink-muted hover:bg-sunken hover:text-ink"
             }`}
           >
             {t(ROTULOS[chave])}

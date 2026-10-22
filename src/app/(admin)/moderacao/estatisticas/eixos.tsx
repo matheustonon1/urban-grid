@@ -1,9 +1,8 @@
 import { useLocale, useTranslations } from "next-intl";
 
+import { Secao } from "@/components/ui/secao";
 import type { DisparoPorEixo } from "@/lib/moderacao/estatisticas";
 import { formatarNumero, formatarPorcentagem } from "@/lib/util/formatarEstatistica";
-
-import { SecaoEstatistica } from "./partes";
 
 export interface GrupoDeEixos {
   tipo: "RECLAMACAO" | "COMENTARIO";
@@ -20,7 +19,7 @@ export function EixosQueDisparam({ grupos }: { grupos: GrupoDeEixos[] }) {
   const locale = useLocale();
 
   return (
-    <SecaoEstatistica id="eixos" titulo={t("eixosTitulo")} descricao={t("eixosDescricao")}>
+    <Secao id="eixos" titulo={t("eixosTitulo")} descricao={t("eixosDescricao")}>
       <div className="grid gap-x-10 gap-y-7 lg:grid-cols-2">
         {grupos.map(({ tipo, corte, dados }) => (
           <div key={tipo} className="flex min-w-0 flex-col gap-3">
@@ -71,6 +70,6 @@ export function EixosQueDisparam({ grupos }: { grupos: GrupoDeEixos[] }) {
           </div>
         ))}
       </div>
-    </SecaoEstatistica>
+    </Secao>
   );
 }

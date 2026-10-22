@@ -1,42 +1,6 @@
-import type { ReactNode } from "react";
 import { useTranslations } from "next-intl";
 
 import { COR_DECISAO } from "@/components/moderacao/barra-decisoes";
-import { cartaoSecao } from "@/lib/estilos";
-
-// Bloco de uma estatística: título, uma linha do que ela mede e o conteúdo.
-// `lateral` fica à direita do título (um número-resumo, um filtro).
-export function SecaoEstatistica({
-  id,
-  titulo,
-  descricao,
-  lateral,
-  children,
-}: {
-  id: string;
-  titulo: string;
-  descricao?: ReactNode;
-  lateral?: ReactNode;
-  children: ReactNode;
-}) {
-  return (
-    <section aria-labelledby={`${id}-titulo`} className={`flex min-w-0 flex-col gap-5 ${cartaoSecao}`}>
-      <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-2">
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <h2
-            id={`${id}-titulo`}
-            className="font-display text-lg font-semibold tracking-tight text-ink"
-          >
-            {titulo}
-          </h2>
-          {descricao && <p className="max-w-prose text-sm text-ink-muted">{descricao}</p>}
-        </div>
-        {lateral}
-      </header>
-      {children}
-    </section>
-  );
-}
 
 // Todo gráfico tem um gêmeo em tabela: quem não enxerga cor, usa leitor de
 // tela ou quer copiar os números encontra o mesmo dado aqui.
