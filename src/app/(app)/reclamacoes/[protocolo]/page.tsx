@@ -179,9 +179,11 @@ export default async function ReclamacaoPage({
 
   // A ação principal da coluna lateral depende de quem está olhando: quem
   // não é o autor confirma ("também sofro"); visitante deslogado é chamado
-  // a entrar; o autor não confirma a própria reclamação.
+  // a entrar; o autor não confirma a própria reclamação e uma conta de órgão
+  // tampouco - o retorno dela é a resposta oficial, não um "também sofro".
   const acaoConfirmar = session?.user ? (
-    !ehAutor && (
+    !ehAutor &&
+    session.user.papel !== "ORGAO" && (
       <FormularioAcao action={alternarConfirmacao.bind(null, reclamacao.id, protocolo)}>
         <BotaoAcao
           pressionado={jaConfirmou}

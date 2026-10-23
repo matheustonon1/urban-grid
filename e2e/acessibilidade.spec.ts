@@ -1,7 +1,17 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
-import { confirmarDialogo, criarAdminTeste, criarCidadaoTeste, limparDadosTeste } from "./helpers";
+import {
+  apagarLogsDeModeracao,
+  confirmarDialogo,
+  criarAdminTeste,
+  criarCidadaoTeste,
+  criarOrgaoNoRanking,
+  criarOrgaoTeste,
+  criarReclamacaoTeste,
+  limparDadosTeste,
+} from "./helpers";
+import { prisma } from "@/lib/prisma";
 
 // Varredura automática de acessibilidade (axe-core) nas telas principais, nos
 // dois temas. Pega o que máquina consegue pegar - contraste, campo sem rótulo,
@@ -82,6 +92,46 @@ for (const tema of TEMAS) {
     for (const rota of ["/painel", "/painel/conta", "/reclamacoes/nova"]) {
       await page.goto(rota, { waitUntil: "networkidle" });
       expect(await violacoesGraves(page), rota).toEqual([]);
+    }
+  });
+
+  // As páginas com ranking de órgãos só têm linhas para medir quando existe um órgão que
+  // respondeu: com o banco vazio o contraste dos números do ranking nunca era avaliado.
+  test(`home e transparência com órgão no ranking não têm violação grave (${tema})`, async ({
+    page,
+  }) => {
+    const cidade = await prisma.cidade.findFirstOrThrow();
+    await criarOrgaoNoRanking(cidade.id);
+    await escolherTema(page, tema);
+
+    for (const rota of ["/", "/transparencia"]) {
+      await page.goto(rota, { waitUntil: "networkidle" });
+      expect(await violacoesGraves(page), rota).toEqual([]);
+    }
+  });
+
+  // O painel do órgão (cartões com formulário recolhido) e a reclamação vista por quem
+  // atende: o formulário de resposta aberto também entra na varredura.
+  test(`painel do órgão e reclamação vista pelo órgão não têm violação grave (${tema})`, async ({
+    page,
+  }) => {
+    const cidade = await prisma.cidade.findFirstOrThrow();
+    const { usuario: autor } = await criarCidadaoTeste();
+    const reclamacao = await criarReclamacaoTeste(autor.id, { cidadeId: cidade.id });
+    const { email, senha } = await criarOrgaoTeste(cidade.id);
+    await escolherTema(page, tema);
+    await entrar(page, email, senha);
+
+    try {
+      await page.goto("/orgao", { waitUntil: "networkidle" });
+      await page.locator("summary", { hasText: "Responder" }).first().click();
+      expect(await violacoesGraves(page), "/orgao").toEqual([]);
+
+      await page.goto(`/reclamacoes/${reclamacao.protocolo}`, { waitUntil: "networkidle" });
+      expect(await violacoesGraves(page), "detalhe").toEqual([]);
+    } finally {
+      await apagarLogsDeModeracao({ id: reclamacao.id });
+      await prisma.reclamacao.delete({ where: { id: reclamacao.id } });
     }
   });
 

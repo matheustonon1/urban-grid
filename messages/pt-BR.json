@@ -209,6 +209,12 @@
     "erroJaAssina": "Você já assina esta combinação de cidade e categoria."
   },
   "PainelOrgao": {
+    "semResposta": "Sem resposta · publicada {tempo}",
+    "ultimaResposta": "Última resposta {tempo}",
+    "prazo": "Prazo: {data}",
+    "prazoVencido": "Prazo vencido em {data}",
+    "confirmacoes": "{count, plural, =0 {Nenhuma confirmação} one {# confirmação} other {# confirmações}}",
+    "responder": "Responder",
     "kicker": "Painel do órgão",
     "titulo": "Painel do órgão",
     "atende": "Atende: {categorias}",
@@ -913,6 +919,7 @@
     "OUTRO": "Outro"
   },
   "ReclamacaoDetalhe": {
+    "erroConfirmarOrgao": "Contas de órgão não confirmam reclamações: o seu retorno é a resposta oficial.",
     "confirmou": "Você confirmou que também sofre com isso. Obrigado.",
     "confirmacaoRemovida": "Sua confirmação foi removida.",
     "erroConfirmar": "Não foi possível registrar sua confirmação nesta reclamação.",

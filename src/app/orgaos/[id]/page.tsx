@@ -44,6 +44,9 @@ export default async function OrgaoPage({ params }: PageProps<"/orgaos/[id]">) {
     prisma.respostaOficial.findMany({
       where: { orgaoId: orgao.id },
       orderBy: { createdAt: "desc" },
+      // Uma linha por reclamação (a resposta mais recente): uma reclamação respondida
+      // duas vezes aparecia repetida na lista.
+      distinct: ["reclamacaoId"],
       take: 10,
       include: { reclamacao: { select: { titulo: true, protocolo: true, status: true } } },
     }),

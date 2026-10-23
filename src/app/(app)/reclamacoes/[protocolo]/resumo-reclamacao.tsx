@@ -19,13 +19,16 @@ function Fato({
   rotulo: string;
   children: ReactNode;
 }) {
+  // Só dt e dd dentro do <div>: um <dl> não aceita outro filho (o ícone vai DENTRO do
+  // dt, decorativo) - o leitor de tela e a varredura de acessibilidade tratam a lista
+  // como pares termo/descrição.
   return (
-    <div className="flex gap-3">
-      <span className="mt-0.5 shrink-0 text-ink-muted">{icone}</span>
-      <div className="flex min-w-0 flex-col">
-        <dt className="text-xs text-ink-muted">{rotulo}</dt>
-        <dd className="text-sm text-ink">{children}</dd>
-      </div>
+    <div className="flex min-w-0 flex-col gap-0.5">
+      <dt className="flex items-center gap-2 text-xs text-ink-muted">
+        <span className="shrink-0">{icone}</span>
+        {rotulo}
+      </dt>
+      <dd className="pl-6 text-sm text-ink">{children}</dd>
     </div>
   );
 }

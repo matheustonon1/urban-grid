@@ -43,6 +43,11 @@ export async function alternarConfirmacao(
   ) {
     return falha(t("erroConfirmar"));
   }
+  // Conta de órgão não confirma reclamação de cidadão: a tela já esconde o botão, e o
+  // servidor recusa mesmo assim (um POST forjado não pode inflar a contagem).
+  if (usuario?.papel === "ORGAO") {
+    return falha(t("erroConfirmarOrgao"));
+  }
   if (usuario && precisaVerificarEmail(usuario)) {
     redirect(`/reclamacoes/${protocolo}?erro=email-nao-verificado`);
   }

@@ -5,6 +5,7 @@ import { CircleCheck, MessageSquareText } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
 import { StatusBadge } from "@/components/reclamacao/status-badge";
+import { Etiqueta, type TomEtiqueta } from "@/components/ui/etiqueta";
 import { Paginacao } from "@/components/ui/paginacao";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/util/paginacao";
 import {
@@ -18,6 +19,8 @@ import {
 } from "@/lib/estilos";
 import { calcularMetricasOrgao, classificarIndice } from "@/lib/orgaos/reputacaoOrgao";
 import { metadataDaPagina } from "@/lib/metadata";
+import { formatarData } from "@/lib/util/formatarData";
+import { formatarTempoRelativo } from "@/lib/util/tempo-relativo";
 import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
 import { EstadoVazio } from "@/components/ui/estado-vazio";
 import { Secao } from "@/components/ui/secao";
@@ -65,7 +68,16 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
       ? prisma.reclamacao.findMany({
           where: filtroPendentes,
           orderBy: { publicadaEm: "asc" },
-          include: { categoria: true },
+          include: {
+            categoria: true,
+            _count: { select: { confirmacoes: true } },
+            // A última resposta oficial (de qualquer órgão): quando foi e que prazo deu.
+            respostas: {
+              orderBy: { createdAt: "desc" },
+              take: 1,
+              select: { createdAt: true, prazoEstimado: true },
+            },
+          },
           skip: calcularSkip(paginaPendentes),
           take: ITENS_POR_PAGINA,
         })
@@ -106,6 +118,15 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
     ? classificarIndice(metricas.indiceResolucao, metricas.totalRespondidas)
     : null;
 
+  const agora = new Date();
+  const DIA_MS = 86_400_000;
+  // Quanto uma reclamação SEM resposta já esperou: neutro na primeira semana, âmbar
+  // até a segunda, vermelho depois - o órgão vê de relance o que está vencendo.
+  const tomDaEspera = (desde: Date): TomEtiqueta => {
+    const dias = (agora.getTime() - desde.getTime()) / DIA_MS;
+    return dias >= 15 ? "erro" : dias >= 7 ? "atencao" : "neutro";
+  };
+
   return (
     <main className={pagina}>
       <CabecalhoPagina
@@ -126,64 +147,103 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
               <EstadoVazio icone={CircleCheck} titulo={t("nenhumaPendente")} />
             )}
 
-            {pendentes.map((reclamacao) => (
-              <article key={reclamacao.id} className={`flex flex-col gap-4 ${cartaoSecao}`}>
-                <header className="flex flex-col gap-1.5">
-                  <p className="kicker">
-                    {reclamacao.protocolo} · {reclamacao.categoria.nome}
-                  </p>
-                  <h3 className="text-lg leading-snug font-extrabold tracking-tight text-ink">
-                    {reclamacao.titulo}
-                  </h3>
-                  <p className="text-sm text-ink-muted">{reclamacao.endereco}</p>
-                </header>
-                <p className="leading-relaxed text-ink-2">{reclamacao.descricao}</p>
+            {pendentes.map((reclamacao) => {
+              const publicadaEm = reclamacao.publicadaEm ?? reclamacao.createdAt;
+              const ultimaResposta = reclamacao.respostas[0];
+              const prazo = ultimaResposta?.prazoEstimado;
 
-                <FormularioAcao
-                  action={responderReclamacao.bind(null, reclamacao.id, reclamacao.protocolo)}
-                  limparAoSucesso
-                  className="flex flex-col gap-4 border-t border-line pt-4"
-                >
-                  <Campo id={`resposta-${reclamacao.id}`} rotulo={tResp("respostaOficial")}>
-                    <textarea
-                      id={`resposta-${reclamacao.id}`}
-                      name="texto"
-                      required
-                      minLength={10}
-                      rows={3}
-                      className={campoInput}
-                    />
-                  </Campo>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <Campo id={`status-${reclamacao.id}`} rotulo={tResp("statusRotulo")}>
-                      <select
-                        id={`status-${reclamacao.id}`}
-                        name="novoStatus"
-                        defaultValue=""
-                        className={campoInput}
-                      >
-                        <option value="">{tResp("manterStatus")}</option>
-                        <option value="EM_ANDAMENTO">{tResp("marcarEmAndamento")}</option>
-                        <option value="RESOLVIDA">{tResp("marcarResolvida")}</option>
-                      </select>
-                    </Campo>
-                    <Campo
-                      id={`prazo-${reclamacao.id}`}
-                      rotulo={tResp("prazoRotulo")}
-                      opcional={tResp("opcional")}
+              return (
+                <article key={reclamacao.id} className={`flex flex-col gap-4 ${cartaoSecao}`}>
+                  <header className="flex flex-col gap-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <StatusBadge status={reclamacao.status} />
+                      {ultimaResposta ? (
+                        <Etiqueta tom="apagado">
+                          {t("ultimaResposta", {
+                            tempo: formatarTempoRelativo(ultimaResposta.createdAt, locale),
+                          })}
+                        </Etiqueta>
+                      ) : (
+                        <Etiqueta tom={tomDaEspera(publicadaEm)}>
+                          {t("semResposta", { tempo: formatarTempoRelativo(publicadaEm, locale) })}
+                        </Etiqueta>
+                      )}
+                      {prazo && (
+                        <Etiqueta tom={prazo < agora ? "erro" : "neutro"}>
+                          {prazo < agora
+                            ? t("prazoVencido", { data: formatarData(prazo, locale) })
+                            : t("prazo", { data: formatarData(prazo, locale) })}
+                        </Etiqueta>
+                      )}
+                    </div>
+                    <p className="kicker">
+                      {reclamacao.protocolo} · {reclamacao.categoria.nome}
+                    </p>
+                    <h3 className="text-lg leading-snug font-extrabold tracking-tight text-ink">
+                      <Link href={`/reclamacoes/${reclamacao.protocolo}`} className="hover:text-brand">
+                        {reclamacao.titulo}
+                      </Link>
+                    </h3>
+                    <p className="text-sm text-ink-muted">
+                      {reclamacao.endereco} · {t("confirmacoes", { count: reclamacao._count.confirmacoes })}
+                    </p>
+                  </header>
+                  <p className="line-clamp-3 leading-relaxed text-ink-2">{reclamacao.descricao}</p>
+
+                  {/* O formulário fica recolhido: sete reclamações com sete formulários abertos
+                      faziam do painel uma página de rolagem sem fim. */}
+                  <details className="group border-t border-line pt-4">
+                    <summary className={`${botaoPrimario} w-fit cursor-pointer list-none`}>
+                      {t("responder")}
+                    </summary>
+                    <FormularioAcao
+                      action={responderReclamacao.bind(null, reclamacao.id, reclamacao.protocolo)}
+                      limparAoSucesso
+                      recolherAoSucesso
+                      className="animate-fade-in mt-4 flex flex-col gap-4"
                     >
-                      <input
-                        id={`prazo-${reclamacao.id}`}
-                        type="date"
-                        name="prazoEstimado"
-                        className={campoInput}
-                      />
-                    </Campo>
-                  </div>
-                  <BotaoAcao className={`${botaoPrimario} w-fit`}>{tResp("enviarResposta")}</BotaoAcao>
-                </FormularioAcao>
-              </article>
-            ))}
+                      <Campo id={`resposta-${reclamacao.id}`} rotulo={tResp("respostaOficial")}>
+                        <textarea
+                          id={`resposta-${reclamacao.id}`}
+                          name="texto"
+                          required
+                          minLength={10}
+                          rows={3}
+                          className={campoInput}
+                        />
+                      </Campo>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <Campo id={`status-${reclamacao.id}`} rotulo={tResp("statusRotulo")}>
+                          <select
+                            id={`status-${reclamacao.id}`}
+                            name="novoStatus"
+                            defaultValue=""
+                            className={campoInput}
+                          >
+                            <option value="">{tResp("manterStatus")}</option>
+                            <option value="EM_ANDAMENTO">{tResp("marcarEmAndamento")}</option>
+                            <option value="RESOLVIDA">{tResp("marcarResolvida")}</option>
+                          </select>
+                        </Campo>
+                        <Campo
+                          id={`prazo-${reclamacao.id}`}
+                          rotulo={tResp("prazoRotulo")}
+                          opcional={tResp("opcional")}
+                        >
+                          <input
+                            id={`prazo-${reclamacao.id}`}
+                            type="date"
+                            name="prazoEstimado"
+                            className={campoInput}
+                          />
+                        </Campo>
+                      </div>
+                      <BotaoAcao className={`${botaoPrimario} w-fit`}>{tResp("enviarResposta")}</BotaoAcao>
+                    </FormularioAcao>
+                  </details>
+                </article>
+              );
+            })}
 
             <Paginacao
               paginaAtual={paginaPendentes}

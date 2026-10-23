@@ -78,6 +78,18 @@ Uma conta de teste sobe de papel direto no banco (`prisma.user.update`) quando o
 papel não é o assunto do teste. `limparDadosTeste` apaga também o registro de
 auditoria dessas contas.
 
+## Banco vazio esconde defeito de lista
+
+O banco dos testes quase não tem dados, então uma lista que só aparece com dados reais
+(ranking de órgãos, painel do órgão com cartões, nomes longos) nunca é renderizada - e o
+estouro de largura em 375 px, o contraste de um número ou o `<dl>` malformado passam. Dois
+casos já pegos só depois de semear dados de demonstração (`npm run db:seed:demo`): o nome
+longo de órgão no ranking da home alargava a coluna do grid, e os números do ranking em
+`/transparencia` tinham pouco contraste. Para uma tela com lista, crie o dado no próprio
+teste (`criarOrgaoNoRanking` em `e2e/helpers.ts` é o modelo) e rode a varredura de
+acessibilidade e a de largura em cima dele. Filho de `grid` precisa de `min-w-0` quando o
+conteúdo tem `truncate`.
+
 ## Armadilhas que já custaram horas
 
 1. **Limite por IP em memória.** O servidor guarda contadores (ex.: 5 pedidos de

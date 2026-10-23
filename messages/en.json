@@ -209,6 +209,12 @@
     "erroJaAssina": "You already follow this city/category combination."
   },
   "PainelOrgao": {
+    "semResposta": "Unanswered · published {tempo}",
+    "ultimaResposta": "Last reply {tempo}",
+    "prazo": "Deadline: {data}",
+    "prazoVencido": "Deadline passed on {data}",
+    "confirmacoes": "{count, plural, =0 {No confirmations} one {# confirmation} other {# confirmations}}",
+    "responder": "Reply",
     "kicker": "Agency panel",
     "titulo": "Department dashboard",
     "atende": "Covers: {categorias}",
@@ -913,6 +919,7 @@
     "OUTRO": "Other"
   },
   "ReclamacaoDetalhe": {
+    "erroConfirmarOrgao": "Agency accounts don't confirm complaints: your reply is the official answer.",
     "confirmou": "You confirmed you're affected too. Thank you.",
     "confirmacaoRemovida": "Your confirmation was removed.",
     "erroConfirmar": "We couldn't record your confirmation on this complaint.",
