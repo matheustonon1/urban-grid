@@ -6,6 +6,7 @@ import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import { atencao, falha, informacao, sucesso, type ResultadoAcao } from "@/lib/acoes/resultado";
+import { registrarAuditoria } from "@/lib/auditoria";
 import { enviarEmailCidadeAprovada, enviarEmailSolicitacaoCidadeRejeitada } from "@/lib/email";
 import { idiomaOuPadrao } from "@/i18n/config";
 import { slugificar } from "@/lib/util/slug";
@@ -57,7 +58,7 @@ export async function aprovarSolicitacaoCidade(
         return { ok: false as const, motivo: "decidida" as const };
       }
 
-      await tx.cidade.create({
+      const cidade = await tx.cidade.create({
         data: {
           nome: solicitacao.nomeCidade,
           slug: `${slugificar(solicitacao.nomeCidade)}-${solicitacao.uf.toLowerCase()}`,
@@ -65,6 +66,17 @@ export async function aprovarSolicitacaoCidade(
           estadoId: estado.id,
         },
       });
+
+      await registrarAuditoria(
+        {
+          acao: "SOLICITACAO_CIDADE_APROVADA",
+          atorId: session.user.id,
+          alvoTipo: "SOLICITACAO_CIDADE",
+          alvoId: solicitacaoId,
+          detalhes: { cidadeId: cidade.id },
+        },
+        tx
+      );
 
       return { ok: true as const };
     })
@@ -118,16 +130,31 @@ export async function rejeitarSolicitacaoCidade(
 
   // updateMany com status:PENDENTE na condição - mesma guarda atômica de
   // aprovarSolicitacaoCidade() (ver comentário lá).
-  const atualizacao = await prisma.solicitacaoCidade.updateMany({
-    where: { id: solicitacaoId, status: "PENDENTE" },
-    data: {
-      status: "REJEITADA",
-      motivoRejeicao: validado.data.motivo,
-      analisadoPorId: session.user.id,
-      analisadoEm: new Date(),
-    },
+  const rejeitada = await prisma.$transaction(async (tx) => {
+    const atualizacao = await tx.solicitacaoCidade.updateMany({
+      where: { id: solicitacaoId, status: "PENDENTE" },
+      data: {
+        status: "REJEITADA",
+        motivoRejeicao: validado.data.motivo,
+        analisadoPorId: session.user.id,
+        analisadoEm: new Date(),
+      },
+    });
+    if (atualizacao.count === 0) {
+      return false;
+    }
+    await registrarAuditoria(
+      {
+        acao: "SOLICITACAO_CIDADE_REJEITADA",
+        atorId: session.user.id,
+        alvoTipo: "SOLICITACAO_CIDADE",
+        alvoId: solicitacaoId,
+      },
+      tx
+    );
+    return true;
   });
-  if (atualizacao.count === 0) {
+  if (!rejeitada) {
     return informacao(t("jaDecidida"));
   }
 

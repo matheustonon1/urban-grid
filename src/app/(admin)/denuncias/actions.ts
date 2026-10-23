@@ -6,6 +6,7 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { exigirConfirmacaoDeSenha } from "@/lib/acoes/confirmarSenha";
 import { falha, informacao, sucesso, type ResultadoAcao } from "@/lib/acoes/resultado";
+import { registrarAuditoria } from "@/lib/auditoria";
 import { criarNotificacao } from "@/lib/notificacoes";
 import { formatarData } from "@/lib/util/formatarData";
 
@@ -252,9 +253,20 @@ export async function banirAutor(denunciaId: string, formData: FormData): Promis
   const novoFim = new Date(Date.now() + dias * DIA_MS);
   const fim = atual?.banidoAte && atual.banidoAte > novoFim ? atual.banidoAte : novoFim;
 
-  await prisma.user.update({
-    where: { id: autor.id },
-    data: { banidoAte: fim },
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({
+      where: { id: autor.id },
+      data: { banidoAte: fim },
+    });
+    await registrarAuditoria(
+      {
+        acao: "BANIMENTO_APLICADO",
+        atorId: session.user.id,
+        alvoUserId: autor.id,
+        detalhes: { duracao, ate: fim.toISOString(), denunciaId: denuncia.id },
+      },
+      tx
+    );
   });
 
   const nome = autor.name ?? autor.email;

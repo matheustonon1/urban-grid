@@ -6,6 +6,7 @@ import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import { falha, informacao, sucesso, type ResultadoAcao } from "@/lib/acoes/resultado";
+import { registrarAuditoria } from "@/lib/auditoria";
 import { criarTokenVerificacao, enviarEmailAcessoOrgao } from "@/lib/email";
 import { idiomaOuPadrao } from "@/i18n/config";
 
@@ -150,7 +151,7 @@ export async function alternarAtivoOrgao(
   orgaoId: string,
   novoAtivo: boolean
 ): Promise<ResultadoAcao> {
-  await exigirAdmin();
+  const session = await exigirAdmin();
   const t = await getTranslations("OrgaosCategorias");
 
   const orgao = await prisma.orgao.findUnique({
@@ -163,14 +164,29 @@ export async function alternarAtivoOrgao(
 
   // Só grava se o estado atual for o OPOSTO do pedido: dois admins desativando o
   // mesmo órgão (ou um clique em tela desatualizada) viram "nada foi alterado".
-  const atualizacao = await prisma.orgao.updateMany({
-    where: { id: orgaoId, ativo: !novoAtivo },
-    data: { ativo: novoAtivo },
+  const alterado = await prisma.$transaction(async (tx) => {
+    const atualizacao = await tx.orgao.updateMany({
+      where: { id: orgaoId, ativo: !novoAtivo },
+      data: { ativo: novoAtivo },
+    });
+    if (atualizacao.count === 0) {
+      return false;
+    }
+    await registrarAuditoria(
+      {
+        acao: novoAtivo ? "ORGAO_REATIVADO" : "ORGAO_DESATIVADO",
+        atorId: session.user.id,
+        alvoTipo: "ORGAO",
+        alvoId: orgaoId,
+      },
+      tx
+    );
+    return true;
   });
 
   revalidatePath("/orgaos-categorias");
 
-  if (atualizacao.count === 0) {
+  if (!alterado) {
     return informacao(t("orgaoJaNoEstado"));
   }
   return sucesso(t(novoAtivo ? "orgaoReativado" : "orgaoDesativado", { nome: orgao.nome }));

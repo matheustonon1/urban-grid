@@ -84,6 +84,15 @@ test("papel: senha errada fica no diálogo e não altera; a certa conclui, avisa
     where: { userId: usuario.id, tipo: "CONTA_SEGURANCA" },
   });
   expect(aviso?.titulo).toBe("Seu papel na plataforma mudou");
+
+  // Ficou registrado quem mudou, de qual papel para qual - a senha errada não gerou nada.
+  const registros = await prisma.registroAuditoria.findMany({ where: { alvoUserId: usuario.id } });
+  expect(registros).toHaveLength(1);
+  expect(registros[0]).toMatchObject({
+    acao: "PAPEL_ALTERADO",
+    atorId: (await prisma.user.findUniqueOrThrow({ where: { email: emailAdmin } })).id,
+    detalhes: { de: "CIDADAO", para: "MODERADOR" },
+  });
 });
 
 test("papel: Cancelar e Esc fecham o diálogo sem alterar nada", async ({ page }) => {
@@ -159,6 +168,12 @@ test("banir: 7 dias não pede senha; permanente pede, e a senha errada não bane
   expect(banido.banidoAte!.getTime()).toBeGreaterThan(Date.now() + 50 * 365 * 24 * 3600 * 1000);
   const fechada = await prisma.denuncia.findUniqueOrThrow({ where: { id: denuncia.id } });
   expect(fechada.status).toBe("PROCEDENTE");
+
+  const registro = await prisma.registroAuditoria.findFirstOrThrow({
+    where: { alvoUserId: autor.id },
+  });
+  expect(registro.acao).toBe("BANIMENTO_APLICADO");
+  expect(registro.detalhes).toMatchObject({ duracao: "permanente", denunciaId: denuncia.id });
 });
 
 test("banir: o servidor recusa banir um administrador e a denúncia continua aberta", async ({
@@ -217,3 +232,33 @@ test("denunciar: quem denuncia recebe a confirmação de que a denúncia foi env
 
   await expect(page.getByText("Denúncia enviada. A moderação vai analisar o caso.")).toBeVisible();
 });
+
+test("auditoria: o admin vê quem mudou o papel; quem só modera é mandado de volta", async ({
+  page,
+}) => {
+  const { email: emailAdmin, senha: senhaAdmin } = await criarAdminTeste();
+  const { usuario, email } = await criarCidadaoTeste();
+
+  await login(page, emailAdmin, senhaAdmin);
+  const linha = await abrirLinhaDoUsuario(page, email);
+  await linha.locator('select[name="papel"]').selectOption("MODERADOR");
+  await linha.getByRole("button", { name: "Salvar" }).click();
+  await confirmarDialogo(page, "Alterar para Moderador", senhaAdmin);
+  await expect(page.getByText(/Papel de .* alterado para Moderador/)).toBeVisible();
+
+  await page.goto("/auditoria");
+  const registro = page.locator("li").filter({ hasText: "Papel alterado" }).first();
+  await expect(registro).toContainText("Cidadão → Moderador");
+  await expect(registro).toContainText("Admin E2E");
+
+  // O recém-promovido é moderador, não admin: a tela de auditoria não é dele. Sai da
+  // página antes de limpar os cookies: num build de produção os <Link> pré-buscam
+  // rotas e a resposta de um prefetch em voo reemite o cookie depois do clearCookies.
+  await page.goto("about:blank");
+  await page.context().clearCookies();
+  await login(page, email, "SenhaForte123");
+  await page.goto("/auditoria");
+  await expect(page).toHaveURL(/\/painel$/);
+  expect(usuario.id).toBeTruthy();
+});
+

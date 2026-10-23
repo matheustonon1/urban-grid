@@ -225,6 +225,11 @@ export async function limparDadosTeste() {
     if (userIds.length > 0) {
       await prisma.totpBackupCode.deleteMany({ where: { userId: { in: userIds } } });
       await prisma.notificacao.deleteMany({ where: { userId: { in: userIds } } });
+      // O registro de auditoria sobrevive a contas apagadas (FK com SetNull) - para o
+      // teste isso é lixo acumulando, então sai junto com os usuários de teste.
+      await prisma.registroAuditoria.deleteMany({
+        where: { OR: [{ atorId: { in: userIds } }, { alvoUserId: { in: userIds } }] },
+      });
       await prisma.respostaOficial.deleteMany({ where: { autorId: { in: userIds } } });
       // Denuncia.denunciante/analisadoPor não tem onDelete: Cascade - sem
       // isso, o deleteMany de User abaixo falha por FK sempre que um teste

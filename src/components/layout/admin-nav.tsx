@@ -11,6 +11,7 @@ import {
   ListChecks,
   MapPinPlus,
   MessageSquareOff,
+  ScrollText,
   ShieldCheck,
   Users,
 } from "lucide-react";
@@ -36,6 +37,7 @@ const ITENS_ADMIN: ItemNav[] = [
   { href: "/orgaos-categorias", chave: "categorias", icone: ListChecks },
   { href: "/banimentos", chave: "banimentos", icone: Ban },
   { href: "/usuarios", chave: "usuarios", icone: Users },
+  { href: "/auditoria", chave: "auditoria", icone: ScrollText },
 ];
 
 export function AdminNav({
@@ -49,9 +51,11 @@ export function AdminNav({
   const t = useTranslations("AdminNav");
   const pathname = usePathname();
   const itens = ehAdmin ? [...ITENS_MODERADOR, ...ITENS_ADMIN] : ITENS_MODERADOR;
-  // Com as nove abas do admin os ícones não cabem na largura do site (6xl):
-  // sem eles a faixa inteira aparece sem rolar, e o texto já identifica a aba.
+  // Com as dez abas do admin nem os ícones nem o respiro folgado cabem na largura do
+  // site (6xl): sem eles, e com o recuo apertado, a faixa inteira aparece sem rolar,
+  // e o texto já identifica a aba.
   const comIcones = itens.length <= 6;
+  const compacto = itens.length > 9;
   const navRef = useRef<HTMLElement>(null);
   const ativoRef = useRef<HTMLAnchorElement>(null);
 
@@ -88,7 +92,7 @@ export function AdminNav({
       // dos links, pro cálculo de auto-scroll abaixo ser preciso.
       className="scrollbar-none relative mb-2 overflow-x-auto border-b border-line"
     >
-      <div className="flex w-max min-w-full flex-nowrap justify-start gap-1">
+      <div className={`flex w-max min-w-full flex-nowrap justify-start ${compacto ? "" : "gap-1"}`}>
         {itens.map((item) => {
           // "/moderacao" não pode marcar como ativo em "/moderacao/comentarios" -
           // por isso o item raiz exige correspondência exata, os demais aceitam
@@ -104,7 +108,9 @@ export function AdminNav({
               href={item.href}
               ref={ativo ? ativoRef : undefined}
               aria-current={ativo ? "page" : undefined}
-              className={`-mb-px inline-flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-3 text-sm font-medium transition-colors ${
+              className={`-mb-px inline-flex shrink-0 items-center gap-1.5 border-b-2 py-3 text-sm font-medium transition-colors ${
+                compacto ? "px-2" : "px-3"
+              } ${
                 ativo
                   ? "border-brand text-ink"
                   : "border-transparent text-ink-muted hover:border-line-strong hover:text-ink"

@@ -6,6 +6,7 @@ import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { exigirConfirmacaoDeSenha } from "@/lib/acoes/confirmarSenha";
 import { falha, informacao, sucesso, type ResultadoAcao } from "@/lib/acoes/resultado";
+import { registrarAuditoria } from "@/lib/auditoria";
 import { criarNotificacao } from "@/lib/notificacoes";
 
 import { criarAlterarPapelSchema } from "./definitions";
@@ -60,11 +61,28 @@ export async function alterarPapelUsuario(
 
   // O papel lido acima na condição: se outro admin mexeu nesta conta entre o
   // findUnique e aqui, ou ela virou conta de órgão, nada é gravado.
-  const atualizacao = await prisma.user.updateMany({
-    where: { id: userId, papel: usuario.papel },
-    data: { papel: novoPapel },
+  // A mudança e o registro de auditoria saem juntos: sem transação, uma falha entre
+  // os dois deixaria um papel alterado sem rastro de quem o alterou.
+  const aplicado = await prisma.$transaction(async (tx) => {
+    const atualizacao = await tx.user.updateMany({
+      where: { id: userId, papel: usuario.papel },
+      data: { papel: novoPapel },
+    });
+    if (atualizacao.count === 0) {
+      return false;
+    }
+    await registrarAuditoria(
+      {
+        acao: "PAPEL_ALTERADO",
+        atorId: session.user.id,
+        alvoUserId: userId,
+        detalhes: { de: usuario.papel, para: novoPapel },
+      },
+      tx
+    );
+    return true;
   });
-  if (atualizacao.count === 0) {
+  if (!aplicado) {
     return falha(t("erroUsuarioIndisponivel"));
   }
 

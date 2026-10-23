@@ -6,6 +6,7 @@ import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import { atencao, falha, informacao, sucesso, type ResultadoAcao } from "@/lib/acoes/resultado";
+import { registrarAuditoria } from "@/lib/auditoria";
 import {
   criarTokenVerificacao,
   enviarEmailAcessoOrgao,
@@ -71,7 +72,7 @@ export async function aprovarSolicitacao(solicitacaoId: string): Promise<Resulta
         },
       });
 
-      await tx.user.create({
+      const novoUsuario = await tx.user.create({
         data: {
           name: solicitacao.nomeResponsavel,
           email: solicitacao.email,
@@ -84,6 +85,18 @@ export async function aprovarSolicitacao(solicitacaoId: string): Promise<Resulta
           idioma: solicitacao.idioma,
         },
       });
+
+      await registrarAuditoria(
+        {
+          acao: "SOLICITACAO_ORGAO_APROVADA",
+          atorId: session.user.id,
+          alvoUserId: novoUsuario.id,
+          alvoTipo: "SOLICITACAO_ORGAO",
+          alvoId: solicitacaoId,
+          detalhes: { orgaoId: orgao.id },
+        },
+        tx
+      );
 
       return { ok: true as const };
     })
@@ -148,16 +161,31 @@ export async function rejeitarSolicitacao(
   // updateMany com status:PENDENTE na condição - mesma guarda atômica de
   // aprovarSolicitacao() (ver comentário lá), evitando rejeitar (e
   // mandar e-mail) uma solicitação que outro admin já aprovou/rejeitou.
-  const atualizacao = await prisma.solicitacaoOrgao.updateMany({
-    where: { id: solicitacaoId, status: "PENDENTE" },
-    data: {
-      status: "REJEITADA",
-      motivoRejeicao: validado.data.motivo,
-      analisadoPorId: session.user.id,
-      analisadoEm: new Date(),
-    },
+  const rejeitada = await prisma.$transaction(async (tx) => {
+    const atualizacao = await tx.solicitacaoOrgao.updateMany({
+      where: { id: solicitacaoId, status: "PENDENTE" },
+      data: {
+        status: "REJEITADA",
+        motivoRejeicao: validado.data.motivo,
+        analisadoPorId: session.user.id,
+        analisadoEm: new Date(),
+      },
+    });
+    if (atualizacao.count === 0) {
+      return false;
+    }
+    await registrarAuditoria(
+      {
+        acao: "SOLICITACAO_ORGAO_REJEITADA",
+        atorId: session.user.id,
+        alvoTipo: "SOLICITACAO_ORGAO",
+        alvoId: solicitacaoId,
+      },
+      tx
+    );
+    return true;
   });
-  if (atualizacao.count === 0) {
+  if (!rejeitada) {
     return informacao(t("jaDecidida"));
   }
 

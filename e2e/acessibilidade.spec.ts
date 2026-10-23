@@ -85,13 +85,25 @@ for (const tema of TEMAS) {
     }
   });
 
-  test(`fila de moderação não tem violação grave (${tema})`, async ({ page }) => {
+  test(`telas de moderação e administração não têm violação grave (${tema})`, async ({ page }) => {
     const { email, senha } = await criarAdminTeste();
     await escolherTema(page, tema);
     await entrar(page, email, senha);
 
-    await page.goto("/moderacao", { waitUntil: "networkidle" });
-    expect(await violacoesGraves(page)).toEqual([]);
+    for (const rota of [
+      "/moderacao",
+      "/moderacao/estatisticas",
+      "/denuncias",
+      "/usuarios",
+      "/banimentos",
+      "/solicitacoes-orgao",
+      "/solicitacoes-cidade",
+      "/orgaos-categorias",
+      "/auditoria",
+    ]) {
+      await page.goto(rota, { waitUntil: "networkidle" });
+      expect(await violacoesGraves(page), rota).toEqual([]);
+    }
   });
 }
 
