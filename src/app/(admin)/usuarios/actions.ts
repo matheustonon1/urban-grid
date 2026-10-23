@@ -71,8 +71,8 @@ export async function alterarPapelUsuario(
   await criarNotificacao({
     userId,
     tipo: "CONTA_SEGURANCA",
-    titulo: "Seu papel na plataforma mudou",
-    mensagem: `Sua conta agora tem o papel de ${tPapel(novoPapel)}. Se você não esperava essa mudança, fale com a administração.`,
+    // O papel vai cru (MODERADOR...) e o texto o traduz no idioma de quem recebe.
+    texto: { chave: "papelAlterado", params: { papel: novoPapel } },
   });
 
   revalidatePath("/usuarios");

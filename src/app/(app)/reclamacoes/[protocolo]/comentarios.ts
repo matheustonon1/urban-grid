@@ -105,10 +105,10 @@ export async function criarComentario(
       await criarNotificacao({
         userId: notificarId,
         tipo: "NOVO_COMENTARIO",
-        titulo: validado.data.paiId
-          ? "Responderam seu comentário"
-          : "Novo comentário na sua reclamação",
-        mensagem: validado.data.texto,
+        texto: {
+          chave: validado.data.paiId ? "respostaComentario" : "novoComentario",
+          mensagemBruta: validado.data.texto,
+        },
         reclamacaoId,
       });
     }

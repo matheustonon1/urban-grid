@@ -79,8 +79,7 @@ export async function aprovarReclamacao(reclamacaoId: string): Promise<Resultado
   await criarNotificacao({
     userId: reclamacao.autorId,
     tipo: "RECLAMACAO_PUBLICADA",
-    titulo: "Reclamação publicada",
-    mensagem: `Sua reclamação "${reclamacao.titulo}" foi publicada.`,
+    texto: { chave: "reclamacaoPublicada", params: { titulo: reclamacao.titulo } },
     reclamacaoId: reclamacao.id,
     protocolo: reclamacao.protocolo,
   });
@@ -141,8 +140,10 @@ export async function rejeitarReclamacao(
   await criarNotificacao({
     userId: reclamacao.autorId,
     tipo: "RECLAMACAO_REJEITADA",
-    titulo: "Reclamação rejeitada",
-    mensagem: `Sua reclamação "${reclamacao.titulo}" foi rejeitada: ${validado.data.motivo}`,
+    texto: {
+      chave: "reclamacaoRejeitada",
+      params: { titulo: reclamacao.titulo, motivo: validado.data.motivo },
+    },
     reclamacaoId: reclamacao.id,
     protocolo: reclamacao.protocolo,
   });

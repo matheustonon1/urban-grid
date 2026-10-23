@@ -8,6 +8,10 @@ import {
 } from "@/lib/email";
 import { idiomaOuPadrao } from "@/i18n/config";
 
+import { montarTexto, type TextoNotificacao } from "./textos";
+
+export type { ChaveNotificacao, TextoNotificacao } from "./textos";
+
 // Só os eventos que fazem sentido o cidadão saber mesmo sem estar com o
 // app aberto. NOVO_COMENTARIO fica de fora (pode ser frequente demais,
 // viraria spam) e ATIVIDADE_SUSPEITA é dirigida a moderadores/admin, não
@@ -23,18 +27,37 @@ const TIPOS_COM_EMAIL: TipoNotificacao[] = [
 export async function criarNotificacao({
   userId,
   tipo,
-  titulo,
-  mensagem,
+  texto,
   reclamacaoId,
   protocolo,
 }: {
   userId: string;
   tipo: TipoNotificacao;
-  titulo: string;
-  mensagem: string;
+  // Chave + parâmetros (ver ./textos): o texto sai no idioma de quem recebe.
+  texto: TextoNotificacao;
   reclamacaoId?: string;
   protocolo?: string;
 }) {
+  // O destinatário é lido primeiro: o idioma decide o texto do sininho e do
+  // e-mail, e a mesma leitura serve ao e-mail logo abaixo. Falhar aqui não impede
+  // a notificação - cai no idioma padrão e simplesmente não manda e-mail.
+  let usuario: {
+    email: string;
+    emailVerified: Date | null;
+    idioma: string | null;
+    notificarPorEmail: boolean;
+  } | null = null;
+  try {
+    usuario = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true, emailVerified: true, idioma: true, notificarPorEmail: true },
+    });
+  } catch (erro) {
+    console.error("Falha ao ler o destinatário da notificação:", erro);
+  }
+  const locale = idiomaOuPadrao(usuario?.idioma);
+  const { titulo, mensagem } = await montarTexto(locale, texto);
+
   // Quem chama (aprovar/rejeitar reclamação ou comentário, resposta
   // oficial, denúncia, etc.) já commitou a própria mudança de estado
   // antes de chegar aqui - uma falha nesta escrita (blip de banco, FK)
@@ -58,10 +81,6 @@ export async function criarNotificacao({
   // notificação (moderação, resposta oficial, etc.) - a notificação no
   // app já foi criada de qualquer forma, o e-mail é só um reforço.
   try {
-    const usuario = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { email: true, emailVerified: true, idioma: true, notificarPorEmail: true },
-    });
     if (!usuario?.emailVerified || !usuario.notificarPorEmail) {
       return;
     }
@@ -71,7 +90,7 @@ export async function criarNotificacao({
       titulo,
       mensagem,
       protocolo,
-      locale: idiomaOuPadrao(usuario.idioma),
+      locale,
     });
   } catch (erro) {
     console.error("Falha ao enviar e-mail de notificação:", erro);
@@ -98,20 +117,17 @@ export async function alertarSenhaAlterada(userId: string) {
   // é o aviso que realmente importa neste fluxo (chega mesmo sem conta
   // verificada - ver comentário em enviarEmailSenhaAlterada), então sai
   // de qualquer forma mesmo se o registro no sininho falhar.
+  const locale = idiomaOuPadrao(usuario.idioma);
   try {
+    const { titulo, mensagem } = await montarTexto(locale, { chave: "senhaAlterada" });
     await prisma.notificacao.create({
-      data: {
-        userId,
-        tipo: "CONTA_SEGURANCA",
-        titulo: "Sua senha foi alterada",
-        mensagem: "Se não foi você, entre em contato com o suporte imediatamente.",
-      },
+      data: { userId, tipo: "CONTA_SEGURANCA", titulo, mensagem },
     });
   } catch (erro) {
     console.error("Falha ao criar notificação de senha alterada:", erro);
   }
 
-  await enviarEmailSenhaAlterada({ email: usuario.email, locale: idiomaOuPadrao(usuario.idioma) });
+  await enviarEmailSenhaAlterada({ email: usuario.email, locale });
 }
 
 // Mesmo espírito de alertarSenhaAlterada: avisa o e-mail ATUAL assim que
@@ -129,14 +145,14 @@ export async function alertarTrocaEmailSolicitada(userId: string, novoEmail: str
   // Ver comentário equivalente em alertarSenhaAlterada() - mesma rede de
   // segurança que criarNotificacao() já tem, faltando aqui porque esta
   // função monta o registro à mão em vez de reusá-la.
+  const locale = idiomaOuPadrao(usuario.idioma);
   try {
+    const { titulo, mensagem } = await montarTexto(locale, {
+      chave: "trocaEmailSolicitada",
+      params: { novoEmail },
+    });
     await prisma.notificacao.create({
-      data: {
-        userId,
-        tipo: "CONTA_SEGURANCA",
-        titulo: "Troca de e-mail solicitada",
-        mensagem: `Pediram a troca do e-mail de acesso para ${novoEmail}. Se não foi você, troque sua senha imediatamente.`,
-      },
+      data: { userId, tipo: "CONTA_SEGURANCA", titulo, mensagem },
     });
   } catch (erro) {
     console.error("Falha ao criar notificação de troca de e-mail solicitada:", erro);
@@ -145,6 +161,6 @@ export async function alertarTrocaEmailSolicitada(userId: string, novoEmail: str
   await enviarEmailTrocaEmailSolicitada({
     email: usuario.email,
     novoEmail,
-    locale: idiomaOuPadrao(usuario.idioma),
+    locale,
   });
 }

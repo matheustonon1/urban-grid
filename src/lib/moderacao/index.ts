@@ -373,8 +373,7 @@ export async function moderarReclamacao(
     await criarNotificacao({
       userId: reclamacao.autorId,
       tipo: "RECLAMACAO_PUBLICADA",
-      titulo: "Reclamação publicada",
-      mensagem: `Sua reclamação "${reclamacao.titulo}" foi publicada.`,
+      texto: { chave: "reclamacaoPublicada", params: { titulo: reclamacao.titulo } },
       reclamacaoId: reclamacao.id,
       protocolo: reclamacao.protocolo,
     });
@@ -395,8 +394,11 @@ export async function moderarReclamacao(
     await criarNotificacao({
       userId: reclamacao.autorId,
       tipo: "RECLAMACAO_REJEITADA",
-      titulo: "Reclamação rejeitada",
-      mensagem: `Sua reclamação "${reclamacao.titulo}" foi rejeitada: ${analise.justificativa}`,
+      // A justificativa é texto gerado pela IA no idioma do prompt, não uma chave.
+      texto: {
+        chave: "reclamacaoRejeitada",
+        params: { titulo: reclamacao.titulo, motivo: analise.justificativa },
+      },
       reclamacaoId: reclamacao.id,
       protocolo: reclamacao.protocolo,
     });
@@ -451,8 +453,7 @@ export async function finalizarPublicacaoAprovada(reclamacaoId: string) {
   await criarNotificacao({
     userId: reclamacao.autorId,
     tipo: "RECLAMACAO_PUBLICADA",
-    titulo: "Reclamação publicada",
-    mensagem: `Sua reclamação "${reclamacao.titulo}" foi publicada.`,
+    texto: { chave: "reclamacaoPublicada", params: { titulo: reclamacao.titulo } },
     reclamacaoId,
     protocolo: reclamacao.protocolo,
   });

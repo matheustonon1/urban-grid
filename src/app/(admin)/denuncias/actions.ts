@@ -113,8 +113,7 @@ async function resolverComoProcedente(
     await criarNotificacao({
       userId: reclamacao.autorId,
       tipo: "MUDANCA_STATUS",
-      titulo: "Reclamação arquivada",
-      mensagem: `Sua reclamação "${reclamacao.titulo}" foi arquivada após denúncia procedente.`,
+      texto: { chave: "reclamacaoArquivada", params: { titulo: reclamacao.titulo } },
       reclamacaoId: reclamacao.id,
       protocolo: reclamacao.protocolo,
     });
@@ -155,8 +154,7 @@ async function resolverComoProcedente(
     await criarNotificacao({
       userId: comentario.autorId,
       tipo: "MUDANCA_STATUS",
-      titulo: "Comentário removido",
-      mensagem: "Um comentário seu foi removido depois de uma denúncia procedente.",
+      texto: { chave: "comentarioRemovido" },
       protocolo: comentario.reclamacao.protocolo,
     });
 

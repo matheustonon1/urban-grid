@@ -96,8 +96,10 @@ async function alertarSeRajadaSuspeita(reclamacaoId: string) {
       criarNotificacao({
         userId: moderador.id,
         tipo: "ATIVIDADE_SUSPEITA",
-        titulo: "Atividade suspeita em confirmações",
-        mensagem: `Uma reclamação recebeu ${confirmacoesRecentes} confirmações em ${JANELA_RAJADA_MINUTOS} minutos — pode ser articulação coordenada. Revise manualmente.`,
+        texto: {
+          chave: "atividadeSuspeita",
+          params: { confirmacoes: confirmacoesRecentes, minutos: JANELA_RAJADA_MINUTOS },
+        },
         reclamacaoId,
       })
     )
@@ -316,8 +318,12 @@ export async function responderReclamacao(
   await criarNotificacao({
     userId: reclamacao.autorId,
     tipo: "RESPOSTA_OFICIAL",
-    titulo: `${orgao.nome} respondeu sua reclamação`,
-    mensagem: validado.data.texto,
+    // O texto da resposta é do órgão e vai como foi escrito; só o título é traduzido.
+    texto: {
+      chave: "respostaOficial",
+      params: { orgao: orgao.nome },
+      mensagemBruta: validado.data.texto,
+    },
     reclamacaoId: reclamacao.id,
     protocolo,
   });
@@ -326,8 +332,10 @@ export async function responderReclamacao(
     await criarNotificacao({
       userId: reclamacao.autorId,
       tipo: "PEDIDO_AVALIACAO",
-      titulo: "O problema foi resolvido?",
-      mensagem: `${orgao.nome} marcou "${reclamacao.titulo}" como resolvida. Avalie se o problema foi realmente resolvido.`,
+      texto: {
+        chave: "pedidoAvaliacao",
+        params: { orgao: orgao.nome, titulo: reclamacao.titulo },
+      },
       reclamacaoId: reclamacao.id,
       protocolo,
     });

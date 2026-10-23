@@ -274,6 +274,7 @@
     "alternarTema": "Alternar tema claro/escuro"
   },
   "AdminNav": {
+    "auditoria": "Auditoria",
     "kickerModeracao": "Moderação",
     "kickerAdmin": "Administração",
     "moderacao": "Moderação",
@@ -1260,6 +1261,86 @@
     "muitasTentativas": "Muitas tentativas com senha incorreta. Aguarde alguns minutos e tente de novo.",
     "senhaIndisponivel": "Esta conta não tem senha cadastrada, então não dá para confirmar a ação.",
     "erroGenerico": "Não foi possível concluir agora. Tente de novo em instantes."
+  },
+  "Notificacao": {
+    "reclamacaoPublicada": {
+      "titulo": "Reclamação publicada",
+      "mensagem": "Sua reclamação \"{titulo}\" foi publicada."
+    },
+    "reclamacaoRejeitada": {
+      "titulo": "Reclamação rejeitada",
+      "mensagem": "Sua reclamação \"{titulo}\" foi rejeitada: {motivo}"
+    },
+    "reclamacaoArquivada": {
+      "titulo": "Reclamação arquivada",
+      "mensagem": "Sua reclamação \"{titulo}\" foi arquivada após denúncia procedente."
+    },
+    "comentarioRemovido": {
+      "titulo": "Comentário removido",
+      "mensagem": "Um comentário seu foi removido depois de uma denúncia procedente."
+    },
+    "respostaOficial": {
+      "titulo": "{orgao} respondeu sua reclamação"
+    },
+    "pedidoAvaliacao": {
+      "titulo": "O problema foi resolvido?",
+      "mensagem": "{orgao} marcou \"{titulo}\" como resolvida. Avalie se o problema foi realmente resolvido."
+    },
+    "novoComentario": {
+      "titulo": "Novo comentário na sua reclamação"
+    },
+    "respostaComentario": {
+      "titulo": "Responderam seu comentário"
+    },
+    "atividadeSuspeita": {
+      "titulo": "Atividade suspeita em confirmações",
+      "mensagem": "Uma reclamação recebeu {confirmacoes} confirmações em {minutos} minutos — pode ser articulação coordenada. Revise manualmente."
+    },
+    "papelAlterado": {
+      "titulo": "Seu papel na plataforma mudou",
+      "mensagem": "Sua conta agora tem o papel de {papel, select, MODERADOR {Moderador} ADMIN {Administrador} CIDADAO {Cidadão} other {{papel}}}. Se você não esperava essa mudança, fale com a administração."
+    },
+    "senhaAlterada": {
+      "titulo": "Sua senha foi alterada",
+      "mensagem": "Se não foi você, entre em contato com o suporte imediatamente."
+    },
+    "trocaEmailSolicitada": {
+      "titulo": "Troca de e-mail solicitada",
+      "mensagem": "Pediram a troca do e-mail de acesso para {novoEmail}. Se não foi você, troque sua senha imediatamente."
+    }
+  },
+  "Auditoria": {
+    "kicker": "Administração",
+    "titulo": "Registro de atividades",
+    "descricao": "Quem mudou papéis, baniu ou reverteu banimentos, ativou ou desativou órgãos e decidiu solicitações. Só leitura: nada aqui se edita.",
+    "secao": "Registros",
+    "vazio": "Nenhuma atividade registrada ainda.",
+    "vazioDesc": "As próximas mudanças de papel, banimentos e decisões sobre órgãos aparecem aqui.",
+    "resumoRotulo": "Registros",
+    "resumoUltimos7dias": "Nos últimos 7 dias",
+    "resumoPapeis": "Mudanças de papel",
+    "resumoBanimentos": "Banimentos e reversões",
+    "resumoOrgaos": "Órgãos e solicitações",
+    "por": "por {ator}",
+    "atorRemovido": "conta removida",
+    "alvoRemovido": "registro removido",
+    "contaRemovida": "conta removida",
+    "acao": {
+      "PAPEL_ALTERADO": "Papel alterado",
+      "BANIMENTO_APLICADO": "Banimento aplicado",
+      "BANIMENTO_REVERTIDO": "Banimento revertido",
+      "ORGAO_DESATIVADO": "Órgão desativado",
+      "ORGAO_REATIVADO": "Órgão reativado",
+      "SOLICITACAO_ORGAO_APROVADA": "Solicitação de órgão aprovada",
+      "SOLICITACAO_ORGAO_REJEITADA": "Solicitação de órgão rejeitada",
+      "SOLICITACAO_CIDADE_APROVADA": "Solicitação de cidade aprovada",
+      "SOLICITACAO_CIDADE_REJEITADA": "Solicitação de cidade rejeitada"
+    },
+    "detalhePapel": "{de} → {para}",
+    "detalheBanimento": "{duracao}, até {ate}",
+    "duracao7": "7 dias",
+    "duracao30": "30 dias",
+    "duracaoPermanente": "Permanente"
   },
   "Comum": {
     "carregando": "Carregando…"
