@@ -9,6 +9,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "db:seed:demo": "tsx prisma/seed-demo-orgao.ts",
     "email:previa": "tsx src/lib/email/previa.ts"
   },
   "dependencies": {

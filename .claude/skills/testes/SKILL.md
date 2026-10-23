@@ -73,7 +73,10 @@ diálogos e confirme juntos. O resultado aparece em `role="status"`/`role="alert
 asserte o texto do aviso em vez de `waitForTimeout`. Com e-mail real configurado, o
 envio para `example.com` falha e o aviso vira "…, mas o e-mail não saiu": asserte só o
 começo ("Solicitação rejeitada", "Cidade X criada"). `e2e/confirmacoes-acoes.spec.ts`
-é o modelo (senha errada, Esc/Cancelar, servidor recusando).
+é o modelo (senha errada, Esc/Cancelar, servidor recusando, registro de auditoria).
+Uma conta de teste sobe de papel direto no banco (`prisma.user.update`) quando o
+papel não é o assunto do teste. `limparDadosTeste` apaga também o registro de
+auditoria dessas contas.
 
 ## Armadilhas que já custaram horas
 

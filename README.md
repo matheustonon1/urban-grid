@@ -209,7 +209,11 @@ npm run lint     # verificação de código
 npm test         # testes unitários (Vitest)
 npm run test:e2e # testes end-to-end (Playwright) - ver seção abaixo
 npm run email:previa # gera o HTML de todos os e-mails em .email-previa/ (abra no navegador)
+npm run db:seed:demo # reclamações de demonstração para ver o site como órgão (-- --limpar remove)
 ```
+
+O GitHub Actions (`.github/workflows/ci.yml`) roda tipos (`tsc`), lint e testes unitários a cada
+push na `main` e a cada PR. O E2E precisa de MySQL e das variáveis do app e continua local.
 
 ### Banco de dados
 
@@ -510,7 +514,9 @@ restrição existe porque uma conta de órgão pode postar "resposta
 oficial" em nome da prefeitura — o mesmo nível de confiança já exigido
 para banir usuário. O `seed.ts` continua criando um órgão de demonstração
 pronto (veja `SEED_ORGAO_EMAIL`/`SEED_ORGAO_SENHA`), útil para testar sem
-passar pelo fluxo de aprovação.
+passar pelo fluxo de aprovação, e `npm run db:seed:demo` o enche de reclamações
+pendentes, em andamento e resolvidas (com e sem avaliação) para ver o painel do órgão
+com movimento — `npm run db:seed:demo -- --limpar` remove tudo que ele criou.
 
 Por padrão, um órgão vê e pode responder qualquer reclamação da sua
 cidade. Um **ADMIN** pode restringir isso em `/orgaos-categorias`,
@@ -527,6 +533,8 @@ Como a plataforma lida com reclamações sobre a cidade — incluindo, indiretam
 - E-mail verificado obrigatório para confirmar ("também sofro com isso") e denunciar, com contas anteriores à regra isentas
 - Rajada de confirmações fora do padrão gera alerta para moderador/admin — nunca ação automática; um problema real pode legitimamente viralizar, então a decisão final é sempre humana
 - Denúncia de conteúdo publicado (`/denuncias`) e banimento de usuário (restrito a ADMIN) como consequência
+- Mudar o papel de uma conta e banir de forma permanente pedem a **senha de quem age** (conferida no servidor, com o mesmo bloqueio por tentativas do login); a pessoa afetada recebe um aviso no sininho
+- **Registro de auditoria** (`RegistroAuditoria`, tela `/auditoria`, só ADMIN): quem mudou papel, baniu ou reverteu banimento, ativou/desativou órgão e aprovou/rejeitou solicitações — gravado na mesma transação da mudança, sem copiar nome ou e-mail
 
 ### Segurança de aplicação
 
@@ -534,6 +542,7 @@ Como a plataforma lida com reclamações sobre a cidade — incluindo, indiretam
 - Cada página de admin, moderação e do painel de órgão já verifica o papel do usuário no próprio server component (sem layout compartilhado); `src/proxy.ts` é uma camada extra de defesa em profundidade que barra por papel antes mesmo da página carregar, cobrindo o caso de uma página nova esquecer de chamar seu guard. Não substitui a checagem de cada server action — o próprio código do Next avisa que uma Server Function é só um POST pra rota onde ela é usada, então a checagem tem que valer por si só também.
 - Bloqueio temporário por força bruta de senha (`loginTentativasFalhas`/`loginBloqueadoAte` no `User`, 5 tentativas / 15 min), independente do bloqueio já existente para código TOTP.
 - Limite de solicitações por IP/hora em endpoints públicos e não autenticados que gravam no banco (cadastro de conta, solicitação de acesso de órgão).
+- Notificações do sininho e e-mails saem no idioma de quem recebe (`User.idioma`), não no de quem disparou a ação.
 - Todo campo de texto livre em formulários tem tamanho máximo validado via Zod (não só mínimo) — evita payloads desproporcionais e custo desnecessário com a API de IA.
 - Cabeçalhos HTTP de segurança (`next.config.ts`): Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, Referrer-Policy e Permissions-Policy em todas as rotas.
 - Moderação por IA (`lib/moderacao`, `lib/moderacao/comentario`): o texto do usuário é isolado no prompt por marcadores explícitos com instrução para nunca seguir comandos embutidos nele (mitiga prompt injection), e a resposta do modelo é revalidada com Zod (não só o `responseSchema` do Gemini) — qualquer score fora de 0-1 ou formato inesperado falha para revisão humana em vez de aprovar por engano ou travar a reclamação sem rastro.

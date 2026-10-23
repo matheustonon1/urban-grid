@@ -65,6 +65,19 @@ existe" e "o e-mail não saiu" são resposta, não silêncio.
   `exigirConfirmacaoDeSenha(session.user.id, formData)` ANTES de gravar. O diálogo é
   UX; **a checagem de verdade é a do servidor** (mesmo contador de tentativas do login).
   Erro corrigível sem sair do diálogo → `falhaNoDialogo()`.
+- **Auditoria:** ação que muda acesso ou decide em nome da plataforma chama
+  `registrarAuditoria({ acao, atorId, alvoUserId?, alvoTipo?, alvoId?, detalhes? }, tx)`
+  (`lib/auditoria`) **dentro da mesma `$transaction`** da mudança — sem transação,
+  uma falha no meio deixa o papel trocado sem rastro. Nunca copie nome ou e-mail
+  para `detalhes` (dado pessoal); a tela `/auditoria` os lê da conta de origem. Ação
+  nova = valor novo em `AcaoAuditoria` (migration), rótulo em `Auditoria.acao` e
+  cor em `TOM_ACAO`.
+- **Notificação:** `criarNotificacao({ userId, tipo, texto: { chave, params,
+  mensagemBruta? } })` — o texto sai no idioma de QUEM RECEBE (`User.idioma`),
+  montado por `lib/notificacoes/textos` a partir de `Notificacao.<chave>.titulo|mensagem`.
+  Texto escrito por uma pessoa (resposta oficial, comentário) vai em `mensagemBruta`,
+  sem tradução. Chave nova: entrada em `ChaveNotificacao`, em `EXEMPLOS` de
+  `textos.test.ts` e nas duas línguas.
 - Mudança de privilégio avisa a pessoa afetada (`criarNotificacao` com
   `CONTA_SEGURANCA`) e recusa o que não faz sentido (mudar o próprio papel, banir
   administrador ou a si mesmo, encurtar um banimento que já vale mais).
