@@ -343,7 +343,7 @@ export default async function Home() {
           <p className="text-ink-muted">{t("diferenteSub")}</p>
         </Revelar>
 
-        <Revelar atraso={120} className="lg:col-span-8">
+        <Revelar atraso={120} className="min-w-0 lg:col-span-8">
           <ul className="grid gap-x-10 gap-y-8 sm:grid-cols-2">
             {DIFERENCIAIS.map((item) => (
               <li key={item.titulo} className="flex flex-col gap-2 border-t-2 border-ink pt-4">
@@ -367,7 +367,9 @@ export default async function Home() {
               <p className="text-ink-muted">{t("melhorAvaliadosSub")}</p>
             </Revelar>
 
-            <Revelar atraso={120} className="lg:col-span-8">
+            {/* min-w-0: filho de grid não encolhe abaixo do conteúdo; sem isto o nome longo de
+                um órgão (truncate = nowrap) alargava a coluna e a página rolava de lado no celular. */}
+            <Revelar atraso={120} className="min-w-0 lg:col-span-8">
               <ol className="divide-y divide-line border-y border-line">
                 {rankingOrgaos.map(({ orgao, metricas }, indice) => {
                   const classificacao = classificarIndice(

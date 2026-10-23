@@ -100,7 +100,7 @@ export default async function TransparenciaPage() {
                     >
                       <th scope="row" className="px-4 py-3.5 font-normal">
                         <div className="flex items-center gap-3">
-                          <span aria-hidden className="w-6 shrink-0 font-mono text-base text-ink-faint tabular-nums">
+                          <span aria-hidden className="w-6 shrink-0 font-mono text-base text-ink-muted tabular-nums">
                             {String(indice + 1).padStart(2, "0")}
                           </span>
                           <div className="min-w-0">

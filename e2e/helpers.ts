@@ -126,6 +126,38 @@ export async function criarOrgaoTeste(
   return { orgao, usuario, email, senha };
 }
 
+// Um órgão de NOME LONGO que já aparece no ranking público (home e transparência):
+// uma reclamação resolvida e respondida por ele. Só com dados assim as listas de órgãos
+// mostram linhas de verdade - com o banco vazio nada disso é renderizado e um nome que
+// estoura a largura, ou um número com pouco contraste, passa despercebido.
+export async function criarOrgaoNoRanking(cidadeId: string) {
+  const { usuario: autor } = await criarCidadaoTeste();
+  const { orgao, usuario: responsavel } = await criarOrgaoTeste(cidadeId);
+  await prisma.orgao.update({
+    where: { id: orgao.id },
+    data: {
+      nome: `Órgão E2E Secretaria Municipal de Serviços Urbanos, Infraestrutura e Mobilidade ${Date.now()}`,
+    },
+  });
+
+  const reclamacao = await criarReclamacaoTeste(autor.id, { cidadeId });
+  await prisma.reclamacao.update({
+    where: { id: reclamacao.id },
+    data: { status: "RESOLVIDA", resolvidaEm: new Date() },
+  });
+  await prisma.respostaOficial.create({
+    data: {
+      reclamacaoId: reclamacao.id,
+      autorId: responsavel.id,
+      orgaoId: orgao.id,
+      texto: "Problema resolvido pela equipe.",
+      novoStatus: "RESOLVIDA",
+    },
+  });
+
+  return { orgao, reclamacao };
+}
+
 // segundosNoFuturo desloca o epoch usado pra gerar o código - útil quando
 // o mesmo teste precisa de dois códigos em sequência rápida (ex.: ativa o
 // TOTP e loga com ele logo em seguida): sem isso, os dois podem cair na
