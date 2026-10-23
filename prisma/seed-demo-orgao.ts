@@ -5,9 +5,10 @@
 //   npm run db:seed:demo            cria (idempotente: rodar de novo não duplica)
 //   npm run db:seed:demo -- --limpar   remove tudo que este script criou
 //
-// Entra como o órgão demo com SEED_ORGAO_EMAIL / SEED_ORGAO_SENHA (padrão:
-// orgao@urbangrid.local / orgao123). Tudo que é criado aqui carrega o protocolo
-// "UG-DEMO-" ou o e-mail "demo.*@urbangrid.local", e é só isso que --limpar apaga.
+// Cria também um responsável do órgão demo (demo.orgao@urbangrid.local / demo1234), para
+// entrar sem depender da senha que o seed.ts usou (SEED_ORGAO_SENHA). Tudo que é criado
+// aqui carrega o protocolo "UG-DEMO-" ou o e-mail "demo.*@urbangrid.local", e é só isso
+// que --limpar apaga.
 import bcrypt from "bcryptjs";
 import { PrismaClient, type StatusReclamacao } from "@prisma/client";
 
@@ -15,7 +16,8 @@ const prisma = new PrismaClient();
 
 const PREFIXO_PROTOCOLO = "UG-DEMO-";
 const DOMINIO = "urbangrid.local";
-const SENHA_CIDADAOS = "demo1234";
+const SENHA_DEMO = "demo1234";
+const EMAIL_ORGAO_DEMO = `demo.orgao@${DOMINIO}`;
 const CODIGO_IBGE_DEMO = "3550308"; // São Paulo - SP, a cidade do órgão demo do seed.ts
 const DIA_MS = 86_400_000;
 
@@ -202,10 +204,12 @@ async function limpar() {
   const removidas = await prisma.reclamacao.deleteMany({
     where: { protocolo: { startsWith: PREFIXO_PROTOCOLO } },
   });
+  // Depois das reclamações: as respostas oficiais caem junto (cascade) e liberam a FK
+  // do responsável.
   const contas = await prisma.user.deleteMany({
-    where: { email: { startsWith: "demo.cidadao", endsWith: `@${DOMINIO}` } },
+    where: { email: { startsWith: "demo.", endsWith: `@${DOMINIO}` } },
   });
-  console.log(`Demo removida: ${removidas.count} reclamações e ${contas.count} contas de cidadão.`);
+  console.log(`Demo removida: ${removidas.count} reclamações e ${contas.count} contas.`);
 }
 
 async function criar() {
@@ -217,16 +221,29 @@ async function criar() {
   const orgao = await prisma.orgao.findFirst({
     where: { cidadeId: cidade.id, nome: { contains: "(demo)" } },
   });
-  const emailOrgao = process.env.SEED_ORGAO_EMAIL ?? `orgao@${DOMINIO}`;
-  const usuarioOrgao = await prisma.user.findUnique({ where: { email: emailOrgao } });
-  if (!orgao || !usuarioOrgao) {
+  if (!orgao) {
     throw new Error("Órgão demo não encontrado - rode `npx prisma db seed` antes.");
   }
+  const senhaHash = await bcrypt.hash(SENHA_DEMO, 10);
+  const usuarioOrgao = await prisma.user.upsert({
+    where: { email: EMAIL_ORGAO_DEMO },
+    update: { orgaoId: orgao.id },
+    create: {
+      email: EMAIL_ORGAO_DEMO,
+      name: "Paulo Henrique Matos",
+      senhaHash,
+      papel: "ORGAO",
+      orgaoId: orgao.id,
+      cidadeId: cidade.id,
+      nivelVerificacao: "EMAIL",
+      emailVerified: new Date(),
+      termosAceitosEm: new Date(),
+    },
+  });
 
   const categorias = await prisma.categoria.findMany();
   const categoriaPorNome = new Map(categorias.map((c) => [c.nome, c.id]));
 
-  const senhaHash = await bcrypt.hash(SENHA_CIDADAOS, 10);
   const cidadaos = [];
   for (const [i, nome] of CIDADAOS.entries()) {
     cidadaos.push(
@@ -297,6 +314,8 @@ async function criar() {
           autorId: confirmantes[i % Math.max(confirmantes.length, 1)].id,
           texto,
           statusModeracao: "APROVADO",
+          // Algumas horas depois da publicação, não "agora": a tela mostra o tempo relativo.
+          createdAt: new Date(publicadaEm.getTime() + (i + 1) * 3 * 3_600_000),
         },
       });
     }
@@ -328,8 +347,8 @@ async function criar() {
   console.log(
     `Demo pronta: ${criadas} reclamações novas (${RECLAMACOES.length - criadas} já existiam) em ${cidade.nome}.`
   );
-  console.log(`Entre como órgão: ${emailOrgao} (senha do seed: orgao123, ou SEED_ORGAO_SENHA).`);
-  console.log(`Cidadãos de demonstração: demo.cidadao1..${CIDADAOS.length}@${DOMINIO} / ${SENHA_CIDADAOS}`);
+  console.log(`Entre como órgão: ${EMAIL_ORGAO_DEMO} / ${SENHA_DEMO}`);
+  console.log(`Cidadãos de demonstração: demo.cidadao1..${CIDADAOS.length}@${DOMINIO} / ${SENHA_DEMO}`);
 }
 
 const acao = process.argv.includes("--limpar") ? limpar : criar;

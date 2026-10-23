@@ -516,7 +516,8 @@ para banir usuário. O `seed.ts` continua criando um órgão de demonstração
 pronto (veja `SEED_ORGAO_EMAIL`/`SEED_ORGAO_SENHA`), útil para testar sem
 passar pelo fluxo de aprovação, e `npm run db:seed:demo` o enche de reclamações
 pendentes, em andamento e resolvidas (com e sem avaliação) para ver o painel do órgão
-com movimento — `npm run db:seed:demo -- --limpar` remove tudo que ele criou.
+com movimento (entre com `demo.orgao@urbangrid.local` / `demo1234`) — `npm run db:seed:demo -- --limpar`
+remove tudo que ele criou.
 
 Por padrão, um órgão vê e pode responder qualquer reclamação da sua
 cidade. Um **ADMIN** pode restringir isso em `/orgaos-categorias`,
