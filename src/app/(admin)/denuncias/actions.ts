@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getLocale, getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
-import { exigirConfirmacaoDeSenha } from "@/lib/acoes/confirmarSenha";
+import { exigirReautenticacao } from "@/lib/acoes/confirmarSenha";
 import { falha, informacao, sucesso, type ResultadoAcao } from "@/lib/acoes/resultado";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { criarNotificacao } from "@/lib/notificacoes";
@@ -231,9 +231,10 @@ export async function banirAutor(denunciaId: string, formData: FormData): Promis
   }
 
   if (duracao === "permanente") {
-    const senhaErrada = await exigirConfirmacaoDeSenha(session.user.id, formData);
-    if (senhaErrada) {
-      return senhaErrada;
+    // Senha E código de duas etapas: o banimento permanente só se desfaz por um admin.
+    const reautenticacao = await exigirReautenticacao(session.user.id, formData);
+    if (reautenticacao) {
+      return reautenticacao;
     }
   }
 

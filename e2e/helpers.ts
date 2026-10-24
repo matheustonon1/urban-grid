@@ -5,18 +5,52 @@ import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { hashCpf } from "@/lib/seguranca/cpf";
-import { decifrarSegredoTotp } from "@/lib/seguranca/totp";
+import {
+  cifrarSegredoTotp,
+  decifrarSegredoTotp,
+  gerarCodigosBackup,
+  gerarSegredoTotp,
+  prepararCodigosBackup,
+} from "@/lib/seguranca/totp";
 
 // Confirma o diálogo que as ações protegidas abrem (FormularioAcao): `botao` é o
-// rótulo do botão que confirma (não o que abriu o diálogo) e `senha` só entra
-// quando o diálogo pede a senha de quem está agindo.
-export async function confirmarDialogo(page: Page, botao: string | RegExp, senha?: string) {
+// rótulo do botão que confirma (não o que abriu o diálogo); `senha` e `codigo` só
+// entram quando o diálogo pede a senha e o código de duas etapas de quem está agindo.
+// O campo do código é `required`: para provar que a senha errada é recusada, passe
+// qualquer código (a senha é conferida antes e não gasta o código).
+export async function confirmarDialogo(
+  page: Page,
+  botao: string | RegExp,
+  senha?: string,
+  codigo?: string
+) {
   const dialogo = page.getByRole("dialog");
   await dialogo.waitFor({ state: "visible" });
   if (senha !== undefined) {
     await dialogo.locator('input[name="senhaConfirmacao"]').fill(senha);
   }
+  if (codigo !== undefined) {
+    await dialogo.locator('input[name="codigoConfirmacao"]').fill(codigo);
+  }
   await dialogo.getByRole("button", { name: botao }).click();
+}
+
+// Liga o 2FA da conta direto no banco, com a sessão já aberta (o login de uma conta com
+// 2FA pediria o código). Devolve o segredo cifrado, para gerar o código do aplicativo, e
+// códigos de backup em claro: cada um vale uma vez e não depende do relógio nem do passo
+// de 30 s do TOTP, então são o que os specs usam para confirmar ações protegidas em
+// sequência sem esbarrar na proteção contra reuso de código.
+export async function ativarDoisFatoresTeste(userId: string, quantidadeBackup = 4) {
+  const segredoCifrado = cifrarSegredoTotp(gerarSegredoTotp());
+  const codigosBackup = gerarCodigosBackup().slice(0, quantidadeBackup);
+  await prisma.user.update({
+    where: { id: userId },
+    data: { totpSecret: segredoCifrado, totpConfirmadoEm: new Date() },
+  });
+  await prisma.totpBackupCode.createMany({
+    data: await prepararCodigosBackup(userId, codigosBackup),
+  });
+  return { segredoCifrado, codigosBackup };
 }
 
 // Prefixo comum a todo dado criado pelos testes E2E - facilita limpar

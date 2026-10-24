@@ -3,6 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 import {
   apagarLogsDeModeracao,
+  ativarDoisFatoresTeste,
   confirmarDialogo,
   criarAdminTeste,
   criarCidadaoTeste,
@@ -157,28 +158,37 @@ for (const tema of TEMAS) {
   });
 }
 
-// Diálogo de confirmação (com o erro de senha dentro dele) e o aviso flutuante que
-// vem depois: são camadas novas por cima da página e precisam passar na varredura
-// com o fundo inerte, nos dois temas.
+// Diálogo de confirmação (sem 2FA, com os campos de senha e código, e com o erro de senha
+// dentro dele) e o aviso flutuante que vem depois: são camadas novas por cima da página
+// e precisam passar na varredura com o fundo inerte, nos dois temas.
 for (const tema of TEMAS) {
   test(`diálogo de confirmação e aviso flutuante, tema ${tema}`, async ({ page }) => {
     await escolherTema(page, tema);
-    const { email, senha } = await criarAdminTeste();
+    const { usuario: admin, email, senha } = await criarAdminTeste();
     const { email: emailAlvo } = await criarCidadaoTeste();
     await entrar(page, email, senha);
 
-    await page.goto(`/usuarios?q=${encodeURIComponent(emailAlvo)}`);
-    const linha = page.locator("li", { hasText: emailAlvo });
-    await linha.locator('select[name="papel"]').selectOption("MODERADOR");
-    await linha.getByRole("button", { name: "Salvar" }).click();
-    await page.getByRole("dialog").waitFor();
+    async function abrirDialogoDePapel() {
+      await page.goto(`/usuarios?q=${encodeURIComponent(emailAlvo)}`);
+      const linha = page.locator("li", { hasText: emailAlvo });
+      await linha.locator('select[name="papel"]').selectOption("MODERADOR");
+      await linha.getByRole("button", { name: "Salvar" }).click();
+      await page.getByRole("dialog").waitFor();
+    }
+
+    // Conta sem 2FA: o diálogo troca os campos por um aviso com o caminho para ativá-lo.
+    await abrirDialogoDePapel();
     expect(await violacoesGraves(page)).toEqual([]);
 
-    await confirmarDialogo(page, "Alterar para Moderador", "senha-errada-123");
+    const { codigosBackup } = await ativarDoisFatoresTeste(admin.id);
+    await abrirDialogoDePapel();
+    expect(await violacoesGraves(page)).toEqual([]);
+
+    await confirmarDialogo(page, "Alterar para Moderador", "senha-errada-123", codigosBackup[0]);
     await page.getByRole("dialog").getByRole("alert").waitFor();
     expect(await violacoesGraves(page)).toEqual([]);
 
-    await confirmarDialogo(page, "Alterar para Moderador", senha);
+    await confirmarDialogo(page, "Alterar para Moderador", senha, codigosBackup[0]);
     await page.getByText(/alterado para Moderador/).waitFor();
     expect(await violacoesGraves(page)).toEqual([]);
   });

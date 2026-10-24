@@ -1258,6 +1258,15 @@
     "equipe": "Equipe (moderadores e administradores)"
   },
   "Acao": {
+    "codigoRotulo": "Código de verificação em duas etapas",
+    "codigoDica": "O código de 6 dígitos do aplicativo autenticador, ou um código de backup.",
+    "codigoObrigatorio": "Digite o código de verificação em duas etapas.",
+    "codigoIncorreto": "Código incorreto. Confira o aplicativo e tente de novo.",
+    "codigoJaUsado": "Esse código já foi usado. Espere o próximo código do aplicativo e tente de novo.",
+    "segundoFatorNecessario": "Esta ação exige a verificação em duas etapas. Ative em Minha conta e tente de novo.",
+    "segundoFatorTitulo": "Ative a verificação em duas etapas",
+    "segundoFatorExplicacao": "Ações que mudam acesso e privilégios exigem, além da senha, o código do aplicativo autenticador da sua conta de administrador.",
+    "segundoFatorAtivar": "Ativar em Minha conta",
     "fecharAviso": "Fechar aviso",
     "cancelar": "Cancelar",
     "processando": "Processando…",
@@ -1265,7 +1274,7 @@
     "senhaDica": "Digite a senha da sua conta para confirmar que é você.",
     "senhaObrigatoria": "Digite sua senha para confirmar.",
     "senhaIncorreta": "Senha incorreta. Confira e tente de novo.",
-    "muitasTentativas": "Muitas tentativas com senha incorreta. Aguarde alguns minutos e tente de novo.",
+    "muitasTentativas": "Muitas tentativas incorretas. Aguarde alguns minutos e tente de novo.",
     "senhaIndisponivel": "Esta conta não tem senha cadastrada, então não dá para confirmar a ação.",
     "erroGenerico": "Não foi possível concluir agora. Tente de novo em instantes."
   },

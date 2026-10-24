@@ -11,6 +11,7 @@ import {
   useState,
 } from "react";
 import type { FormEvent, ReactNode } from "react";
+import Link from "next/link";
 import { LoaderCircle, ShieldAlert, ShieldCheck } from "lucide-react";
 import { useTranslations } from "next-intl";
 
@@ -18,7 +19,7 @@ import { Campo } from "@/components/formulario/campo";
 import { Aviso } from "@/components/ui/aviso";
 import { useAvisos } from "@/components/ui/avisos";
 import { botaoPerigoSolido, botaoPrimario, botaoSecundario, campoInput } from "@/lib/estilos";
-import { CAMPO_SENHA_CONFIRMACAO } from "@/lib/acoes/senha";
+import { CAMPO_CODIGO_CONFIRMACAO, CAMPO_SENHA_CONFIRMACAO } from "@/lib/acoes/senha";
 import type { ResultadoAcao } from "@/lib/acoes/resultado";
 
 // Diálogo que pede uma confirmação ANTES de a ação sair. O texto é escrito no
@@ -41,8 +42,12 @@ export interface Confirmacao {
   soSeMudar?: string;
   // Pede a senha de quem está agindo. `true` = sempre; `{ campo, valor }` = só
   // quando aquele campo tiver aquele valor (banimento permanente). A checagem de
-  // verdade é a do servidor (exigirConfirmacaoDeSenha) - isto só mostra o campo.
+  // verdade é a do servidor (exigirReautenticacao) - isto só mostra os campos.
   senha?: boolean | { campo: string; valor: string };
+  // Junto com a senha, o código de duas etapas de quem age: "ativo" mostra o campo do
+  // código; "ausente" (a conta não tem 2FA) troca os campos por um aviso com o caminho
+  // para ativá-lo e trava o botão. Só vale quando `senha` pede reautenticação.
+  segundoFator?: "ativo" | "ausente";
 }
 
 interface ContextoFormulario {
@@ -63,6 +68,7 @@ interface Resumo {
   detalhes: string[];
   confirmar: string;
   exigeSenha: boolean;
+  segundoFator?: "ativo" | "ausente";
 }
 
 type Controle = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
@@ -76,7 +82,14 @@ const ehControle = (elemento: Element): elemento is Controle =>
 function textosDoFormulario(form: HTMLFormElement): Record<string, string> {
   const mapa: Record<string, string> = {};
   for (const elemento of Array.from(form.elements)) {
-    if (!ehControle(elemento) || !elemento.name || elemento.name === CAMPO_SENHA_CONFIRMACAO) continue;
+    if (
+      !ehControle(elemento) ||
+      !elemento.name ||
+      elemento.name === CAMPO_SENHA_CONFIRMACAO ||
+      elemento.name === CAMPO_CODIGO_CONFIRMACAO
+    ) {
+      continue;
+    }
     if (
       elemento instanceof HTMLInputElement &&
       (elemento.type === "checkbox" || elemento.type === "radio") &&
@@ -197,6 +210,7 @@ export function FormularioAcao({
       detalhes: (confirmacao.detalhes ?? []).map((linha) => interpolar(linha, valores)),
       confirmar: interpolar(confirmacao.confirmar, valores),
       exigeSenha,
+      segundoFator: exigeSenha ? confirmacao.segundoFator : undefined,
     });
     setErroDialogo(null);
     setAberto(true);
@@ -295,7 +309,21 @@ export function FormularioAcao({
                   </ul>
                 )}
 
-                {resumo.exigeSenha && (
+                {resumo.exigeSenha && resumo.segundoFator === "ausente" && (
+                  <Aviso
+                    tom="atencao"
+                    acao={
+                      <Link href="/painel/conta" className={botaoSecundario}>
+                        {t("segundoFatorAtivar")}
+                      </Link>
+                    }
+                  >
+                    <p className="font-semibold">{t("segundoFatorTitulo")}</p>
+                    <p>{t("segundoFatorExplicacao")}</p>
+                  </Aviso>
+                )}
+
+                {resumo.exigeSenha && resumo.segundoFator !== "ausente" && (
                   <Campo id={`${idTitulo}-senha`} rotulo={t("senhaRotulo")} dica={t("senhaDica")}>
                     <input
                       id={`${idTitulo}-senha`}
@@ -304,6 +332,24 @@ export function FormularioAcao({
                       required
                       autoComplete="current-password"
                       className={campoInput}
+                    />
+                  </Campo>
+                )}
+
+                {resumo.exigeSenha && resumo.segundoFator === "ativo" && (
+                  <Campo
+                    id={`${idTitulo}-codigo`}
+                    rotulo={t("codigoRotulo")}
+                    dica={t("codigoDica")}
+                  >
+                    <input
+                      id={`${idTitulo}-codigo`}
+                      type="text"
+                      name={CAMPO_CODIGO_CONFIRMACAO}
+                      required
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      className={`${campoInput} font-mono tracking-widest`}
                     />
                   </Campo>
                 )}
@@ -322,7 +368,7 @@ export function FormularioAcao({
                   <button
                     type="submit"
                     data-confirmacao="sim"
-                    disabled={pendente}
+                    disabled={pendente || (resumo.exigeSenha && resumo.segundoFator === "ausente")}
                     aria-busy={pendente}
                     className={perigo ? botaoPerigoSolido : botaoPrimario}
                   >

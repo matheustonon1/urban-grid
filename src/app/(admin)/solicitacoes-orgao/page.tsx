@@ -22,6 +22,7 @@ import { ResumoLateral } from "@/components/ui/resumo-lateral";
 import { Secao } from "@/components/ui/secao";
 import { Selo } from "@/components/ui/selo";
 import { formatarDataHora } from "@/lib/util/formatarData";
+import { usuarioTemDoisFatores } from "@/lib/seguranca/doisFatores";
 
 import { aprovarSolicitacao, rejeitarSolicitacao } from "./actions";
 import { exigirAdmin } from "./exigir-admin";
@@ -34,7 +35,9 @@ export default async function SolicitacoesOrgaoPage({
   const t = await getTranslations("SolicitacoesOrgao");
   const tNav = await getTranslations("AdminNav");
   const locale = await getLocale();
-  await exigirAdmin();
+  const session = await exigirAdmin();
+  // Aprovar concede voz oficial: o diálogo pede senha e código de duas etapas.
+  const temDoisFatores = await usuarioTemDoisFatores(session.user.id);
 
   const { pagePendentes, pageDecididas } = await searchParams;
   const paginaPendentes = lerPaginaAtual(pagePendentes);
@@ -107,6 +110,8 @@ export default async function SolicitacoesOrgaoPage({
                       detalhes: [t("confirmarAprovarDetalheEmail"), t("confirmarAprovarDetalheResposta")],
                       confirmar: t("confirmarAprovarBotao"),
                       tom: "primario",
+                      senha: true,
+                      segundoFator: temDoisFatores ? "ativo" : "ausente",
                     }}
                   >
                     <BotaoAcao className={`${botaoPrimario} w-full sm:w-auto`}>{t("aprovar")}</BotaoAcao>

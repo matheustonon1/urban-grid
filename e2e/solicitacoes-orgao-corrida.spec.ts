@@ -2,7 +2,13 @@ import { expect, test } from "@playwright/test";
 
 import { prisma } from "@/lib/prisma";
 
-import { confirmarDialogo, criarAdminTeste, emailTeste, limparDadosTeste } from "./helpers";
+import {
+  ativarDoisFatoresTeste,
+  confirmarDialogo,
+  criarAdminTeste,
+  emailTeste,
+  limparDadosTeste,
+} from "./helpers";
 
 let emailOrgaoCriado: string | undefined;
 
@@ -24,7 +30,7 @@ async function login(page: import("@playwright/test").Page, email: string, senha
 test("aprovar duas solicitações com o mesmo e-mail ao mesmo tempo não cria duas contas nem trava com erro", async ({
   browser,
 }) => {
-  const { email: emailAdmin, senha } = await criarAdminTeste();
+  const { usuario: admin, email: emailAdmin, senha } = await criarAdminTeste();
   const cidade = await prisma.cidade.findFirstOrThrow();
   const emailOrgao = emailTeste("orgao-corrida");
   const sufixo = Date.now();
@@ -50,6 +56,10 @@ test("aprovar duas solicitações com o mesmo e-mail ao mesmo tempo não cria du
   const paginaA = await contexto.newPage();
   const paginaB = await contexto.newPage();
   await login(paginaA, emailAdmin, senha);
+  // Aprovar pede senha e código de duas etapas. Cada página usa o seu código de backup
+  // (de uso único): com o mesmo código, a proteção contra reuso é que decidiria a
+  // disputa, e o que este teste quer provar é a corrida pela mesma conta.
+  const { codigosBackup } = await ativarDoisFatoresTeste(admin.id);
 
   await paginaA.goto("/solicitacoes-orgao");
   await paginaB.goto("/solicitacoes-orgao");
@@ -69,8 +79,8 @@ test("aprovar duas solicitações com o mesmo e-mail ao mesmo tempo não cria du
     cartaoB.getByRole("button", { name: "Aprovar" }).click(),
   ]);
   await Promise.all([
-    confirmarDialogo(paginaA, "Aprovar e enviar acesso"),
-    confirmarDialogo(paginaB, "Aprovar e enviar acesso"),
+    confirmarDialogo(paginaA, "Aprovar e enviar acesso", senha, codigosBackup[0]),
+    confirmarDialogo(paginaB, "Aprovar e enviar acesso", senha, codigosBackup[1]),
   ]);
   await paginaA.waitForTimeout(1500);
 

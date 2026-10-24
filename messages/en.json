@@ -1258,6 +1258,15 @@
     "equipe": "Team (moderators and admins)"
   },
   "Acao": {
+    "codigoRotulo": "Two-step verification code",
+    "codigoDica": "The 6-digit code from your authenticator app, or a backup code.",
+    "codigoObrigatorio": "Enter the two-step verification code.",
+    "codigoIncorreto": "Incorrect code. Check your app and try again.",
+    "codigoJaUsado": "That code was already used. Wait for the next code in your app and try again.",
+    "segundoFatorNecessario": "This action requires two-step verification. Turn it on under My account and try again.",
+    "segundoFatorTitulo": "Turn on two-step verification",
+    "segundoFatorExplicacao": "Actions that change access and privileges require, besides your password, the code from your administrator account's authenticator app.",
+    "segundoFatorAtivar": "Turn on in My account",
     "fecharAviso": "Dismiss message",
     "cancelar": "Cancel",
     "processando": "Working…",
@@ -1265,7 +1274,7 @@
     "senhaDica": "Enter your account password to confirm it's you.",
     "senhaObrigatoria": "Enter your password to confirm.",
     "senhaIncorreta": "Incorrect password. Check it and try again.",
-    "muitasTentativas": "Too many incorrect password attempts. Wait a few minutes and try again.",
+    "muitasTentativas": "Too many incorrect attempts. Wait a few minutes and try again.",
     "senhaIndisponivel": "This account has no password set, so the action can't be confirmed.",
     "erroGenerico": "We couldn't complete this right now. Try again in a moment."
   },

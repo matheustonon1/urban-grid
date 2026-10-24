@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 import {
   apagarLogsDeModeracao,
+  ativarDoisFatoresTeste,
   confirmarDialogo,
   criarAdminTeste,
   criarCidadaoTeste,
@@ -14,7 +15,8 @@ import {
 
 // Retorno das ações e confirmação segura: toda ação de moderação/administração
 // agora responde com um aviso na tela e as que mudam acesso ou afetam outra
-// pessoa passam por um diálogo (com a senha de quem age quando muda privilégio).
+// pessoa passam por um diálogo (com a senha e o código de duas etapas de quem age
+// quando muda privilégio).
 
 const idsReclamacaoParaLimpar: string[] = [];
 
@@ -55,10 +57,11 @@ function cartaoDaDenuncia(page: import("@playwright/test").Page, protocolo: stri
 test("papel: senha errada fica no diálogo e não altera; a certa conclui, avisa na tela e a pessoa afetada recebe um aviso", async ({
   page,
 }) => {
-  const { email: emailAdmin, senha: senhaAdmin } = await criarAdminTeste();
+  const { usuario: admin, email: emailAdmin, senha: senhaAdmin } = await criarAdminTeste();
   const { usuario, email } = await criarCidadaoTeste();
 
   await login(page, emailAdmin, senhaAdmin);
+  const { codigosBackup } = await ativarDoisFatoresTeste(admin.id);
   const linha = await abrirLinhaDoUsuario(page, email);
   await linha.locator('select[name="papel"]').selectOption("MODERADOR");
   await linha.getByRole("button", { name: "Salvar" }).click();
@@ -67,13 +70,14 @@ test("papel: senha errada fica no diálogo e não altera; a certa conclui, avisa
   await expect(dialogo.getByRole("heading")).toContainText("Alterar o papel de");
   await expect(dialogo).toContainText("passa de Cidadão para Moderador");
 
-  await confirmarDialogo(page, "Alterar para Moderador", "senha-errada-123");
+  await confirmarDialogo(page, "Alterar para Moderador", "senha-errada-123", codigosBackup[0]);
   await expect(dialogo.getByRole("alert")).toContainText("Senha incorreta");
   await expect(dialogo).toBeVisible();
   const intacto = await prisma.user.findUniqueOrThrow({ where: { id: usuario.id } });
   expect(intacto.papel).toBe("CIDADAO");
 
-  await confirmarDialogo(page, "Alterar para Moderador", senhaAdmin);
+  // A senha errada barrou antes do segundo fator: o código de backup não foi gasto.
+  await confirmarDialogo(page, "Alterar para Moderador", senhaAdmin, codigosBackup[0]);
   await expect(page.getByText(/Papel de .* alterado para Moderador/)).toBeVisible();
   await expect(dialogo).toBeHidden();
 
@@ -130,15 +134,16 @@ test("papel: sem mudança não há diálogo e a tela diz que nada foi alterado",
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });
 
-test("banir: 7 dias não pede senha; permanente pede, e a senha errada não bane", async ({
+test("banir: 7 dias não pede senha; permanente pede senha e código, e a senha errada não bane", async ({
   page,
 }) => {
   const { usuario: autor } = await criarCidadaoTeste();
   const { usuario: denunciante } = await criarCidadaoTeste();
-  const { email, senha } = await criarAdminTeste();
+  const { usuario: admin, email, senha } = await criarAdminTeste();
   const { reclamacao, denuncia } = await criarDenunciaAberta(autor.id, denunciante.id);
 
   await login(page, email, senha);
+  const { codigosBackup } = await ativarDoisFatoresTeste(admin.id);
   await page.goto("/denuncias");
   const cartao = cartaoDaDenuncia(page, reclamacao.protocolo);
   const dialogo = page.getByRole("dialog");
@@ -153,15 +158,16 @@ test("banir: 7 dias não pede senha; permanente pede, e a senha errada não bane
   await cartao.locator('select[name="duracao"]').selectOption("permanente");
   await cartao.getByRole("button", { name: "Banir autor" }).click();
   await expect(dialogo.locator('input[name="senhaConfirmacao"]')).toBeVisible();
+  await expect(dialogo.locator('input[name="codigoConfirmacao"]')).toBeVisible();
 
-  await confirmarDialogo(page, "Banir conta", "senha-errada-123");
+  await confirmarDialogo(page, "Banir conta", "senha-errada-123", codigosBackup[0]);
   await expect(dialogo.getByRole("alert")).toContainText("Senha incorreta");
   const aindaLivre = await prisma.user.findUniqueOrThrow({ where: { id: autor.id } });
   expect(aindaLivre.banidoAte).toBeNull();
   const aindaAberta = await prisma.denuncia.findUniqueOrThrow({ where: { id: denuncia.id } });
   expect(aindaAberta.status).toBe("ABERTA");
 
-  await confirmarDialogo(page, "Banir conta", senha);
+  await confirmarDialogo(page, "Banir conta", senha, codigosBackup[0]);
   await expect(page.getByText(/banida permanentemente/)).toBeVisible();
 
   const banido = await prisma.user.findUniqueOrThrow({ where: { id: autor.id } });
@@ -236,14 +242,15 @@ test("denunciar: quem denuncia recebe a confirmação de que a denúncia foi env
 test("auditoria: o admin vê quem mudou o papel; quem só modera é mandado de volta", async ({
   page,
 }) => {
-  const { email: emailAdmin, senha: senhaAdmin } = await criarAdminTeste();
+  const { usuario: admin, email: emailAdmin, senha: senhaAdmin } = await criarAdminTeste();
   const { usuario, email } = await criarCidadaoTeste();
 
   await login(page, emailAdmin, senhaAdmin);
+  const { codigosBackup } = await ativarDoisFatoresTeste(admin.id);
   const linha = await abrirLinhaDoUsuario(page, email);
   await linha.locator('select[name="papel"]').selectOption("MODERADOR");
   await linha.getByRole("button", { name: "Salvar" }).click();
-  await confirmarDialogo(page, "Alterar para Moderador", senhaAdmin);
+  await confirmarDialogo(page, "Alterar para Moderador", senhaAdmin, codigosBackup[0]);
   await expect(page.getByText(/Papel de .* alterado para Moderador/)).toBeVisible();
 
   await page.goto("/auditoria");

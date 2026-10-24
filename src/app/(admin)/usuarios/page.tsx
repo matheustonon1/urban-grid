@@ -21,6 +21,7 @@ import {
   pagina,
 } from "@/lib/estilos";
 import { metadataDaPagina } from "@/lib/metadata";
+import { usuarioTemDoisFatores } from "@/lib/seguranca/doisFatores";
 
 import { alterarPapelUsuario } from "./actions";
 import { PAPEIS_ATRIBUIVEIS } from "./definitions";
@@ -35,6 +36,10 @@ export default async function UsuariosPage({ searchParams }: PageProps<"/usuario
   const tPapel = await getTranslations("Papel");
   const tNav = await getTranslations("AdminNav");
   const session = await exigirAdmin();
+
+  // Mudar papel pede senha e código de duas etapas: o diálogo precisa saber se a conta
+  // de quem age tem 2FA para mostrar o campo do código ou mandar ativá-lo.
+  const temDoisFatores = await usuarioTemDoisFatores(session.user.id);
 
   const { q } = await searchParams;
   const termo = typeof q === "string" ? q.trim() : "";
@@ -147,8 +152,9 @@ export default async function UsuariosPage({ searchParams }: PageProps<"/usuario
                           tom: "primario",
                           // Sem mudança de papel não há o que confirmar: o servidor responde "nada foi alterado".
                           soSeMudar: "papel",
-                          // Muda o que a conta pode fazer: pede a senha de quem está alterando.
+                          // Muda o que a conta pode fazer: senha e código de duas etapas de quem altera.
                           senha: true,
+                          segundoFator: temDoisFatores ? "ativo" : "ausente",
                         }}
                       >
                         <select

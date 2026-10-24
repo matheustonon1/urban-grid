@@ -60,11 +60,18 @@ existe" e "o e-mail não saiu" são resposta, não silêncio.
   denúncia). Decisões de fila de alto volume (aprovar/rejeitar reclamação, comentário)
   não pedem: o motivo digitado já é a fricção. `{campo}` no texto vira o rótulo da
   opção marcada; para o ICU deixar passar, passe `{ campo: "{campo}" }` ao `t()`.
-- **Senha de quem age** (`senha: true`, ou `{ campo, valor }` para só um valor — banimento
-  permanente) quando muda privilégio: o servidor chama
-  `exigirConfirmacaoDeSenha(session.user.id, formData)` ANTES de gravar. O diálogo é
-  UX; **a checagem de verdade é a do servidor** (mesmo contador de tentativas do login).
-  Erro corrigível sem sair do diálogo → `falhaNoDialogo()`.
+- **Senha e código de duas etapas de quem age** (`senha: true`, ou `{ campo, valor }` para
+  só um valor — banimento permanente) quando muda privilégio ou concede voz oficial
+  (mudar papel, banir permanente, aprovar órgão): o servidor chama
+  `exigirReautenticacao(session.user.id, formData)` ANTES de gravar. Ela confere a senha
+  (mesmo contador de tentativas do login) e depois o código do aplicativo autenticador ou
+  um código de backup; conta SEM 2FA não passa, e o código do aplicativo é de uso único
+  no passo de 30 s (o que o login gastou não vale aqui). A página busca
+  `usuarioTemDoisFatores(session.user.id)` (`lib/seguranca/doisFatores`) e passa
+  `segundoFator: temDoisFatores ? "ativo" : "ausente"` na `confirmacao`: "ativo" mostra o
+  campo do código; "ausente" troca os campos por um aviso com o caminho para ativar o 2FA
+  e trava o botão. O diálogo é UX; **a checagem de verdade é a do servidor**. Erro
+  corrigível sem sair do diálogo → `falhaNoDialogo()`.
 - **Auditoria:** ação que muda acesso ou decide em nome da plataforma chama
   `registrarAuditoria({ acao, atorId, alvoUserId?, alvoTipo?, alvoId?, detalhes? }, tx)`
   (`lib/auditoria`) **dentro da mesma `$transaction`** da mudança — sem transação,

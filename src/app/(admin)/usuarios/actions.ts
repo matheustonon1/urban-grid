@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
-import { exigirConfirmacaoDeSenha } from "@/lib/acoes/confirmarSenha";
+import { exigirReautenticacao } from "@/lib/acoes/confirmarSenha";
 import { falha, informacao, sucesso, type ResultadoAcao } from "@/lib/acoes/resultado";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { criarNotificacao } from "@/lib/notificacoes";
@@ -54,9 +54,10 @@ export async function alterarPapelUsuario(
     return informacao(t("papelInalterado", { nome, papel: tPapel(novoPapel) }));
   }
 
-  const senhaErrada = await exigirConfirmacaoDeSenha(session.user.id, formData);
-  if (senhaErrada) {
-    return senhaErrada;
+  // Senha E código de duas etapas: mudar papel concede ou tira poder de outra conta.
+  const reautenticacao = await exigirReautenticacao(session.user.id, formData);
+  if (reautenticacao) {
+    return reautenticacao;
   }
 
   // O papel lido acima na condição: se outro admin mexeu nesta conta entre o

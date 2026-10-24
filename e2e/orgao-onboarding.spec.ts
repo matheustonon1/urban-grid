@@ -2,14 +2,20 @@ import { expect, test } from "@playwright/test";
 
 import { prisma } from "@/lib/prisma";
 
-import { confirmarDialogo, criarAdminTeste, emailTeste, limparDadosTeste } from "./helpers";
+import {
+  ativarDoisFatoresTeste,
+  confirmarDialogo,
+  criarAdminTeste,
+  emailTeste,
+  limparDadosTeste,
+} from "./helpers";
 
 test.afterAll(async () => {
   await limparDadosTeste();
 });
 
 test("solicita acesso como órgão, admin aprova, define senha e loga", async ({ page }) => {
-  const { email: emailAdmin, senha: senhaAdmin } = await criarAdminTeste();
+  const { usuario: admin, email: emailAdmin, senha: senhaAdmin } = await criarAdminTeste();
   const emailOrgao = emailTeste("solicitacao-orgao");
   const cidade = await prisma.cidade.findFirstOrThrow();
 
@@ -30,10 +36,12 @@ test("solicita acesso como órgão, admin aprova, define senha e loga", async ({
   await page.click('button[type="submit"]');
   await page.waitForURL(/\/painel$/);
 
+  // Aprovar concede voz oficial: pede a senha e o código de duas etapas do admin.
+  const { codigosBackup } = await ativarDoisFatoresTeste(admin.id);
   await page.goto("/solicitacoes-orgao");
   await expect(page.getByText(emailOrgao)).toBeVisible();
   await page.click('button:has-text("Aprovar")');
-  await confirmarDialogo(page, "Aprovar e enviar acesso");
+  await confirmarDialogo(page, "Aprovar e enviar acesso", senhaAdmin, codigosBackup[0]);
 
   await expect
     .poll(async () => {

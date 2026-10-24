@@ -6,6 +6,7 @@ import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import { atencao, falha, informacao, sucesso, type ResultadoAcao } from "@/lib/acoes/resultado";
+import { exigirReautenticacao } from "@/lib/acoes/confirmarSenha";
 import { registrarAuditoria } from "@/lib/auditoria";
 import {
   criarTokenVerificacao,
@@ -17,7 +18,10 @@ import { idiomaOuPadrao } from "@/i18n/config";
 import { criarRejeitarSolicitacaoSchema } from "./definitions";
 import { exigirAdmin } from "./exigir-admin";
 
-export async function aprovarSolicitacao(solicitacaoId: string): Promise<ResultadoAcao> {
+export async function aprovarSolicitacao(
+  solicitacaoId: string,
+  formData: FormData
+): Promise<ResultadoAcao> {
   const session = await exigirAdmin();
   const t = await getTranslations("SolicitacoesOrgao");
 
@@ -36,6 +40,13 @@ export async function aprovarSolicitacao(solicitacaoId: string): Promise<Resulta
     // não sobrescreve uma conta existente. Fica pendente pra um admin
     // resolver manualmente (rejeitar, ou o solicitante usar outro e-mail).
     return falha(t("erroEmailJaTemConta", { email: solicitacao.email }));
+  }
+
+  // Aprovar cria uma conta que responde em nome do órgão: concede voz oficial, então
+  // pede senha E código de duas etapas (como mudar papel), conferidos aqui no servidor.
+  const reautenticacao = await exigirReautenticacao(session.user.id, formData);
+  if (reautenticacao) {
+    return reautenticacao;
   }
 
   const agora = new Date();

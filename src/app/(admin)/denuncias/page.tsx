@@ -28,6 +28,7 @@ import {
 } from "@/lib/estilos";
 import { formatarDataHora } from "@/lib/util/formatarData";
 import { metadataDaPagina } from "@/lib/metadata";
+import { usuarioTemDoisFatores } from "@/lib/seguranca/doisFatores";
 
 import { exigirModerador } from "../moderacao/exigir-moderador";
 import { banirAutor, marcarImprocedente, marcarProcedente } from "./actions";
@@ -41,6 +42,9 @@ export default async function DenunciasPage({ searchParams }: PageProps<"/denunc
   const locale = await getLocale();
   const session = await exigirModerador();
   const ehAdmin = session.user.papel === "ADMIN";
+
+  // Só admin bane; banimento permanente pede senha e código de duas etapas.
+  const temDoisFatores = ehAdmin ? await usuarioTemDoisFatores(session.user.id) : false;
 
   const { page } = await searchParams;
   const paginaAtual = lerPaginaAtual(page);
@@ -229,8 +233,9 @@ export default async function DenunciasPage({ searchParams }: PageProps<"/denunc
                           ],
                           confirmar: t("confirmarBanirBotao"),
                           tom: "perigo",
-                          // Banimento permanente pede a senha de quem está banindo.
+                          // Banimento permanente pede a senha e o código de duas etapas de quem bane.
                           senha: { campo: "duracao", valor: "permanente" },
+                          segundoFator: temDoisFatores ? "ativo" : "ausente",
                         }}
                       >
                         <select
