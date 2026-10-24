@@ -1,0 +1,52 @@
+name: CI
+
+# Verificações que não precisam de banco nem de segredos: tipos, lint e testes
+# unitários. O E2E (Playwright) exige MySQL e variáveis de ambiente do app e
+# continua local - ver "Testes end-to-end" no README.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verificar:
+    name: Tipos, lint e testes unitários
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      # O client do Prisma (tipos de `prisma.user`, `Prisma.*`...) é gerado, não
+      # versionado. generate não conecta no banco; a URL só precisa existir.
+      - name: Gera o client do Prisma
+        run: npx prisma generate
+        env:
+          DATABASE_URL: mysql://ci:ci@localhost:3306/ci
+
+      # `PageProps<"/rota">` e `LayoutProps` são tipos globais gerados pelo Next em
+      # .next/types; sem isto o tsc não acha nenhum dos dois num checkout limpo.
+      - name: Gera os tipos de rota do Next
+        run: npx next typegen
+
+      - name: Tipos
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Testes unitários
+        run: npm test

@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
+import { PaginaAuth } from "@/components/ui/pagina-auth";
 import { prisma } from "@/lib/prisma";
-import { botaoPrimario, cartao } from "@/lib/estilos";
+import { botaoPrimario } from "@/lib/estilos";
 
 import { FormularioDefinirSenha } from "./formulario";
 
@@ -21,29 +22,17 @@ export default async function DefinirSenhaOrgaoPage({
 
   if (!valido) {
     return (
-      <main className="animate-fade-in flex flex-1 flex-col items-center justify-center gap-4 p-8">
-        <div className={`flex w-full max-w-sm flex-col items-center gap-3 text-center ${cartao}`}>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-            {t("linkInvalidoTitulo")}
-          </h1>
-          <p className="text-sm text-slate-600 dark:text-slate-400">{t("linkInvalidoDesc")}</p>
-          <Link href="/login" className={botaoPrimario}>
-            {t("irParaLogin")}
-          </Link>
-        </div>
-      </main>
+      <PaginaAuth titulo={t("linkInvalidoTitulo")} descricao={t("linkInvalidoDesc")}>
+        <Link href="/login" className={`${botaoPrimario} w-full py-3`}>
+          {t("irParaLogin")}
+        </Link>
+      </PaginaAuth>
     );
   }
 
   return (
-    <main className="animate-fade-in flex flex-1 flex-col items-center justify-center gap-6 p-8">
-      <div className="flex max-w-sm flex-col items-center gap-2 text-center">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-          {t("boasVindas", { nome: usuario!.name ?? "" })}
-        </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">{t("defineSenha")}</p>
-      </div>
+    <PaginaAuth titulo={t("boasVindas", { nome: usuario!.name ?? "" })} descricao={t("defineSenha")}>
       <FormularioDefinirSenha token={token} />
-    </main>
+    </PaginaAuth>
   );
 }

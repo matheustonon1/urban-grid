@@ -1,29 +1,33 @@
 import Link from "next/link";
 import {
   ArrowRight,
+  ArrowUpRight,
   Award,
   BrainCircuit,
-  IdCard,
-  Landmark,
-  MapPin,
   MessageSquare,
   ShieldCheck,
-  Sparkles,
-  TrendingUp,
 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
+import { auth } from "@/auth";
+import { CategoriaIcon } from "@/components/reclamacao/categoria-icon";
+import { StatusBadge } from "@/components/reclamacao/status-badge";
+import { Revelar } from "@/components/ui/revelar";
 import { prisma } from "@/lib/prisma";
-import { CategoriaIcon } from "@/components/categoria-icon";
-import { StatusBadge } from "@/components/status-badge";
-import { Revelar } from "@/components/revelar";
-import { botaoPrimario, botaoSecundario, cartao } from "@/lib/estilos";
-import { calcularMetricasOrgao, classificarIndice } from "@/lib/reputacaoOrgao";
-import { STATUS_PUBLICOS } from "@/lib/statusPublicos";
+import { botaoPrimario, botaoSecundario, containerSite } from "@/lib/estilos";
+import { calcularMetricasOrgao, classificarIndice } from "@/lib/orgaos/reputacaoOrgao";
+import { STATUS_PUBLICOS } from "@/lib/reclamacoes/statusPublicos";
+
+// Etapas da vida pública de uma reclamação, na ordem em que a ficha as mostra.
+const ETAPAS_FICHA = ["PUBLICADA", "EM_ANDAMENTO", "RESOLVIDA"] as const;
 
 export default async function Home() {
+  const session = await auth();
+  const logado = Boolean(session?.user);
+
   const t = await getTranslations("Home");
   const tSelo = await getTranslations("Selo");
+  const tStatus = await getTranslations("Status");
 
   const PASSOS = [
     { titulo: t("passo1Titulo"), descricao: t("passo1Desc") },
@@ -53,10 +57,11 @@ export default async function Home() {
       where: { reclamacoes: { some: { status: { in: [...STATUS_PUBLICOS] } } } },
     }),
     prisma.orgao.count({ where: { ativo: true } }),
+    // 4: a mais nova vira a "ficha" do topo, as 3 seguintes entram na lista.
     prisma.reclamacao.findMany({
       where: { status: { in: [...STATUS_PUBLICOS] } },
       orderBy: { createdAt: "desc" },
-      take: 3,
+      take: 4,
       include: {
         categoria: true,
         cidade: { include: { estado: true } },
@@ -70,6 +75,8 @@ export default async function Home() {
       take: 6,
     }),
   ]);
+
+  const [destaque, ...outrasRecentes] = reclamacoesRecentes;
 
   const orgaosCandidatos = await prisma.orgao.findMany({
     where: { id: { in: candidatosResposta.map((c) => c.orgaoId) }, ativo: true },
@@ -101,261 +108,400 @@ export default async function Home() {
     },
   ];
 
+  const etapaAtual = destaque
+    ? Math.max(0, ETAPAS_FICHA.indexOf(destaque.status as (typeof ETAPAS_FICHA)[number]))
+    : 0;
+
   return (
-    <main className="flex flex-1 flex-col items-center overflow-hidden">
-      <section className="relative flex w-full flex-col items-center gap-10 border-b border-slate-200 px-6 py-20 sm:px-8 sm:py-28 dark:border-slate-800">
+    <main className="flex flex-1 flex-col">
+      {/* ---------------------------------------------------------------- topo */}
+      <section className="relative overflow-hidden border-b border-line">
+        <div aria-hidden className="bg-planta pointer-events-none absolute inset-0 -z-10" />
+
         <div
-          aria-hidden
-          className="bg-city-grid animate-city-grid-drift pointer-events-none absolute inset-0 -z-10"
-        />
+          className={`${containerSite} grid items-center gap-12 py-14 sm:py-20 lg:grid-cols-12 lg:gap-10`}
+        >
+          <div className="animate-fade-in flex flex-col items-start gap-6 lg:col-span-7">
+            <span className="kicker inline-flex items-center gap-2">
+              <span aria-hidden className="h-2 w-2 rounded-xs bg-signal" />
+              {t("badge")}
+            </span>
 
-        <div className="animate-fade-in flex max-w-2xl flex-col items-center gap-5 text-center">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-medium text-accent-dark dark:text-accent">
-            <Sparkles className="h-3.5 w-3.5" aria-hidden />
-            {t("badge")}
-          </span>
+            <h1 className="max-w-2xl text-4xl leading-[1.05] font-extrabold tracking-tight text-ink sm:text-6xl">
+              {t.rich("titulo", {
+                marca: (trecho) => <span className="marca-texto">{trecho}</span>,
+              })}
+            </h1>
 
-          <h1 className="text-5xl font-semibold tracking-tight text-slate-900 sm:text-6xl dark:text-slate-100">
-            Urban <span className="text-primary">Grid</span>
-          </h1>
-          <p className="text-lg text-slate-600 dark:text-slate-400">{t("subtitulo")}</p>
-          <div className="mt-2 flex flex-wrap justify-center gap-3">
-            <Link href="/reclamacoes" className={`${botaoPrimario} group px-6 py-3 text-base`}>
-              {t("verReclamacoes")}
-              <ArrowRight
-                className="h-4 w-4 transition-transform group-hover:translate-x-1"
-                aria-hidden
-              />
-            </Link>
-            <Link href="/cadastro" className={`${botaoSecundario} px-6 py-3 text-base`}>
-              {t("criarConta")}
-            </Link>
+            <p className="max-w-xl text-lg leading-relaxed text-ink-muted">{t("subtitulo")}</p>
+
+            <div className="flex flex-wrap items-center gap-3">
+              <Link href="/reclamacoes" className={`${botaoPrimario} group px-5 py-3 text-base`}>
+                {t("verReclamacoes")}
+                <ArrowRight
+                  className="h-4 w-4 transition-transform group-hover:translate-x-1"
+                  aria-hidden
+                />
+              </Link>
+              {logado ? (
+                <Link href="/painel" className={`${botaoSecundario} px-5 py-3 text-base`}>
+                  {t("irParaPainel")}
+                </Link>
+              ) : (
+                <Link href="/cadastro" className={`${botaoSecundario} px-5 py-3 text-base`}>
+                  {t("criarConta")}
+                </Link>
+              )}
+            </div>
+
+            {!logado && (
+              <Link
+                href="/login"
+                className="text-sm font-medium text-brand underline underline-offset-4"
+              >
+                {t("jaTemConta")}
+              </Link>
+            )}
           </div>
-          <Link href="/login" className="text-sm text-primary underline">
-            {t("jaTemConta")}
-          </Link>
-        </div>
 
-        {totalReclamacoes > 0 && (
-          // Painel único com divisórias internas, números em mono/tabular -
-          // lembra um placar/painel técnico (ligado à fonte Plex Mono que o
-          // projeto já tinha e mal usava), não quatro cartões de stat
-          // genéricos repetindo o mesmo visual do resto da página.
-          <div className="animate-fade-in flex w-full max-w-3xl flex-wrap justify-center divide-x divide-slate-300 border border-slate-300 bg-white/70 backdrop-blur-sm dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-900/50">
-            {ESTATISTICAS.map((item) => (
+          {destaque && (
+            // A "ficha": a reclamação mais recente de verdade, com o que o
+            // site promete mostrar de cada uma - protocolo, onde fica, em que
+            // etapa está e quem também confirmou. Não é ilustração genérica.
+            <Link
+              href={`/reclamacoes/${destaque.protocolo}`}
+              className="group animate-fade-in block overflow-hidden rounded-xl border border-line-strong bg-surface shadow-[0_24px_48px_-28px_rgb(14_21_32/0.45)] transition-transform hover:-translate-y-0.5 lg:col-span-5"
+            >
+              <MapaFicha />
+              <div className="flex flex-col gap-4 p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="kicker truncate">{destaque.protocolo}</span>
+                  <StatusBadge status={destaque.status} />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <h2 className="text-xl leading-snug font-bold text-ink">{destaque.titulo}</h2>
+                  <p className="flex items-center gap-1.5 text-sm text-ink-muted">
+                    <CategoriaIcon
+                      icone={destaque.categoria.icone}
+                      className="h-3.5 w-3.5 shrink-0"
+                    />
+                    {destaque.categoria.nome} · {destaque.cidade.nome} - {destaque.cidade.estado.uf}
+                  </p>
+                </div>
+
+                <ol className="grid grid-cols-3 gap-2" aria-label={t("etapas")}>
+                  {ETAPAS_FICHA.map((etapa, indice) => (
+                    <li
+                      key={etapa}
+                      className="flex flex-col gap-1.5"
+                      aria-current={indice === etapaAtual ? "step" : undefined}
+                    >
+                      <span
+                        aria-hidden
+                        className={`h-1 rounded-full ${indice <= etapaAtual ? "bg-brand" : "bg-line"}`}
+                      />
+                      <span
+                        className={`text-xs ${
+                          indice === etapaAtual ? "font-semibold text-ink" : "text-ink-muted"
+                        }`}
+                      >
+                        {tStatus(etapa)}
+                      </span>
+                    </li>
+                  ))}
+                </ol>
+
+                <p className="flex items-center justify-between gap-3 border-t border-line pt-3 text-sm">
+                  <span className="text-ink-muted">
+                    {t("confirmacoes", { count: destaque._count.confirmacoes })}
+                  </span>
+                  <span className="flex items-center gap-1 font-medium text-brand">
+                    {t("abrirFicha")}
+                    <ArrowUpRight
+                      className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                      aria-hidden
+                    />
+                  </span>
+                </p>
+              </div>
+            </Link>
+          )}
+        </div>
+      </section>
+
+      {/* -------------------------------------------------------------- números */}
+      {totalReclamacoes > 0 && (
+        <section aria-label={t("numeros")} className="border-b border-line bg-surface">
+          <dl className={`${containerSite} grid grid-cols-2 gap-y-6 py-8 lg:grid-cols-4`}>
+            {ESTATISTICAS.map((item, indice) => (
               <div
                 key={item.rotulo}
-                className="flex min-w-30 flex-1 flex-col items-center gap-0.5 px-4 py-4 text-center"
+                className={`flex flex-col-reverse gap-1 ${
+                  indice % 2 === 1 ? "border-l border-line pl-6" : ""
+                } ${indice > 0 ? "lg:border-l lg:border-line lg:pl-8" : ""}`}
               >
-                <span className="font-mono text-2xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
+                <dt className="kicker">{item.rotulo}</dt>
+                <dd className="font-mono text-4xl font-medium tracking-tight text-ink tabular-nums">
                   {item.valor}
-                </span>
-                <span className="text-xs text-slate-500 dark:text-slate-400">{item.rotulo}</span>
+                </dd>
               </div>
             ))}
-          </div>
-        )}
-      </section>
+          </dl>
+        </section>
+      )}
 
-      <section className="flex w-full flex-col items-center gap-8 px-6 py-16 sm:px-8">
-        <Revelar className="flex flex-col items-center gap-2 text-center">
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            {t("comoFunciona")}
-          </h2>
-          <p className="max-w-md text-sm text-slate-500 dark:text-slate-400">
-            {t("comoFuncionaSub")}
-          </p>
+      {/* --------------------------------------------------------- como funciona */}
+      <section className={`${containerSite} flex flex-col gap-10 py-16 sm:py-20`}>
+        <Revelar className="flex max-w-xl flex-col gap-2">
+          <h2 className="text-3xl font-extrabold tracking-tight text-ink">{t("comoFunciona")}</h2>
+          <p className="text-ink-muted">{t("comoFuncionaSub")}</p>
         </Revelar>
 
-        <Revelar atraso={120} className="grid w-full max-w-4xl gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {PASSOS.map((passo, indice) => (
-            // Sequência numerada com régua no topo, não cartão - os passos não
-            // são clicáveis, e a ordem aqui carrega informação de verdade (é
-            // literalmente um passo a passo), diferente de um cartão genérico.
-            <div
-              key={passo.titulo}
-              style={{ animationDelay: `${indice * 80}ms` }}
-              className="animate-fade-in group flex flex-col gap-2 border-t-2 border-primary/30 pt-4 transition-colors hover:border-primary dark:border-blue-400/30 dark:hover:border-blue-400"
-            >
-              <span className="font-display inline-block text-xs font-bold tracking-wide text-primary transition-transform group-hover:translate-x-1 dark:text-blue-400">
-                {String(indice + 1).padStart(2, "0")}
-              </span>
-              <p className="font-semibold text-slate-900 dark:text-slate-100">{passo.titulo}</p>
-              <p className="text-sm text-slate-600 dark:text-slate-400">{passo.descricao}</p>
-            </div>
-          ))}
-        </Revelar>
-      </section>
-
-      {reclamacoesRecentes.length > 0 && (
-        <section className="flex w-full flex-col items-center gap-8 border-t border-slate-200 bg-slate-50 px-6 py-16 sm:px-8 dark:border-slate-800 dark:bg-slate-950/50">
-          <Revelar className="flex flex-col items-center gap-2 text-center">
-            <span className="flex items-center gap-1.5 text-xs font-semibold tracking-wide text-accent-dark uppercase dark:text-accent">
-              <span className="relative flex h-2 w-2" aria-hidden>
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75 motion-reduce:hidden" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
-              </span>
-              {t("aoVivo")}
-            </span>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-              {t("acontecendoAgora")}
-            </h2>
-            <p className="max-w-md text-sm text-slate-500 dark:text-slate-400">
-              {t("acontecendoAgoraSub")}
-            </p>
-          </Revelar>
-
-          <Revelar atraso={120} className="grid w-full max-w-4xl gap-4 sm:grid-cols-3">
-            {reclamacoesRecentes.map((reclamacao, indice) => (
-              <Link
-                key={reclamacao.id}
-                href={`/reclamacoes/${reclamacao.protocolo}`}
-                style={{ animationDelay: `${indice * 80}ms` }}
-                className={`animate-fade-in flex flex-col gap-2 transition hover:-translate-y-0.5 hover:border-primary hover:shadow-md ${cartao}`}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
-                    <CategoriaIcon
-                      icone={reclamacao.categoria.icone}
-                      className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500"
-                    />
-                    {reclamacao.categoria.nome}
+        <Revelar atraso={120}>
+          <ol className="grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
+            {PASSOS.map((passo, indice) => (
+              // Régua com o número no começo: é um passo a passo de verdade (a
+              // ordem importa e os passos não são clicáveis), então ganha uma
+              // sequência numerada, não cartões.
+              <li key={passo.titulo} className="flex flex-col gap-3">
+                <div className="flex items-center gap-3" aria-hidden>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-md bg-ink font-mono text-sm font-medium text-paper">
+                    {String(indice + 1).padStart(2, "0")}
                   </span>
-                  <StatusBadge status={reclamacao.status} />
+                  <span className="h-px flex-1 bg-line-strong" />
                 </div>
-                <p className="line-clamp-2 font-semibold text-slate-900 dark:text-slate-100">
-                  {reclamacao.titulo}
-                </p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {reclamacao.cidade.nome} - {reclamacao.cidade.estado.uf} ·{" "}
-                  {t("confirmacoes", { count: reclamacao._count.confirmacoes })}
-                </p>
-              </Link>
+                <h3 className="text-lg font-bold text-ink">{passo.titulo}</h3>
+                <p className="text-sm leading-relaxed text-ink-muted">{passo.descricao}</p>
+              </li>
             ))}
-          </Revelar>
-
-          <Link
-            href="/reclamacoes"
-            className="flex items-center gap-1 text-sm font-medium text-primary underline"
-          >
-            {t("verTodasReclamacoes")}
-            <ArrowRight className="h-4 w-4" aria-hidden />
-          </Link>
-        </section>
-      )}
-
-      <section className="flex w-full flex-col items-center gap-8 border-t border-slate-200 px-6 py-16 sm:px-8 dark:border-slate-800">
-        <Revelar className="flex flex-col items-center gap-2 text-center">
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            {t("diferente")}
-          </h2>
-          <p className="max-w-md text-sm text-slate-500 dark:text-slate-400">{t("diferenteSub")}</p>
-        </Revelar>
-
-        <Revelar atraso={120} className="grid w-full max-w-4xl gap-4 sm:grid-cols-2">
-          {DIFERENCIAIS.map((item, indice) => (
-            // Sem o chip quadrado colorido atrás do ícone (clichê de "feature
-            // de SaaS") e sem shadow/hover-lift - estes cards são só
-            // informativos, não levam a lugar nenhum, então não devem parecer
-            // tão "clicáveis" quanto os de reclamação/ranking logo acima.
-            <div
-              key={item.titulo}
-              style={{ animationDelay: `${indice * 80}ms` }}
-              className="animate-fade-in flex flex-col gap-2 rounded-lg border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900"
-            >
-              <item.icone className="h-6 w-6 text-primary dark:text-blue-400" aria-hidden />
-              <p className="font-semibold text-slate-900 dark:text-slate-100">{item.titulo}</p>
-              <p className="text-sm text-slate-600 dark:text-slate-400">{item.descricao}</p>
-            </div>
-          ))}
+          </ol>
         </Revelar>
       </section>
 
-      {rankingOrgaos.length > 0 && (
-        <section className="flex w-full flex-col items-center gap-8 border-t border-slate-200 bg-slate-50 px-6 py-16 sm:px-8 dark:border-slate-800 dark:bg-slate-950/50">
-          <Revelar className="flex flex-col items-center gap-2 text-center">
-            <span className="inline-flex items-center gap-1.5 text-primary dark:text-blue-400">
-              <TrendingUp className="h-5 w-5" aria-hidden />
-            </span>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-              {t("melhorAvaliados")}
-            </h2>
-            <p className="max-w-md text-sm text-slate-500 dark:text-slate-400">
-              {t("melhorAvaliadosSub")}
-            </p>
-          </Revelar>
+      {/* ----------------------------------------------------- acontecendo agora */}
+      {outrasRecentes.length > 0 && (
+        <section className="border-y border-line bg-surface">
+          <div className={`${containerSite} flex flex-col gap-8 py-16`}>
+            <Revelar className="flex flex-col gap-2">
+              <span className="kicker flex items-center gap-2">
+                <span className="relative flex h-2 w-2" aria-hidden>
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-signal opacity-75 motion-reduce:hidden" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-signal" />
+                </span>
+                {t("aoVivo")}
+              </span>
+              <h2 className="text-3xl font-extrabold tracking-tight text-ink">
+                {t("acontecendoAgora")}
+              </h2>
+              <p className="max-w-xl text-ink-muted">{t("acontecendoAgoraSub")}</p>
+            </Revelar>
 
-          <Revelar atraso={120} className="grid w-full max-w-3xl gap-4 sm:grid-cols-3">
-            {rankingOrgaos.map(({ orgao, metricas }, indice) => {
-              const classificacao = classificarIndice(
-                metricas.indiceResolucao,
-                metricas.totalRespondidas
-              );
-              return (
-                <Link
-                  key={orgao.id}
-                  href={`/orgaos/${orgao.id}`}
-                  style={{ animationDelay: `${indice * 80}ms` }}
-                  className={`animate-fade-in flex flex-col gap-2 transition hover:-translate-y-0.5 hover:border-primary hover:shadow-md ${cartao}`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span
-                      className={`inline-block shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${classificacao.className}`}
+            <Revelar atraso={120}>
+              <ul className="divide-y divide-line border-y border-line">
+                {outrasRecentes.map((reclamacao) => (
+                  <li key={reclamacao.id}>
+                    <Link
+                      href={`/reclamacoes/${reclamacao.protocolo}`}
+                      className="group grid items-center gap-x-6 gap-y-1.5 py-4 transition-colors hover:bg-sunken/60 sm:grid-cols-[11rem_1fr_auto] sm:px-2"
                     >
-                      {tSelo(classificacao.chave)}
-                    </span>
-                    <span className="text-xs font-semibold text-slate-400 dark:text-slate-600">
-                      #{indice + 1}
-                    </span>
-                  </div>
-                  <p className="font-semibold text-slate-900 dark:text-slate-100">
-                    {orgao.nome}
-                    {orgao.sigla && ` (${orgao.sigla})`}
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {orgao.cidade.nome} ·{" "}
-                    {t("reclamacoesRespondidas", { count: metricas.totalRespondidas })}
-                  </p>
-                </Link>
-              );
-            })}
-          </Revelar>
+                      <span className="kicker truncate">{reclamacao.protocolo}</span>
+                      <span className="min-w-0">
+                        <span className="block truncate font-bold text-ink group-hover:text-brand">
+                          {reclamacao.titulo}
+                        </span>
+                        <span className="block truncate text-sm text-ink-muted">
+                          {reclamacao.categoria.nome} · {reclamacao.cidade.nome} -{" "}
+                          {reclamacao.cidade.estado.uf} ·{" "}
+                          {t("confirmacoes", { count: reclamacao._count.confirmacoes })}
+                        </span>
+                      </span>
+                      <span className="justify-self-start sm:justify-self-end">
+                        <StatusBadge status={reclamacao.status} />
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </Revelar>
+
+            <Link
+              href="/reclamacoes"
+              className="inline-flex w-fit items-center gap-1.5 text-sm font-semibold text-brand underline underline-offset-4"
+            >
+              {t("verTodasReclamacoes")}
+              <ArrowRight className="h-4 w-4" aria-hidden />
+            </Link>
+          </div>
         </section>
       )}
 
-      <section className="flex w-full flex-col items-center gap-4 border-t border-slate-200 px-6 py-16 text-center sm:px-8 dark:border-slate-800">
-        <Revelar className="flex flex-col items-center gap-4">
-          <MapPin className="h-8 w-8 text-primary" aria-hidden />
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            {t("prontoParticipar")}
-          </h2>
-          <p className="max-w-md text-sm text-slate-600 dark:text-slate-400">
-            {t("prontoParticiparSub")}
-          </p>
+      {/* ------------------------------------------------------------ diferenciais */}
+      <section className={`${containerSite} grid gap-10 py-16 sm:py-20 lg:grid-cols-12`}>
+        <Revelar className="flex flex-col gap-2 lg:col-span-4">
+          <h2 className="text-3xl font-extrabold tracking-tight text-ink">{t("diferente")}</h2>
+          <p className="text-ink-muted">{t("diferenteSub")}</p>
+        </Revelar>
 
-          <div className="mt-4 grid w-full max-w-3xl gap-4 sm:grid-cols-2">
-            <div className={`flex flex-col items-center gap-3 text-center ${cartao}`}>
-              <IdCard className="h-7 w-7 text-primary dark:text-blue-400" aria-hidden />
-              <p className="font-semibold text-slate-900 dark:text-slate-100">
-                {t("souCidadao")}
-              </p>
-              <p className="text-sm text-slate-600 dark:text-slate-400">{t("souCidadaoDesc")}</p>
-              <Link href="/cadastro" className={`${botaoPrimario} mt-1`}>
-                {t("criarContaGratuita")}
-              </Link>
+        <Revelar atraso={120} className="min-w-0 lg:col-span-8">
+          <ul className="grid gap-x-10 gap-y-8 sm:grid-cols-2">
+            {DIFERENCIAIS.map((item) => (
+              <li key={item.titulo} className="flex flex-col gap-2 border-t-2 border-ink pt-4">
+                <item.icone className="h-5 w-5 text-brand" aria-hidden />
+                <h3 className="text-lg font-bold text-ink">{item.titulo}</h3>
+                <p className="text-sm leading-relaxed text-ink-muted">{item.descricao}</p>
+              </li>
+            ))}
+          </ul>
+        </Revelar>
+      </section>
+
+      {/* ---------------------------------------------------------------- ranking */}
+      {rankingOrgaos.length > 0 && (
+        <section className="border-y border-line bg-surface">
+          <div className={`${containerSite} grid gap-10 py-16 lg:grid-cols-12`}>
+            <Revelar className="flex flex-col gap-2 lg:col-span-4">
+              <h2 className="text-3xl font-extrabold tracking-tight text-ink">
+                {t("melhorAvaliados")}
+              </h2>
+              <p className="text-ink-muted">{t("melhorAvaliadosSub")}</p>
+            </Revelar>
+
+            {/* min-w-0: filho de grid não encolhe abaixo do conteúdo; sem isto o nome longo de
+                um órgão (truncate = nowrap) alargava a coluna e a página rolava de lado no celular. */}
+            <Revelar atraso={120} className="min-w-0 lg:col-span-8">
+              <ol className="divide-y divide-line border-y border-line">
+                {rankingOrgaos.map(({ orgao, metricas }, indice) => {
+                  const classificacao = classificarIndice(
+                    metricas.indiceResolucao,
+                    metricas.totalRespondidas
+                  );
+                  return (
+                    <li key={orgao.id}>
+                      <Link
+                        href={`/orgaos/${orgao.id}`}
+                        className="group flex items-center gap-4 py-4 transition-colors hover:bg-sunken/60 sm:px-2"
+                      >
+                        <span className="w-8 shrink-0 font-mono text-2xl font-medium text-ink-faint tabular-nums">
+                          {String(indice + 1).padStart(2, "0")}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate font-bold text-ink group-hover:text-brand">
+                            {orgao.nome}
+                            {orgao.sigla && ` (${orgao.sigla})`}
+                          </span>
+                          <span className="block truncate text-sm text-ink-muted">
+                            {orgao.cidade.nome} ·{" "}
+                            {t("reclamacoesRespondidas", { count: metricas.totalRespondidas })}
+                          </span>
+                        </span>
+                        <span
+                          className={`shrink-0 rounded-[5px] px-2 py-0.5 text-xs font-semibold ${classificacao.className}`}
+                        >
+                          {tSelo(classificacao.chave)}
+                        </span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ol>
+            </Revelar>
+          </div>
+        </section>
+      )}
+
+      {/* ------------------------------------------------------------- participar */}
+      {!logado && (
+        <section className="bg-night text-chalk">
+          <div aria-hidden className="faixa-obra h-2" />
+          <div className={`${containerSite} grid gap-10 py-16 lg:grid-cols-12 lg:items-center`}>
+            <div className="flex flex-col gap-3 lg:col-span-5">
+              <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
+                {t("prontoParticipar")}
+              </h2>
+              <p className="text-chalk/75">{t("prontoParticiparSub")}</p>
             </div>
 
-            <div className={`flex flex-col items-center gap-3 text-center ${cartao}`}>
-              <Landmark className="h-7 w-7 text-primary dark:text-blue-400" aria-hidden />
-              <p className="font-semibold text-slate-900 dark:text-slate-100">{t("souOrgao")}</p>
-              <p className="text-sm text-slate-600 dark:text-slate-400">{t("souOrgaoDesc")}</p>
-              <Link href="/cadastro?tipo=orgao" className={`${botaoSecundario} mt-1`}>
-                {t("solicitarAcesso")}
-              </Link>
+            <div className="grid gap-4 sm:grid-cols-2 lg:col-span-7">
+              <div className="flex flex-col items-start gap-3 rounded-lg border border-chalk/20 p-5">
+                <p className="text-lg font-bold">{t("souCidadao")}</p>
+                <p className="flex-1 text-sm leading-relaxed text-chalk/75">
+                  {t("souCidadaoDesc")}
+                </p>
+                <Link
+                  href="/cadastro"
+                  className="inline-flex items-center justify-center rounded-md bg-signal px-4 py-2.5 text-sm font-semibold text-on-signal transition-colors hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-signal"
+                >
+                  {t("criarContaGratuita")}
+                </Link>
+              </div>
+
+              <div className="flex flex-col items-start gap-3 rounded-lg border border-chalk/20 p-5">
+                <p className="text-lg font-bold">{t("souOrgao")}</p>
+                <p className="flex-1 text-sm leading-relaxed text-chalk/75">{t("souOrgaoDesc")}</p>
+                <Link
+                  href="/cadastro?tipo=orgao"
+                  className="inline-flex items-center justify-center rounded-md border border-chalk/40 px-4 py-2.5 text-sm font-semibold text-chalk transition-colors hover:bg-chalk/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-chalk"
+                >
+                  {t("solicitarAcesso")}
+                </Link>
+              </div>
             </div>
           </div>
-        </Revelar>
-      </section>
+        </section>
+      )}
     </main>
+  );
+}
+
+// Cabeça da "ficha": quarteirões e ruas desenhados em SVG, com o alfinete de
+// obra no meio. Estático e decorativo (aria-hidden) - o que importa está no
+// texto logo abaixo.
+function MapaFicha() {
+  const quarteiroes = [
+    [8, 8, 54, 26],
+    [78, 8, 94, 26],
+    [188, 8, 104, 26],
+    [308, 8, 84, 26],
+    [8, 50, 54, 44],
+    [78, 50, 94, 44],
+    [188, 50, 104, 44],
+    [308, 50, 84, 44],
+    [8, 110, 54, 22],
+    [78, 110, 94, 22],
+    [188, 110, 104, 22],
+    [308, 110, 84, 22],
+  ];
+
+  return (
+    <div className="relative h-36 border-b border-line bg-sunken" aria-hidden>
+      <svg viewBox="0 0 400 140" preserveAspectRatio="xMidYMid slice" className="h-full w-full">
+        {quarteiroes.map(([x, y, largura, altura], i) => (
+          <rect
+            key={i}
+            x={x}
+            y={y}
+            width={largura}
+            height={altura}
+            rx="3"
+            className={i === 6 ? "fill-signal-soft stroke-line-strong" : "fill-surface stroke-line"}
+            strokeWidth="1"
+          />
+        ))}
+        <path
+          d="M0 128 L400 14"
+          className="stroke-brand"
+          strokeWidth="2"
+          strokeDasharray="2 6"
+          strokeLinecap="round"
+          fill="none"
+          opacity="0.5"
+        />
+        <g transform="translate(240 72)">
+          <circle r="14" className="fill-signal" opacity="0.25" />
+          <circle r="7" className="fill-signal stroke-ink" strokeWidth="2" />
+        </g>
+      </svg>
+    </div>
   );
 }

@@ -8,7 +8,7 @@ test.afterAll(async () => {
   await limparDadosTeste();
 });
 
-test("ativa, exige no login e desativa a autenticação em duas etapas", async ({ page }) => {
+test("ativa, exige no login e desativa a autenticação em duas etapas", async ({ page, browser }) => {
   const { email, senha } = await criarCidadaoTeste();
 
   await page.goto("/login");
@@ -31,7 +31,10 @@ test("ativa, exige no login e desativa a autenticação em duas etapas", async (
   await page.click('button:has-text("Confirmar")');
   await expect(page.getByText("Autenticação em duas etapas ativada")).toBeVisible();
 
-  // Login volta a pedir senha + código a partir de agora.
+  // Login volta a pedir senha + código a partir de agora. Sem deslogar
+  // primeiro, /login redireciona direto pro painel (sessão ainda ativa)
+  // e o formulário nunca aparece.
+  await page.context().clearCookies();
   await page.goto("/login");
   await page.fill('input[name="identificador"]', email);
   await page.fill('input[name="senha"]', senha);
@@ -59,18 +62,25 @@ test("ativa, exige no login e desativa a autenticação em duas etapas", async (
   await page.click('button[type="submit"]');
   await page.waitForURL(/\/painel$/);
 
-  // Sair e tentar logar de novo com o MESMO código (reuso) tem que falhar
-  // - é a proteção contra replay de codigoTotpValido() em ação de ponta a
-  // ponta, não só em unit test com prisma/otplib mockados.
-  await page.goto("/login");
-  await page.fill('input[name="identificador"]', email);
-  await page.fill('input[name="senha"]', senha);
-  await page.click('button[type="submit"]');
-  await expect(page.locator('input[name="codigoTotp"]')).toBeVisible();
-  await page.fill('input[name="codigoTotp"]', codigoLogin);
-  await page.click('button[type="submit"]');
-  await expect(page.getByText("E-mail/CPF, senha ou código inválidos.")).toBeVisible();
-  await expect(page).not.toHaveURL(/\/painel$/);
+  // Tentar logar de novo com o MESMO código (reuso) tem que falhar - é a
+  // proteção contra replay de codigoTotpValido() em ação de ponta a ponta,
+  // não só em unit test com prisma/otplib mockados. Numa janela anônima à
+  // parte (contexto novo, sem cookies) de propósito: limpar os cookies desta
+  // página a deixaria deslogada, e a desativação logo abaixo precisa da
+  // sessão - um novo login pediria um código de uma janela ainda mais à
+  // frente, fora da tolerância de relógio do servidor.
+  const contextoAnonimo = await browser.newContext();
+  const paginaAnonima = await contextoAnonimo.newPage();
+  await paginaAnonima.goto("/login");
+  await paginaAnonima.fill('input[name="identificador"]', email);
+  await paginaAnonima.fill('input[name="senha"]', senha);
+  await paginaAnonima.click('button[type="submit"]');
+  await expect(paginaAnonima.locator('input[name="codigoTotp"]')).toBeVisible();
+  await paginaAnonima.fill('input[name="codigoTotp"]', codigoLogin);
+  await paginaAnonima.click('button[type="submit"]');
+  await expect(paginaAnonima.getByText("E-mail/CPF, senha ou código inválidos.")).toBeVisible();
+  await expect(paginaAnonima).not.toHaveURL(/\/painel$/);
+  await contextoAnonimo.close();
 
   // Desativa - precisa do campo de senha específico dessa seção, não o
   // de "Alterar senha" (os dois formulários usam name="senhaAtual").

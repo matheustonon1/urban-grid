@@ -1,15 +1,24 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
-import { ImagePlus, X } from "lucide-react";
+import { startTransition, useActionState, useEffect, useRef, useState } from "react";
+import { Check, CircleAlert, LoaderCircle, Send } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { SeletorCidade } from "@/components/cidade-combobox";
-import { SeletorCategoria } from "@/components/categoria-select";
-import { useFecharAoInteragirFora } from "@/hooks/useFecharAoInteragirFora";
-import { botaoPrimario, campoInput, cartao } from "@/lib/estilos";
-import { MAX_IMAGENS, MAX_TAMANHO_BYTES, TIPOS_ACEITOS } from "@/lib/limitesImagemReclamacao";
+import { Aviso } from "@/components/ui/aviso";
+import { SeletorCidade } from "@/components/formulario/cidade-combobox";
+import { botaoPrimario, campoInput, campoInputInvalido } from "@/lib/estilos";
 
+import { Campo, descritoPor } from "@/components/formulario/campo";
+import { FotosReclamacao } from "./fotos";
+import {
+  DepoisDeEnviar,
+  DicasReclamacao,
+  ListaDeDicas,
+  ProgressoPreenchimento,
+  type ChaveEtapa,
+} from "./lateral";
+import { SecaoFormulario } from "./secao-formulario";
+import { SeletorCategorias } from "./seletor-categorias";
 import { criarReclamacao } from "./actions";
 
 interface Categoria {
@@ -24,338 +33,413 @@ interface CidadeResultado {
   uf: string;
 }
 
+// Limites do schema (definitions.ts), repetidos aqui só pra os contadores e o
+// progresso; quem decide de verdade é o servidor.
+const TITULO_MIN = 10;
+const TITULO_MAX = 180;
+const DESCRICAO_MIN = 30;
+const DESCRICAO_MAX = 3000;
+
+function formatarCep(valor: string) {
+  const digitos = valor.replace(/\D/g, "").slice(0, 8);
+  return digitos.length > 5 ? `${digitos.slice(0, 5)}-${digitos.slice(5)}` : digitos;
+}
+
 export function NovaReclamacaoForm({
   categorias,
+  cidadePadrao,
 }: {
   categorias: Categoria[];
+  cidadePadrao: CidadeResultado | null;
 }) {
   const t = useTranslations("NovaReclamacao");
-  const [state, action, pending] = useActionState(criarReclamacao, undefined);
-  const enderecoRef = useRef<HTMLInputElement>(null);
-  const bairroRef = useRef<HTMLInputElement>(null);
-  const [cidadeAutoPreenchida, setCidadeAutoPreenchida] =
-    useState<CidadeResultado | null>(null);
-  const [statusCep, setStatusCep] = useState<
-    "idle" | "buscando" | "nao-encontrado"
-  >("idle");
+  const [state, acao, pending] = useActionState(criarReclamacao, undefined);
+  const formRef = useRef<HTMLFormElement>(null);
+  const mensagemRef = useRef<HTMLDivElement>(null);
+  const buscaCepRef = useRef(0);
+
+  // Campos controlados: alimentam os contadores e o progresso ao lado.
+  const [titulo, setTitulo] = useState("");
+  const [descricao, setDescricao] = useState("");
+  const [categoriaId, setCategoriaId] = useState("");
+  const [cep, setCep] = useState("");
+  const [cidadeId, setCidadeId] = useState(cidadePadrao?.id ?? "");
+  const [endereco, setEndereco] = useState("");
+  const [bairro, setBairro] = useState("");
+  const [referencia, setReferencia] = useState("");
+  const [declaracao, setDeclaracao] = useState(false);
   const [arquivos, setArquivos] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<string[]>([]);
-  const [avisoArquivos, setAvisoArquivos] = useState<string | null>(null);
-  const [categoriaId, setCategoriaId] = useState<string | null>(null);
-  const [imagemAmpliada, setImagemAmpliada] = useState<string | null>(null);
-  const imagensInputRef = useRef<HTMLInputElement>(null);
-  const modalRef = useFecharAoInteragirFora<HTMLDivElement>(!!imagemAmpliada, () =>
-    setImagemAmpliada(null)
-  );
+  const [cidadeAutoPreenchida, setCidadeAutoPreenchida] = useState<CidadeResultado | null>(null);
+  const [statusCep, setStatusCep] = useState<
+    "idle" | "buscando" | "preenchido" | "nao-encontrado"
+  >("idle");
 
-  // Reaplica a lista pro <input> nativo via DataTransfer sempre que ela
-  // muda (seleção nova ou remoção de uma foto) - não dá pra editar um
-  // FileList existente diretamente, só substituir o do input inteiro.
-  // Sem isso, remover uma miniatura não removia o arquivo de verdade do
-  // que seria enviado no submit.
-  function atualizarArquivos(novaLista: File[]) {
-    previews.forEach((url) => URL.revokeObjectURL(url));
-    setArquivos(novaLista);
-    setPreviews(novaLista.map((arquivo) => URL.createObjectURL(arquivo)));
+  const erros = state?.erros ?? {};
+  const quantidadeErros = Object.keys(erros).length;
 
-    const dt = new DataTransfer();
-    novaLista.forEach((arquivo) => dt.items.add(arquivo));
-    if (imagensInputRef.current) {
-      imagensInputRef.current.files = dt.files;
+  // Depois de um envio com erro, leva o foco ao primeiro campo com problema
+  // (ou à mensagem geral): sem isso a pessoa clica em "Enviar", nada parece
+  // acontecer e o erro está duas telas acima.
+  useEffect(() => {
+    if (!state) return;
+    const primeiroInvalido = formRef.current?.querySelector<HTMLElement>(
+      '[aria-invalid="true"], [data-invalido="true"] input'
+    );
+    if (primeiroInvalido) {
+      primeiroInvalido.focus({ preventScroll: true });
+      primeiroInvalido.scrollIntoView({ block: "center", behavior: "smooth" });
+    } else {
+      mensagemRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
     }
-  }
+  }, [state]);
 
-  // Mesmos limites do servidor (reclamacoes/nova/actions.ts), avisados
-  // na hora de escolher o arquivo em vez de só depois de enviar o
-  // formulário inteiro e descobrir o problema no retorno do servidor.
-  // A validação de verdade continua no servidor - isto é só feedback
-  // mais cedo, não substitui a checagem real.
-  function selecionarImagens(lista: FileList | null) {
-    const selecionados = lista ? Array.from(lista) : [];
-
-    if (selecionados.length > MAX_IMAGENS) {
-      setAvisoArquivos(t("erroMaxImagens", { max: MAX_IMAGENS }));
-      return;
-    }
-
-    const avisos: string[] = [];
-    const validos = selecionados.filter((arquivo) => {
-      if (!TIPOS_ACEITOS.includes(arquivo.type)) {
-        avisos.push(t("avisoTipoInvalido", { nome: arquivo.name }));
-        return false;
-      }
-      if (arquivo.size > MAX_TAMANHO_BYTES) {
-        avisos.push(
-          t("avisoTamanhoExcedido", {
-            nome: arquivo.name,
-            tamanho: (arquivo.size / (1024 * 1024)).toFixed(1),
-          })
-        );
-        return false;
-      }
-      return true;
-    });
-
-    setAvisoArquivos(avisos.length > 0 ? avisos.join(" ") : null);
-    atualizarArquivos(validos);
-  }
-
-  function removerImagem(indice: number) {
-    setAvisoArquivos(null);
-    atualizarArquivos(arquivos.filter((_, i) => i !== indice));
+  // Envia por onSubmit + startTransition, e não por <form action={...}>: o
+  // React 19 reinicia o formulário quando uma ação passada em `action`
+  // termina - mesmo com erro de validação -, o que apagava o que a pessoa
+  // tinha escrito e desmarcava a declaração e a categoria. As fotos vêm do
+  // estado, não do <input> nativo.
+  function enviar(evento: React.FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+    const formData = new FormData(evento.currentTarget);
+    formData.delete("imagens");
+    for (const arquivo of arquivos) formData.append("imagens", arquivo);
+    startTransition(() => acao(formData));
   }
 
   async function buscarCep(valorDigitado: string) {
-    const cep = valorDigitado.replace(/\D/g, "");
-    if (cep.length !== 8) {
+    const digitos = valorDigitado.replace(/\D/g, "");
+    const busca = ++buscaCepRef.current;
+    if (digitos.length !== 8) {
       setStatusCep("idle");
       return;
     }
 
     setStatusCep("buscando");
     try {
-      const resposta = await fetch(`/api/cep?cep=${cep}`);
+      const resposta = await fetch(`/api/cep?cep=${digitos}`);
       const dados = await resposta.json();
+      // Resposta de um CEP que a pessoa já trocou: descarta.
+      if (busca !== buscaCepRef.current) return;
 
       if (dados.erro) {
         setStatusCep("nao-encontrado");
         return;
       }
 
-      setStatusCep("idle");
-      if (enderecoRef.current && dados.logradouro) {
-        enderecoRef.current.value = dados.logradouro;
-      }
-      if (bairroRef.current && dados.bairro) {
-        bairroRef.current.value = dados.bairro;
-      }
+      setStatusCep("preenchido");
+      if (dados.logradouro) setEndereco(dados.logradouro);
+      if (dados.bairro) setBairro(dados.bairro);
       if (dados.cidade) {
         setCidadeAutoPreenchida(dados.cidade);
+        setCidadeId(dados.cidade.id);
       }
     } catch {
-      setStatusCep("nao-encontrado");
+      if (busca === buscaCepRef.current) setStatusCep("nao-encontrado");
     }
   }
 
+  const etapas: { chave: ChaveEtapa; ok: boolean }[] = [
+    { chave: "titulo", ok: titulo.trim().length >= TITULO_MIN },
+    { chave: "descricao", ok: descricao.trim().length >= DESCRICAO_MIN },
+    { chave: "categoria", ok: categoriaId !== "" },
+    {
+      chave: "local",
+      ok:
+        cep.replace(/\D/g, "").length === 8 &&
+        cidadeId !== "" &&
+        endereco.trim().length >= 5 &&
+        bairro.trim().length >= 1,
+    },
+    { chave: "declaracao", ok: declaracao },
+  ];
+
+  const classe = (invalido: boolean) => (invalido ? campoInputInvalido : campoInput);
+  const contador = (atual: number, minimo: number, maximo: number) => (
+    <span
+      aria-hidden
+      className={`font-mono text-xs tabular-nums ${
+        atual > 0 && atual < minimo
+          ? "text-warn-ink"
+          : "text-ink-muted"
+      }`}
+    >
+      {atual}/{maximo}
+    </span>
+  );
+
   return (
-    <form action={action} className={`flex flex-col gap-5 ${cartao}`}>
-      <div className="flex flex-col gap-3">
-        <h2 className="text-sm font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400">
-          {t("sobreProblema")}
-        </h2>
+    <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+      <form ref={formRef} onSubmit={enviar} className="flex min-w-0 flex-col gap-5">
+        <details className="rounded-lg border border-line bg-surface px-4 py-3 lg:hidden">
+          <summary className="cursor-pointer text-sm font-medium text-ink-2">
+            {t("dicasTitulo")}
+          </summary>
+          <div className="pt-3">
+            <ListaDeDicas />
+          </div>
+        </details>
 
-        <input
-          type="text"
-          name="titulo"
-          placeholder={t("titulo")}
-          className={campoInput}
-        />
-        {state?.erros?.titulo && (
-          <p className="text-sm text-red-600 dark:text-red-400">{state.erros.titulo[0]}</p>
+        {quantidadeErros > 0 && (
+          <Aviso tom="erro">{t("revisarCampos", { count: quantidadeErros })}</Aviso>
         )}
 
-        <textarea
-          name="descricao"
-          placeholder={t("descrevaProblema")}
-          rows={5}
-          className={campoInput}
-        />
-        {state?.erros?.descricao && (
-          <p className="text-sm text-red-600 dark:text-red-400">{state.erros.descricao[0]}</p>
-        )}
-
-        <SeletorCategoria
-          categorias={categorias}
-          selecionadaId={categoriaId}
-          onSelecionar={setCategoriaId}
-          placeholder={t("categoria")}
-        />
-        {state?.erros?.categoriaId && (
-          <p className="text-sm text-red-600 dark:text-red-400">{state.erros.categoriaId[0]}</p>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-3 border-t border-slate-200 pt-4 dark:border-slate-800">
-        <h2 className="text-sm font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400">
-          {t("localizacao")}
-        </h2>
-
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="flex flex-col gap-1">
-            <input
-              type="text"
-              name="cep"
-              required
-              placeholder={t("cep")}
-              onChange={(evento) => buscarCep(evento.target.value)}
-              className={campoInput}
-            />
-            {statusCep === "buscando" && (
-              <p className="text-sm text-slate-500 dark:text-slate-400">{t("buscandoEndereco")}</p>
-            )}
-            {statusCep === "nao-encontrado" && (
-              <p className="text-sm text-amber-600 dark:text-amber-400">{t("cepNaoEncontrado")}</p>
-            )}
-            {state?.erros?.cep && (
-              <p className="text-sm text-red-600 dark:text-red-400">{state.erros.cep[0]}</p>
-            )}
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <SeletorCidade
-              key={cidadeAutoPreenchida?.id ?? "manual"}
-              required
-              placeholder={t("cidade")}
-              defaultValue={cidadeAutoPreenchida}
-            />
-            {state?.erros?.cidadeId && (
-              <p className="text-sm text-red-600 dark:text-red-400">{state.erros.cidadeId[0]}</p>
-            )}
-          </div>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="flex flex-col gap-1">
-            <input
-              ref={enderecoRef}
-              type="text"
-              name="endereco"
-              placeholder={t("endereco")}
-              className={campoInput}
-            />
-            {state?.erros?.endereco && (
-              <p className="text-sm text-red-600 dark:text-red-400">{state.erros.endereco[0]}</p>
-            )}
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <input
-              ref={bairroRef}
-              type="text"
-              name="bairro"
-              placeholder={t("bairro")}
-              className={campoInput}
-            />
-            {state?.erros?.bairro && (
-              <p className="text-sm text-red-600 dark:text-red-400">{state.erros.bairro[0]}</p>
-            )}
-          </div>
-        </div>
-
-        <input
-          type="text"
-          name="referencia"
-          placeholder={t("referencia")}
-          className={campoInput}
-        />
-      </div>
-
-      <div className="flex flex-col gap-3 border-t border-slate-200 pt-4 dark:border-slate-800">
-        <h2 className="text-sm font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400">
-          {t("fotos")}
-        </h2>
-
-        {/* <input type="file"> nativo escondido (sr-only, não display:none -
-            continua focável/acionável por teclado) atrás de um label
-            estilizado como zona de soltar - o controle nativo do navegador
-            destoava muito do resto do formulário. */}
-        <label
-          htmlFor="imagens-input"
-          className="flex cursor-pointer flex-col items-center gap-1.5 rounded-lg border border-dashed border-slate-300 bg-slate-50/60 px-4 py-6 text-center transition-colors hover:border-primary hover:bg-primary/5 dark:border-slate-700 dark:bg-slate-900/40 dark:hover:border-blue-400 dark:hover:bg-blue-500/5"
+        <SecaoFormulario
+          id="secao-problema"
+          numero={1}
+          titulo={t("sobreProblema")}
+          descricao={t("sobreProblemaDesc")}
         >
-          <ImagePlus className="h-5 w-5 text-slate-400 dark:text-slate-500" aria-hidden />
-          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-            {previews.length > 0
-              ? t("fotosSelecionadas", { count: previews.length })
-              : t("adicionarFotos")}
-          </span>
-          <span className="text-xs text-slate-400 dark:text-slate-500">{t("ateCincoFotos")}</span>
-          <input
-            ref={imagensInputRef}
-            id="imagens-input"
-            type="file"
-            name="imagens"
-            multiple
-            accept="image/jpeg,image/png,image/webp"
-            onChange={(evento) => selecionarImagens(evento.target.files)}
-            className="sr-only"
+          <Campo
+            id="nova-titulo"
+            rotulo={t("titulo")}
+            dica={t("dicaTitulo")}
+            erro={erros.titulo?.[0]}
+            contador={contador(titulo.length, TITULO_MIN, TITULO_MAX)}
+          >
+            <input
+              id="nova-titulo"
+              type="text"
+              name="titulo"
+              value={titulo}
+              onChange={(evento) => setTitulo(evento.target.value)}
+              maxLength={TITULO_MAX}
+              placeholder={t("exemploTitulo")}
+              aria-invalid={erros.titulo ? true : undefined}
+              aria-describedby={descritoPor("nova-titulo", erros.titulo?.[0], t("dicaTitulo"))}
+              className={classe(!!erros.titulo)}
+            />
+          </Campo>
+
+          <Campo
+            id="nova-descricao"
+            rotulo={t("descrevaProblema")}
+            dica={t("dicaDescricao", { min: DESCRICAO_MIN })}
+            erro={erros.descricao?.[0]}
+            contador={contador(descricao.length, DESCRICAO_MIN, DESCRICAO_MAX)}
+          >
+            <textarea
+              id="nova-descricao"
+              name="descricao"
+              value={descricao}
+              onChange={(evento) => setDescricao(evento.target.value)}
+              maxLength={DESCRICAO_MAX}
+              rows={6}
+              placeholder={t("exemploDescricao")}
+              aria-invalid={erros.descricao ? true : undefined}
+              aria-describedby={descritoPor(
+                "nova-descricao",
+                erros.descricao?.[0],
+                t("dicaDescricao", { min: DESCRICAO_MIN })
+              )}
+              className={`${classe(!!erros.descricao)} resize-y leading-relaxed`}
+            />
+          </Campo>
+
+          <SeletorCategorias
+            categorias={categorias}
+            selecionadaId={categoriaId}
+            onSelecionar={setCategoriaId}
+            rotulo={t("categoria")}
+            dica={t("dicaCategoria")}
+            erro={erros.categoriaId?.[0]}
           />
-        </label>
-        {avisoArquivos && (
-          <p className="text-sm text-amber-600 dark:text-amber-400">{avisoArquivos}</p>
-        )}
+        </SecaoFormulario>
 
-        {previews.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {previews.map((url, indice) => (
-              <div key={url} className="group relative h-20 w-20 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setImagemAmpliada(url)}
-                  className="block h-full w-full overflow-hidden rounded-lg border border-slate-200 transition hover:border-primary dark:border-slate-700 dark:hover:border-blue-400"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element -- preview local via object URL, não é ativo do Next */}
-                  <img src={url} alt="" className="h-full w-full object-cover" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => removerImagem(indice)}
-                  aria-label={t("removerFoto")}
-                  className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-slate-700 text-white shadow transition hover:bg-red-600"
-                >
-                  <X className="h-3 w-3" aria-hidden />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {imagemAmpliada && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-6"
+        <SecaoFormulario
+          id="secao-local"
+          numero={2}
+          titulo={t("localizacao")}
+          descricao={t("localizacaoDesc")}
         >
-          <div ref={modalRef} className="relative max-h-full max-w-full">
-            {/* eslint-disable-next-line @next/next/no-img-element -- preview local via object URL, não é ativo do Next */}
-            <img
-              src={imagemAmpliada}
-              alt=""
-              className="max-h-[85vh] max-w-full rounded-lg object-contain"
-            />
-            <button
-              type="button"
-              onClick={() => setImagemAmpliada(null)}
-              aria-label={t("fecharImagem")}
-              className="absolute -top-3 -right-3 flex h-8 w-8 items-center justify-center rounded-full bg-white text-slate-900 shadow-lg hover:bg-slate-100"
+          <div className="grid gap-4 sm:grid-cols-[11rem_minmax(0,1fr)]">
+            <Campo
+              id="nova-cep"
+              rotulo={t("cep")}
+              erro={erros.cep?.[0]}
+              dica={
+                statusCep === "buscando"
+                  ? t("buscandoEndereco")
+                  : statusCep === "preenchido"
+                    ? t("enderecoPreenchido")
+                    : statusCep === "nao-encontrado"
+                      ? t("cepNaoEncontrado")
+                      : t("dicaCep")
+              }
             >
-              <X className="h-4 w-4" aria-hidden />
-            </button>
+              <div className="relative">
+                <input
+                  id="nova-cep"
+                  type="text"
+                  name="cep"
+                  inputMode="numeric"
+                  autoComplete="postal-code"
+                  required
+                  value={cep}
+                  onChange={(evento) => {
+                    setCep(formatarCep(evento.target.value));
+                    buscarCep(evento.target.value);
+                  }}
+                  placeholder="00000-000"
+                  aria-invalid={erros.cep ? true : undefined}
+                  aria-describedby={descritoPor("nova-cep", erros.cep?.[0], "dica")}
+                  className={`w-full pr-9 font-mono tabular-nums ${classe(!!erros.cep)}`}
+                />
+                <span aria-hidden className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                  {statusCep === "buscando" && (
+                    <LoaderCircle className="h-4 w-4 animate-spin text-ink-muted" />
+                  )}
+                  {statusCep === "preenchido" && (
+                    <Check className="h-4 w-4 text-ok-ink" strokeWidth={3} />
+                  )}
+                  {statusCep === "nao-encontrado" && (
+                    <CircleAlert className="h-4 w-4 text-warn-ink" />
+                  )}
+                </span>
+              </div>
+            </Campo>
+
+            <Campo id="nova-cidade" rotulo={t("cidade")} erro={erros.cidadeId?.[0]}>
+              {/* O CEP sempre vale mais que a cidade padrão da conta: a key
+                  muda de "padrao" pro id da cidade do CEP e remonta o campo,
+                  mesmo que seja a mesma cidade (e mesmo que a pessoa já
+                  tenha trocado a cidade na mão). */}
+              <SeletorCidade
+                key={cidadeAutoPreenchida?.id ?? "padrao"}
+                id="nova-cidade"
+                required
+                placeholder={t("cidade")}
+                defaultValue={cidadeAutoPreenchida ?? cidadePadrao}
+                onMudar={(cidade) => setCidadeId(cidade?.id ?? "")}
+              />
+            </Campo>
           </div>
+
+          <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_14rem]">
+            <Campo id="nova-endereco" rotulo={t("endereco")} erro={erros.endereco?.[0]}>
+              <input
+                id="nova-endereco"
+                type="text"
+                name="endereco"
+                autoComplete="street-address"
+                value={endereco}
+                onChange={(evento) => setEndereco(evento.target.value)}
+                placeholder={t("exemploEndereco")}
+                aria-invalid={erros.endereco ? true : undefined}
+                aria-describedby={descritoPor("nova-endereco", erros.endereco?.[0])}
+                className={classe(!!erros.endereco)}
+              />
+            </Campo>
+
+            <Campo id="nova-bairro" rotulo={t("bairro")} erro={erros.bairro?.[0]}>
+              <input
+                id="nova-bairro"
+                type="text"
+                name="bairro"
+                value={bairro}
+                onChange={(evento) => setBairro(evento.target.value)}
+                placeholder={t("exemploBairro")}
+                aria-invalid={erros.bairro ? true : undefined}
+                aria-describedby={descritoPor("nova-bairro", erros.bairro?.[0])}
+                className={classe(!!erros.bairro)}
+              />
+            </Campo>
+          </div>
+
+          <Campo
+            id="nova-referencia"
+            rotulo={t("referencia")}
+            opcional={t("opcional")}
+            dica={t("dicaReferencia")}
+          >
+            <input
+              id="nova-referencia"
+              type="text"
+              name="referencia"
+              value={referencia}
+              onChange={(evento) => setReferencia(evento.target.value)}
+              placeholder={t("exemploReferencia")}
+              aria-describedby={descritoPor("nova-referencia", undefined, "dica")}
+              className={campoInput}
+            />
+          </Campo>
+        </SecaoFormulario>
+
+        <SecaoFormulario
+          id="secao-fotos"
+          numero={3}
+          titulo={t("fotos")}
+          descricao={t("fotosDesc")}
+        >
+          <FotosReclamacao arquivos={arquivos} onMudar={setArquivos} />
+        </SecaoFormulario>
+
+        <SecaoFormulario
+          id="secao-envio"
+          numero={4}
+          titulo={t("confirmacao")}
+          descricao={t("confirmacaoDesc")}
+        >
+          <label
+            className={`flex cursor-pointer items-start gap-3 rounded-lg border px-3.5 py-3 text-sm transition-colors has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-brand ${
+              erros.declaracaoVeracidade
+                ? "border-danger-ink/60 bg-danger-soft/50"
+                : "border-line bg-sunken/60"
+            }`}
+          >
+            <input
+              type="checkbox"
+              name="declaracaoVeracidade"
+              required
+              checked={declaracao}
+              onChange={(evento) => setDeclaracao(evento.target.checked)}
+              aria-invalid={erros.declaracaoVeracidade ? true : undefined}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-brand"
+            />
+            <span className="leading-relaxed text-ink-2">
+              {t("declaracaoVeracidade")}
+            </span>
+          </label>
+          {erros.declaracaoVeracidade && (
+            <p role="alert" className="flex items-start gap-1.5 text-sm text-danger-ink">
+              <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+              {erros.declaracaoVeracidade[0]}
+            </p>
+          )}
+
+          <div ref={mensagemRef}>
+            {state?.mensagem && <Aviso tom="erro">{state.mensagem}</Aviso>}
+          </div>
+
+          <div className="flex flex-col gap-2.5">
+            <button type="submit" disabled={pending} aria-busy={pending} className={`${botaoPrimario} w-full py-2.5`}>
+              {pending ? (
+                <>
+                  <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden />
+                  {t("enviando")}
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4" aria-hidden />
+                  {t("enviarReclamacao")}
+                </>
+              )}
+            </button>
+            <p role="status" className="text-center text-xs text-ink-muted">
+              {pending ? t("enviandoAviso") : t("avisoModeracao")}
+            </p>
+          </div>
+        </SecaoFormulario>
+      </form>
+
+      <aside className="flex flex-col gap-4 lg:sticky lg:top-24">
+        <div className="hidden lg:block">
+          <ProgressoPreenchimento etapas={etapas} />
         </div>
-      )}
-
-      <label className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
-        <input
-          type="checkbox"
-          name="declaracaoVeracidade"
-          required
-          className="mt-0.5"
-        />
-        <span>{t("declaracaoVeracidade")}</span>
-      </label>
-      {state?.erros?.declaracaoVeracidade && (
-        <p className="text-sm text-red-600 dark:text-red-400">{state.erros.declaracaoVeracidade[0]}</p>
-      )}
-
-      {state?.mensagem && (
-        <p className="text-sm text-red-600 dark:text-red-400">{state.mensagem}</p>
-      )}
-
-      <button type="submit" disabled={pending} className={botaoPrimario}>
-        {t("enviarReclamacao")}
-      </button>
-    </form>
+        <div className="hidden lg:block">
+          <DicasReclamacao />
+        </div>
+        <DepoisDeEnviar />
+      </aside>
+    </div>
   );
 }

@@ -5,13 +5,14 @@ import { Prisma } from "@prisma/client";
 import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
-import { exigirSessao } from "@/lib/sessao";
+import { informacao, sucesso, type ResultadoAcao } from "@/lib/acoes/resultado";
+import { exigirSessao } from "@/lib/seguranca/sessao";
 
 // Sentinel de categoriaChave pra "todas as categorias" - precisa bater com
 // o default da coluna no schema.prisma (AssinaturaCidade.categoriaChave).
 const CATEGORIA_CHAVE_TODAS = "__todas__";
 
-export type AssinaturaFormState = { erro?: string } | undefined;
+export type AssinaturaFormState = { erro?: string; sucesso?: string } | undefined;
 
 export async function criarAssinatura(
   _state: AssinaturaFormState,
@@ -65,17 +66,24 @@ export async function criarAssinatura(
 
   revalidatePath("/painel/assinaturas");
   revalidatePath(`/cidades/${cidade.slug}`);
+
+  return { sucesso: t("assinaturaCriada", { cidade: cidade.nome }) };
 }
 
-export async function cancelarAssinatura(assinaturaId: string) {
+export async function cancelarAssinatura(assinaturaId: string): Promise<ResultadoAcao> {
   const session = await exigirSessao();
+  const t = await getTranslations("Assinaturas");
 
   // deleteMany (não delete) pra checar dono e existência numa query só,
   // sem lançar quando o id não pertence a este usuário (evita um usuário
   // cancelar a assinatura de outro só adivinhando o id).
-  await prisma.assinaturaCidade.deleteMany({
+  const removidas = await prisma.assinaturaCidade.deleteMany({
     where: { id: assinaturaId, userId: session.user.id },
   });
 
   revalidatePath("/painel/assinaturas");
+
+  return removidas.count === 0
+    ? informacao(t("erroAssinaturaNaoEncontrada"))
+    : sucesso(t("assinaturaCancelada"));
 }

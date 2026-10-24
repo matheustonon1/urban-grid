@@ -8,10 +8,10 @@ import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import { signIn } from "@/auth";
-import { hashCpf } from "@/lib/cpf";
+import { hashCpf } from "@/lib/seguranca/cpf";
 import { criarTokenVerificacao, enviarEmailVerificacao } from "@/lib/email";
 import { obterIdiomaAtual } from "@/i18n/atual";
-import { verificarTurnstile } from "@/lib/turnstile";
+import { verificarTurnstile } from "@/lib/seguranca/turnstile";
 
 import { criarCadastroSchema, type CadastroFormState } from "./definitions";
 

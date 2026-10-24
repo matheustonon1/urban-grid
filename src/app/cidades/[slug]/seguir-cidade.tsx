@@ -22,9 +22,9 @@ export function SeguirCidade({
 
   if (jaAssina) {
     return (
-      <p className="text-sm text-slate-500 dark:text-slate-400">
+      <p className="text-sm text-ink-muted">
         {t("jaAcompanha")}{" "}
-        <Link href="/painel/assinaturas" className="text-primary underline">
+        <Link href="/painel/assinaturas" className="text-brand underline">
           {t("gerenciarAssinaturas")}
         </Link>
       </p>
@@ -33,8 +33,8 @@ export function SeguirCidade({
 
   if (!logado) {
     return (
-      <p className="text-sm text-slate-500 dark:text-slate-400">
-        <Link href="/login" className="text-primary underline">
+      <p className="text-sm text-ink-muted">
+        <Link href="/login" className="text-brand underline">
           {t("entrarParaAcompanhar")}
         </Link>
       </p>
@@ -48,7 +48,7 @@ export function SeguirCidade({
         <Rss className="h-4 w-4" aria-hidden />
         {t("acompanharCidade")}
       </button>
-      {state?.erro && <p className="text-sm text-red-600 dark:text-red-400">{state.erro}</p>}
+      {state?.erro && <p className="text-sm text-danger-ink">{state.erro}</p>}
     </form>
   );
 }

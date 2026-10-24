@@ -1,10 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import bcrypt from "bcryptjs";
 import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
+import { verificarSenhaAtual } from "@/lib/conta/senhaAtual";
 import {
   cifrarSegredoTotp,
   codigoTotpValido,
@@ -12,26 +12,28 @@ import {
   gerarCodigosBackup,
   gerarSegredoTotp,
   prepararCodigosBackup,
-} from "@/lib/totp";
-import { exigirSessao } from "@/lib/sessao";
+} from "@/lib/seguranca/totp";
+import { exigirSessao } from "@/lib/seguranca/sessao";
 
 import {
   criarConfirmarTotpSchema,
-  criarDesativarTotpSchema,
+  criarSenhaAtualSchema,
   type ConfirmarTotpFormState,
-  type DesativarTotpFormState,
+  type RegenerarCodigosFormState,
+  type SenhaAtualFormState,
 } from "./definitions";
 
 export async function iniciarConfiguracaoTotp() {
   const session = await exigirSessao();
 
-  const usuario = await prisma.user.findUniqueOrThrow({ where: { id: session.user.id } });
-  if (usuario.totpConfirmadoEm) {
-    return;
-  }
-
-  await prisma.user.update({
-    where: { id: session.user.id },
+  // Só grava se não há 2FA ativo E nenhum segredo pendente - um único
+  // updateMany guardado, não "lê e depois atualiza". Antes, um duplo clique
+  // (ou uma segunda aba) trocava o segredo por baixo de um QR já escaneado,
+  // e uma confirmação concorrente podia ter o segredo ATIVO sobrescrito,
+  // deixando a pessoa trancada com um segredo que ela não conhece. Pra
+  // gerar um novo segredo, a pessoa cancela a configuração antes.
+  await prisma.user.updateMany({
+    where: { id: session.user.id, totpConfirmadoEm: null, totpSecret: null },
     data: { totpSecret: cifrarSegredoTotp(gerarSegredoTotp()) },
   });
 
@@ -92,38 +94,41 @@ export async function confirmarTotp(
   revalidatePath("/painel/conta");
 
   return {
+    tipo: "sucesso",
     mensagem: t("ativadaMensagem"),
     codigosBackup,
   };
 }
 
 export async function desativarTotp(
-  _state: DesativarTotpFormState,
+  _state: SenhaAtualFormState,
   formData: FormData
-): Promise<DesativarTotpFormState> {
+): Promise<SenhaAtualFormState> {
   const session = await exigirSessao();
 
   const t = await getTranslations("Totp");
-  const validado = criarDesativarTotpSchema(t).safeParse({
+  // O schema é compartilhado com excluirConta e pede as chaves de "Conta".
+  const validado = criarSenhaAtualSchema(await getTranslations("Conta")).safeParse({
     senhaAtual: formData.get("senhaAtual"),
   });
   if (!validado.success) {
     return { erros: validado.error.flatten().fieldErrors };
   }
 
-  const usuario = await prisma.user.findUnique({ where: { id: session.user.id } });
-  if (!usuario?.senhaHash) {
-    return { mensagem: t("erroDesativar") };
+  const resultadoSenha = await verificarSenhaAtual(session.user.id, validado.data.senhaAtual);
+  if (resultadoSenha === "bloqueada") {
+    return { mensagem: t("erroMuitasTentativas") };
   }
-
-  const senhaValida = await bcrypt.compare(validado.data.senhaAtual, usuario.senhaHash);
-  if (!senhaValida) {
+  if (resultadoSenha === "incorreta") {
     return { erros: { senhaAtual: [t("erroSenhaIncorreta")] } };
+  }
+  if (resultadoSenha !== "ok") {
+    return { mensagem: t("erroDesativar") };
   }
 
   await prisma.$transaction([
     prisma.user.update({
-      where: { id: usuario.id },
+      where: { id: session.user.id },
       data: {
         totpSecret: null,
         totpConfirmadoEm: null,
@@ -131,10 +136,59 @@ export async function desativarTotp(
         totpBloqueadoAte: null,
       },
     }),
-    prisma.totpBackupCode.deleteMany({ where: { userId: usuario.id } }),
+    prisma.totpBackupCode.deleteMany({ where: { userId: session.user.id } }),
   ]);
 
   revalidatePath("/painel/conta");
 
-  return { mensagem: t("desativadaMensagem") };
+  return { tipo: "sucesso", mensagem: t("desativadaMensagem") };
+}
+
+// Os códigos de backup só são mostrados uma vez (na ativação) e cada um
+// vale um único uso - quem gasta ou perde a lista ficaria sem saída caso
+// perdesse também o aplicativo autenticador. Gerar um lote novo descarta
+// o anterior inteiro (inclusive os ainda não usados), por isso a senha é
+// exigida: é o mesmo nível de confirmação de desativarTotp().
+export async function regenerarCodigosBackup(
+  _state: RegenerarCodigosFormState,
+  formData: FormData
+): Promise<RegenerarCodigosFormState> {
+  const session = await exigirSessao();
+
+  const t = await getTranslations("Totp");
+  const validado = criarSenhaAtualSchema(await getTranslations("Conta")).safeParse({
+    senhaAtual: formData.get("senhaAtual"),
+  });
+  if (!validado.success) {
+    return { erros: validado.error.flatten().fieldErrors };
+  }
+
+  const resultadoSenha = await verificarSenhaAtual(session.user.id, validado.data.senhaAtual);
+  if (resultadoSenha === "bloqueada") {
+    return { mensagem: t("erroMuitasTentativas") };
+  }
+  if (resultadoSenha === "incorreta") {
+    return { erros: { senhaAtual: [t("erroSenhaIncorreta")] } };
+  }
+  const usuario = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { id: true, totpConfirmadoEm: true },
+  });
+  if (resultadoSenha !== "ok" || !usuario?.totpConfirmadoEm) {
+    return { mensagem: t("erroGerarCodigos") };
+  }
+
+  const codigosBackup = gerarCodigosBackup();
+  const dadosCodigosBackup = await prepararCodigosBackup(usuario.id, codigosBackup);
+
+  // Atômico pelo mesmo motivo de confirmarTotp(): se o createMany falhasse
+  // depois do deleteMany, a conta ficaria com 2FA ativo e zero códigos.
+  await prisma.$transaction([
+    prisma.totpBackupCode.deleteMany({ where: { userId: usuario.id } }),
+    prisma.totpBackupCode.createMany({ data: dadosCodigosBackup }),
+  ]);
+
+  revalidatePath("/painel/conta");
+
+  return { tipo: "sucesso", mensagem: t("novosCodigosGerados"), codigosBackup };
 }

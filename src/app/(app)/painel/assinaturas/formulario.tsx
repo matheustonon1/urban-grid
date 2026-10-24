@@ -3,9 +3,11 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
-import { SeletorCategoria } from "@/components/categoria-select";
-import { SeletorCidade } from "@/components/cidade-combobox";
-import { botaoPrimario, cartao } from "@/lib/estilos";
+import { SeletorCategoria } from "@/components/reclamacao/categoria-select";
+import { SeletorCidade } from "@/components/formulario/cidade-combobox";
+import { Campo } from "@/components/formulario/campo";
+import { Aviso } from "@/components/ui/aviso";
+import { botaoPrimario, cartaoSecao } from "@/lib/estilos";
 
 import { criarAssinatura } from "./actions";
 
@@ -34,27 +36,36 @@ export function FormularioNovaAssinatura({ categorias }: { categorias: Categoria
   }, [pending, state]);
 
   return (
-    <form action={action} className={`flex flex-col gap-3 ${cartao}`}>
-      <h2 className="font-semibold text-slate-900 dark:text-slate-100">{t("nova")}</h2>
-      <p className="text-sm text-slate-500 dark:text-slate-400">{t("novaDescricao")}</p>
-
-      <div className="flex flex-wrap gap-2">
-        <div className="min-w-48 flex-1">
-          <SeletorCidade key={resetKey} name="cidadeId" placeholder={t("cidade")} required />
-        </div>
-        <div className="min-w-48 flex-1">
-          <SeletorCategoria
-            categorias={categorias}
-            selecionadaId={categoriaId}
-            placeholder={t("todasCategorias")}
-            onSelecionar={setCategoriaId}
-          />
-        </div>
+    <form action={action} className={`flex flex-col gap-5 ${cartaoSecao}`}>
+      <div className="flex flex-col gap-1.5">
+        <h2 className="text-xl font-extrabold tracking-tight text-ink">{t("nova")}</h2>
+        <p className="text-sm text-ink-muted">{t("novaDescricao")}</p>
       </div>
 
-      {state?.erro && <p className="text-sm text-red-600 dark:text-red-400">{state.erro}</p>}
+      <Campo id="assinatura-cidade" rotulo={t("cidade")}>
+        <SeletorCidade
+          key={resetKey}
+          id="assinatura-cidade"
+          name="cidadeId"
+          placeholder={t("cidade")}
+          required
+        />
+      </Campo>
 
-      <button type="submit" disabled={pending} className={`${botaoPrimario} w-fit`}>
+      <div className="flex flex-col gap-1.5">
+        <span className="text-sm font-medium text-ink-2">{t("rotuloCategoria")}</span>
+        <SeletorCategoria
+          categorias={categorias}
+          selecionadaId={categoriaId}
+          placeholder={t("todasCategorias")}
+          onSelecionar={setCategoriaId}
+        />
+      </div>
+
+      {state?.erro && <Aviso tom="erro">{state.erro}</Aviso>}
+      {state?.sucesso && <Aviso tom="sucesso">{state.sucesso}</Aviso>}
+
+      <button type="submit" disabled={pending} className={`${botaoPrimario} w-full`}>
         {t("assinar")}
       </button>
     </form>

@@ -37,7 +37,7 @@ test("excluir conta anonimiza os dados pessoais, mantém a reclamação e encerr
   await page.click('button:has-text("Excluir minha conta")');
 
   // signOut({ redirectTo: "/" }) - sai da área logada e derruba a sessão.
-  await page.waitForURL(/^http:\/\/localhost:3000\/$/);
+  await page.waitForURL(/^https?:\/\/[^/]+\/$/);
 
   const usuarioFinal = await prisma.user.findUniqueOrThrow({ where: { id: usuario.id } });
   expect(usuarioFinal.email).toBe(`removido-${usuario.id}@urbangrid.local`);
@@ -55,7 +55,8 @@ test("excluir conta anonimiza os dados pessoais, mantém a reclamação e encerr
   // A reclamação continua acessível publicamente, como registro de
   // interesse público, mesmo com a conta do autor removida.
   await page.goto(`/reclamacoes/${reclamacao.protocolo}`);
-  await expect(page.getByText(reclamacao.titulo)).toBeVisible();
+  // Pelo cabeçalho, não por getByText: o título da aba (<title>) tem o mesmo texto.
+  await expect(page.getByRole("heading", { name: reclamacao.titulo })).toBeVisible();
 
   // Sessão encerrada de verdade - área logada exige novo login.
   await page.goto("/painel");

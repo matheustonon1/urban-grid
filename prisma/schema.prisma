@@ -159,7 +159,7 @@ model User {
   banidoAte DateTime?
 
   // Desliga só os e-mails de "status mudou" (ver TIPOS_COM_EMAIL em
-  // lib/notificacoes.ts) - a notificação no sininho continua sendo
+  // lib/notificacoes/index.ts) - a notificação no sininho continua sendo
   // criada de qualquer forma. Não afeta alertas de segurança (senha
   // alterada, troca de e-mail solicitada), que sempre saem por e-mail
   // independente disto - nem o resumo semanal, que já é opt-in por si só
@@ -187,6 +187,8 @@ model User {
   solicitacoesOrgaoAnalisadas  SolicitacaoOrgao[]
   solicitacoesCidadeAnalisadas SolicitacaoCidade[]
   assinaturas                  AssinaturaCidade[]
+  auditoriasFeitas             RegistroAuditoria[] @relation("AuditoriaAtor")
+  auditoriasSofridas           RegistroAuditoria[] @relation("AuditoriaAlvo")
 
   @@index([cidadeId])
   @@index([papel])
@@ -311,7 +313,7 @@ model Categoria {
 }
 
 // Assinatura de "resumo semanal por e-mail" de uma cidade (com categoria
-// opcional) - ver src/lib/resumoSemanal.ts, disparado pelo cron em
+// opcional) - ver src/lib/notificacoes/resumoSemanal.ts, disparado pelo cron em
 // api/cron/resumo-semanal. categoriaId nulo = todas as categorias da
 // cidade.
 model AssinaturaCidade {
@@ -686,4 +688,53 @@ model Notificacao {
   createdAt DateTime @default(now())
 
   @@index([userId, lida])
+}
+
+// ===========================================================================
+// AUDITORIA
+// Quem fez o quê nas ações que mudam acesso ou decidem em nome da plataforma
+// (papel, banimento, órgão ativo/inativo, solicitações). Só leitura para o admin
+// (/auditoria); nada aqui é editável.
+// ===========================================================================
+
+enum AcaoAuditoria {
+  PAPEL_ALTERADO
+  BANIMENTO_APLICADO
+  BANIMENTO_REVERTIDO
+  ORGAO_DESATIVADO
+  ORGAO_REATIVADO
+  SOLICITACAO_ORGAO_APROVADA
+  SOLICITACAO_ORGAO_REJEITADA
+  SOLICITACAO_CIDADE_APROVADA
+  SOLICITACAO_CIDADE_REJEITADA
+}
+
+model RegistroAuditoria {
+  id   String        @id @default(cuid())
+  acao AcaoAuditoria
+
+  // SetNull: apagar/anonimizar uma conta não pode apagar o histórico do que
+  // aconteceu - o registro continua, só perde a ligação com a pessoa.
+  atorId String?
+  ator   User?   @relation("AuditoriaAtor", fields: [atorId], references: [id], onDelete: SetNull)
+
+  // Conta afetada, quando a ação é sobre uma pessoa (papel, banimento).
+  alvoUserId String?
+  alvoUser   User?   @relation("AuditoriaAlvo", fields: [alvoUserId], references: [id], onDelete: SetNull)
+
+  // Outros alvos (órgão, solicitação): tipo + id, sem FK - mesmo desenho polimórfico
+  // de LogModeracao/Denuncia. Nome e e-mail NÃO são copiados para cá (dado pessoal);
+  // a tela os lê da conta/órgão de origem.
+  alvoTipo String? @db.VarChar(32)
+  alvoId   String?
+
+  // Só o que explica a mudança e não é dado pessoal: papel anterior e novo, duração
+  // do banimento, motivo escolhido.
+  detalhes Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([acao, createdAt])
+  @@index([alvoUserId])
 }

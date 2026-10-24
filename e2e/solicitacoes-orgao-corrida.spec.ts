@@ -2,7 +2,13 @@ import { expect, test } from "@playwright/test";
 
 import { prisma } from "@/lib/prisma";
 
-import { criarAdminTeste, emailTeste, limparDadosTeste } from "./helpers";
+import {
+  ativarDoisFatoresTeste,
+  confirmarDialogo,
+  criarAdminTeste,
+  emailTeste,
+  limparDadosTeste,
+} from "./helpers";
 
 let emailOrgaoCriado: string | undefined;
 
@@ -24,7 +30,7 @@ async function login(page: import("@playwright/test").Page, email: string, senha
 test("aprovar duas solicitações com o mesmo e-mail ao mesmo tempo não cria duas contas nem trava com erro", async ({
   browser,
 }) => {
-  const { email: emailAdmin, senha } = await criarAdminTeste();
+  const { usuario: admin, email: emailAdmin, senha } = await criarAdminTeste();
   const cidade = await prisma.cidade.findFirstOrThrow();
   const emailOrgao = emailTeste("orgao-corrida");
   const sufixo = Date.now();
@@ -50,6 +56,10 @@ test("aprovar duas solicitações com o mesmo e-mail ao mesmo tempo não cria du
   const paginaA = await contexto.newPage();
   const paginaB = await contexto.newPage();
   await login(paginaA, emailAdmin, senha);
+  // Aprovar pede senha e código de duas etapas. Cada página usa o seu código de backup
+  // (de uso único): com o mesmo código, a proteção contra reuso é que decidiria a
+  // disputa, e o que este teste quer provar é a corrida pela mesma conta.
+  const { codigosBackup } = await ativarDoisFatoresTeste(admin.id);
 
   await paginaA.goto("/solicitacoes-orgao");
   await paginaB.goto("/solicitacoes-orgao");
@@ -62,9 +72,15 @@ test("aprovar duas solicitações com o mesmo e-mail ao mesmo tempo não cria du
   // na constraint única de User.email. A correção precisa desfazer por
   // completo a transação da perdedora (ela volta a PENDENTE) em vez de
   // deixar a solicitação marcada como aprovada sem nenhuma conta criada.
+  // "Aprovar" agora abre um diálogo de confirmação em cada página: abre os dois e
+  // confirma juntos, que é o que mantém a disputa pela mesma conta.
   await Promise.all([
     cartaoA.getByRole("button", { name: "Aprovar" }).click(),
     cartaoB.getByRole("button", { name: "Aprovar" }).click(),
+  ]);
+  await Promise.all([
+    confirmarDialogo(paginaA, "Aprovar e enviar acesso", senha, codigosBackup[0]),
+    confirmarDialogo(paginaB, "Aprovar e enviar acesso", senha, codigosBackup[1]),
   ]);
   await paginaA.waitForTimeout(1500);
 

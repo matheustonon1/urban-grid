@@ -1,286 +1,228 @@
-import { getTranslations } from "next-intl/server";
+import { BarChart3 } from "lucide-react";
+import { getLocale, getTranslations } from "next-intl/server";
 
-import { prisma } from "@/lib/prisma";
-import { cartao, containerPagina } from "@/lib/estilos";
+import { Aviso } from "@/components/ui/aviso";
+import { BarraDecisoes } from "@/components/moderacao/barra-decisoes";
+import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
+import { EstadoVazio } from "@/components/ui/estado-vazio";
+import { Secao } from "@/components/ui/secao";
+import {
+  carregarEstatisticasModeracao,
+  LIMITE_LINHAS_ESTATISTICAS,
+} from "@/lib/moderacao/carregarEstatisticas";
+import {
+  consumoDoModelo,
+  disparosPorEixo,
+  ehFalhaDaIA,
+  escolherGranularidade,
+  histogramaScore,
+  idadesDaFila,
+  interpretarPeriodo,
+  LIMITE_REVISAO,
+  motivosDeRevisao,
+  percentil,
+  porVersaoDoPrompt,
+  resumirDecisoes,
+  resumirDenuncias,
+  revisaoHumana,
+  variacaoPontos,
+  variacaoRelativa,
+  volumePorPeriodo,
+} from "@/lib/moderacao/estatisticas";
+import { pagina } from "@/lib/estilos";
+import { formatarNumero, formatarPorcentagem, formatarVariacao } from "@/lib/util/formatarEstatistica";
+import { metadataDaPagina } from "@/lib/metadata";
+import { LIMITE_REPROVACAO_COMENTARIO } from "@/lib/moderacao/pontuacoes";
 
 import { exigirModerador } from "../exigir-moderador";
+import { DenunciasDoPeriodo } from "./denuncias";
+import { EixosQueDisparam } from "./eixos";
+import { FilaAgora } from "./fila-agora";
+import { GraficoVolume } from "./grafico-volume";
+import { HistogramaPontuacoes } from "./histograma";
+import { IaVersusHumano } from "./ia-humano";
+import { Kpis, type Variacao } from "./kpis";
+import { SeletorPeriodo } from "./seletor-periodo";
+import { ConsumoDoModelo, VersoesDoPrompt } from "./versoes-consumo";
 
-const DIAS_VOLUME = 14;
+export const generateMetadata = metadataDaPagina("Estatisticas");
 
-const DECISAO_COR: Record<string, string> = {
-  APROVAR: "text-green-700 dark:text-green-400",
-  REPROVAR: "text-red-700 dark:text-red-400",
-  ENCAMINHAR_REVISAO: "text-amber-700 dark:text-amber-400",
-};
+const MS_DIA = 86_400_000;
 
-// Número em mono/tabular, mesmo vocabulário do painel de estatísticas
-// da home (ver app/page.tsx) - lembra um painel técnico, não um stat
-// card isolado. Sem cartao próprio aqui de propósito: cada Estatistica
-// é um item dentro do painel único montado onde é usada, não um bloco
-// solto.
-function Estatistica({ label, valor }: { label: string; valor: string }) {
-  return (
-    <div className="flex min-w-30 flex-1 flex-col gap-0.5 px-4 py-3">
-      <span className="font-mono text-2xl font-bold tabular-nums text-slate-900 dark:text-slate-100">
-        {valor}
-      </span>
-      <span className="text-xs text-slate-500 dark:text-slate-400">{label}</span>
-    </div>
-  );
+// Diferença menor que isto (em % ou pp) é ruído de arredondamento: mostra "="
+// em vez de uma seta pra cima ou pra baixo que não quer dizer nada.
+const LIMIAR_IGUAL = 0.05;
+
+function comoVariacao(valor: number | null, unidade: "%" | "pp", locale: string): Variacao | null {
+  if (valor === null) return null;
+  return {
+    texto: formatarVariacao(valor, locale, unidade),
+    direcao: Math.abs(valor) < LIMIAR_IGUAL ? "igual" : valor > 0 ? "sobe" : "desce",
+  };
 }
 
-function BarraScore({ rotulo, valor }: { rotulo: string; valor: number | null }) {
-  const pct = valor !== null ? Math.round(valor * 100) : null;
-  return (
-    <div className="flex items-center gap-3">
-      <span className="w-40 shrink-0 text-sm text-slate-600 dark:text-slate-400">{rotulo}</span>
-      <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-        <div
-          className="h-full rounded-full bg-primary transition-all"
-          style={{ width: `${pct ?? 0}%` }}
-        />
-      </div>
-      <span className="w-12 shrink-0 text-right text-sm font-medium text-slate-700 dark:text-slate-300">
-        {pct !== null ? `${pct}%` : "—"}
-      </span>
-    </div>
-  );
-}
-
-function formatarDiaChave(data: Date) {
-  return data.toISOString().slice(0, 10);
-}
-
-function formatarDiaCurto(chave: string) {
-  const [, mes, dia] = chave.split("-");
-  return `${dia}/${mes}`;
-}
-
-export default async function EstatisticasModeracaoPage() {
+export default async function EstatisticasModeracaoPage({
+  searchParams,
+}: PageProps<"/moderacao/estatisticas">) {
   const t = await getTranslations("Estatisticas");
-  const tDecisao = await getTranslations("Decisao");
+  const tNav = await getTranslations("AdminNav");
+  const locale = await getLocale();
   await exigirModerador();
 
-  const agora = new Date();
-  const desde = new Date(agora.getTime() - DIAS_VOLUME * 86_400_000);
-  desde.setHours(0, 0, 0, 0);
+  const { dias } = await searchParams;
+  const periodo = interpretarPeriodo(dias);
+  const dados = await carregarEstatisticasModeracao(periodo);
+  const { logs, logsAnteriores, agora } = dados;
 
-  const [
-    porTipoEDecisao,
-    agregadoReclamacao,
-    agregadoComentario,
-    revisadosHumano,
-    logsRecentes,
-  ] = await Promise.all([
-    prisma.logModeracao.groupBy({
-      by: ["alvoTipo", "decisao"],
-      _count: { _all: true },
-    }),
-    prisma.logModeracao.aggregate({
-      where: { alvoTipo: "RECLAMACAO" },
-      _avg: {
-        latenciaMs: true,
-        scoreOfensivo: true,
-        scoreSpam: true,
-        scoreDadosPessoais: true,
-        scoreForaEscopo: true,
-        scoreDesinformacao: true,
-        coerenciaTextoImagem: true,
-      },
-      _count: { _all: true },
-    }),
-    prisma.logModeracao.aggregate({
-      where: { alvoTipo: "COMENTARIO" },
-      _avg: { latenciaMs: true, scoreOfensivo: true, scoreSpam: true, scoreDadosPessoais: true },
-      _count: { _all: true },
-    }),
-    prisma.logModeracao.findMany({
-      where: { decisaoFinal: { not: null } },
-      select: { decisao: true, decisaoFinal: true },
-    }),
-    prisma.logModeracao.findMany({
-      where: { createdAt: { gte: desde } },
-      select: { createdAt: true },
-    }),
-  ]);
+  const filas = [
+    { chave: "reclamacoes" as const, href: "/moderacao", idades: idadesDaFila(dados.filas.reclamacoes, agora) },
+    { chave: "comentarios" as const, href: "/moderacao/comentarios", idades: idadesDaFila(dados.filas.comentarios, agora) },
+    { chave: "denuncias" as const, href: "/denuncias", idades: idadesDaFila(dados.filas.denuncias, agora) },
+  ];
 
-  const totalAnalises = porTipoEDecisao.reduce((soma, item) => soma + item._count._all, 0);
-  const totalAprovado = porTipoEDecisao
-    .filter((item) => item.decisao === "APROVAR")
-    .reduce((soma, item) => soma + item._count._all, 0);
-  const taxaAprovacao = totalAnalises > 0 ? Math.round((totalAprovado / totalAnalises) * 100) : null;
-
-  const totalRevisados = revisadosHumano.length;
-  const totalConcordou = revisadosHumano.filter((log) => log.decisaoFinal === log.decisao).length;
-  const concordanciaHumana =
-    totalRevisados > 0 ? Math.round((totalConcordou / totalRevisados) * 100) : null;
-
-  const latenciaMediaMs = agregadoReclamacao._avg.latenciaMs ?? agregadoComentario._avg.latenciaMs;
-
-  const diasChaves: string[] = [];
-  for (let i = DIAS_VOLUME - 1; i >= 0; i--) {
-    diasChaves.push(formatarDiaChave(new Date(agora.getTime() - i * 86_400_000)));
-  }
-  const contagemPorDia = new Map(diasChaves.map((chave) => [chave, 0]));
-  for (const log of logsRecentes) {
-    const chave = formatarDiaChave(log.createdAt);
-    contagemPorDia.set(chave, (contagemPorDia.get(chave) ?? 0) + 1);
-  }
-  const volumeDiario = diasChaves.map((chave) => ({
-    chave,
-    total: contagemPorDia.get(chave) ?? 0,
-  }));
-  const maximoVolume = Math.max(...volumeDiario.map((d) => d.total), 1);
-  const totalVolumePeriodo = volumeDiario.reduce((soma, dia) => soma + dia.total, 0);
-  const diaPico = volumeDiario.reduce(
-    (maior, dia) => (dia.total > maior.total ? dia : maior),
-    volumeDiario[0]
+  const cabecalho = (
+    <CabecalhoPagina
+      kicker={tNav("kickerModeracao")}
+      titulo={t("titulo")}
+      descricao={t("subtitulo")}
+      acoes={<SeletorPeriodo atual={periodo.chave} />}
+    />
   );
-  const chaveHoje = formatarDiaChave(agora);
 
-  const linhasPorTipo = (["RECLAMACAO", "COMENTARIO"] as const).map((tipo) => ({
-    tipo,
-    decisoes: porTipoEDecisao.filter((item) => item.alvoTipo === tipo),
-  }));
+  if (logs.length === 0) {
+    return (
+      <main className={pagina}>
+        {cabecalho}
+        <EstadoVazio
+          icone={BarChart3}
+          titulo={periodo.dias ? t("nenhumaAnalisePeriodo") : t("nenhumaAnalise")}
+          descricao={periodo.dias ? t("tenteOutroPeriodo") : undefined}
+        />
+        <FilaAgora filas={filas} />
+      </main>
+    );
+  }
+
+  const resumo = resumirDecisoes(logs);
+  const anterior = logsAnteriores ? resumirDecisoes(logsAnteriores) : null;
+  const comparar = anterior !== null && anterior.total > 0;
+
+  const kpis = [
+    {
+      rotulo: t("kpiAnalises"),
+      valor: formatarNumero(resumo.total, locale),
+      variacao: comparar ? comoVariacao(variacaoRelativa(resumo.total, anterior.total), "%", locale) : null,
+      detalhe: resumo.falhas > 0 ? t("kpiFalhas", { count: resumo.falhas }) : undefined,
+    },
+    {
+      rotulo: t("kpiAprovadas"),
+      valor: formatarPorcentagem(resumo.taxaAprovar, locale),
+      variacao: comparar ? comoVariacao(variacaoPontos(resumo.taxaAprovar, anterior.taxaAprovar), "pp", locale) : null,
+      detalhe: t("kpiDe", { n: resumo.aprovar, total: resumo.validas }),
+    },
+    {
+      rotulo: t("kpiRevisao"),
+      valor: formatarPorcentagem(resumo.taxaEncaminhar, locale),
+      variacao: comparar ? comoVariacao(variacaoPontos(resumo.taxaEncaminhar, anterior.taxaEncaminhar), "pp", locale) : null,
+      detalhe: t("kpiDe", { n: resumo.encaminhar, total: resumo.validas }),
+    },
+    {
+      rotulo: t("kpiReprovadas"),
+      valor: formatarPorcentagem(resumo.taxaReprovar, locale),
+      variacao: comparar ? comoVariacao(variacaoPontos(resumo.taxaReprovar, anterior.taxaReprovar), "pp", locale) : null,
+      detalhe: t("kpiDe", { n: resumo.reprovar, total: resumo.validas }),
+    },
+  ];
+
+  const porTipo = (["RECLAMACAO", "COMENTARIO"] as const)
+    .map((tipo) => ({ tipo, resumo: resumirDecisoes(logs.filter((log) => log.alvoTipo === tipo)) }))
+    .filter(({ resumo: r }) => r.total > 0);
+
+  // Janela do gráfico: o período escolhido; em "todos", da primeira análise até agora.
+  const primeira = logs.reduce((menor, log) => Math.min(menor, log.createdAt.getTime()), agora.getTime());
+  const de = dados.inicio ?? new Date(primeira);
+  const granularidade = escolherGranularidade(Math.ceil((agora.getTime() - de.getTime()) / MS_DIA) + 1);
+  const buckets = volumePorPeriodo(logs, de, agora, granularidade);
+
+  const scoresReclamacao = logs
+    .filter((log) => log.alvoTipo === "RECLAMACAO" && !ehFalhaDaIA(log))
+    .map((log) => log.scoreGeral);
 
   return (
-    <main className={`${containerPagina} max-w-3xl`}>
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-        {t("titulo")}
-      </h1>
+    <main className={pagina}>
+      {cabecalho}
 
-      {totalAnalises === 0 ? (
-        <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumaAnalise")}</p>
-      ) : (
-        <>
-          <div className="flex w-full flex-wrap divide-x divide-slate-300 border border-slate-300 bg-white/70 dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-900/50">
-            <Estatistica label={t("analisesNoTotal")} valor={String(totalAnalises)} />
-            <Estatistica
-              label={t("taxaAprovacao")}
-              valor={taxaAprovacao !== null ? `${taxaAprovacao}%` : "—"}
-            />
-            <Estatistica
-              label={t("tempoMedioResposta")}
-              valor={latenciaMediaMs != null ? `${(latenciaMediaMs / 1000).toFixed(1)}s` : "—"}
-            />
-            <Estatistica
-              label={t("concordanciaHumana")}
-              valor={concordanciaHumana !== null ? `${concordanciaHumana}%` : t("semRevisaoAinda")}
-            />
-          </div>
-
-          <div className={`flex flex-col gap-3 ${cartao}`}>
-            <h2 className="font-semibold text-slate-900 dark:text-slate-100">
-              {t("decisoesPorTipo")}
-            </h2>
-            {linhasPorTipo.map(({ tipo, decisoes }) => {
-              const total = decisoes.reduce((soma, item) => soma + item._count._all, 0);
-              if (total === 0) return null;
-              return (
-                <div key={tipo} className="flex flex-col gap-1">
-                  <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    {tipo === "RECLAMACAO" ? t("reclamacoes") : t("comentarios")} ({total})
-                  </p>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
-                    {decisoes.map((item) => (
-                      <span key={item.decisao} className={DECISAO_COR[item.decisao]}>
-                        {tDecisao(item.decisao)}: {item._count._all} (
-                        {Math.round((item._count._all / total) * 100)}%)
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {agregadoReclamacao._count._all > 0 && (
-            <div className={`flex flex-col gap-3 ${cartao}`}>
-              <h2 className="font-semibold text-slate-900 dark:text-slate-100">
-                {t("scoreMedioReclamacoes")}
-              </h2>
-              <BarraScore rotulo={t("ofensivo")} valor={agregadoReclamacao._avg.scoreOfensivo} />
-              <BarraScore rotulo={t("spam")} valor={agregadoReclamacao._avg.scoreSpam} />
-              <BarraScore
-                rotulo={t("dadosPessoais")}
-                valor={agregadoReclamacao._avg.scoreDadosPessoais}
-              />
-              <BarraScore
-                rotulo={t("foraDeEscopo")}
-                valor={agregadoReclamacao._avg.scoreForaEscopo}
-              />
-              <BarraScore
-                rotulo={t("desinformacao")}
-                valor={agregadoReclamacao._avg.scoreDesinformacao}
-              />
-              <BarraScore
-                rotulo={t("coerenciaTextoImagem")}
-                valor={agregadoReclamacao._avg.coerenciaTextoImagem}
-              />
-            </div>
-          )}
-
-          {agregadoComentario._count._all > 0 && (
-            <div className={`flex flex-col gap-3 ${cartao}`}>
-              <h2 className="font-semibold text-slate-900 dark:text-slate-100">
-                {t("scoreMedioComentarios")}
-              </h2>
-              <BarraScore rotulo={t("ofensivo")} valor={agregadoComentario._avg.scoreOfensivo} />
-              <BarraScore rotulo={t("spam")} valor={agregadoComentario._avg.scoreSpam} />
-              <BarraScore
-                rotulo={t("dadosPessoais")}
-                valor={agregadoComentario._avg.scoreDadosPessoais}
-              />
-            </div>
-          )}
-
-          <div className={`flex flex-col gap-3 ${cartao}`}>
-            <div>
-              <h2 className="font-semibold text-slate-900 dark:text-slate-100">
-                {t("volumeUltimosDias", { dias: DIAS_VOLUME })}
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                {t("analisesNoPeriodo", { analises: t("analises", { count: totalVolumePeriodo }) })}
-                {diaPico.total > 0 &&
-                  ` · ${t("picoDe", { total: diaPico.total, data: formatarDiaCurto(diaPico.chave) })}`}
-              </p>
-            </div>
-            <div className="flex h-32 gap-1">
-              {volumeDiario.map((dia) => (
-                <div
-                  key={dia.chave}
-                  title={`${formatarDiaCurto(dia.chave)}: ${t("analises", { count: dia.total })}`}
-                  className="flex flex-1 flex-col items-center justify-end gap-0.5"
-                >
-                  {dia.total > 0 && (
-                    <span className="text-[10px] leading-none text-slate-500 dark:text-slate-400">
-                      {dia.total}
-                    </span>
-                  )}
-                  <div
-                    // Hoje ganha a cor de destaque (accent) em vez do azul
-                    // padrão - só pra dar uma âncora temporal rápida, sem
-                    // precisar de outro elemento (legenda, marcador etc.)
-                    // que pesaria mais no gráfico.
-                    className={`w-full rounded-t transition-colors ${
-                      dia.chave === chaveHoje
-                        ? "bg-accent"
-                        : "bg-primary/70 hover:bg-primary"
-                    }`}
-                    style={{
-                      height: `${dia.total > 0 ? Math.max((dia.total / maximoVolume) * 100, 4) : 1}%`,
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
-            <div className="flex justify-between text-xs text-slate-400 dark:text-slate-500">
-              <span>{formatarDiaCurto(volumeDiario[0].chave)}</span>
-              <span>{formatarDiaCurto(volumeDiario[volumeDiario.length - 1].chave)}</span>
-            </div>
-          </div>
-        </>
+      {dados.truncado && (
+        <Aviso tom="atencao">
+          {t("truncado", { max: formatarNumero(LIMITE_LINHAS_ESTATISTICAS, locale) })}
+        </Aviso>
       )}
+
+      <Kpis
+        itens={kpis}
+        rotuloComparacao={t("vsAnterior")}
+        descricaoComparacao={t("vsAnteriorDescricao")}
+      />
+
+      <FilaAgora filas={filas} />
+
+      <GraficoVolume buckets={buckets} granularidade={granularidade} />
+
+      <div className="grid gap-10 lg:grid-cols-2 lg:items-start">
+        <Secao id="destino" titulo={t("destinoTitulo")} descricao={t("destinoDescricao")}>
+          <div className="flex flex-col gap-6">
+            {porTipo.map(({ tipo, resumo: r }) => (
+              <div key={tipo} className="flex flex-col gap-2.5">
+                <p className="text-sm font-medium text-ink-2">
+                  {tipo === "RECLAMACAO" ? t("reclamacoes") : t("comentarios")}{" "}
+                  <span className="font-mono tabular-nums text-ink-muted">({r.validas})</span>
+                </p>
+                <BarraDecisoes
+                  contagens={{
+                    APROVAR: r.aprovar,
+                    ENCAMINHAR_REVISAO: r.encaminhar,
+                    REPROVAR: r.reprovar,
+                  }}
+                />
+                {r.falhas > 0 && (
+                  <p className="text-xs text-ink-muted">{t("falhasForaDaConta", { count: r.falhas })}</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </Secao>
+
+        {scoresReclamacao.length > 0 && (
+          <HistogramaPontuacoes
+            faixas={histogramaScore(scoresReclamacao)}
+            mediana={percentil(scoresReclamacao, 0.5)}
+          />
+        )}
+      </div>
+
+      <EixosQueDisparam
+        grupos={[
+          { tipo: "RECLAMACAO", corte: LIMITE_REVISAO, dados: disparosPorEixo(logs, "RECLAMACAO", LIMITE_REVISAO) },
+          {
+            tipo: "COMENTARIO",
+            corte: LIMITE_REPROVACAO_COMENTARIO,
+            dados: disparosPorEixo(logs, "COMENTARIO", LIMITE_REPROVACAO_COMENTARIO),
+          },
+        ]}
+      />
+
+      <IaVersusHumano
+        reclamacoes={revisaoHumana(logs, "RECLAMACAO")}
+        comentarios={revisaoHumana(logs, "COMENTARIO")}
+        motivos={motivosDeRevisao(logs)}
+      />
+
+      <div className="grid gap-10 lg:grid-cols-2 lg:items-start">
+        <DenunciasDoPeriodo resumo={resumirDenuncias(dados.denuncias)} />
+        <ConsumoDoModelo consumo={consumoDoModelo(logs)} />
+      </div>
+
+      <VersoesDoPrompt linhas={porVersaoDoPrompt(logs)} />
     </main>
   );
 }

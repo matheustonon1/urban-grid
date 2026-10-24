@@ -1,87 +1,186 @@
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { Bell, ChevronRight, FilePlus, Plus, Rss, User, Users } from "lucide-react";
+import { getLocale, getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
-import { exigirSessao } from "@/lib/sessao";
-import { StatusBadge } from "@/components/status-badge";
-import { Paginacao } from "@/components/paginacao";
-import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
-import { botaoPrimario, botaoSecundario, cartao, containerPagina } from "@/lib/estilos";
+import { exigirSessao } from "@/lib/seguranca/sessao";
+import { Aviso } from "@/components/ui/aviso";
+import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
+import { EstadoVazio } from "@/components/ui/estado-vazio";
+import { BotaoAcao, FormularioAcao } from "@/components/ui/formulario-acao";
+import { PainelNumeros } from "@/components/ui/painel-numeros";
+import { Secao } from "@/components/ui/secao";
+import { StatusBadge } from "@/components/reclamacao/status-badge";
+import { Paginacao } from "@/components/ui/paginacao";
+import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/util/paginacao";
+import {
+  botaoPrimario,
+  botaoSecundario,
+  colunaLateral,
+  colunaPrincipal,
+  grade,
+  pagina,
+} from "@/lib/estilos";
+import { metadataDaPagina } from "@/lib/metadata";
+import { formatarTempoRelativo } from "@/lib/util/tempo-relativo";
 
 import { reenviarVerificacao } from "./actions";
+
+export const generateMetadata = metadataDaPagina("Painel");
 
 export default async function PainelPage({ searchParams }: PageProps<"/painel">) {
   const t = await getTranslations("Painel");
   const tPapel = await getTranslations("Papel");
+  const tMenu = await getTranslations("UserMenu");
+  const tNotificacoes = await getTranslations("Notificacoes");
+  const locale = await getLocale();
   const session = await exigirSessao();
 
   const { page } = await searchParams;
   const paginaAtual = lerPaginaAtual(page);
   const filtro = { autorId: session.user.id };
 
-  const [reclamacoes, totalReclamacoes, usuario] = await Promise.all([
-    prisma.reclamacao.findMany({
-      where: filtro,
-      orderBy: { createdAt: "desc" },
-      skip: calcularSkip(paginaAtual),
-      take: ITENS_POR_PAGINA,
-    }),
-    prisma.reclamacao.count({ where: filtro }),
-    prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { emailVerified: true },
-    }),
-  ]);
+  const [reclamacoes, totalReclamacoes, porStatus, confirmacoesRecebidas, usuario] =
+    await Promise.all([
+      prisma.reclamacao.findMany({
+        where: filtro,
+        orderBy: { createdAt: "desc" },
+        skip: calcularSkip(paginaAtual),
+        take: ITENS_POR_PAGINA,
+        include: { _count: { select: { confirmacoes: true } } },
+      }),
+      prisma.reclamacao.count({ where: filtro }),
+      prisma.reclamacao.groupBy({ by: ["status"], where: filtro, _count: { _all: true } }),
+      prisma.confirmacao.count({ where: { reclamacao: filtro } }),
+      prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { emailVerified: true },
+      }),
+    ]);
   const totalPaginas = calcularTotalPaginas(totalReclamacoes);
 
+  const contagem = (status: string) =>
+    porStatus.find((grupo) => grupo.status === status)?._count._all ?? 0;
+  const primeiroNome = session.user.name?.trim().split(/\s+/)[0];
+
+  const atalhos = [
+    { href: "/painel/notificacoes", rotulo: tNotificacoes("titulo"), icone: Bell },
+    { href: "/painel/assinaturas", rotulo: tMenu("assinaturas"), icone: Rss },
+    { href: "/painel/conta", rotulo: tMenu("minhaConta"), icone: User },
+  ];
+
+  const novaReclamacao = (
+    <Link href="/reclamacoes/nova" className={botaoPrimario}>
+      <Plus className="h-4 w-4" aria-hidden />
+      {t("novaReclamacao")}
+    </Link>
+  );
+
   return (
-    <main className={containerPagina}>
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-        {t("titulo")}
-      </h1>
-      <p className="text-sm text-slate-600 dark:text-slate-400">
-        {t("logadoComo")} <strong>{session.user.email}</strong> ({tPapel(session.user.papel)})
-      </p>
+    <main className={pagina}>
+      <CabecalhoPagina
+        kicker={t("kicker")}
+        titulo={primeiroNome ? t("ola", { nome: primeiroNome }) : t("titulo")}
+        descricao={`${tPapel(session.user.papel)} · ${session.user.email}`}
+        acoes={totalReclamacoes > 0 ? novaReclamacao : undefined}
+      />
 
       {!usuario?.emailVerified && (
-        <div className={`flex items-center justify-between gap-3 ${cartao}`}>
-          <p className="text-sm text-amber-700 dark:text-amber-400">{t("emailNaoVerificado")}</p>
-          <form action={reenviarVerificacao}>
-            <button type="submit" className={botaoSecundario}>
-              {t("reenviarVerificacao")}
-            </button>
-          </form>
-        </div>
+        <Aviso
+          tom="atencao"
+          acao={
+            <FormularioAcao action={reenviarVerificacao}>
+              <BotaoAcao className={botaoSecundario}>{t("reenviarVerificacao")}</BotaoAcao>
+            </FormularioAcao>
+          }
+        >
+          {t("emailNaoVerificado")}
+        </Aviso>
       )}
 
-      <Link href="/reclamacoes/nova" className={`${botaoPrimario} w-fit`}>
-        {t("novaReclamacao")}
-      </Link>
+      {totalReclamacoes > 0 && (
+        <PainelNumeros
+          itens={[
+            { rotulo: t("metricaTotal"), valor: String(totalReclamacoes) },
+            { rotulo: t("metricaAndamento"), valor: String(contagem("EM_ANDAMENTO")) },
+            { rotulo: t("metricaResolvidas"), valor: String(contagem("RESOLVIDA")) },
+            { rotulo: t("metricaConfirmacoes"), valor: String(confirmacoesRecebidas) },
+          ]}
+        />
+      )}
 
-      <div className="flex flex-col gap-2">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          {t("minhasReclamacoes")}
-        </h2>
-        {reclamacoes.length === 0 && (
-          <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumaReclamacao")}</p>
-        )}
-        {reclamacoes.map((reclamacao) => (
-          <Link
-            key={reclamacao.id}
-            href={`/reclamacoes/${reclamacao.protocolo}`}
-            className={`flex items-center justify-between gap-2 ${cartao} transition hover:border-primary`}
-          >
-            <div>
-              <p className="font-medium text-slate-900 dark:text-slate-100">{reclamacao.titulo}</p>
-              <p className="font-mono text-xs text-slate-500 dark:text-slate-400">
-                {reclamacao.protocolo}
-              </p>
-            </div>
-            <StatusBadge status={reclamacao.status} />
-          </Link>
-        ))}
+      <div className={grade}>
+        <div className={colunaPrincipal}>
+          <Secao id="minhas" titulo={t("minhasReclamacoes")} contador={totalReclamacoes}>
+            {reclamacoes.length === 0 ? (
+              <EstadoVazio
+                icone={FilePlus}
+                titulo={t("nenhumaReclamacao")}
+                descricao={t("nenhumaReclamacaoDesc")}
+              >
+                {novaReclamacao}
+              </EstadoVazio>
+            ) : (
+              <ul className="-mt-2 divide-y divide-line">
+                {reclamacoes.map((reclamacao) => (
+                  <li key={reclamacao.id}>
+                    <Link
+                      href={`/reclamacoes/${reclamacao.protocolo}`}
+                      className="group flex items-center gap-4 py-4 transition-colors"
+                    >
+                      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                        <div className="sm:hidden">
+                          <StatusBadge status={reclamacao.status} />
+                        </div>
+                        <p className="line-clamp-2 font-bold text-ink group-hover:text-brand sm:line-clamp-1">
+                          {reclamacao.titulo}
+                        </p>
+                        <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-ink-muted">
+                          <span className="kicker">{reclamacao.protocolo}</span>
+                          <span>{formatarTempoRelativo(reclamacao.createdAt, locale)}</span>
+                          {reclamacao._count.confirmacoes > 0 && (
+                            <span className="flex items-center gap-1">
+                              <Users className="h-3 w-3" aria-hidden />
+                              <span className="tabular-nums">{reclamacao._count.confirmacoes}</span>
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                      <div className="hidden sm:block">
+                        <StatusBadge status={reclamacao.status} />
+                      </div>
+                      <ChevronRight
+                        className="h-4 w-4 shrink-0 text-ink-faint transition-transform group-hover:translate-x-0.5 group-hover:text-brand"
+                        aria-hidden
+                      />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
 
-        <Paginacao paginaAtual={paginaAtual} totalPaginas={totalPaginas} basePath="/painel" />
+            <Paginacao paginaAtual={paginaAtual} totalPaginas={totalPaginas} basePath="/painel" />
+          </Secao>
+        </div>
+
+        <aside className={colunaLateral}>
+          <Secao id="atalhos" titulo={t("atalhos")}>
+            <ul className="-mt-2 divide-y divide-line">
+              {atalhos.map(({ href, rotulo, icone: Icone }) => (
+                <li key={href}>
+                  <Link
+                    href={href}
+                    className="group flex items-center gap-3 py-3.5 text-ink-2 transition-colors hover:text-brand"
+                  >
+                    <Icone className="h-4 w-4 shrink-0 text-ink-muted group-hover:text-brand" aria-hidden />
+                    <span className="flex-1 font-medium">{rotulo}</span>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-ink-faint" aria-hidden />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </Secao>
+        </aside>
       </div>
     </main>
   );

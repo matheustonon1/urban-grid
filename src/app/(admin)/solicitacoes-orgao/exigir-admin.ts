@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { exigirSessao } from "@/lib/sessao";
+import { exigirSessao } from "@/lib/seguranca/sessao";
 
 // Aprovar uma solicitação de órgão cria uma conta com poder de postar
 // "resposta oficial" em nome da prefeitura - ação sensível o bastante

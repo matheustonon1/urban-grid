@@ -1,9 +1,18 @@
 import { getLocale, getTranslations } from "next-intl/server";
+import { CircleCheck } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
-import { Paginacao } from "@/components/paginacao";
-import { botaoSecundario, cartao, containerPagina } from "@/lib/estilos";
-import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
+import { Paginacao } from "@/components/ui/paginacao";
+import { ResumoLateral } from "@/components/ui/resumo-lateral";
+import { Secao } from "@/components/ui/secao";
+import { botaoSecundario, colunaLateral, colunaPrincipal, grade, pagina } from "@/lib/estilos";
+import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/util/paginacao";
+import { metadataDaPagina } from "@/lib/metadata";
+import { EstadoVazio } from "@/components/ui/estado-vazio";
+import { BotaoAcao, FormularioAcao } from "@/components/ui/formulario-acao";
+import { AvatarIniciais } from "@/components/ui/avatar-iniciais";
+import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
+import { formatarDataHora } from "@/lib/util/formatarData";
 
 import { exigirAdmin } from "../solicitacoes-orgao/exigir-admin";
 import { reverterBanimento } from "./actions";
@@ -13,8 +22,11 @@ import { reverterBanimento } from "./actions";
 // isso aqui só pra mostrar um rótulo melhor do que uma data em 2126.
 const LIMIAR_PERMANENTE_MS = 50 * 365 * 24 * 60 * 60 * 1000;
 
+export const generateMetadata = metadataDaPagina("Banimentos");
+
 export default async function BanimentosPage({ searchParams }: PageProps<"/banimentos">) {
   const t = await getTranslations("Banimentos");
+  const tNav = await getTranslations("AdminNav");
   const locale = await getLocale();
   await exigirAdmin();
 
@@ -23,7 +35,7 @@ export default async function BanimentosPage({ searchParams }: PageProps<"/banim
   const agora = new Date();
   const filtro = { banidoAte: { gt: agora } };
 
-  const [banidos, totalBanidos] = await Promise.all([
+  const [banidos, totalBanidos, totalPermanentes] = await Promise.all([
     prisma.user.findMany({
       where: filtro,
       orderBy: { banidoAte: "asc" },
@@ -32,52 +44,74 @@ export default async function BanimentosPage({ searchParams }: PageProps<"/banim
       take: ITENS_POR_PAGINA,
     }),
     prisma.user.count({ where: filtro }),
+    prisma.user.count({ where: { banidoAte: { gt: new Date(agora.getTime() + LIMIAR_PERMANENTE_MS) } } }),
   ]);
   const totalPaginas = calcularTotalPaginas(totalBanidos);
 
   return (
-    <main className={`${containerPagina} max-w-3xl`}>
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-          {t("titulo")} {totalBanidos > 0 && `(${totalBanidos})`}
-        </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">{t("descricao")}</p>
+    <main className={pagina}>
+      <CabecalhoPagina
+        kicker={tNav("kickerAdmin")}
+        titulo={t("titulo")}
+        descricao={t("descricao")}
+      />
+
+      <div className={grade}>
+        <div className={colunaPrincipal}>
+          <Secao id="banidos" titulo={t("secaoContas")}>
+            {banidos.length === 0 && <EstadoVazio icone={CircleCheck} titulo={t("nenhumBanido")} />}
+
+            {banidos.length > 0 && (
+              <ul className="-mt-2 divide-y divide-line">
+                {banidos.map((usuario) => {
+                  const permanente =
+                    usuario.banidoAte!.getTime() - agora.getTime() > LIMIAR_PERMANENTE_MS;
+
+                  return (
+                    <li
+                      key={usuario.id}
+                      className="flex flex-wrap items-center justify-between gap-3 py-4"
+                    >
+                      <AvatarIniciais nome={usuario.name ?? usuario.email} />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-bold text-ink">{usuario.name ?? usuario.email}</p>
+                        <p className="text-sm text-ink-muted">
+                          {permanente
+                            ? t("banidoPermanente")
+                            : t("banidoAte", { data: formatarDataHora(usuario.banidoAte!, locale) })}
+                        </p>
+                      </div>
+
+                      <FormularioAcao
+                        action={reverterBanimento.bind(null, usuario.id)}
+                        confirmacao={{
+                          titulo: t("confirmarTitulo", { nome: usuario.name ?? usuario.email }),
+                          descricao: t("confirmarDescricao"),
+                          detalhes: [t("confirmarDetalhe")],
+                          confirmar: t("confirmarBotao"),
+                          tom: "primario",
+                        }}
+                      >
+                        <BotaoAcao className={botaoSecundario}>{t("reverter")}</BotaoAcao>
+                      </FormularioAcao>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+
+            <Paginacao paginaAtual={paginaAtual} totalPaginas={totalPaginas} basePath="/banimentos" />
+          </Secao>
+        </div>
+
+        <aside className={colunaLateral}>
+          <ResumoLateral
+            rotulo={t("secaoContas")}
+            valor={totalBanidos}
+            itens={[{ rotulo: t("resumoPermanentes"), valor: totalPermanentes }]}
+          />
+        </aside>
       </div>
-
-      {banidos.length === 0 && (
-        <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumBanido")}</p>
-      )}
-
-      {banidos.map((usuario) => {
-        const permanente =
-          usuario.banidoAte!.getTime() - agora.getTime() > LIMIAR_PERMANENTE_MS;
-
-        return (
-          <div
-            key={usuario.id}
-            className={`flex flex-wrap items-center justify-between gap-3 ${cartao}`}
-          >
-            <div>
-              <p className="font-medium text-slate-900 dark:text-slate-100">
-                {usuario.name ?? usuario.email}
-              </p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                {permanente
-                  ? t("banidoPermanente")
-                  : t("banidoAte", { data: usuario.banidoAte!.toLocaleString(locale) })}
-              </p>
-            </div>
-
-            <form action={reverterBanimento.bind(null, usuario.id)}>
-              <button type="submit" className={botaoSecundario}>
-                {t("reverter")}
-              </button>
-            </form>
-          </div>
-        );
-      })}
-
-      <Paginacao paginaAtual={paginaAtual} totalPaginas={totalPaginas} basePath="/banimentos" />
     </main>
   );
 }

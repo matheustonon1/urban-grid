@@ -1,16 +1,21 @@
 "use client";
 
 import { useActionState } from "react";
-import { Bell, Lock, Mail, Trash2, User } from "lucide-react";
+import { Bell, Lock, LogOut, Mail, Trash2, User } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { botaoPrimario, campoInput, cartao } from "@/lib/estilos";
+import { SeletorCidade } from "@/components/formulario/cidade-combobox";
+import { botaoPrimario, botaoSecundario, campoInput, cartaoSecao } from "@/lib/estilos";
+import { CabecalhoCartao } from "@/components/ui/cabecalho-cartao";
+import { MensagemForm } from "@/components/formulario/mensagem-form";
 
 import {
   alterarSenha,
   atualizarPerfil,
   atualizarPreferenciasNotificacao,
+  encerrarSessoes,
   excluirConta,
+  reenviarVerificacaoEmail,
   solicitarTrocaEmail,
 } from "./actions";
 
@@ -18,23 +23,53 @@ function Rotulo({ children, htmlFor }: { children: string; htmlFor: string }) {
   return (
     <label
       htmlFor={htmlFor}
-      className="text-sm font-medium text-slate-700 dark:text-slate-300"
+      className="text-sm font-medium text-ink-2"
     >
       {children}
     </label>
   );
 }
 
-export function FormularioPerfil({ telefone }: { telefone: string }) {
+export function BotaoReenviarVerificacao() {
+  const t = useTranslations("Conta");
+  const [state, action, pending] = useActionState(reenviarVerificacaoEmail, undefined);
+
+  return (
+    <form action={action} className="flex flex-col items-start gap-2">
+      <button type="submit" disabled={pending} className={botaoSecundario}>
+        {t("reenviarVerificacao")}
+      </button>
+      <MensagemForm estado={state} />
+    </form>
+  );
+}
+
+export function BotaoEncerrarSessoes() {
+  const t = useTranslations("Conta");
+
+  return (
+    <form action={encerrarSessoes}>
+      <button type="submit" className={botaoSecundario}>
+        <LogOut className="h-4 w-4" aria-hidden />
+        {t("encerrarSessoes")}
+      </button>
+    </form>
+  );
+}
+
+export function FormularioPerfil({
+  telefone,
+  cidadePadrao,
+}: {
+  telefone: string;
+  cidadePadrao: { id: string; nome: string; uf: string } | null;
+}) {
   const t = useTranslations("Conta");
   const [state, action, pending] = useActionState(atualizarPerfil, undefined);
 
   return (
-    <form action={action} className={`flex flex-col gap-3 ${cartao}`}>
-      <div className="flex items-center gap-2">
-        <User className="h-5 w-5 text-slate-400 dark:text-slate-500" aria-hidden />
-        <h2 className="font-semibold text-slate-900 dark:text-slate-100">{t("dadosPessoais")}</h2>
-      </div>
+    <form action={action} className={`flex flex-col gap-3 ${cartaoSecao}`}>
+      <CabecalhoCartao icone={User} titulo={t("dadosPessoais")} />
 
       <div className="flex flex-col gap-1">
         <Rotulo htmlFor="perfil-telefone">{t("telefone")}</Rotulo>
@@ -47,13 +82,24 @@ export function FormularioPerfil({ telefone }: { telefone: string }) {
           className={campoInput}
         />
         {state?.erros?.telefone && (
-          <p className="text-sm text-red-600 dark:text-red-400">{state.erros.telefone[0]}</p>
+          <p className="text-sm text-danger-ink">{state.erros.telefone[0]}</p>
         )}
       </div>
 
-      {state?.mensagem && (
-        <p className="text-sm text-slate-600 dark:text-slate-400">{state.mensagem}</p>
-      )}
+      <div className="flex flex-col gap-1">
+        <Rotulo htmlFor="perfil-cidade">{t("cidadePadrao")}</Rotulo>
+        <SeletorCidade
+          id="perfil-cidade"
+          placeholder={t("cidadePadrao")}
+          defaultValue={cidadePadrao}
+        />
+        <p className="text-xs text-ink-muted">{t("cidadePadraoDesc")}</p>
+        {state?.erros?.cidadeId && (
+          <p className="text-sm text-danger-ink">{state.erros.cidadeId[0]}</p>
+        )}
+      </div>
+
+      <MensagemForm estado={state} />
 
       <button type="submit" disabled={pending} className={`${botaoPrimario} w-fit`}>
         {t("salvarDados")}
@@ -67,15 +113,10 @@ export function FormularioPreferenciasNotificacao({ notificarPorEmail }: { notif
   const [state, action, pending] = useActionState(atualizarPreferenciasNotificacao, undefined);
 
   return (
-    <form action={action} className={`flex flex-col gap-3 ${cartao}`}>
-      <div className="flex items-center gap-2">
-        <Bell className="h-5 w-5 text-slate-400 dark:text-slate-500" aria-hidden />
-        <h2 className="font-semibold text-slate-900 dark:text-slate-100">
-          {t("preferenciasNotificacao")}
-        </h2>
-      </div>
+    <form action={action} className={`flex flex-col gap-3 ${cartaoSecao}`}>
+      <CabecalhoCartao icone={Bell} titulo={t("preferenciasNotificacao")} />
 
-      <label className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-300">
+      <label className="flex items-start gap-2 text-sm text-ink-2">
         <input
           type="checkbox"
           name="notificarPorEmail"
@@ -85,9 +126,7 @@ export function FormularioPreferenciasNotificacao({ notificarPorEmail }: { notif
         <span>{t("notificarPorEmailDesc")}</span>
       </label>
 
-      {state?.mensagem && (
-        <p className="text-sm text-slate-600 dark:text-slate-400">{state.mensagem}</p>
-      )}
+      <MensagemForm estado={state} />
 
       <button type="submit" disabled={pending} className={`${botaoPrimario} w-fit`}>
         {t("salvarDados")}
@@ -101,11 +140,8 @@ export function FormularioSenha() {
   const [state, action, pending] = useActionState(alterarSenha, undefined);
 
   return (
-    <form action={action} className={`flex flex-col gap-3 ${cartao}`}>
-      <div className="flex items-center gap-2">
-        <Lock className="h-5 w-5 text-slate-400 dark:text-slate-500" aria-hidden />
-        <h2 className="font-semibold text-slate-900 dark:text-slate-100">{t("alterarSenha")}</h2>
-      </div>
+    <form action={action} className={`flex flex-col gap-3 ${cartaoSecao}`}>
+      <CabecalhoCartao icone={Lock} titulo={t("alterarSenha")} />
 
       <div className="flex flex-col gap-1">
         <Rotulo htmlFor="senha-atual">{t("senhaAtual")}</Rotulo>
@@ -116,7 +152,7 @@ export function FormularioSenha() {
           className={campoInput}
         />
         {state?.erros?.senhaAtual && (
-          <p className="text-sm text-red-600 dark:text-red-400">{state.erros.senhaAtual[0]}</p>
+          <p className="text-sm text-danger-ink">{state.erros.senhaAtual[0]}</p>
         )}
       </div>
 
@@ -130,7 +166,7 @@ export function FormularioSenha() {
           className={campoInput}
         />
         {state?.erros?.novaSenha && (
-          <p className="text-sm text-red-600 dark:text-red-400">{state.erros.novaSenha[0]}</p>
+          <p className="text-sm text-danger-ink">{state.erros.novaSenha[0]}</p>
         )}
       </div>
 
@@ -143,15 +179,13 @@ export function FormularioSenha() {
           className={campoInput}
         />
         {state?.erros?.confirmarNovaSenha && (
-          <p className="text-sm text-red-600 dark:text-red-400">
+          <p className="text-sm text-danger-ink">
             {state.erros.confirmarNovaSenha[0]}
           </p>
         )}
       </div>
 
-      {state?.mensagem && (
-        <p className="text-sm text-slate-600 dark:text-slate-400">{state.mensagem}</p>
-      )}
+      <MensagemForm estado={state} />
 
       <button type="submit" disabled={pending} className={`${botaoPrimario} w-fit`}>
         {t("alterarSenha")}
@@ -165,12 +199,9 @@ export function FormularioTrocaEmail({ emailAtual }: { emailAtual: string }) {
   const [state, action, pending] = useActionState(solicitarTrocaEmail, undefined);
 
   return (
-    <form action={action} className={`flex flex-col gap-3 ${cartao}`}>
-      <div className="flex items-center gap-2">
-        <Mail className="h-5 w-5 text-slate-400 dark:text-slate-500" aria-hidden />
-        <h2 className="font-semibold text-slate-900 dark:text-slate-100">{t("trocarEmail")}</h2>
-      </div>
-      <p className="text-sm text-slate-500 dark:text-slate-400">
+    <form action={action} className={`flex flex-col gap-3 ${cartaoSecao}`}>
+      <CabecalhoCartao icone={Mail} titulo={t("trocarEmail")} />
+      <p className="text-sm text-ink-muted">
         {t("emailAtual")} <span className="font-medium">{emailAtual}</span>. {t("trocaEmailDesc")}
       </p>
 
@@ -183,7 +214,7 @@ export function FormularioTrocaEmail({ emailAtual }: { emailAtual: string }) {
           className={campoInput}
         />
         {state?.erros?.novoEmail && (
-          <p className="text-sm text-red-600 dark:text-red-400">{state.erros.novoEmail[0]}</p>
+          <p className="text-sm text-danger-ink">{state.erros.novoEmail[0]}</p>
         )}
       </div>
 
@@ -196,13 +227,11 @@ export function FormularioTrocaEmail({ emailAtual }: { emailAtual: string }) {
           className={campoInput}
         />
         {state?.erros?.senhaAtual && (
-          <p className="text-sm text-red-600 dark:text-red-400">{state.erros.senhaAtual[0]}</p>
+          <p className="text-sm text-danger-ink">{state.erros.senhaAtual[0]}</p>
         )}
       </div>
 
-      {state?.mensagem && (
-        <p className="text-sm text-slate-600 dark:text-slate-400">{state.mensagem}</p>
-      )}
+      <MensagemForm estado={state} />
 
       <button type="submit" disabled={pending} className={`${botaoPrimario} w-fit`}>
         {t("enviarLinkConfirmacao")}
@@ -218,13 +247,10 @@ export function FormularioExclusao() {
   return (
     <form
       action={action}
-      className="flex flex-col gap-3 rounded-lg border border-red-200 bg-red-50/50 p-4 dark:border-red-900 dark:bg-red-950/30"
+      className="flex flex-col gap-3 rounded-lg border border-danger-ink/30 bg-danger-soft/50 p-4"
     >
-      <div className="flex items-center gap-2">
-        <Trash2 className="h-5 w-5 text-red-600 dark:text-red-400" aria-hidden />
-        <h2 className="font-semibold text-red-800 dark:text-red-400">{t("excluirConta")}</h2>
-      </div>
-      <p className="text-sm text-red-700 dark:text-red-400">{t("excluirContaDesc")}</p>
+      <CabecalhoCartao icone={Trash2} titulo={t("excluirConta")} tom="perigo" />
+      <p className="text-sm text-danger-ink">{t("excluirContaDesc")}</p>
 
       <div className="flex flex-col gap-1">
         <Rotulo htmlFor="exclusao-senha">{t("confirmeSuaSenha")}</Rotulo>
@@ -235,17 +261,15 @@ export function FormularioExclusao() {
           className={campoInput}
         />
         {state?.erros?.senhaAtual && (
-          <p className="text-sm text-red-600 dark:text-red-400">{state.erros.senhaAtual[0]}</p>
+          <p className="text-sm text-danger-ink">{state.erros.senhaAtual[0]}</p>
         )}
       </div>
-      {state?.mensagem && (
-        <p className="text-sm text-red-600 dark:text-red-400">{state.mensagem}</p>
-      )}
+      <MensagemForm estado={state} />
 
       <button
         type="submit"
         disabled={pending}
-        className="w-fit rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-800 active:scale-95 disabled:opacity-50 disabled:active:scale-100 dark:bg-red-600 dark:hover:bg-red-500"
+        className="w-fit rounded-md bg-danger px-4 py-2.5 text-sm font-semibold text-on-danger transition hover:brightness-90 active:translate-y-px disabled:opacity-50 disabled:active:translate-y-0"
       >
         {t("excluirMinhaConta")}
       </button>

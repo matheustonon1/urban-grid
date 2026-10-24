@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
-import { excedeuLimitePorIp } from "@/lib/rateLimitMemoria";
+import { excedeuLimitePorIp } from "@/lib/seguranca/rateLimitMemoria";
 
 const LIMITE = 20;
 const LIMITE_CONSULTAS_POR_IP_MINUTO = 120;

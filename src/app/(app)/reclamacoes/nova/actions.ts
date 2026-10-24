@@ -6,12 +6,12 @@ import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import { finalizarPublicacaoAprovada, moderarReclamacao } from "@/lib/moderacao";
-import { gerarProtocolo } from "@/lib/protocolo";
-import { uploadImagem } from "@/lib/storage";
-import { aplicarBlur, calcularPhash, distanciaHamming, extrairExif } from "@/lib/imagem";
-import { analisarImagemReal, mimeTypeDoFormato, type ImagemAnalisada } from "@/lib/validarImagem";
-import { MAX_IMAGENS, MAX_TAMANHO_BYTES, TIPOS_ACEITOS } from "@/lib/limitesImagemReclamacao";
-import { exigirSessao } from "@/lib/sessao";
+import { gerarProtocolo } from "@/lib/reclamacoes/protocolo";
+import { uploadImagem } from "@/lib/imagens/storage";
+import { aplicarBlur, calcularPhash, distanciaHamming, extrairExif } from "@/lib/imagens/imagem";
+import { analisarImagemReal, mimeTypeDoFormato, type ImagemAnalisada } from "@/lib/imagens/validarImagem";
+import { MAX_IMAGENS, MAX_TAMANHO_BYTES, TIPOS_ACEITOS } from "@/lib/reclamacoes/limitesImagem";
+import { exigirSessao } from "@/lib/seguranca/sessao";
 
 import { criarNovaReclamacaoSchema, type NovaReclamacaoFormState } from "./definitions";
 
@@ -81,9 +81,9 @@ export async function criarReclamacao(
     arquivosValidados.push({ buffer, analise });
   }
 
-  // Content-Type salvo no Blob público (ver uploadImagem em lib/storage.ts)
+  // Content-Type salvo no Blob público (ver uploadImagem em lib/imagens/storage.ts)
   // e no registro de Midia - construído a partir do formato detectado acima
-  // (ver lib/validarImagem.ts), não do arquivo.type que o navegador mandou.
+  // (ver lib/imagens/validarImagem.ts), não do arquivo.type que o navegador mandou.
   // Sem isso, a validação de formato de cima não tinha efeito nenhum no que
   // realmente fica servido: um JPEG de verdade com arquivo.type adulterado
   // pra "image/webp" ainda saía do storage como webp.
@@ -232,6 +232,24 @@ export async function criarReclamacao(
     regioesSensiveis = resultado.regioesSensiveis;
   } catch (erro) {
     console.error("Falha na moderação automática:", erro);
+    // moderarReclamacao() já tem seu próprio fallback pra falha do Gemini
+    // (manda pra AGUARDANDO_REVISAO), mas esse catch cobre uma falha fora
+    // dali - ex.: erro ao gravar LogModeracao ou atualizar a reclamação no
+    // meio do processamento. Sem isto, a reclamação ficava presa em
+    // EM_MODERACAO pra sempre: invisível na fila de moderação (que só
+    // lista AGUARDANDO_REVISAO) e sem nenhum jeito do autor ou de um
+    // moderador saberem que algo deu errado.
+    try {
+      await prisma.reclamacao.update({
+        where: { id: reclamacao.id },
+        data: { status: "AGUARDANDO_REVISAO" },
+      });
+    } catch (erroFallback) {
+      console.error(
+        "Falha ao mover reclamação para revisão humana após erro de moderação:",
+        erroFallback
+      );
+    }
   }
 
   const regioesPorMidia = new Map<number, typeof regioesSensiveis>();

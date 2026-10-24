@@ -5,8 +5,12 @@ export const contentType = "image/png";
 
 // Mesmo desenho do icon.tsx, só maior (tamanho recomendado pro ícone de
 // tela inicial do iOS) - o próprio iOS aplica a máscara arredondada, não
-// precisa de border-radius aqui.
+// precisa de border-radius no fundo.
 export default function AppleIcon() {
+  const quarteirao = (cor: string) => (
+    <div style={{ width: 62, height: 62, borderRadius: 10, background: cor }} />
+  );
+
   return new ImageResponse(
     (
       <div
@@ -14,17 +18,21 @@ export default function AppleIcon() {
           width: "100%",
           height: "100%",
           display: "flex",
-          alignItems: "center",
+          flexDirection: "column",
           justifyContent: "center",
-          background: "#0f172a",
-          fontFamily: "sans-serif",
-          fontWeight: 700,
-          fontSize: 110,
-          letterSpacing: -4,
+          alignItems: "center",
+          gap: 12,
+          background: "#0e1520",
         }}
       >
-        <span style={{ color: "#ffffff" }}>U</span>
-        <span style={{ color: "#1d4ed8" }}>G</span>
+        <div style={{ display: "flex", gap: 12 }}>
+          {quarteirao("#f2f4f7")}
+          {quarteirao("#7ea6ff")}
+        </div>
+        <div style={{ display: "flex", gap: 12 }}>
+          {quarteirao("#7ea6ff")}
+          {quarteirao("#ffc20e")}
+        </div>
       </div>
     ),
     { ...size }

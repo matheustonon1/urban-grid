@@ -1,34 +1,42 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
+import { PaginaAuth } from "@/components/ui/pagina-auth";
 import { prisma } from "@/lib/prisma";
 import { dadosDoTokenTrocaEmail } from "@/lib/email";
-import { botaoPrimario, cartao } from "@/lib/estilos";
+import { botaoPrimario } from "@/lib/estilos";
 
 export default async function ConfirmarEmailPage({
   params,
 }: PageProps<"/confirmar-email/[token]">) {
+  const t = await getTranslations("ConfirmarEmail");
   const { token } = await params;
 
   const registro = await prisma.verificationToken.findUnique({ where: { token } });
   const dados = registro ? dadosDoTokenTrocaEmail(registro.identifier) : null;
   const expirado = !registro || registro.expires <= new Date();
 
-  let mensagem = "Link inválido ou expirado.";
+  let mensagem = t("linkInvalido");
   let sucesso = false;
 
   if (dados && !expirado) {
     const usuario = await prisma.user.findUnique({ where: { id: dados.userId } });
 
-    if (usuario?.email === dados.novoEmail) {
+    // Conta excluída não troca de e-mail: sem isto, um link pedido antes da
+    // exclusão (válido por 1h) gravava o e-mail novo numa conta já
+    // anonimizada, deixando esse endereço "em uso" por uma conta morta.
+    if (!usuario?.ativo) {
+      mensagem = t("linkInvalido");
+    } else if (usuario.email === dados.novoEmail) {
       // Já foi confirmado antes (ex.: provedor de e-mail pré-visitou o
       // link) - idempotente igual verificar-email, não é erro reexibir
       // sucesso num clique repetido.
       sucesso = true;
-      mensagem = "E-mail confirmado! Use o novo endereço para entrar.";
-    } else if (usuario) {
+      mensagem = t("confirmado");
+    } else {
       const emailEmUso = await prisma.user.findUnique({ where: { email: dados.novoEmail } });
       if (emailEmUso) {
-        mensagem = "Este e-mail passou a estar em uso por outra conta. Peça uma nova troca.";
+        mensagem = t("emUso");
       } else {
         await prisma.user.update({
           where: { id: usuario.id },
@@ -44,24 +52,21 @@ export default async function ConfirmarEmailPage({
           },
         });
         sucesso = true;
-        mensagem = "E-mail confirmado! Use o novo endereço para entrar.";
+        mensagem = t("confirmado");
       }
     }
   } else if (expirado) {
-    mensagem = "Este link expirou. Peça uma nova troca em 'Minha conta'.";
+    mensagem = t("expirado");
   }
 
   return (
-    <main className="animate-fade-in flex flex-1 flex-col items-center justify-center gap-4 p-8">
-      <div className={`flex w-full max-w-sm flex-col items-center gap-3 text-center ${cartao}`}>
-        <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-          {sucesso ? "E-mail atualizado!" : "Link inválido ou expirado"}
-        </h1>
-        <p className="text-sm text-slate-600 dark:text-slate-400">{mensagem}</p>
-        <Link href="/login" className={botaoPrimario}>
-          Ir para o login
-        </Link>
-      </div>
-    </main>
+    <PaginaAuth
+      titulo={sucesso ? t("atualizado") : t("linkInvalidoTitulo")}
+      descricao={mensagem}
+    >
+      <Link href="/login" className={`${botaoPrimario} w-full py-3`}>
+        {t("irParaLogin")}
+      </Link>
+    </PaginaAuth>
   );
 }

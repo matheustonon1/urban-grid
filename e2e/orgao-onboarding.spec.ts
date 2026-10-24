@@ -2,14 +2,20 @@ import { expect, test } from "@playwright/test";
 
 import { prisma } from "@/lib/prisma";
 
-import { criarAdminTeste, emailTeste, limparDadosTeste } from "./helpers";
+import {
+  ativarDoisFatoresTeste,
+  confirmarDialogo,
+  criarAdminTeste,
+  emailTeste,
+  limparDadosTeste,
+} from "./helpers";
 
 test.afterAll(async () => {
   await limparDadosTeste();
 });
 
 test("solicita acesso como órgão, admin aprova, define senha e loga", async ({ page }) => {
-  const { email: emailAdmin, senha: senhaAdmin } = await criarAdminTeste();
+  const { usuario: admin, email: emailAdmin, senha: senhaAdmin } = await criarAdminTeste();
   const emailOrgao = emailTeste("solicitacao-orgao");
   const cidade = await prisma.cidade.findFirstOrThrow();
 
@@ -30,9 +36,12 @@ test("solicita acesso como órgão, admin aprova, define senha e loga", async ({
   await page.click('button[type="submit"]');
   await page.waitForURL(/\/painel$/);
 
+  // Aprovar concede voz oficial: pede a senha e o código de duas etapas do admin.
+  const { codigosBackup } = await ativarDoisFatoresTeste(admin.id);
   await page.goto("/solicitacoes-orgao");
   await expect(page.getByText(emailOrgao)).toBeVisible();
   await page.click('button:has-text("Aprovar")');
+  await confirmarDialogo(page, "Aprovar e enviar acesso", senhaAdmin, codigosBackup[0]);
 
   await expect
     .poll(async () => {
@@ -47,13 +56,23 @@ test("solicita acesso como órgão, admin aprova, define senha e loga", async ({
   // teste sem domínio verificado no Resend) - o token já foi criado
   // antes da tentativa de envio, então buscamos ele direto no banco,
   // como um teste automatizado tem que fazer (não há inbox pra ler).
-  const registro = await prisma.verificationToken.findFirstOrThrow({
-    where: { identifier: emailOrgao },
-    orderBy: { expires: "desc" },
-  });
+  // Com poll: a solicitação vira APROVADA numa transação e o token só é
+  // criado depois, ao montar o e-mail - ler logo ao ver APROVADA era uma
+  // corrida.
+  let token = "";
+  await expect
+    .poll(async () => {
+      const registro = await prisma.verificationToken.findFirst({
+        where: { identifier: emailOrgao },
+        orderBy: { expires: "desc" },
+      });
+      token = registro?.token ?? "";
+      return token;
+    })
+    .not.toBe("");
 
   await page.context().clearCookies();
-  await page.goto(`/orgao/definir-senha/${registro.token}`);
+  await page.goto(`/orgao/definir-senha/${token}`);
   await expect(page.getByText("Bem-vindo(a)")).toBeVisible();
 
   const senha = "SenhaForte123";

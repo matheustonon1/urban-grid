@@ -1,0 +1,192 @@
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+// Evita bater no provedor de e-mail de verdade. enviarEmail() (em lib/email)
+// só entra no caminho de rede quando RESEND_API_KEY está setada - o valor
+// real varia se o .env é carregado ou não pelo runner de teste (vitest não
+// carrega .env por padrão), então fixa aqui em vez de depender do ambiente:
+// sem isso, o teste passa ou falha de acordo com o que estiver fora dele.
+vi.stubEnv("RESEND_API_KEY", "re_teste_fake");
+
+const enviosCapturados: Array<{
+  to: string;
+  subject: string;
+  html: string;
+  text?: string;
+  headers?: Record<string, string>;
+}> = [];
+
+// O que o "provedor" responde na próxima chamada (e se ele explode, como numa
+// queda de rede): cada teste ajusta, e o beforeEach volta ao caminho feliz.
+const comportamentoDoProvedor: {
+  erro: { message: string } | null;
+  lancar: Error | null;
+} = { erro: null, lancar: null };
+
+vi.mock("resend", () => ({
+  Resend: vi.fn().mockImplementation(() => ({
+    emails: {
+      send: vi.fn(async (parametros: (typeof enviosCapturados)[number]) => {
+        enviosCapturados.push(parametros);
+        if (comportamentoDoProvedor.lancar) throw comportamentoDoProvedor.lancar;
+        return comportamentoDoProvedor.erro
+          ? { data: null, error: comportamentoDoProvedor.erro }
+          : { data: { id: "teste" }, error: null };
+      }),
+    },
+  })),
+}));
+
+import {
+  enviarEmailAcessoOrgao,
+  enviarEmailCidadeAprovada,
+  esc,
+  enviarEmailResumoSemanal,
+  enviarEmailVerificacao,
+} from "./index";
+
+beforeEach(() => {
+  enviosCapturados.length = 0;
+  comportamentoDoProvedor.erro = null;
+  comportamentoDoProvedor.lancar = null;
+});
+
+afterAll(() => {
+  vi.unstubAllEnvs();
+});
+
+describe("esc", () => {
+  it("escapa os caracteres especiais de HTML", () => {
+    expect(esc(`<script>alert("x & 'y'")</script>`)).toBe(
+      "&lt;script&gt;alert(&quot;x &amp; &#39;y&#39;&quot;)&lt;/script&gt;"
+    );
+  });
+
+  it("não altera texto sem caracteres especiais", () => {
+    expect(esc("Prefeitura de São Paulo")).toBe("Prefeitura de São Paulo");
+  });
+
+  it("neutraliza uma tentativa de injetar uma tag/link no e-mail", () => {
+    const nomeMalicioso = `Órgão</p><a href="https://phishing.exemplo">clique aqui</a><p>`;
+    const escapado = esc(nomeMalicioso);
+    expect(escapado).not.toContain("<a ");
+    expect(escapado).not.toContain("</p>");
+    expect(escapado).toContain("&lt;a href=&quot;https://phishing.exemplo&quot;&gt;");
+  });
+});
+
+describe("enviarEmailVerificacao (idioma)", () => {
+  it("sai em português quando locale não é informado (padrão)", async () => {
+    await enviarEmailVerificacao({ email: "pessoa@exemplo.com", token: "abc" });
+
+    expect(enviosCapturados).toHaveLength(1);
+    expect(enviosCapturados[0].subject).toBe("Confirme seu e-mail — Urban Grid");
+    expect(enviosCapturados[0].html).toContain("Verificar e-mail");
+  });
+
+  it("sai em inglês quando locale é 'en'", async () => {
+    await enviarEmailVerificacao({ email: "pessoa@exemplo.com", token: "abc", locale: "en" });
+
+    expect(enviosCapturados).toHaveLength(1);
+    expect(enviosCapturados[0].subject).toBe("Confirm your e-mail — Urban Grid");
+    expect(enviosCapturados[0].html).toContain("Verify e-mail");
+    expect(enviosCapturados[0].html).not.toContain("Confirme seu e-mail");
+  });
+});
+
+describe("o que vai para o provedor", () => {
+  it("manda a versão em texto puro junto com o HTML, com o link por extenso", async () => {
+    await enviarEmailVerificacao({ email: "pessoa@exemplo.com", token: "abc123" });
+
+    const [envio] = enviosCapturados;
+    expect(envio.text).toBeTruthy();
+    expect(envio.text).not.toMatch(/<[a-z/][^>]*>/i);
+    expect(envio.text).toContain("/verificar-email/abc123");
+    expect(envio.html).toContain("/verificar-email/abc123");
+  });
+
+  it("quebra de linha vinda de um dado (nome de cidade) não vira cabeçalho extra no assunto", async () => {
+    await enviarEmailCidadeAprovada({
+      email: "pessoa@exemplo.com",
+      nomeCidade: "Cidade\r\nBcc: invasor@exemplo.com",
+    });
+
+    expect(enviosCapturados[0].subject).not.toMatch(/[\r\n]/);
+    expect(enviosCapturados[0].subject).toContain("Cidade Bcc: invasor@exemplo.com");
+  });
+
+  it("o resumo semanal leva List-Unsubscribe apontando pras assinaturas", async () => {
+    await enviarEmailResumoSemanal({
+      email: "pessoa@exemplo.com",
+      nomeCidade: "Santa Isabel",
+      nomeCategoria: null,
+      total: 1,
+      url: "http://localhost:3000/cidades/santa-isabel",
+    });
+
+    expect(enviosCapturados[0].headers?.["List-Unsubscribe"]).toMatch(/\/painel\/assinaturas>$/);
+  });
+});
+
+describe("resultado do envio (enviarEmailAcessoOrgao)", () => {
+  const convite = { email: "orgao@exemplo.com", token: "abc", nomeOrgao: "Secretaria de Obras" };
+
+  // O log de falha é esperado aqui; não polui a saída do teste. Restaura só
+  // estes dois espiões (restoreAllMocks também zeraria o mock do Resend).
+  let espiaoErro: ReturnType<typeof vi.spyOn>;
+  let espiaoLog: ReturnType<typeof vi.spyOn>;
+  beforeEach(() => {
+    espiaoErro = vi.spyOn(console, "error").mockImplementation(() => {});
+    espiaoLog = vi.spyOn(console, "log").mockImplementation(() => {});
+  });
+  afterEach(() => {
+    espiaoErro.mockRestore();
+    espiaoLog.mockRestore();
+    vi.stubEnv("RESEND_API_KEY", "re_teste_fake");
+  });
+
+  it("'enviado' quando o provedor aceita", async () => {
+    expect(await enviarEmailAcessoOrgao(convite)).toEqual({ status: "enviado" });
+    expect(enviosCapturados).toHaveLength(1);
+  });
+
+  it("'falhou' com a mensagem do provedor quando ele recusa (ex.: remetente de teste do Resend)", async () => {
+    comportamentoDoProvedor.erro = {
+      message: "You can only send testing emails to your own email address.",
+    };
+    expect(await enviarEmailAcessoOrgao(convite)).toEqual({
+      status: "falhou",
+      motivo: "You can only send testing emails to your own email address.",
+    });
+  });
+
+  it("'falhou' quando a chamada ao provedor explode (queda de rede)", async () => {
+    comportamentoDoProvedor.lancar = new Error("fetch failed");
+    expect(await enviarEmailAcessoOrgao(convite)).toEqual({ status: "falhou", motivo: "fetch failed" });
+  });
+
+  it("'simulado' quando não há RESEND_API_KEY: nada é enviado, o corpo vai pro log", async () => {
+    vi.stubEnv("RESEND_API_KEY", "");
+    expect(await enviarEmailAcessoOrgao(convite)).toEqual({ status: "simulado" });
+    expect(enviosCapturados).toHaveLength(0);
+  });
+});
+
+describe("enviarEmailResumoSemanal (assunto vs. corpo)", () => {
+  it("não escapa o assunto (cabeçalho texto puro), mas escapa o corpo HTML", async () => {
+    await enviarEmailResumoSemanal({
+      email: "pessoa@exemplo.com",
+      nomeCidade: "Santa Isabel D'Oeste",
+      nomeCategoria: null,
+      total: 2,
+      url: "http://localhost:3000/cidades/santa-isabel-doeste-pr",
+    });
+
+    expect(enviosCapturados).toHaveLength(1);
+    // Assunto é cabeçalho de e-mail em texto puro, não HTML - escapar
+    // entregaria "D&#39;Oeste" literal na caixa de entrada.
+    expect(enviosCapturados[0].subject).toContain("Santa Isabel D'Oeste");
+    expect(enviosCapturados[0].subject).not.toContain("&#39;");
+    // No corpo (HTML de verdade), o mesmo nome precisa vir escapado.
+    expect(enviosCapturados[0].html).toContain("Santa Isabel D&#39;Oeste");
+  });
+});

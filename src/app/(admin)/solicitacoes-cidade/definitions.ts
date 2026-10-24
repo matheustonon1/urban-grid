@@ -1,7 +1,7 @@
 import * as z from "zod";
 import type { getTranslations } from "next-intl/server";
 
-export { criarMotivoRejeicaoSchema as criarRejeitarSolicitacaoCidadeSchema } from "@/lib/motivoRejeicao";
+export { criarMotivoRejeicaoSchema as criarRejeitarSolicitacaoCidadeSchema } from "@/lib/moderacao/motivoRejeicao";
 
 // Código de município do IBGE: sempre 7 dígitos. Não é preenchido por quem
 // solicita (ver comentário no model SolicitacaoCidade) - o admin digita na

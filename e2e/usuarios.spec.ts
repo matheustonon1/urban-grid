@@ -2,7 +2,13 @@ import { expect, test } from "@playwright/test";
 
 import { prisma } from "@/lib/prisma";
 
-import { criarAdminTeste, criarCidadaoTeste, limparDadosTeste } from "./helpers";
+import {
+  ativarDoisFatoresTeste,
+  confirmarDialogo,
+  criarAdminTeste,
+  criarCidadaoTeste,
+  limparDadosTeste,
+} from "./helpers";
 
 test.afterAll(async () => {
   await limparDadosTeste();
@@ -16,35 +22,40 @@ async function login(page: import("@playwright/test").Page, email: string, senha
   await page.waitForURL(/\/painel$/);
 }
 
-test("admin promove cidadão a moderador e depois rebaixa de volta", async ({ page }) => {
-  const { email: emailAdmin, senha: senhaAdmin } = await criarAdminTeste();
+test("admin promove cidadão a moderador e depois rebaixa de volta", async ({ page, browser }) => {
+  const { usuario: admin, email: emailAdmin, senha: senhaAdmin } = await criarAdminTeste();
   const { usuario, email, senha } = await criarCidadaoTeste();
 
   await login(page, emailAdmin, senhaAdmin);
+  // Mudar papel pede senha E código de duas etapas; um código de backup vale uma vez.
+  const { codigosBackup } = await ativarDoisFatoresTeste(admin.id);
   await page.goto(`/usuarios?q=${encodeURIComponent(email)}`);
 
   const cartao = page.locator(`text=${email}`).locator("..").locator("..");
   await cartao.locator('select[name="papel"]').selectOption("MODERADOR");
   await cartao.getByRole("button", { name: "Salvar" }).click();
-  await page.waitForTimeout(500);
+  await confirmarDialogo(page, "Alterar para Moderador", senhaAdmin, codigosBackup[0]);
+  await expect(page.getByText(/Papel de .* alterado para Moderador/)).toBeVisible();
 
   const usuarioPromovido = await prisma.user.findUniqueOrThrow({ where: { id: usuario.id } });
   expect(usuarioPromovido.papel).toBe("MODERADOR");
 
-  // Confirma que o papel novo realmente destranca a área de moderador,
-  // não só que o campo mudou no banco.
-  await page.context().clearCookies();
-  await login(page, email, senha);
-  await page.goto("/moderacao");
-  await expect(page).toHaveURL(/\/moderacao$/);
+  // Confirma que o papel novo realmente destranca a área de moderador, não só que o
+  // campo mudou no banco. Num contexto à parte: a conta do admin agora tem 2FA, e entrar
+  // de novo nela pediria um código que o teste não precisa gastar.
+  const contextoPromovido = await browser.newContext();
+  const paginaPromovida = await contextoPromovido.newPage();
+  await login(paginaPromovida, email, senha);
+  await paginaPromovida.goto("/moderacao");
+  await expect(paginaPromovida).toHaveURL(/\/moderacao$/);
+  await contextoPromovido.close();
 
-  await page.context().clearCookies();
-  await login(page, emailAdmin, senhaAdmin);
   await page.goto(`/usuarios?q=${encodeURIComponent(email)}`);
   const cartaoDeNovo = page.locator(`text=${email}`).locator("..").locator("..");
   await cartaoDeNovo.locator('select[name="papel"]').selectOption("CIDADAO");
   await cartaoDeNovo.getByRole("button", { name: "Salvar" }).click();
-  await page.waitForTimeout(500);
+  await confirmarDialogo(page, "Alterar para Cidadão", senhaAdmin, codigosBackup[1]);
+  await expect(page.getByText(/Papel de .* alterado para Cidadão/)).toBeVisible();
 
   const usuarioRebaixado = await prisma.user.findUniqueOrThrow({ where: { id: usuario.id } });
   expect(usuarioRebaixado.papel).toBe("CIDADAO");

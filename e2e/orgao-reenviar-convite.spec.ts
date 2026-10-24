@@ -39,7 +39,14 @@ test("admin reenvia convite pra órgão que nunca definiu senha", async ({ page 
   await expect(cartao.getByText("Convite pendente")).toBeVisible();
 
   await cartao.getByRole("button", { name: `Reenviar convite para ${emailOrgao}` }).click();
-  await page.waitForTimeout(500);
+
+  // O admin vê o que houve com o envio. Qual das mensagens depende do
+  // ambiente: com o Resend configurado, o endereço de teste (example.com) é
+  // recusado; sem ele, o e-mail só vai pro log; com um domínio verificado,
+  // enviaria de verdade. Nos três o resultado tem que aparecer na tela.
+  await expect(cartao.getByRole("status")).toContainText(
+    /Não foi possível enviar o convite|não está configurado|Convite enviado/
+  );
 
   const tokenCriado = await prisma.verificationToken.findFirst({
     where: { identifier: emailOrgao },

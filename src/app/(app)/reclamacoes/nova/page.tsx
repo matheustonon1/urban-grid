@@ -1,26 +1,38 @@
 import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
-import { containerPagina } from "@/lib/estilos";
-import { exigirSessao } from "@/lib/sessao";
+import { pagina } from "@/lib/estilos";
+import { exigirSessao } from "@/lib/seguranca/sessao";
+import { metadataDaPagina } from "@/lib/metadata";
+import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
 
 import { NovaReclamacaoForm } from "./form";
 
+export const generateMetadata = metadataDaPagina("NovaReclamacao", "tituloPagina");
+
 export default async function NovaReclamacaoPage() {
   const t = await getTranslations("NovaReclamacao");
-  await exigirSessao();
+  const session = await exigirSessao();
 
-  const categorias = await prisma.categoria.findMany({
-    where: { ativa: true },
-    orderBy: { ordem: "asc" },
-  });
+  const [categorias, usuario] = await Promise.all([
+    prisma.categoria.findMany({
+      where: { ativa: true },
+      orderBy: { ordem: "asc" },
+    }),
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { cidade: { select: { id: true, nome: true, estado: { select: { uf: true } } } } },
+    }),
+  ]);
+
+  const cidadePadrao = usuario?.cidade
+    ? { id: usuario.cidade.id, nome: usuario.cidade.nome, uf: usuario.cidade.estado.uf }
+    : null;
 
   return (
-    <main className={`${containerPagina} max-w-xl`}>
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-        {t("tituloPagina")}
-      </h1>
-      <NovaReclamacaoForm categorias={categorias} />
+    <main className={pagina}>
+      <CabecalhoPagina kicker={t("kicker")} titulo={t("tituloPagina")} descricao={t("subtitulo")} />
+      <NovaReclamacaoForm categorias={categorias} cidadePadrao={cidadePadrao} />
     </main>
   );
 }
