@@ -48,7 +48,10 @@ export function Aviso({
       role={tom === "erro" ? "alert" : tom === "sucesso" ? "status" : undefined}
       className={`flex flex-wrap items-center gap-x-4 gap-y-2.5 rounded-md border px-3.5 py-3 text-sm ${caixa}`}
     >
-      <div className="flex min-w-0 flex-1 items-start gap-2.5">
+      {/* Base de 14rem (e não 0, como no `flex-1`): sem ela o texto nunca "não cabe" e o
+          flex-wrap não leva a ação para baixo - o botão espremia o texto numa coluna de
+          uma palavra por linha em tela estreita e dentro de diálogo. */}
+      <div className="flex min-w-0 flex-[1_1_14rem] items-start gap-2.5">
         <Icone className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
         <div className="min-w-0">{children}</div>
       </div>
