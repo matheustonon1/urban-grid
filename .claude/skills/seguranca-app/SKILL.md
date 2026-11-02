@@ -38,9 +38,12 @@ claro; o porquê vem junto para você saber quando a regra se aplica a um caso n
 - Token de verificação de e-mail e de redefinição de senha **não são
   intercambiáveis**: o `identifier` tem prefixo de propósito
   (`lib/email/tokens.ts`). Não reaproveite o mesmo token para duas finalidades.
-- Hoje o login **não consome** `callbackUrl` (as páginas só o anexam ao link).
-  Se um dia passar a consumir, aceite apenas caminho interno iniciado por `/`
-  (e não por `//`) — URL absoluta vinda da query é open redirect.
+- O login consome `callbackUrl` (o `proxy.ts` e os links "entre para…" o geram), **sempre**
+  por `caminhoInternoSeguro`/`destinoPosLogin` (`lib/seguranca/destinoLogin.ts`): só caminho
+  interno iniciado por `/` — nunca `//host`, URL absoluta, barra invertida, tab/quebra de
+  linha (o navegador os descarta e `/\t/golpe.com` viraria `//golpe.com`) nem `/login`
+  (laço). O valor da query nunca vai direto a `redirect()`/`redirectTo`. Sem `callbackUrl`, a
+  conta de órgão entra em `/orgao` e as demais em `/painel`.
 
 ## Limites de abuso
 

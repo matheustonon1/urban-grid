@@ -10,12 +10,14 @@ import { botaoPrimario, campoInput, linkSutil } from "@/lib/estilos";
 
 import { login } from "./actions";
 
-export function FormularioLogin() {
+export function FormularioLogin({ callbackUrl }: { callbackUrl?: string }) {
   const t = useTranslations("Login");
   const [state, action, pending] = useActionState(login, undefined);
 
   return (
     <form action={action} className="flex flex-col gap-5">
+      {callbackUrl && <input type="hidden" name="callbackUrl" value={callbackUrl} />}
+
       <Campo id="login-identificador" rotulo={t("identificador")}>
         <input
           id="login-identificador"

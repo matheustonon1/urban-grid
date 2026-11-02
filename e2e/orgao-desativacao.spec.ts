@@ -20,7 +20,8 @@ async function login(page: import("@playwright/test").Page, email: string, senha
   await page.fill('input[name="identificador"]', email);
   await page.fill('input[name="senha"]', senha);
   await page.click('button[type="submit"]');
-  await page.waitForURL(/\/painel$/);
+  // A conta de órgão entra em /orgao; as demais em /painel.
+  await page.waitForURL(/\/(painel|orgao)$/);
 }
 
 test("desativar um órgão bloqueia resposta oficial, reativar libera de novo", async ({ page }) => {
@@ -48,6 +49,13 @@ test("desativar um órgão bloqueia resposta oficial, reativar libera de novo", 
   // equivalente em responderReclamacao() do lado do servidor. A prova
   // aqui é dupla: o formulário nem aparece, e nenhuma resposta existe.
   await expect(page.getByText("Responder como órgão")).toHaveCount(0);
+  // E a tela diz por quê, em vez de o formulário simplesmente sumir.
+  await expect(page.getByText(/Seu órgão está desativado|O seu órgão está desativado/)).toBeVisible();
+
+  // No painel, o órgão vê a fila mas não tem como responder: aviso no topo e nenhum "Responder".
+  await page.goto("/orgao");
+  await expect(page.getByText(/Seu órgão está desativado/)).toBeVisible();
+  await expect(page.getByText("Responder", { exact: true })).toHaveCount(0);
 
   const respostasComOrgaoInativo = await prisma.respostaOficial.count({
     where: { reclamacaoId: reclamacao.id },

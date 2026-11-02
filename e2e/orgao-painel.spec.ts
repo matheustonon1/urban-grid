@@ -31,7 +31,7 @@ async function login(page: import("@playwright/test").Page, email: string, senha
   await page.fill('input[name="identificador"]', email);
   await page.fill('input[name="senha"]', senha);
   await page.click('button[type="submit"]');
-  await page.waitForURL(/\/painel$/);
+  await page.waitForURL(/\/(painel|orgao)$/);
 }
 
 async function novaReclamacao(autorId: string, cidadeId: string, diasAtras: number, titulo: string) {
@@ -79,10 +79,87 @@ test("painel: cada cartão diz há quanto tempo espera, o prazo vencido e abre a
     `/reclamacoes/${semResposta.protocolo}`
   );
 
+  // A que já teve resposta não está mais na fila "sem resposta": vai para "em acompanhamento".
+  await expect(page.locator("article").filter({ hasText: comPrazo.titulo })).toHaveCount(0);
+  await page.goto(`/orgao?fila=acompanhamento&q=${encodeURIComponent(comPrazo.titulo)}`);
   const cartaoComPrazo = page.locator("article").filter({ hasText: comPrazo.titulo });
   await expect(cartaoComPrazo).toContainText("Em andamento");
   await expect(cartaoComPrazo).toContainText("Última resposta");
   await expect(cartaoComPrazo).toContainText("Prazo vencido em");
+});
+
+test("painel: duas filas, com contagem, e a busca por título ou protocolo filtra as duas", async ({
+  page,
+}) => {
+  const cidade = await prisma.cidade.findFirstOrThrow();
+  const { usuario: autor } = await criarCidadaoTeste();
+  const { orgao, usuario: responsavel, email, senha } = await criarOrgaoTeste(cidade.id);
+  const sufixo = Date.now();
+
+  const aberta = await novaReclamacao(autor.id, cidade.id, DIAS_ANTIGA, `Fila sem resposta ${sufixo}`);
+  const respondida = await novaReclamacao(
+    autor.id,
+    cidade.id,
+    DIAS_ANTIGA,
+    `Fila acompanhamento ${sufixo}`
+  );
+  await prisma.reclamacao.update({ where: { id: respondida.id }, data: { status: "EM_ANDAMENTO" } });
+  await prisma.respostaOficial.create({
+    data: {
+      reclamacaoId: respondida.id,
+      autorId: responsavel.id,
+      orgaoId: orgao.id,
+      texto: "Equipe acionada.",
+      novoStatus: "EM_ANDAMENTO",
+    },
+  });
+
+  await login(page, email, senha);
+
+  // Buscar pelo protocolo traz uma só; a contagem de cada aba respeita a busca.
+  await page.goto(`/orgao?q=${encodeURIComponent(aberta.protocolo)}`);
+  const filas = page.getByRole("navigation", { name: "Filas de reclamações" });
+  await expect(filas.getByRole("link", { name: /Sem resposta/ })).toContainText("1");
+  await expect(filas.getByRole("link", { name: /Em acompanhamento/ })).toContainText("0");
+  await expect(page.locator("article").filter({ hasText: aberta.titulo })).toHaveCount(1);
+  await expect(page.locator("article").filter({ hasText: respondida.titulo })).toHaveCount(0);
+
+  // A outra fila, mantendo a busca por parte do título.
+  await page.goto(`/orgao?fila=acompanhamento&q=${encodeURIComponent(`acompanhamento ${sufixo}`)}`);
+  await expect(page.locator("article").filter({ hasText: respondida.titulo })).toHaveCount(1);
+  await expect(filas.getByRole("link", { name: /Em acompanhamento/ })).toHaveAttribute(
+    "aria-current",
+    "true"
+  );
+
+  // Sem nenhum resultado, o painel diz que os filtros não acharam nada e oferece limpar.
+  await page.goto(`/orgao?q=${encodeURIComponent(`nada-assim-${sufixo}`)}`);
+  await expect(page.getByText("Nenhuma reclamação com esses filtros.")).toBeVisible();
+  await page.getByRole("link", { name: "Limpar filtros" }).click();
+  await expect(page).toHaveURL(/\/orgao$/);
+});
+
+test("painel: a reclamação aberta por uma conta do próprio órgão não entra na fila dele", async ({
+  page,
+}) => {
+  const cidade = await prisma.cidade.findFirstOrThrow();
+  const { orgao, email, senha } = await criarOrgaoTeste(cidade.id);
+  // Outra conta do mesmo órgão abriu uma reclamação (acontecia antes de a regra existir).
+  const colega = await prisma.user.create({
+    data: {
+      name: "Colega do órgão E2E",
+      email: `e2e-teste-colega-${Date.now()}@example.com`,
+      papel: "ORGAO",
+      orgaoId: orgao.id,
+      emailVerified: new Date(),
+      termosAceitosEm: new Date(),
+    },
+  });
+  const propria = await novaReclamacao(colega.id, cidade.id, DIAS_ANTIGA, `Aberta pelo órgão ${Date.now()}`);
+
+  await login(page, email, senha);
+  await page.goto(`/orgao?q=${encodeURIComponent(propria.protocolo)}`);
+  await expect(page.locator("article").filter({ hasText: propria.titulo })).toHaveCount(0);
 });
 
 test("painel: o formulário vem recolhido, abre em 'Responder' e a resposta volta com aviso", async ({

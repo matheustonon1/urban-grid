@@ -158,6 +158,71 @@ for (const tema of TEMAS) {
   });
 }
 
+// Telas do órgão que só existem com dado certo: órgão desativado (aviso e nenhum "Responder"),
+// as duas filas, a busca sem resultado, a página "órgão não registra reclamação", o cartão de
+// solicitação com os sinais do admin e o convite vencido. Com o banco vazio nada disso aparece.
+for (const tema of TEMAS) {
+  test(`telas do órgão: desativado, filas, solicitação com sinais e convite vencido (${tema})`, async ({
+    page,
+  }) => {
+    const cidade = await prisma.cidade.findFirstOrThrow();
+    const sufixo = Date.now();
+    const { usuario: autor } = await criarCidadaoTeste();
+    const reclamacao = await criarReclamacaoTeste(autor.id, { cidadeId: cidade.id });
+    const { orgao, email, senha } = await criarOrgaoTeste(cidade.id);
+    await prisma.orgao.update({ where: { id: orgao.id }, data: { ativo: false } });
+    await prisma.solicitacaoOrgao.create({
+      data: {
+        nomeOrgao: orgao.nome,
+        cidadeId: cidade.id,
+        nomeResponsavel: "Pessoa Que Pede E2E",
+        email: `e2e-teste-a11y-${sufixo}@gmail.com`,
+      },
+    });
+    const emailConvite = `e2e-teste-convite-${sufixo}@example.com`;
+    const orgaoConvite = await prisma.orgao.create({
+      data: { nome: `Órgão E2E Convite A11y ${sufixo}`, cidadeId: cidade.id },
+    });
+    await prisma.user.create({
+      data: { name: "Responsável E2E", email: emailConvite, papel: "ORGAO", orgaoId: orgaoConvite.id },
+    });
+    const tokenVencido = `e2e-teste-token-a11y-${sufixo}`;
+    await prisma.verificationToken.create({
+      data: { identifier: emailConvite, token: tokenVencido, expires: new Date(Date.now() - 60_000) },
+    });
+    await escolherTema(page, tema);
+
+    try {
+      await page.goto(`/orgao/definir-senha/${tokenVencido}`, { waitUntil: "networkidle" });
+      expect(await violacoesGraves(page), "convite vencido").toEqual([]);
+
+      await entrar(page, email, senha);
+      for (const rota of [
+        "/orgao",
+        "/orgao?fila=acompanhamento",
+        "/orgao?q=nada-assim-existe",
+        "/reclamacoes/nova",
+        `/reclamacoes/${reclamacao.protocolo}`,
+      ]) {
+        await page.goto(rota, { waitUntil: "networkidle" });
+        expect(await violacoesGraves(page), rota).toEqual([]);
+      }
+
+      // Sai da página antes de limpar os cookies (prefetch em voo reemite o cookie).
+      await page.goto("about:blank");
+      await page.context().clearCookies();
+      const admin = await criarAdminTeste();
+      await entrar(page, admin.email, admin.senha);
+      await page.goto("/solicitacoes-orgao", { waitUntil: "networkidle" });
+      expect(await violacoesGraves(page), "/solicitacoes-orgao com sinais").toEqual([]);
+    } finally {
+      await apagarLogsDeModeracao({ id: reclamacao.id });
+      await prisma.reclamacao.delete({ where: { id: reclamacao.id } });
+      await prisma.verificationToken.deleteMany({ where: { identifier: { contains: "e2e-teste" } } });
+    }
+  });
+}
+
 // Diálogo de confirmação (sem 2FA, com os campos de senha e código, e com o erro de senha
 // dentro dele) e o aviso flutuante que vem depois: são camadas novas por cima da página
 // e precisam passar na varredura com o fundo inerte, nos dois temas.

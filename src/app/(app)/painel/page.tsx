@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Bell, ChevronRight, FilePlus, Plus, Rss, User, Users } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 
@@ -35,6 +36,13 @@ export default async function PainelPage({ searchParams }: PageProps<"/painel">)
   const tNotificacoes = await getTranslations("Notificacoes");
   const locale = await getLocale();
   const session = await exigirSessao();
+
+  // Esta é a lista de reclamações de quem as registra. A conta de órgão não registra
+  // nenhuma (e responde pelo painel do órgão): cair aqui seria ver um "você ainda não
+  // registrou nenhuma reclamação" com um botão que ela não pode usar.
+  if (session.user.papel === "ORGAO") {
+    redirect("/orgao");
+  }
 
   const { page } = await searchParams;
   const paginaAtual = lerPaginaAtual(page);

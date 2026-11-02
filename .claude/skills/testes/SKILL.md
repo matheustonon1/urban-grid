@@ -122,6 +122,14 @@ conteúdo tem `truncate`.
    desses nomes. Spec novo que cria órgão por outro nome deixa lixo e, com a lista
    paginada em 20, esconde botões de outros testes.
 
+10. **Onde o login cai.** A conta de órgão entra em `/orgao` (e `/painel` a redireciona para lá);
+    as demais, em `/painel`. Helper de login que serve a órgão espera
+    `page.waitForURL(/\/(painel|orgao)$/)`. Para provar uma regra do servidor que a tela já
+    esconde, deixe a página abrir com o formulário visível e **mude o dado no banco antes de
+    enviar** (`orgao-integridade.spec.ts`) - não há como forjar a action sem o ID dela.
+11. **Filtro Prisma que "esvazia" a lista.** Teste de lista com dado de outro dono (autor sem órgão =
+    NULL) pegaria `NOT`/`not` que viram SQL com NULL; confira com `count` no banco, não só na tela.
+
 ## Quando um teste falha
 
 1. Releia a mensagem e o screenshot/trace (`test-results/`, `npx playwright show-report`).

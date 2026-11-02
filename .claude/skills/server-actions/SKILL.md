@@ -85,6 +85,18 @@ existe" e "o e-mail não saiu" são resposta, não silêncio.
   Texto escrito por uma pessoa (resposta oficial, comentário) vai em `mensagemBruta`,
   sem tradução. Chave nova: entrada em `ChaveNotificacao`, em `EXEMPLOS` de
   `textos.test.ts` e nas duas línguas.
+- **Quem abre não responde, nem avalia.** Conta de órgão não registra reclamação (página e
+  `criarReclamacao` recusam), não avalia (`avaliarReclamacao`) e não responde ao que uma conta
+  do próprio órgão abriu (`responderReclamacao`; o painel também a tira da fila). Senão o
+  órgão se atende, marca resolvida e se dá nota 5 na reputação pública.
+- **Contestar reabre.** Avaliação "não foi resolvido" volta a reclamação para `EM_ANDAMENTO`
+  (e `resolvidaEm` para nulo) **na mesma transação** da avaliação, com `status: "RESOLVIDA"` no
+  `WHERE`, e avisa os responsáveis ativos dos órgãos que responderam
+  (`lib/notificacoes/orgaos`). Resolvida de novo, o autor pode avaliar outra vez e a nova avaliação
+  substitui a contestada (`lib/reclamacoes/avaliacao`: `podeAvaliar`); confirmação é definitiva.
+- **Filtro Prisma com NULL.** `NOT: { rel: { campo: x } }` e `campo: { not: x }` viram SQL com
+  NULL (`NOT (campo = ?)` não é verdadeiro) e **esvaziam a lista** de quem tem o campo nulo.
+  Escreva `OR: [{ campo: null }, { campo: { not: x } }]` e confira a contagem no banco.
 - Mudança de privilégio avisa a pessoa afetada (`criarNotificacao` com
   `CONTA_SEGURANCA`) e recusa o que não faz sentido (mudar o próprio papel, banir
   administrador ou a si mesmo, encurtar um banimento que já vale mais).

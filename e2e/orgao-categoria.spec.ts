@@ -35,7 +35,7 @@ test("órgão restrito a uma categoria só vê e responde reclamações dela", a
   await page.fill('input[name="identificador"]', emailOrgao);
   await page.fill('input[name="senha"]', senhaOrgao);
   await page.click('button[type="submit"]');
-  await page.waitForURL(/\/painel$/);
+  await page.waitForURL(/\/(painel|orgao)$/);
 
   await page.goto("/orgao");
   const textoPainel = await page.locator("main").innerText();

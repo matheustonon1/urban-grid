@@ -519,6 +519,20 @@ pendentes, em andamento e resolvidas (com e sem avaliação) para ver o painel d
 com movimento (entre com `demo.orgao@urbangrid.local` / `demo1234`) — `npm run db:seed:demo -- --limpar`
 remove tudo que ele criou.
 
+Ao decidir um pedido, o ADMIN vê no cartão o que confere: o tipo do domínio do
+e-mail (institucional `.gov.br`/`.leg.br`…, pessoal ou próprio), se **já existe um órgão
+com aquele nome na cidade** (aprovar adiciona a conta nova a ele, sem criar outro) e se
+aquele e-mail já teve um pedido rejeitado. São indícios, não comprovação: o nome e o e-mail
+são digitados por quem pede, e o vínculo deve ser conferido no site oficial do órgão ou por
+telefone. Quem deixa o convite vencer (vale 24 h) pede outro na própria página do link.
+
+A conta de órgão entra direto em `/orgao`, onde as reclamações aparecem em duas filas —
+**sem resposta** e **em acompanhamento** (já respondidas e ainda abertas) —, com busca por
+protocolo ou título e filtro de categoria. Ela **não registra nem avalia reclamação** e não
+responde ao que uma conta do próprio órgão abriu (a reputação pública não pode ser inflada
+por quem a recebe). Quando o autor contesta uma resolução ("não foi resolvido"), a
+reclamação **reabre**, o órgão é avisado e, resolvida de novo, o autor avalia outra vez.
+
 Por padrão, um órgão vê e pode responder qualquer reclamação da sua
 cidade. Um **ADMIN** pode restringir isso em `/orgaos-categorias`,
 atribuindo categorias específicas a cada órgão (ex.: só "Buracos e

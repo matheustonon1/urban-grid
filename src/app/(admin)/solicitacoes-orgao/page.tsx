@@ -12,8 +12,12 @@ import {
   colunaPrincipal,
   grade,
   pagina,
+  rotuloSecao,
 } from "@/lib/estilos";
 import { metadataDaPagina } from "@/lib/metadata";
+import { sinaisDaSolicitacao } from "@/lib/orgaos/sinaisSolicitacao";
+import { Aviso } from "@/components/ui/aviso";
+import { Etiqueta } from "@/components/ui/etiqueta";
 import { EstadoVazio } from "@/components/ui/estado-vazio";
 import { BotaoAcao, FormularioAcao } from "@/components/ui/formulario-acao";
 import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
@@ -65,6 +69,31 @@ export default async function SolicitacoesOrgaoPage({
   const totalPaginasPendentes = calcularTotalPaginas(totalPendentes);
   const totalPaginasDecididas = calcularTotalPaginas(totalDecididas);
 
+  // O que o admin não via ao decidir: se já existe um órgão com esse nome na cidade (aprovar
+  // adiciona a conta nova a ELE, por causa do upsert em aprovarSolicitacao - a mesma chave
+  // única, então a mesma regra de maiúsculas/acentos do banco) e se aquele e-mail já teve um
+  // pedido rejeitado.
+  const [orgaosExistentes, rejeicoesPorEmail] = await Promise.all([
+    Promise.all(
+      pendentes.map((solicitacao) =>
+        prisma.orgao.findUnique({
+          where: {
+            cidadeId_nome: { cidadeId: solicitacao.cidadeId, nome: solicitacao.nomeOrgao },
+          },
+          select: { _count: { select: { responsaveis: true } } },
+        })
+      )
+    ),
+    pendentes.length > 0
+      ? prisma.solicitacaoOrgao.groupBy({
+          by: ["email"],
+          where: { email: { in: pendentes.map((s) => s.email) }, status: "REJEITADA" },
+          _count: { _all: true },
+        })
+      : Promise.resolve([]),
+  ]);
+  const rejeicoes = new Map(rejeicoesPorEmail.map((linha) => [linha.email, linha._count._all]));
+
   return (
     <main className={pagina}>
       <CabecalhoPagina
@@ -80,7 +109,15 @@ export default async function SolicitacoesOrgaoPage({
               <EstadoVazio icone={CircleCheck} titulo={t("nenhumaPendente")} />
             )}
 
-            {pendentes.map((solicitacao) => (
+            {pendentes.map((solicitacao, indice) => {
+              const responsaveisExistentes = orgaosExistentes[indice]?._count.responsaveis ?? null;
+              const sinais = sinaisDaSolicitacao({
+                email: solicitacao.email,
+                responsaveisDoOrgaoExistente: responsaveisExistentes,
+                rejeicoesAnteriores: rejeicoes.get(solicitacao.email) ?? 0,
+              });
+
+              return (
               <article key={solicitacao.id} className={`flex flex-col gap-3 ${cartaoSecao}`}>
                 <p className="kicker">
                   {solicitacao.cidade.nome} - {solicitacao.cidade.estado.uf}
@@ -97,6 +134,25 @@ export default async function SolicitacoesOrgaoPage({
                   {t("enviadoEm")} {formatarDataHora(solicitacao.createdAt, locale)}
                 </p>
 
+                <div className="flex flex-col gap-2.5 border-t border-line pt-4">
+                  <p className={rotuloSecao}>{t("sinaisRotulo")}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {sinais.map((sinal) => (
+                      <Etiqueta key={sinal.chave} tom={sinal.tom}>
+                        {t(`sinais.${sinal.chave}`, {
+                          count: "count" in sinal ? sinal.count : 0,
+                        })}
+                      </Etiqueta>
+                    ))}
+                  </div>
+                  {responsaveisExistentes !== null && (
+                    <Aviso tom="atencao">
+                      {t("avisoOrgaoJaExiste", { responsavel: solicitacao.nomeResponsavel })}
+                    </Aviso>
+                  )}
+                  <p className="text-xs text-ink-muted">{t("sinaisAviso")}</p>
+                </div>
+
                 <div className="mt-2 grid gap-4 border-t border-line pt-5 sm:grid-cols-[auto_1fr] sm:items-end">
                   <FormularioAcao
                     action={aprovarSolicitacao.bind(null, solicitacao.id)}
@@ -107,7 +163,13 @@ export default async function SolicitacoesOrgaoPage({
                         email: solicitacao.email,
                         cidade: solicitacao.cidade.nome,
                       }),
-                      detalhes: [t("confirmarAprovarDetalheEmail"), t("confirmarAprovarDetalheResposta")],
+                      detalhes: [
+                        t("confirmarAprovarDetalheEmail"),
+                        t("confirmarAprovarDetalheResposta"),
+                        ...(responsaveisExistentes !== null
+                          ? [t("confirmarAprovarDetalheOrgaoExistente", { count: responsaveisExistentes })]
+                          : []),
+                      ],
                       confirmar: t("confirmarAprovarBotao"),
                       tom: "primario",
                       senha: true,
@@ -131,7 +193,8 @@ export default async function SolicitacoesOrgaoPage({
                   />
                 </div>
               </article>
-            ))}
+              );
+            })}
 
             <Paginacao
               paginaAtual={paginaPendentes}

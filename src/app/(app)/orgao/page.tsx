@@ -1,23 +1,28 @@
 import Link from "next/link";
 import { StatusReclamacao } from "@prisma/client";
 import { getLocale, getTranslations } from "next-intl/server";
-import { CircleCheck, MessageSquareText } from "lucide-react";
+import { CircleCheck, MessageSquareText, SearchX } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
 import { StatusBadge } from "@/components/reclamacao/status-badge";
+import { Aviso } from "@/components/ui/aviso";
 import { Etiqueta, type TomEtiqueta } from "@/components/ui/etiqueta";
 import { Paginacao } from "@/components/ui/paginacao";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/util/paginacao";
 import {
   botaoPrimario,
+  botaoSecundario,
   campoInput,
   cartaoSecao,
   colunaLateral,
   colunaPrincipal,
   grade,
   pagina,
+  rotuloSecao,
 } from "@/lib/estilos";
 import { calcularMetricasOrgao, classificarIndice } from "@/lib/orgaos/reputacaoOrgao";
+import { nomeCategoriaTraduzido } from "@/lib/reclamacoes/categoriaI18n";
+import { idiomaOuPadrao } from "@/i18n/config";
 import { metadataDaPagina } from "@/lib/metadata";
 import { formatarData } from "@/lib/util/formatarData";
 import { formatarTempoRelativo } from "@/lib/util/tempo-relativo";
@@ -39,35 +44,78 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
   const locale = await getLocale();
   const session = await exigirOrgao();
 
-  const { pagePendentes, pageHistorico } = await searchParams;
+  const { pagePendentes, pageHistorico, fila: filaParam, q, categoria } = await searchParams;
   const paginaPendentes = lerPaginaAtual(pagePendentes);
   const paginaHistorico = lerPaginaAtual(pageHistorico);
 
   const orgao = await prisma.orgao.findUnique({
     where: { id: session.user.orgaoId! },
-    include: { categorias: { select: { id: true, nome: true } } },
+    include: { categorias: { select: { id: true, nome: true, slug: true } } },
   });
+  const idioma = idiomaOuPadrao(locale);
 
   // categoriasIds null = orgao sem categoria atribuida, atende qualquer
   // uma da cidade (ver orgaoAtendeCategoria em lib/orgaos/orgaoCategoria.ts).
   const categoriaIds =
     orgao && orgao.categorias.length > 0 ? orgao.categorias.map((c) => c.id) : null;
 
-  const filtroPendentes = orgao
+  // As categorias que o filtro oferece: as do órgão, ou todas as ativas quando ele atende
+  // qualquer uma. Um `categoria` da URL fora desta lista é ignorado (link antigo, id forjado).
+  const categoriasDoEscopo = orgao
+    ? (categoriaIds
+        ? orgao.categorias
+        : await prisma.categoria.findMany({
+            where: { ativa: true },
+            orderBy: { ordem: "asc" },
+            select: { id: true, nome: true, slug: true },
+          }))
+    : [];
+  const categoriaFiltro =
+    typeof categoria === "string" && categoriasDoEscopo.some((c) => c.id === categoria)
+      ? categoria
+      : null;
+  const termo = typeof q === "string" ? q.trim().slice(0, 100) : "";
+
+  // Duas filas, porque pedem ação diferente: "sem resposta" é o que ninguém atendeu ainda;
+  // "em acompanhamento" já teve resposta (prazo, andamento) e continua aberta. Misturadas, o
+  // contador de "pendentes" inflava com o que o órgão já tinha respondido.
+  const fila: "sem-resposta" | "acompanhamento" =
+    filaParam === "acompanhamento" ? "acompanhamento" : "sem-resposta";
+
+  const filtroBase = orgao
     ? {
         cidadeId: orgao.cidadeId,
         status: {
           in: [StatusReclamacao.PUBLICADA, StatusReclamacao.EM_ANDAMENTO],
         },
-        ...(categoriaIds ? { categoriaId: { in: categoriaIds } } : {}),
+        ...(categoriaFiltro
+          ? { categoriaId: categoriaFiltro }
+          : categoriaIds
+            ? { categoriaId: { in: categoriaIds } }
+            : {}),
+        ...(termo
+          ? { OR: [{ protocolo: { contains: termo } }, { titulo: { contains: termo } }] }
+          : {}),
+        // O órgão não responde ao que uma conta dele mesmo abriu (responderReclamacao recusa):
+        // listar na fila seria oferecer um "Responder" que só leva a um erro. O `orgaoId: null`
+        // explícito é essencial: o autor comum não tem órgão, e `NOT`/`not` sozinhos viram SQL
+        // com NULL (`NOT (orgaoId = ?)` é NULL, não verdadeiro) e esvaziariam a fila inteira.
+        autor: { OR: [{ orgaoId: null }, { orgaoId: { not: orgao.id } }] },
       }
     : null;
+  const filtroSemResposta = filtroBase && { ...filtroBase, respostas: { none: {} } };
+  const filtroAcompanhamento = filtroBase && { ...filtroBase, respostas: { some: {} } };
+  const filtroPendentes = fila === "sem-resposta" ? filtroSemResposta : filtroAcompanhamento;
 
-  const [pendentes, totalPendentes, metricas, historico, totalHistorico] = await Promise.all([
+  const [pendentes, totalSemResposta, totalAcompanhamento, metricas, historico, totalHistorico] =
+    await Promise.all([
     filtroPendentes
       ? prisma.reclamacao.findMany({
           where: filtroPendentes,
-          orderBy: { publicadaEm: "asc" },
+          // Sem resposta: a que espera há mais tempo primeiro. Em acompanhamento: a de
+          // resposta mais antiga primeiro (updatedAt é tocado a cada resposta), que é a que
+          // o órgão mais corre o risco de ter esquecido.
+          orderBy: fila === "sem-resposta" ? { publicadaEm: "asc" } : { updatedAt: "asc" },
           include: {
             categoria: true,
             _count: { select: { confirmacoes: true } },
@@ -82,7 +130,10 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
           take: ITENS_POR_PAGINA,
         })
       : Promise.resolve([]),
-    filtroPendentes ? prisma.reclamacao.count({ where: filtroPendentes }) : Promise.resolve(0),
+    filtroSemResposta ? prisma.reclamacao.count({ where: filtroSemResposta }) : Promise.resolve(0),
+    filtroAcompanhamento
+      ? prisma.reclamacao.count({ where: filtroAcompanhamento })
+      : Promise.resolve(0),
     orgao
       ? calcularMetricasOrgao(orgao.id)
       : Promise.resolve(null),
@@ -111,8 +162,24 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
           .then((linhas) => linhas.length)
       : Promise.resolve(0),
   ]);
-  const totalPaginasPendentes = calcularTotalPaginas(totalPendentes);
+  const totalFilaAtual = fila === "sem-resposta" ? totalSemResposta : totalAcompanhamento;
+  const totalPaginasPendentes = calcularTotalPaginas(totalFilaAtual);
   const totalPaginasHistorico = calcularTotalPaginas(totalHistorico);
+  const filtrando = termo !== "" || categoriaFiltro !== null;
+
+  // Link do painel com os filtros de agora (fila, busca, categoria) e, opcionalmente, outra fila.
+  const hrefPainel = (filaDestino: typeof fila) => {
+    const params = new URLSearchParams();
+    if (filaDestino !== "sem-resposta") params.set("fila", filaDestino);
+    if (termo) params.set("q", termo);
+    if (categoriaFiltro) params.set("categoria", categoriaFiltro);
+    const query = params.toString();
+    return query ? `/orgao?${query}` : "/orgao";
+  };
+  const filas = [
+    { chave: "sem-resposta" as const, rotulo: t("filaSemResposta"), total: totalSemResposta },
+    { chave: "acompanhamento" as const, rotulo: t("filaAcompanhamento"), total: totalAcompanhamento },
+  ];
 
   const classificacao = metricas
     ? classificarIndice(metricas.indiceResolucao, metricas.totalRespondidas)
@@ -140,11 +207,107 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
         }
       />
 
+      {/* O órgão desativado continua vendo a fila (é o que está parado por causa disso), mas
+          não responde: sem este aviso o formulário sumia e a tela parecia quebrada. */}
+      {orgao && !orgao.ativo && <Aviso tom="atencao">{t("orgaoDesativado")}</Aviso>}
+
       <div className={grade}>
         <div className={colunaPrincipal}>
-          <Secao id="pendentes" titulo={t("pendentesDeResposta")} contador={totalPendentes}>
+          <Secao
+            id="pendentes"
+            titulo={t("aAtender")}
+            contador={totalSemResposta + totalAcompanhamento}
+          >
+            <div className="flex flex-col gap-4">
+              <nav aria-label={t("filasRotulo")} className="flex flex-wrap items-center gap-3">
+                <div className="flex gap-1 rounded-md bg-sunken p-1">
+                  {filas.map((item) => (
+                    <Link
+                      key={item.chave}
+                      href={hrefPainel(item.chave)}
+                      aria-current={fila === item.chave ? "true" : undefined}
+                      className={
+                        fila === item.chave
+                          ? "rounded-[5px] bg-surface px-3 py-1.5 text-sm font-semibold text-ink shadow-[0_1px_2px_rgb(14_21_32/0.12)]"
+                          : "rounded-[5px] px-3 py-1.5 text-sm font-medium text-ink-muted hover:text-ink"
+                      }
+                    >
+                      {item.rotulo}
+                      <span className="ml-2 font-mono text-xs tabular-nums">{item.total}</span>
+                    </Link>
+                  ))}
+                </div>
+                <p className="text-xs text-ink-muted">
+                  {fila === "sem-resposta" ? t("filaSemRespostaDesc") : t("filaAcompanhamentoDesc")}
+                </p>
+              </nav>
+
+              <form
+                method="get"
+                action="/orgao"
+                role="search"
+                aria-label={t("buscarRotulo")}
+                className="flex flex-wrap items-end gap-3"
+              >
+                {fila !== "sem-resposta" && <input type="hidden" name="fila" value={fila} />}
+                <div className="flex min-w-48 flex-1 flex-col gap-1.5">
+                  <label htmlFor="painel-busca" className={rotuloSecao}>
+                    {t("buscarRotulo")}
+                  </label>
+                  <input
+                    id="painel-busca"
+                    type="search"
+                    name="q"
+                    defaultValue={termo}
+                    maxLength={100}
+                    className={campoInput}
+                  />
+                </div>
+                {categoriasDoEscopo.length > 1 && (
+                  <div className="flex flex-col gap-1.5">
+                    <label htmlFor="painel-categoria" className={rotuloSecao}>
+                      {t("categoriaRotulo")}
+                    </label>
+                    <select
+                      id="painel-categoria"
+                      name="categoria"
+                      defaultValue={categoriaFiltro ?? ""}
+                      className={campoInput}
+                    >
+                      <option value="">{t("todasCategorias")}</option>
+                      {categoriasDoEscopo.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {nomeCategoriaTraduzido(c.slug, c.nome, idioma)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                <button type="submit" className={botaoSecundario}>
+                  {t("buscar")}
+                </button>
+                {filtrando && (
+                  <Link
+                    href={fila === "sem-resposta" ? "/orgao" : `/orgao?fila=${fila}`}
+                    className="py-2.5 text-sm font-medium text-brand underline underline-offset-2"
+                  >
+                    {t("limparFiltros")}
+                  </Link>
+                )}
+              </form>
+            </div>
+
             {pendentes.length === 0 && (
-              <EstadoVazio icone={CircleCheck} titulo={t("nenhumaPendente")} />
+              <EstadoVazio
+                icone={filtrando ? SearchX : CircleCheck}
+                titulo={
+                  filtrando
+                    ? t("nenhumaComFiltros")
+                    : fila === "sem-resposta"
+                      ? t("nenhumaSemResposta")
+                      : t("nenhumaAcompanhamento")
+                }
+              />
             )}
 
             {pendentes.map((reclamacao) => {
@@ -177,7 +340,8 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
                       )}
                     </div>
                     <p className="kicker">
-                      {reclamacao.protocolo} · {reclamacao.categoria.nome}
+                      {reclamacao.protocolo} ·{" "}
+                      {nomeCategoriaTraduzido(reclamacao.categoria.slug, reclamacao.categoria.nome, idioma)}
                     </p>
                     <h3 className="text-lg leading-snug font-extrabold tracking-tight text-ink">
                       <Link href={`/reclamacoes/${reclamacao.protocolo}`} className="hover:text-brand">
@@ -192,6 +356,7 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
 
                   {/* O formulário fica recolhido: sete reclamações com sete formulários abertos
                       faziam do painel uma página de rolagem sem fim. */}
+                  {orgao?.ativo && (
                   <details className="group border-t border-line pt-4">
                     <summary className={`${botaoPrimario} w-fit cursor-pointer list-none`}>
                       {t("responder")}
@@ -241,6 +406,7 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
                       <BotaoAcao className={`${botaoPrimario} w-fit`}>{tResp("enviarResposta")}</BotaoAcao>
                     </FormularioAcao>
                   </details>
+                  )}
                 </article>
               );
             })}
@@ -251,6 +417,9 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
               basePath="/orgao"
               paramName="pagePendentes"
               searchParams={{
+                fila: fila === "sem-resposta" ? undefined : fila,
+                q: termo || undefined,
+                categoria: categoriaFiltro ?? undefined,
                 pageHistorico: typeof pageHistorico === "string" ? pageHistorico : undefined,
               }}
             />
@@ -310,6 +479,9 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
               basePath="/orgao"
               paramName="pageHistorico"
               searchParams={{
+                fila: fila === "sem-resposta" ? undefined : fila,
+                q: termo || undefined,
+                categoria: categoriaFiltro ?? undefined,
                 pagePendentes: typeof pagePendentes === "string" ? pagePendentes : undefined,
               }}
             />
