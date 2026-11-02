@@ -212,8 +212,14 @@ npm run email:previa # gera o HTML de todos os e-mails em .email-previa/ (abra n
 npm run db:seed:demo # reclamações de demonstração para ver o site como órgão (-- --limpar remove)
 ```
 
-O GitHub Actions (`.github/workflows/ci.yml`) roda tipos (`tsc`), lint e testes unitários a cada
-push na `main` e a cada PR. O E2E precisa de MySQL e das variáveis do app e continua local.
+O GitHub Actions (`.github/workflows/ci.yml`) roda a cada push na `main` e a cada PR dois jobs em
+paralelo: **verificar** (tipos `tsc`, lint, testes unitários e `npm audit` das dependências de
+produção, este ainda informativo) e **e2e**, a suíte Playwright inteira contra um build de produção
+e um MySQL 8.4 descartável: aplica todas as migrations num banco vazio, roda o seed (que baixa a
+geografia do IBGE, com nova tentativa se a rede falhar), faz o build e executa os testes. Sem chaves
+de Gemini, Resend, Blob ou Turnstile, de propósito (os specs criam as reclamações direto no banco e
+o e-mail vira log). Se um teste falhar, o relatório HTML com screenshots e traces e o log do servidor
+ficam como artefato do job por 7 dias.
 
 ### Banco de dados
 

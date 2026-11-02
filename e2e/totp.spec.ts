@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { prisma } from "@/lib/prisma";
 
-import { criarCidadaoTeste, gerarCodigoTotpAtual, limparDadosTeste } from "./helpers";
+import { criarCidadaoTeste, gerarCodigoTotpAtual, limparDadosTeste, sairDaSessao } from "./helpers";
 
 test.afterAll(async () => {
   await limparDadosTeste();
@@ -34,7 +34,7 @@ test("ativa, exige no login e desativa a autenticação em duas etapas", async (
   // Login volta a pedir senha + código a partir de agora. Sem deslogar
   // primeiro, /login redireciona direto pro painel (sessão ainda ativa)
   // e o formulário nunca aparece.
-  await page.context().clearCookies();
+  await sairDaSessao(page);
   await page.goto("/login");
   await page.fill('input[name="identificador"]', email);
   await page.fill('input[name="senha"]', senha);

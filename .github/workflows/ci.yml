@@ -1,12 +1,16 @@
 name: CI
 
-# Verificações que não precisam de banco nem de segredos: tipos, lint e testes
-# unitários. O E2E (Playwright) exige MySQL e variáveis de ambiente do app e
-# continua local - ver "Testes end-to-end" no README.
+# Dois jobs, em paralelo:
+# - verificar: tipos, lint, testes unitários e auditoria de dependências (rápido, sem banco);
+# - e2e: a suíte Playwright inteira contra um build de produção e um MySQL descartável. Os
+#   testes de ponta a ponta já pegaram regressão que tipos e unitários não pegam (um filtro
+#   que esvaziava a fila do órgão, um redirecionamento do login); rodar só na máquina de quem
+#   lembra era confiar na memória.
 on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -50,3 +54,108 @@ jobs:
 
       - name: Testes unitários
         run: npm test
+
+      # Informativo por enquanto: há vulnerabilidades conhecidas em dependências de produção
+      # (Next, sharp...) que dependem de uma atualização planejada. Quando ela sair, tirar o
+      # `continue-on-error` para o passo passar a barrar o PR.
+      - name: Auditoria de dependências (produção)
+        run: npm audit --omit=dev --audit-level=high
+        continue-on-error: true
+
+  e2e:
+    name: Testes de ponta a ponta (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: reclame_cidade
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=12
+
+    # Sem GEMINI_API_KEY, RESEND_API_KEY, BLOB_READ_WRITE_TOKEN e Turnstile, de propósito: os
+    # specs criam as reclamações direto no banco (não chamam IA nem Blob), o e-mail vira log
+    # ("simulado") e o Turnstile bloquearia, corretamente, o navegador automatizado.
+    # AUTH_TRUST_HOST é obrigatório fora do dev: sem ele o Auth.js responde UntrustedHost e todo
+    # spec que entra na conta falha por timeout.
+    env:
+      DATABASE_URL: mysql://root:root@127.0.0.1:3306/reclame_cidade
+      AUTH_SECRET: ci-segredo-so-para-testes-nao-usar-em-producao-0123456789
+      AUTH_TRUST_HOST: "true"
+      NEXT_PUBLIC_APP_URL: http://localhost:3001
+      PLAYWRIGHT_BASE_URL: http://localhost:3001
+      # O spec do cron semanal chama /api/cron/resumo-semanal com este segredo; o servidor e o
+      # spec leem o mesmo valor. Sem ele a rota responde 401 (falha fechada, por desenho).
+      CRON_SECRET: ci-cron-segredo-so-para-testes
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Gera o client do Prisma
+        run: npx prisma generate
+
+      # Aplica TODAS as migrations num banco vazio: pega migration que só funciona em cima de
+      # dados antigos ou que depende de ordem.
+      - name: Aplica as migrations
+        run: npx prisma migrate deploy
+
+      # O seed baixa estados e municípios da API do IBGE: é idempotente, então uma falha de
+      # rede passageira se resolve repetindo.
+      - name: Seed (geografia do IBGE e categorias)
+        run: |
+          for tentativa in 1 2 3; do
+            npx prisma db seed && exit 0
+            echo "Seed falhou (tentativa $tentativa); aguardando para repetir..."
+            sleep 20
+          done
+          exit 1
+
+      # O build consulta o banco (sitemap), então vem depois das migrations e do seed.
+      - name: Build de produção
+        run: npx next build
+
+      - name: Sobe o servidor de produção
+        run: |
+          nohup npx next start -p 3001 > servidor.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:3001/login > /dev/null; then exit 0; fi
+            sleep 2
+          done
+          echo "O servidor não respondeu a tempo:"
+          cat servidor.log
+          exit 1
+
+      - name: Instala o Chromium do Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Testes E2E
+        run: npx playwright test --reporter=list,html
+
+      # Relatório (com screenshots e traces das falhas) e o log do servidor, para depurar sem
+      # precisar reproduzir localmente.
+      - name: Guarda o relatório e o log do servidor
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-relatorio
+          path: |
+            playwright-report/
+            test-results/
+            servidor.log
+          retention-days: 7
+          if-no-files-found: ignore

@@ -9,6 +9,7 @@ import {
   criarCidadaoTeste,
   criarReclamacaoTeste,
   limparDadosTeste,
+  sairDaSessao,
 } from "./helpers";
 
 const idsReclamacaoParaLimpar: string[] = [];
@@ -65,7 +66,7 @@ test("denunciar um comentário e marcar procedente remove o comentário e avisa 
   });
   expect(denuncia.status).toBe("ABERTA");
 
-  await page.context().clearCookies();
+  await sairDaSessao(page);
   await login(page, emailModerador, senhaModerador);
   await page.goto("/denuncias");
 
@@ -88,7 +89,7 @@ test("denunciar um comentário e marcar procedente remove o comentário e avisa 
   expect(notificacaoAutor).not.toBeNull();
 
   // Comentário reprovado não aparece mais pra um visitante comum.
-  await page.context().clearCookies();
+  await sairDaSessao(page);
   await page.goto(`/reclamacoes/${reclamacao.protocolo}`);
   await expect(page.getByText(textoComentario)).toHaveCount(0);
 });
@@ -116,7 +117,7 @@ test("banir autor a partir de uma denúncia de comentário reprova o comentário
   await cartaoComentario.getByRole("button", { name: "Enviar denúncia" }).click();
   await page.waitForTimeout(500);
 
-  await page.context().clearCookies();
+  await sairDaSessao(page);
   await login(page, emailAdmin, senhaAdmin);
   await page.goto("/denuncias");
 

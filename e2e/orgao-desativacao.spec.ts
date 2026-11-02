@@ -15,6 +15,15 @@ test.afterAll(async () => {
   await limparDadosTeste();
 });
 
+// Num build de produção, os <Link> da página pré-buscam rotas e a resposta de um prefetch ainda
+// em voo reemite o cookie de sessão DEPOIS do clearCookies() (no `npm run dev` não há prefetch):
+// o /login então redireciona por a sessão "voltar" e o formulário nunca aparece. Sair da página
+// antes cancela esses pedidos. O painel do órgão, cheio de links, tornou isso frequente.
+async function sairDaSessao(page: import("@playwright/test").Page) {
+  await page.goto("about:blank");
+  await page.context().clearCookies();
+}
+
 async function login(page: import("@playwright/test").Page, email: string, senha: string) {
   await page.goto("/login");
   await page.fill('input[name="identificador"]', email);
@@ -41,7 +50,7 @@ test("desativar um órgão bloqueia resposta oficial, reativar libera de novo", 
   const orgaoDesativado = await prisma.orgao.findUniqueOrThrow({ where: { id: orgao.id } });
   expect(orgaoDesativado.ativo).toBe(false);
 
-  await page.context().clearCookies();
+  await sairDaSessao(page);
   await login(page, emailOrgao, senhaOrgao);
   await page.goto(`/reclamacoes/${reclamacao.protocolo}`);
   // A própria UI já esconde o formulário pra um órgão inativo (ver
@@ -62,7 +71,7 @@ test("desativar um órgão bloqueia resposta oficial, reativar libera de novo", 
   });
   expect(respostasComOrgaoInativo).toBe(0);
 
-  await page.context().clearCookies();
+  await sairDaSessao(page);
   await login(page, emailAdmin, senhaAdmin);
   await page.goto("/orgaos-categorias");
   const cartaoOrgaoInativo = page.locator(`text=${orgao.nome}`).locator("..").locator("..");
@@ -74,7 +83,7 @@ test("desativar um órgão bloqueia resposta oficial, reativar libera de novo", 
   const orgaoReativado = await prisma.orgao.findUniqueOrThrow({ where: { id: orgao.id } });
   expect(orgaoReativado.ativo).toBe(true);
 
-  await page.context().clearCookies();
+  await sairDaSessao(page);
   await login(page, emailOrgao, senhaOrgao);
   await page.goto(`/reclamacoes/${reclamacao.protocolo}`);
   await page.fill('textarea[name="texto"]', "Resposta depois de reativar o órgão.");

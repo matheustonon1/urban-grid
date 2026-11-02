@@ -8,6 +8,7 @@ import {
   criarAdminTeste,
   emailTeste,
   limparDadosTeste,
+  sairDaSessao,
 } from "./helpers";
 
 test.afterAll(async () => {
@@ -71,7 +72,7 @@ test("solicita acesso como órgão, admin aprova, define senha e loga", async ({
     })
     .not.toBe("");
 
-  await page.context().clearCookies();
+  await sairDaSessao(page);
   await page.goto(`/orgao/definir-senha/${token}`);
   await expect(page.getByText("Bem-vindo(a)")).toBeVisible();
 

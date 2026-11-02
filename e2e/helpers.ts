@@ -35,6 +35,16 @@ export async function confirmarDialogo(
   await dialogo.getByRole("button", { name: botao }).click();
 }
 
+// Encerra a sessão do navegador de teste para entrar com outra conta. Num build de produção os
+// <Link> da página pré-buscam rotas e a resposta de um prefetch ainda em voo reemite o cookie de
+// sessão DEPOIS do clearCookies() (no `npm run dev` não há prefetch): o /login então redireciona
+// porque a sessão "voltou" e o formulário nunca aparece. Sair da página antes cancela esses
+// pedidos. Usar isto em vez de `page.context().clearCookies()` solto.
+export async function sairDaSessao(page: Page) {
+  await page.goto("about:blank");
+  await page.context().clearCookies();
+}
+
 // Liga o 2FA da conta direto no banco, com a sessão já aberta (o login de uma conta com
 // 2FA pediria o código). Devolve o segredo cifrado, para gerar o código do aplicativo, e
 // códigos de backup em claro: cada um vale uma vez e não depende do relógio nem do passo

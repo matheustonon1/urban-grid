@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { emailTeste, gerarCpfValido, limparDadosTeste } from "./helpers";
+import { emailTeste, gerarCpfValido, limparDadosTeste, sairDaSessao } from "./helpers";
 
 test.afterAll(async () => {
   await limparDadosTeste();
@@ -52,7 +52,7 @@ test.describe("cadastro e login", () => {
     // O cadastro loga automaticamente - sem isto, /login redireciona
     // direto pro painel (usuário já autenticado) e o formulário de login
     // usado no loop abaixo nunca chega a aparecer.
-    await page.context().clearCookies();
+    await sairDaSessao(page);
 
     for (let tentativa = 1; tentativa <= 5; tentativa++) {
       await page.goto("/login");

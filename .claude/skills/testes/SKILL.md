@@ -129,7 +129,17 @@ conteúdo tem `truncate`.
     `page.waitForURL(/\/(painel|orgao)$/)`. Para provar uma regra do servidor que a tela já
     esconde, deixe a página abrir com o formulário visível e **mude o dado no banco antes de
     enviar** (`orgao-integridade.spec.ts`) - não há como forjar a action sem o ID dela.
-11. **Filtro Prisma que "esvazia" a lista.** Teste de lista com dado de outro dono (autor sem órgão =
+11. **Trocar de conta no mesmo navegador: `sairDaSessao(page)`** (`e2e/helpers.ts`), nunca
+    `page.context().clearCookies()` solto. Num build de produção, o prefetch dos `<Link>` ainda em
+    voo reemite o cookie depois da limpeza; o `/login` redireciona e o formulário nunca aparece
+    (timeout "waiting for input[name=identificador]"). Passa na máquina rápida e falha no CI.
+12. **CI.** O job `e2e` do GitHub Actions roda a suíte inteira num checkout limpo, banco vazio
+    (`migrate deploy` + seed) e **sem `.env`**: o que só passa por causa de uma variável ou de um
+    dado do seu banco de desenvolvimento aparece lá (foi assim que se achou o `CRON_SECRET` que
+    faltava e o teste que dependia de timing). Para reproduzir antes de abrir o PR: exporte o
+    projeto para uma pasta limpa, `npm ci`, MySQL novo em outra porta, os mesmos passos do
+    `.github/workflows/ci.yml`.
+13. **Filtro Prisma que "esvazia" a lista.** Teste de lista com dado de outro dono (autor sem órgão =
     NULL) pegaria `NOT`/`not` que viram SQL com NULL; confira com `count` no banco, não só na tela.
 
 ## Quando um teste falha
