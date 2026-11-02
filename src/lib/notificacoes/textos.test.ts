@@ -21,6 +21,11 @@ const EXEMPLOS: Record<ChaveNotificacao, TextoNotificacao> = {
     mensagemBruta: "Vamos ao local.",
   },
   pedidoAvaliacao: { chave: "pedidoAvaliacao", params: { orgao: "Obras", titulo: "Buraco" } },
+  reclamacaoReaberta: { chave: "reclamacaoReaberta", params: { titulo: "Buraco" } },
+  reclamacaoReabertaComComentario: {
+    chave: "reclamacaoReabertaComComentario",
+    params: { titulo: "Buraco", comentario: "Continua igual." },
+  },
   novoComentario: { chave: "novoComentario", mensagemBruta: "Concordo." },
   respostaComentario: { chave: "respostaComentario", mensagemBruta: "Concordo." },
   atividadeSuspeita: { chave: "atividadeSuspeita", params: { confirmacoes: 15, minutos: 30 } },

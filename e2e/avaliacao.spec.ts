@@ -62,7 +62,12 @@ test("autor avalia reclamação resolvida como não resolvida de fato", async ({
   });
   expect(avaliacao.resolvido).toBe(false);
 
-  // Segunda avaliação não é permitida - o formulário some depois da primeira.
+  // Contestar reabre a reclamação (reabertura-avaliacao.spec.ts cobre o resto do ciclo): ela
+  // volta para Em andamento, então não há mais o que avaliar até o órgão resolver de novo.
+  const reaberta = await prisma.reclamacao.findUniqueOrThrow({ where: { id: reclamacao.id } });
+  expect(reaberta.status).toBe("EM_ANDAMENTO");
+  expect(reaberta.resolvidaEm).toBeNull();
+
   await page.reload();
   await expect(page.getByText("O problema foi realmente resolvido?")).toHaveCount(0);
 });

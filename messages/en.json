@@ -847,6 +847,10 @@
     "erroCep": "Enter a valid ZIP code (00000-000).",
     "erroDeclaracao": "You must declare that the information is true.",
     "erroLimiteDiario": "You've reached the daily complaint limit. Try again tomorrow.",
+    "orgaoNaoRegistraTitulo": "Agency accounts don't file complaints",
+    "orgaoNaoRegistraDescricao": "Citizens report problems; the agency answers. That way an official answer never comes from whoever opened the complaint. To handle your city's complaints, use the agency panel.",
+    "orgaoNaoRegistraAcao": "Go to the agency panel",
+    "erroOrgaoNaoRegistra": "Agency accounts don't file complaints. Use the agency panel to answer your city's.",
     "erroMaxImagens": "Submit at most {max} images.",
     "erroTipoImagem": "Images must be JPEG, PNG, or WebP.",
     "erroTamanhoImagem": "Each image must be at most 5MB.",
@@ -934,6 +938,10 @@
     "erroOrgaoForaDoEscopo": "This complaint isn't in the city or categories your agency covers.",
     "erroSemMaisRespostas": "This complaint no longer accepts answers: it was already resolved or closed.",
     "avaliacaoEnviada": "Rating sent. Thank you for telling us whether the problem was really resolved.",
+    "avaliacaoEnviadaReaberta": "Rating sent. Since the problem persists, the complaint was reopened and the agency was notified.",
+    "erroAvaliacaoOrgao": "Agency accounts don't rate complaints.",
+    "erroRespostaPropria": "This complaint was opened by an account of your agency, so it can't answer it.",
+    "orgaoDesativadoAviso": "Your agency is deactivated and can't answer complaints. Contact the administration to reactivate it.",
     "erroAvaliacaoInvalida": "Pick a rating from 1 to 5 and say whether the problem was resolved.",
     "avaliacaoJaEnviada": "You already rated this complaint.",
     "erroAvaliacaoIndisponivel": "Only the person who filed the complaint can rate it, and only after it's marked as resolved.",
@@ -1301,6 +1309,14 @@
     "pedidoAvaliacao": {
       "titulo": "Was the problem resolved?",
       "mensagem": "{orgao} marked \"{titulo}\" as resolved. Rate whether the problem was really resolved."
+    },
+    "reclamacaoReaberta": {
+      "titulo": "Complaint reopened by its author",
+      "mensagem": "The author of \"{titulo}\" said the problem was not resolved. The complaint is back to In progress."
+    },
+    "reclamacaoReabertaComComentario": {
+      "titulo": "Complaint reopened by its author",
+      "mensagem": "The author of \"{titulo}\" said the problem was not resolved: {comentario}"
     },
     "novoComentario": {
       "titulo": "New comment on your complaint"

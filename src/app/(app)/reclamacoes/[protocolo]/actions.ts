@@ -2,13 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { Prisma } from "@prisma/client";
 import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import { falha, informacao, sucesso, type ResultadoAcao } from "@/lib/acoes/resultado";
 import { criarNotificacao } from "@/lib/notificacoes";
+import { responsaveisAtivosDosOrgaos } from "@/lib/notificacoes/orgaos";
 import { orgaoAtendeCategoria } from "@/lib/orgaos/orgaoCategoria";
 import { precisaVerificarEmail } from "@/lib/conta/verificacao";
+import { podeAvaliar } from "@/lib/reclamacoes/avaliacao";
 import { STATUS_PUBLICOS } from "@/lib/reclamacoes/statusPublicos";
 import { exigirSessao } from "@/lib/seguranca/sessao";
 
@@ -290,35 +293,51 @@ export async function responderReclamacao(
     return informacao(t("erroSemMaisRespostas"));
   }
 
-  const agora = new Date();
+  // Quem abriu a reclamação e quem responde oficialmente não podem ser a mesma parte: um
+  // órgão que se responde, marca resolvida e se avalia infla a própria reputação pública.
+  // A conta de órgão já não abre reclamação; isto cobre as que existiam antes dessa regra.
+  const autor = await prisma.user.findUnique({
+    where: { id: reclamacao.autorId },
+    select: { orgaoId: true },
+  });
+  if (autor?.orgaoId === orgao.id) {
+    return falha(t("erroRespostaPropria"));
+  }
 
-  await prisma.$transaction([
-    prisma.respostaOficial.create({
+  const agora = new Date();
+  const novoStatus = validado.data.novoStatus;
+
+  // O status foi lido lá em cima, mas pode ter mudado até aqui (outra pessoa do órgão
+  // resolveu, o autor contestou, a moderação arquivou): a guarda no WHERE decide, e a
+  // resposta só é gravada se a reclamação ainda estava aberta.
+  const gravou = await prisma.$transaction(async (tx) => {
+    const aberta = await tx.reclamacao.updateMany({
+      where: { id: reclamacaoId, status: { in: ["PUBLICADA", "EM_ANDAMENTO"] } },
+      data: novoStatus
+        ? { status: novoStatus, ...(novoStatus === "RESOLVIDA" ? { resolvidaEm: agora } : {}) }
+        : { updatedAt: agora },
+    });
+    if (aberta.count === 0) {
+      return false;
+    }
+
+    await tx.respostaOficial.create({
       data: {
         reclamacaoId,
         autorId: session.user.id,
         orgaoId: orgao.id,
         texto: validado.data.texto,
-        novoStatus: validado.data.novoStatus,
+        novoStatus,
         prazoEstimado: validado.data.prazoEstimado
           ? new Date(validado.data.prazoEstimado)
           : undefined,
       },
-    }),
-    ...(validado.data.novoStatus
-      ? [
-          prisma.reclamacao.update({
-            where: { id: reclamacaoId },
-            data: {
-              status: validado.data.novoStatus,
-              ...(validado.data.novoStatus === "RESOLVIDA"
-                ? { resolvidaEm: agora }
-                : {}),
-            },
-          }),
-        ]
-      : []),
-  ]);
+    });
+    return true;
+  });
+  if (!gravou) {
+    return informacao(t("erroSemMaisRespostas"));
+  }
 
   await criarNotificacao({
     userId: reclamacao.autorId,
@@ -362,6 +381,12 @@ export async function avaliarReclamacao(
   const session = await exigirSessao();
   const t = await getTranslations("ReclamacaoDetalhe");
 
+  // O órgão responde; quem avalia é o cidadão. Conta de órgão não avalia (nem a própria
+  // resposta: a nota alimenta a reputação pública dele).
+  if (session.user.papel === "ORGAO") {
+    return falha(t("erroAvaliacaoOrgao"));
+  }
+
   const validado = criarAvaliacaoSchema().safeParse({
     nota: formData.get("nota"),
     resolvido: formData.get("resolvido"),
@@ -373,32 +398,98 @@ export async function avaliarReclamacao(
 
   const reclamacao = await prisma.reclamacao.findUnique({
     where: { id: reclamacaoId },
+    include: {
+      avaliacao: true,
+      respostas: { select: { orgaoId: true } },
+    },
   });
   if (!reclamacao || reclamacao.autorId !== session.user.id || reclamacao.status !== "RESOLVIDA") {
     return falha(t("erroAvaliacaoIndisponivel"));
   }
-
-  const existente = await prisma.avaliacao.findUnique({
-    where: { reclamacaoId },
-  });
-  if (existente) {
+  if (!podeAvaliar(reclamacao, reclamacao.avaliacao)) {
     return informacao(t("avaliacaoJaEnviada"));
   }
 
-  await prisma.avaliacao.create({
-    data: {
-      reclamacaoId,
-      autorId: session.user.id,
-      nota: validado.data.nota,
-      resolvido: validado.data.resolvido,
-      comentario: validado.data.comentario,
-    },
-  });
+  const { nota, resolvido, comentario } = validado.data;
+  const anterior = reclamacao.avaliacao;
+
+  // Contestar ("não foi resolvido") REABRE a reclamação: senão ela ficaria resolvida para
+  // sempre com o autor discordando e sem o órgão saber nem poder responder. A reabertura e
+  // a avaliação valem juntas ou nenhuma vale, e a guarda no WHERE (status ainda RESOLVIDA)
+  // impede reabrir o que outra ação acabou de mudar.
+  let situacao: "ok" | "jaMudou";
+  try {
+    situacao = await prisma.$transaction(async (tx) => {
+      if (!resolvido) {
+        const reaberta = await tx.reclamacao.updateMany({
+          where: { id: reclamacaoId, status: "RESOLVIDA" },
+          data: { status: "EM_ANDAMENTO", resolvidaEm: null },
+        });
+        if (reaberta.count === 0) return "jaMudou" as const;
+      }
+
+      if (anterior) {
+        // Substitui a contestação anterior (só ela pode ser substituída, e só uma vez por
+        // resolução: a data da avaliação vigente é a guarda).
+        const substituida = await tx.avaliacao.updateMany({
+          where: { id: anterior.id, resolvido: false, createdAt: anterior.createdAt },
+          data: { nota, resolvido, comentario: comentario ?? null, createdAt: new Date() },
+        });
+        if (substituida.count === 0) {
+          throw new AvaliacaoJaMudou();
+        }
+      } else {
+        await tx.avaliacao.create({
+          data: { reclamacaoId, autorId: session.user.id, nota, resolvido, comentario },
+        });
+      }
+      return "ok" as const;
+    });
+  } catch (erro) {
+    // P2002: duas avaliações ao mesmo tempo, a outra venceu (reclamacaoId é único).
+    const perdeuACorrida =
+      erro instanceof AvaliacaoJaMudou ||
+      (erro instanceof Prisma.PrismaClientKnownRequestError && erro.code === "P2002");
+    if (!perdeuACorrida) throw erro;
+    situacao = "jaMudou";
+  }
+  if (situacao === "jaMudou") {
+    revalidatePath(`/reclamacoes/${protocolo}`);
+    return informacao(t("avaliacaoJaEnviada"));
+  }
+
+  if (!resolvido) {
+    // O órgão precisa saber agora: a reclamação voltou para a fila dele.
+    const orgaoIds = [...new Set(reclamacao.respostas.map((resposta) => resposta.orgaoId))];
+    const destinatarios = await responsaveisAtivosDosOrgaos(orgaoIds);
+    await Promise.all(
+      destinatarios.map((userId) =>
+        criarNotificacao({
+          userId,
+          tipo: "MUDANCA_STATUS",
+          texto: comentario
+            ? {
+                chave: "reclamacaoReabertaComComentario",
+                params: { titulo: reclamacao.titulo, comentario },
+              }
+            : { chave: "reclamacaoReaberta", params: { titulo: reclamacao.titulo } },
+          reclamacaoId: reclamacao.id,
+          protocolo,
+        })
+      )
+    );
+    revalidatePath("/orgao");
+    revalidatePath("/reclamacoes");
+  }
 
   revalidatePath(`/reclamacoes/${protocolo}`);
 
-  return sucesso(t("avaliacaoEnviada"));
+  return sucesso(t(resolvido ? "avaliacaoEnviada" : "avaliacaoEnviadaReaberta"));
 }
+
+// Sinaliza, dentro da transação de avaliarReclamacao, que a avaliação que ela ia substituir
+// já foi trocada por outra requisição - lançar desfaz também a reabertura.
+class AvaliacaoJaMudou extends Error {}
 
 // Único recurso permitido por reclamação rejeitada (emRecurso vira true
 // aqui e nunca volta a false) - reaproveita a mesma fila e as mesmas

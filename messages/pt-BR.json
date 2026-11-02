@@ -847,6 +847,10 @@
     "erroCep": "Informe um CEP válido (00000-000).",
     "erroDeclaracao": "É preciso declarar que as informações são verdadeiras.",
     "erroLimiteDiario": "Você atingiu o limite de reclamações por dia. Tente novamente amanhã.",
+    "orgaoNaoRegistraTitulo": "Contas de órgão não registram reclamações",
+    "orgaoNaoRegistraDescricao": "Quem registra um problema é o cidadão; o órgão responde. Assim a resposta oficial nunca vem de quem abriu a reclamação. Para atender as reclamações da sua cidade, use o painel do órgão.",
+    "orgaoNaoRegistraAcao": "Ir para o painel do órgão",
+    "erroOrgaoNaoRegistra": "Contas de órgão não registram reclamações. Use o painel do órgão para responder às da sua cidade.",
     "erroMaxImagens": "Envie no máximo {max} imagens.",
     "erroTipoImagem": "As imagens devem ser JPEG, PNG ou WebP.",
     "erroTamanhoImagem": "Cada imagem deve ter no máximo 5MB.",
@@ -934,6 +938,10 @@
     "erroOrgaoForaDoEscopo": "Esta reclamação não é da cidade ou das categorias que o seu órgão atende.",
     "erroSemMaisRespostas": "Esta reclamação não aceita mais respostas: ela já foi resolvida ou encerrada.",
     "avaliacaoEnviada": "Avaliação enviada. Obrigado por contar se o problema foi mesmo resolvido.",
+    "avaliacaoEnviadaReaberta": "Avaliação enviada. Como o problema continua, a reclamação foi reaberta e o órgão foi avisado.",
+    "erroAvaliacaoOrgao": "Contas de órgão não avaliam reclamações.",
+    "erroRespostaPropria": "Esta reclamação foi aberta por uma conta do seu órgão, então ele não pode respondê-la.",
+    "orgaoDesativadoAviso": "O seu órgão está desativado e não pode responder reclamações. Fale com a administração para reativá-lo.",
     "erroAvaliacaoInvalida": "Escolha uma nota de 1 a 5 e diga se o problema foi resolvido.",
     "avaliacaoJaEnviada": "Você já avaliou esta reclamação.",
     "erroAvaliacaoIndisponivel": "Só quem registrou a reclamação pode avaliá-la, e só depois de ela ser marcada como resolvida.",
@@ -1301,6 +1309,14 @@
     "pedidoAvaliacao": {
       "titulo": "O problema foi resolvido?",
       "mensagem": "{orgao} marcou \"{titulo}\" como resolvida. Avalie se o problema foi realmente resolvido."
+    },
+    "reclamacaoReaberta": {
+      "titulo": "Reclamação reaberta pelo autor",
+      "mensagem": "O autor de \"{titulo}\" respondeu que o problema não foi resolvido. A reclamação voltou para Em andamento."
+    },
+    "reclamacaoReabertaComComentario": {
+      "titulo": "Reclamação reaberta pelo autor",
+      "mensagem": "O autor de \"{titulo}\" respondeu que o problema não foi resolvido: {comentario}"
     },
     "novoComentario": {
       "titulo": "Novo comentário na sua reclamação"

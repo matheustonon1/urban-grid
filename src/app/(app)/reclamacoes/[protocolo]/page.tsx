@@ -29,6 +29,7 @@ import {
 } from "@/lib/estilos";
 import { formatarDataHora } from "@/lib/util/formatarData";
 import { orgaoAtendeCategoria } from "@/lib/orgaos/orgaoCategoria";
+import { podeAvaliar as autorPodeAvaliar } from "@/lib/reclamacoes/avaliacao";
 import { STATUS_PUBLICOS } from "@/lib/reclamacoes/statusPublicos";
 import { formatarTempoRelativo } from "@/lib/util/tempo-relativo";
 
@@ -115,7 +116,7 @@ export default async function ReclamacaoPage({
   // Nenhuma das 4 consultas abaixo depende do resultado de outra - rodam
   // em paralelo em vez de uma esperar a outra, o que só somava latência à
   // toa numa rota de alto tráfego e acessível por qualquer visitante.
-  const [confirmacaoDoUsuario, orgaoDoUsuario, denunciaDoUsuario, comentarios] =
+  const [confirmacaoDoUsuario, orgaoDoUsuario, denunciaDoUsuario, comentarios, autorDaReclamacao] =
     await Promise.all([
       session?.user
         ? prisma.confirmacao.findUnique({
@@ -155,19 +156,32 @@ export default async function ReclamacaoPage({
           },
         },
       }),
+      // Só a conta de órgão precisa saber de que órgão é quem abriu a reclamação (um órgão
+      // não responde a que a própria conta abriu).
+      session?.user?.papel === "ORGAO"
+        ? prisma.user.findUnique({
+            where: { id: reclamacao.autorId },
+            select: { orgaoId: true },
+          })
+        : Promise.resolve(null),
     ]);
 
   const jaConfirmou = confirmacaoDoUsuario !== null;
   const denunciaAberta = denunciaDoUsuario !== null;
 
-  const podeResponder =
-    !!orgaoDoUsuario?.ativo &&
+  const reclamacaoAberta = reclamacao.status === "PUBLICADA" || reclamacao.status === "EM_ANDAMENTO";
+  const orgaoNoEscopo =
+    !!orgaoDoUsuario &&
     orgaoDoUsuario.cidadeId === reclamacao.cidadeId &&
     orgaoAtendeCategoria(orgaoDoUsuario.categorias, reclamacao.categoriaId) &&
-    (reclamacao.status === "PUBLICADA" || reclamacao.status === "EM_ANDAMENTO");
+    autorDaReclamacao?.orgaoId !== orgaoDoUsuario.id;
+  const podeResponder = orgaoNoEscopo && !!orgaoDoUsuario?.ativo && reclamacaoAberta;
+  // O órgão está no escopo desta reclamação, mas desativado: sem isto o formulário some
+  // sem explicação e o responsável acha que a tela quebrou.
+  const orgaoDesativadoNoEscopo = orgaoNoEscopo && !orgaoDoUsuario?.ativo && reclamacaoAberta;
 
   const podeAvaliar =
-    ehAutor && reclamacao.status === "RESOLVIDA" && !reclamacao.avaliacao;
+    ehAutor && session?.user?.papel !== "ORGAO" && autorPodeAvaliar(reclamacao, reclamacao.avaliacao);
 
   const linhaDoTempo = construirLinhaDoTempo(
     reclamacao,
@@ -373,6 +387,8 @@ export default async function ReclamacaoPage({
               <LinhaDoTempoVisual eventos={linhaDoTempo} locale={locale} />
             </Secao>
           )}
+
+          {orgaoDesativadoNoEscopo && <Aviso tom="atencao">{t("orgaoDesativadoAviso")}</Aviso>}
 
           {podeResponder && (
             <FormularioAcao

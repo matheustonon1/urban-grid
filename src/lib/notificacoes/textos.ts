@@ -17,6 +17,8 @@ export type ChaveNotificacao =
   | "comentarioRemovido"
   | "respostaOficial"
   | "pedidoAvaliacao"
+  | "reclamacaoReaberta"
+  | "reclamacaoReabertaComComentario"
   | "novoComentario"
   | "respostaComentario"
   | "atividadeSuspeita"

@@ -26,6 +26,12 @@ export async function criarReclamacao(
   const t = await getTranslations("NovaReclamacao");
   const session = await exigirSessao();
 
+  // A página já explica; aqui o servidor recusa mesmo assim (um POST forjado não cria
+  // a reclamação que o órgão depois responderia e avaliaria sozinho).
+  if (session.user.papel === "ORGAO") {
+    return { mensagem: t("erroOrgaoNaoRegistra") };
+  }
+
   const validado = criarNovaReclamacaoSchema(t).safeParse({
     titulo: formData.get("titulo"),
     descricao: formData.get("descricao"),
