@@ -3,6 +3,7 @@ import { CircleCheck, Shield, TriangleAlert } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 
 import { cartaoSecao } from "@/lib/estilos";
+import { formatarDataNumerica } from "@/lib/util/formatarData";
 import { CabecalhoCartao } from "@/components/ui/cabecalho-cartao";
 
 import { BotaoEncerrarSessoes, BotaoReenviarVerificacao } from "./formularios";
@@ -58,7 +59,7 @@ export async function ResumoSeguranca({
         </Linha>
         <Linha rotulo={t("contaCriadaEm")}>
           <span className="font-mono tabular-nums">
-            {criadoEm.toLocaleDateString(locale, { day: "2-digit", month: "2-digit", year: "numeric" })}
+            {formatarDataNumerica(criadoEm, locale)}
           </span>
         </Linha>
       </dl>

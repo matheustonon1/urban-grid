@@ -24,7 +24,7 @@ import { calcularMetricasOrgao, classificarIndice } from "@/lib/orgaos/reputacao
 import { nomeCategoriaTraduzido } from "@/lib/reclamacoes/categoriaI18n";
 import { idiomaOuPadrao } from "@/i18n/config";
 import { metadataDaPagina } from "@/lib/metadata";
-import { formatarData } from "@/lib/util/formatarData";
+import { diaCalendarioVencido, formatarData, formatarDiaCalendario } from "@/lib/util/formatarData";
 import { formatarTempoRelativo } from "@/lib/util/tempo-relativo";
 import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
 import { EstadoVazio } from "@/components/ui/estado-vazio";
@@ -331,11 +331,13 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
                           {t("semResposta", { tempo: formatarTempoRelativo(publicadaEm, locale) })}
                         </Etiqueta>
                       )}
+                      {/* O prazo é um dia de calendário: vence no FIM dele, e aparece com o dia
+                          que o órgão escolheu (ver lib/util/formatarData). */}
                       {prazo && (
-                        <Etiqueta tom={prazo < agora ? "erro" : "neutro"}>
-                          {prazo < agora
-                            ? t("prazoVencido", { data: formatarData(prazo, locale) })
-                            : t("prazo", { data: formatarData(prazo, locale) })}
+                        <Etiqueta tom={diaCalendarioVencido(prazo, agora) ? "erro" : "neutro"}>
+                          {diaCalendarioVencido(prazo, agora)
+                            ? t("prazoVencido", { data: formatarDiaCalendario(prazo, locale) })
+                            : t("prazo", { data: formatarDiaCalendario(prazo, locale) })}
                         </Etiqueta>
                       )}
                     </div>
@@ -448,7 +450,7 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <p className="kicker">
                           {resposta.reclamacao.protocolo} ·{" "}
-                          {resposta.createdAt.toLocaleDateString(locale)}
+                          {formatarData(resposta.createdAt, locale)}
                         </p>
                         {resposta.reclamacao.avaliacao ? (
                           <p

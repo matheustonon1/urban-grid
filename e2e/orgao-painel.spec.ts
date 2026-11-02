@@ -88,6 +88,32 @@ test("painel: cada cartão diz há quanto tempo espera, o prazo vencido e abre a
   await expect(cartaoComPrazo).toContainText("Prazo vencido em");
 });
 
+test("painel: prazo para hoje não aparece como vencido (vence no fim do dia)", async ({ page }) => {
+  const cidade = await prisma.cidade.findFirstOrThrow();
+  const { usuario: autor } = await criarCidadaoTeste();
+  const { orgao, usuario: responsavel, email, senha } = await criarOrgaoTeste(cidade.id);
+  const reclamacao = await novaReclamacao(autor.id, cidade.id, DIAS_ANTIGA, `Prazo para hoje ${Date.now()}`);
+  await prisma.reclamacao.update({ where: { id: reclamacao.id }, data: { status: "EM_ANDAMENTO" } });
+  // O que um <input type="date"> com o dia de hoje grava: a meia-noite UTC de hoje.
+  const hoje = new Date(new Date().toISOString().slice(0, 10));
+  await prisma.respostaOficial.create({
+    data: {
+      reclamacaoId: reclamacao.id,
+      autorId: responsavel.id,
+      orgaoId: orgao.id,
+      texto: "Equipe acionada, conclusão prevista para hoje.",
+      novoStatus: "EM_ANDAMENTO",
+      prazoEstimado: hoje,
+    },
+  });
+
+  await login(page, email, senha);
+  await page.goto(`/orgao?fila=acompanhamento&q=${encodeURIComponent(reclamacao.titulo)}`);
+  const cartao = page.locator("article").filter({ hasText: reclamacao.titulo });
+  await expect(cartao).toContainText("Prazo:");
+  await expect(cartao).not.toContainText("Prazo vencido");
+});
+
 test("painel: duas filas, com contagem, e a busca por título ou protocolo filtra as duas", async ({
   page,
 }) => {

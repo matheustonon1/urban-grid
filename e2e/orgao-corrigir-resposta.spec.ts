@@ -86,6 +86,8 @@ test("corrige o texto e o prazo dentro da janela, e a resposta aparece como edit
     page.locator("p", { hasText: "Equipe acionada; conserto previsto para esta semana." })
   ).toBeVisible();
   await expect(page.getByText(/Editada em/)).toBeVisible();
+  // O prazo aparece com o dia que o órgão escolheu (15), não com a noite do anterior (14).
+  await expect(page.getByText("15 de jan. de 2030")).toBeVisible();
 });
 
 test("passada a janela não há botão, e o servidor recusa mesmo com a tela aberta antes", async ({

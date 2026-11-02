@@ -3,7 +3,7 @@ import type { StatusReclamacao } from "@prisma/client";
 import { CalendarClock, Landmark } from "lucide-react";
 
 import { StatusBadge } from "@/components/reclamacao/status-badge";
-import { formatarData, formatarDataHora } from "@/lib/util/formatarData";
+import { formatarDataHora, formatarDiaCalendario } from "@/lib/util/formatarData";
 
 // A resposta do órgão é o dado que a pessoa mais quer ver numa reclamação, então
 // tem bloco próprio (fundo azul-suave, selo do órgão) em vez de ser uma linha da
@@ -40,7 +40,9 @@ export function RespostaOficial({
       valor: (
         <span className="inline-flex items-center gap-1.5 font-medium text-ink">
           <CalendarClock className="h-4 w-4 text-brand" aria-hidden />
-          <time dateTime={prazoEstimado.toISOString()}>{formatarData(prazoEstimado, locale)}</time>
+          <time dateTime={prazoEstimado.toISOString().slice(0, 10)}>
+            {formatarDiaCalendario(prazoEstimado, locale)}
+          </time>
         </span>
       ),
     });
