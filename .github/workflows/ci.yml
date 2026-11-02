@@ -114,16 +114,13 @@ jobs:
       - name: Aplica as migrations
         run: npx prisma migrate deploy
 
-      # O seed baixa estados e municípios da API do IBGE: é idempotente, então uma falha de
-      # rede passageira se resolve repetindo.
+      # SEED_IBGE=local: a geografia vem de prisma/dados/ibge-localidades.json (um retrato dos
+      # mesmos dados). A API do IBGE dá timeout de conexão a partir dos runners do GitHub (o
+      # primeiro job e2e caiu aqui, nas três tentativas), então o CI não depende dela.
       - name: Seed (geografia do IBGE e categorias)
-        run: |
-          for tentativa in 1 2 3; do
-            npx prisma db seed && exit 0
-            echo "Seed falhou (tentativa $tentativa); aguardando para repetir..."
-            sleep 20
-          done
-          exit 1
+        run: npx prisma db seed
+        env:
+          SEED_IBGE: local
 
       # O build consulta o banco (sitemap), então vem depois das migrations e do seed.
       - name: Build de produção

@@ -88,6 +88,12 @@ O Prisma gera DDL, mas dado existente precisa de SQL seu. Modelo no repositório
 municípios do IBGE. Mantenha assim: tem que poder rodar de novo sem duplicar.
 `npx prisma db seed`.
 
+**A API do IBGE dá timeout de conexão nos runners do GitHub Actions** (derrubou o primeiro job
+`e2e`), então o seed tem um caminho sem rede: `prisma/dados/ibge-localidades.json`, um retrato
+dos mesmos dados. `SEED_IBGE=local` o usa direto (é o que o CI faz) e, sem a variável, o seed cai
+nele sozinho se a API falhar. Para atualizá-lo (município criado ou extinto):
+`npx tsx prisma/gerar-snapshot-ibge.ts` e commite o arquivo.
+
 ## Erros comuns
 
 | Código | Causa provável |
