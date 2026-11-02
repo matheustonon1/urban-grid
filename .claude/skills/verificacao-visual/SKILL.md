@@ -27,7 +27,11 @@ Saída em `.capturas/<rótulo>/<rota>.<modo>.png` (pasta ignorada pelo git). Abr
 imagens (a ferramenta de leitura de arquivo mostra PNG) e **olhe**: não basta o
 script dizer "ok" — ele só detecta rolagem horizontal.
 
-- No Git Bash use `home` para a rota `/` (um `/` solto vira caminho do Windows).
+- No Git Bash use `home` para a rota `/` (um `/` solto vira caminho do Windows). O mesmo
+  acontece com a **primeira** rota da lista quando ela começa com `/` (`/painel` vira
+  `C:/Program Files/Git/painel` e dá "invalid URL"): rode `export MSYS_NO_PATHCONV=1` antes.
+- Tabela larga ou faixa de abas no celular: além da imagem parada, confira rolada (início, meio e
+  fim) e com um nome longo no dado; foi assim que se achou uma coluna fixa que tomava a tela toda.
 - Tire um "antes" **antes** de mexer, com o mesmo rótulo de modos do "depois".
 
 ## O que olhar, sempre

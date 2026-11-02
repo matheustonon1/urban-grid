@@ -34,7 +34,12 @@ frio); estenda esta base com a mesma intenção, não a substitua por hábito.
 - **Utilitários de identidade** (`@utility`): `kicker` (rótulo mono em caixa alta —
   protocolo, índice, legenda), `marca-texto` (grifo amarelo atrás de uma palavra do
   título), `faixa-obra` (listras amarelo/tinta, fina e rara), `bg-planta` /
-  `bg-planta-clara` (quadrícula de quarteirões que some em degradê), `scrollbar-none`.
+  `bg-planta-clara` (quadrícula de quarteirões que some em degradê), `scrollbar-none`,
+  `rolagem-x` (contêiner de rolagem horizontal com sombra na borda que ainda esconde
+  conteúdo: tabelas largas e faixas de abas no celular. Passe `[--rolagem-fundo:var(--paper)]`
+  quando o contêiner estiver sobre o papel da página, senão aparece uma faixa de outra cor nas
+  bordas; tabela larga numa região sem link ganha `role="region"`, nome e `tabIndex={0}` para
+  o teclado rolar).
 - **Tipografia** (`src/app/layout.tsx`): **Archivo** nos títulos (`--font-display`,
   grotesca de placa, 700–800, `tracking-tight`), **IBM Plex Sans** no corpo,
   **IBM Plex Mono** em protocolo e números (`font-mono tabular-nums`). Nada de
