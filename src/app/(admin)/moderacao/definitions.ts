@@ -1,1 +1,1 @@
-export { criarMotivoRejeicaoSchema as criarRejeitarSchema } from "@/lib/motivoRejeicao";
+export { criarMotivoRejeicaoSchema as criarRejeitarSchema } from "@/lib/moderacao/motivoRejeicao";

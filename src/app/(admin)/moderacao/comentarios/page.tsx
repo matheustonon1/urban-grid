@@ -1,19 +1,49 @@
 import Link from "next/link";
+import { CircleCheck, History } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
-import { Paginacao } from "@/components/paginacao";
-import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
-import { botaoPrimario, botaoSecundario, cartao, containerPagina } from "@/lib/estilos";
+import { AvatarIniciais } from "@/components/ui/avatar-iniciais";
+import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
+import { DecisaoBadge } from "@/components/moderacao/decisao-badge";
+import { EstadoVazio } from "@/components/ui/estado-vazio";
+import { BotaoAcao, FormularioAcao } from "@/components/ui/formulario-acao";
+import { Paginacao } from "@/components/ui/paginacao";
+import { ResumoLateral } from "@/components/ui/resumo-lateral";
+import { Secao } from "@/components/ui/secao";
+import { GuiaPontuacoes } from "@/components/moderacao/guia-pontuacoes";
+import { PontuacoesIA } from "@/components/moderacao/pontuacoes-ia";
+import { TempoNaFila } from "@/components/moderacao/tempo-na-fila";
+import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/util/paginacao";
+import {
+  blocoCitacao,
+  botaoPerigo,
+  botaoPrimario,
+  botaoSecundario,
+  cartaoSecao,
+  colunaLateral,
+  colunaPrincipal,
+  grade,
+  pagina,
+  painelSuave,
+  rotuloSecao,
+} from "@/lib/estilos";
+import { metadataDaPagina } from "@/lib/metadata";
 
 import { aprovarComentarioReprovado, confirmarRejeicaoComentario } from "./actions";
 import { exigirModerador } from "../exigir-moderador";
+
+export const generateMetadata = metadataDaPagina("ModeracaoComentarios");
+
+const rotuloEixo = (rotulo: string) => rotulo.replace(/:\s*$/, "");
 
 export default async function ModeracaoComentariosPage({
   searchParams,
 }: PageProps<"/moderacao/comentarios">) {
   const t = await getTranslations("ModeracaoComentarios");
   const tMod = await getTranslations("Moderacao");
+  const tHist = await getTranslations("HistoricoModeracao");
+  const tNav = await getTranslations("AdminNav");
   await exigirModerador();
 
   const { page } = await searchParams;
@@ -40,80 +70,98 @@ export default async function ModeracaoComentariosPage({
   const comentarioPorId = new Map(comentarios.map((c) => [c.id, c]));
 
   return (
-    <main className={`${containerPagina} max-w-3xl`}>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-          {t("titulo")}
-        </h1>
-        <Link href="/moderacao/historico/comentarios" className="text-sm text-primary underline">
-          {tMod("verHistorico")}
-        </Link>
-      </div>
-      <p className="text-sm text-slate-500 dark:text-slate-400">{t("descricao")}</p>
-
-      {logsPendentes.length === 0 && (
-        <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumPendente")}</p>
-      )}
-
-      {logsPendentes.map((log) => {
-        const comentario = comentarioPorId.get(log.alvoId);
-        if (!comentario) return null;
-
-        return (
-          <div key={log.id} className={`flex flex-col gap-2 ${cartao}`}>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              {comentario.autor.name ?? comentario.autor.email} {t("em")}{" "}
-              <Link
-                href={`/reclamacoes/${comentario.reclamacao.protocolo}`}
-                className="text-primary underline"
-              >
-                {comentario.reclamacao.titulo}
-              </Link>
-              {comentario.paiId && ` · ${t("respostaAOutroComentario")}`}
-            </p>
-            <p className="text-slate-800 dark:text-slate-200">{comentario.texto}</p>
-
-            <div className="rounded-lg bg-amber-50 p-3 text-sm dark:bg-amber-950/40">
-              <p className="font-medium text-amber-800 dark:text-amber-300">
-                {tMod("analiseIA")}
-              </p>
-              <p className="text-amber-900 dark:text-amber-200">
-                {tMod("ofensivo")} {log.scoreOfensivo?.toFixed(2)}
-              </p>
-              <p className="text-amber-900 dark:text-amber-200">
-                {tMod("spam")} {log.scoreSpam?.toFixed(2)}
-              </p>
-              <p className="text-amber-900 dark:text-amber-200">
-                {tMod("dadosPessoais")} {log.scoreDadosPessoais?.toFixed(2)}
-              </p>
-              {log.justificativa && (
-                <p className="mt-1 italic text-amber-900 dark:text-amber-200">
-                  {log.justificativa}
-                </p>
-              )}
-            </div>
-
-            <div className="flex gap-2">
-              <form action={aprovarComentarioReprovado.bind(null, comentario.id)}>
-                <button type="submit" className={botaoPrimario}>
-                  {t("aprovarMesmoAssim")}
-                </button>
-              </form>
-              <form action={confirmarRejeicaoComentario.bind(null, comentario.id)}>
-                <button type="submit" className={botaoSecundario}>
-                  {t("confirmarRejeicao")}
-                </button>
-              </form>
-            </div>
-          </div>
-        );
-      })}
-
-      <Paginacao
-        paginaAtual={paginaAtual}
-        totalPaginas={totalPaginas}
-        basePath="/moderacao/comentarios"
+    <main className={pagina}>
+      <CabecalhoPagina
+        kicker={tNav("kickerModeracao")}
+        titulo={t("titulo")}
+        descricao={t("descricao")}
+        acoes={
+          <Link href="/moderacao/historico/comentarios" className={botaoSecundario}>
+            <History className="h-4 w-4" aria-hidden />
+            {tMod("verHistorico")}
+          </Link>
+        }
       />
+
+      <div className={grade}>
+        <div className={colunaPrincipal}>
+          <Secao id="fila" titulo={t("resumoRotulo")}>
+            {logsPendentes.length === 0 && (
+              <EstadoVazio
+                icone={CircleCheck}
+                titulo={t("nenhumPendente")}
+                descricao={t("nenhumPendenteDesc")}
+              />
+            )}
+
+            {logsPendentes.map((log) => {
+              const comentario = comentarioPorId.get(log.alvoId);
+              if (!comentario) return null;
+              const nomeAutor = comentario.autor.name ?? comentario.autor.email;
+
+              return (
+                <article key={log.id} className={`flex flex-col gap-5 ${cartaoSecao}`}>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <DecisaoBadge decisao="REPROVAR" origem={tHist("ia")} />
+                    <TempoNaFila desde={log.createdAt} />
+                  </div>
+
+                  <div className="flex items-center gap-2.5 text-sm text-ink-muted">
+                    <AvatarIniciais nome={nomeAutor} />
+                    <p>
+                      <span className="font-medium text-ink">{nomeAutor}</span> {t("em")}{" "}
+                      <Link
+                        href={`/reclamacoes/${comentario.reclamacao.protocolo}`}
+                        className="font-semibold text-brand underline underline-offset-2"
+                      >
+                        {comentario.reclamacao.titulo}
+                      </Link>
+                      {comentario.paiId && ` · ${t("respostaAOutroComentario")}`}
+                    </p>
+                  </div>
+
+                  <p className={blocoCitacao}>{comentario.texto}</p>
+
+                  <div className={`flex flex-col gap-3 ${painelSuave}`}>
+                    <p className={rotuloSecao}>{tMod("analiseIA")}</p>
+                    <PontuacoesIA
+                      itens={[
+                        { rotulo: tMod("geral"), valor: log.scoreGeral, destaque: true },
+                        { rotulo: rotuloEixo(tMod("ofensivo")), valor: log.scoreOfensivo },
+                        { rotulo: rotuloEixo(tMod("spam")), valor: log.scoreSpam },
+                        { rotulo: rotuloEixo(tMod("dadosPessoais")), valor: log.scoreDadosPessoais },
+                      ]}
+                    />
+                    {log.justificativa && (
+                      <p className="text-sm text-ink-2 italic">“{log.justificativa}”</p>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 border-t border-line pt-5">
+                    <FormularioAcao action={aprovarComentarioReprovado.bind(null, comentario.id)}>
+                      <BotaoAcao className={botaoPrimario}>{t("aprovarMesmoAssim")}</BotaoAcao>
+                    </FormularioAcao>
+                    <FormularioAcao action={confirmarRejeicaoComentario.bind(null, comentario.id)}>
+                      <BotaoAcao className={botaoPerigo}>{t("confirmarRejeicao")}</BotaoAcao>
+                    </FormularioAcao>
+                  </div>
+                </article>
+              );
+            })}
+
+            <Paginacao
+              paginaAtual={paginaAtual}
+              totalPaginas={totalPaginas}
+              basePath="/moderacao/comentarios"
+            />
+          </Secao>
+        </div>
+
+        <aside className={colunaLateral}>
+          <ResumoLateral rotulo={t("resumoRotulo")} valor={totalPendentes} />
+          <GuiaPontuacoes comentario />
+        </aside>
+      </div>
     </main>
   );
 }

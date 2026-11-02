@@ -3,6 +3,7 @@ import * as z from "zod";
 
 import { prisma } from "@/lib/prisma";
 import { criarNotificacao } from "@/lib/notificacoes";
+import { LIMITE_REPROVACAO, LIMITE_REVISAO } from "@/lib/moderacao/pontuacoes";
 
 import { getGeminiClient } from "./gemini";
 
@@ -131,8 +132,8 @@ Responda apenas com o JSON solicitado. Os scores devem ser números entre 0 e 1.
 export function decidir(
   scoreGeral: number
 ): "APROVAR" | "REPROVAR" | "ENCAMINHAR_REVISAO" {
-  if (scoreGeral >= 0.75) return "REPROVAR";
-  if (scoreGeral >= 0.4) return "ENCAMINHAR_REVISAO";
+  if (scoreGeral >= LIMITE_REPROVACAO) return "REPROVAR";
+  if (scoreGeral >= LIMITE_REVISAO) return "ENCAMINHAR_REVISAO";
   return "APROVAR";
 }
 
@@ -159,7 +160,7 @@ export async function gerarConteudoComRetry(
 
 // Chama o Gemini (com retry) e faz o parse/validação da resposta - parte
 // mecânica idêntica entre moderarReclamacao() e moderarComentario()
-// (moderacaoComentario.ts): JSON.parse, revalidação com zod (o
+// (lib/moderacao/comentario.ts): JSON.parse, revalidação com zod (o
 // responseSchema do Gemini não garante limites como score entre 0 e 1),
 // e extração dos metadados de uso. Erra sempre lançando (nunca retorna
 // um resultado parcial) - cada chamador decide sozinho o fallback
@@ -372,8 +373,7 @@ export async function moderarReclamacao(
     await criarNotificacao({
       userId: reclamacao.autorId,
       tipo: "RECLAMACAO_PUBLICADA",
-      titulo: "Reclamação publicada",
-      mensagem: `Sua reclamação "${reclamacao.titulo}" foi publicada.`,
+      texto: { chave: "reclamacaoPublicada", params: { titulo: reclamacao.titulo } },
       reclamacaoId: reclamacao.id,
       protocolo: reclamacao.protocolo,
     });
@@ -394,8 +394,11 @@ export async function moderarReclamacao(
     await criarNotificacao({
       userId: reclamacao.autorId,
       tipo: "RECLAMACAO_REJEITADA",
-      titulo: "Reclamação rejeitada",
-      mensagem: `Sua reclamação "${reclamacao.titulo}" foi rejeitada: ${analise.justificativa}`,
+      // A justificativa é texto gerado pela IA no idioma do prompt, não uma chave.
+      texto: {
+        chave: "reclamacaoRejeitada",
+        params: { titulo: reclamacao.titulo, motivo: analise.justificativa },
+      },
       reclamacaoId: reclamacao.id,
       protocolo: reclamacao.protocolo,
     });
@@ -450,8 +453,7 @@ export async function finalizarPublicacaoAprovada(reclamacaoId: string) {
   await criarNotificacao({
     userId: reclamacao.autorId,
     tipo: "RECLAMACAO_PUBLICADA",
-    titulo: "Reclamação publicada",
-    mensagem: `Sua reclamação "${reclamacao.titulo}" foi publicada.`,
+    texto: { chave: "reclamacaoPublicada", params: { titulo: reclamacao.titulo } },
     reclamacaoId,
     protocolo: reclamacao.protocolo,
   });

@@ -1,7 +1,7 @@
 import * as z from "zod";
 import type { getTranslations } from "next-intl/server";
 
-import { validarCpf } from "@/lib/cpf";
+import { validarCpf } from "@/lib/seguranca/cpf";
 
 // Schema como fábrica (não um objeto pronto no topo do módulo) porque as
 // mensagens de erro do Zod precisam do dicionário do idioma ativo no

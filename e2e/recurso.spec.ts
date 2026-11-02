@@ -7,6 +7,7 @@ import {
   criarCidadaoTeste,
   criarReclamacaoTeste,
   limparDadosTeste,
+  sairDaSessao,
 } from "./helpers";
 
 test.afterAll(async () => {
@@ -38,7 +39,7 @@ test("recurso contra rejeição aprovado publica a reclamação", async ({ page 
     page.getByText("Seu recurso contra a rejeição está em análise por um moderador.")
   ).toBeVisible();
 
-  await page.context().clearCookies();
+  await sairDaSessao(page);
   await page.goto("/login");
   await page.fill('input[name="identificador"]', emailAdmin);
   await page.fill('input[name="senha"]', senhaAdmin);
@@ -77,7 +78,7 @@ test("recurso contra rejeição negado bloqueia um segundo recurso", async ({ pa
     .fill("Não concordo com a rejeição desta reclamação.");
   await formRecurso.locator('button:has-text("Contestar rejeição")').click();
 
-  await page.context().clearCookies();
+  await sairDaSessao(page);
   await page.goto("/login");
   await page.fill('input[name="identificador"]', emailAdmin);
   await page.fill('input[name="senha"]', senhaAdmin);
@@ -90,7 +91,7 @@ test("recurso contra rejeição negado bloqueia um segundo recurso", async ({ pa
   await page.click('button:has-text("Rejeitar")');
   await expect(page.getByText(reclamacao.titulo)).toHaveCount(0);
 
-  await page.context().clearCookies();
+  await sairDaSessao(page);
   await page.goto("/login");
   await page.fill('input[name="identificador"]', email);
   await page.fill('input[name="senha"]', senha);

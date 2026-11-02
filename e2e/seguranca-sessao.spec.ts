@@ -130,7 +130,7 @@ test("excluir a conta num dispositivo derruba a sessão já aberta em outro", as
   await paginaNova.goto("/painel/conta");
   await paginaNova.fill("#exclusao-senha", senha);
   await paginaNova.click('button:has-text("Excluir minha conta")');
-  await paginaNova.waitForURL(/^http:\/\/localhost:3000\/$/);
+  await paginaNova.waitForURL(/^https?:\/\/[^/]+\/$/);
 
   const usuarioFinal = await prisma.user.findUniqueOrThrow({ where: { id: usuario.id } });
   expect(usuarioFinal.ativo).toBe(false);

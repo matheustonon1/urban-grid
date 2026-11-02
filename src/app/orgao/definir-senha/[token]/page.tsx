@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
+import { PaginaAuth } from "@/components/ui/pagina-auth";
+import { BotaoAcao, FormularioAcao } from "@/components/ui/formulario-acao";
 import { prisma } from "@/lib/prisma";
-import { botaoPrimario, cartao } from "@/lib/estilos";
+import { botaoPrimario, botaoSecundario } from "@/lib/estilos";
 
+import { reenviarConviteExpirado } from "./actions";
 import { FormularioDefinirSenha } from "./formulario";
 
 export default async function DefinirSenhaOrgaoPage({
@@ -16,34 +19,37 @@ export default async function DefinirSenhaOrgaoPage({
   const usuario = registro
     ? await prisma.user.findUnique({ where: { email: registro.identifier } })
     : null;
-  const valido =
-    !!registro && registro.expires > new Date() && !!usuario && !usuario.senhaHash;
+  const contaPendente = !!usuario && usuario.papel === "ORGAO" && !usuario.senhaHash;
+  const valido = !!registro && registro.expires > new Date() && contaPendente;
+
+  // Convite vencido de uma conta que ainda não definiu a senha: quem tem o link em mãos pede
+  // outro aqui mesmo, sem depender de achar um administrador.
+  if (!valido && registro && contaPendente) {
+    return (
+      <PaginaAuth titulo={t("linkExpiradoTitulo")} descricao={t("linkExpiradoDesc")}>
+        <FormularioAcao action={reenviarConviteExpirado.bind(null, token)} className="flex flex-col gap-3">
+          <BotaoAcao className={`${botaoPrimario} w-full py-3`}>{t("enviarNovoLink")}</BotaoAcao>
+        </FormularioAcao>
+        <Link href="/login" className={`${botaoSecundario} w-full py-3`}>
+          {t("irParaLogin")}
+        </Link>
+      </PaginaAuth>
+    );
+  }
 
   if (!valido) {
     return (
-      <main className="animate-fade-in flex flex-1 flex-col items-center justify-center gap-4 p-8">
-        <div className={`flex w-full max-w-sm flex-col items-center gap-3 text-center ${cartao}`}>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-            {t("linkInvalidoTitulo")}
-          </h1>
-          <p className="text-sm text-slate-600 dark:text-slate-400">{t("linkInvalidoDesc")}</p>
-          <Link href="/login" className={botaoPrimario}>
-            {t("irParaLogin")}
-          </Link>
-        </div>
-      </main>
+      <PaginaAuth titulo={t("linkInvalidoTitulo")} descricao={t("linkInvalidoDesc")}>
+        <Link href="/login" className={`${botaoPrimario} w-full py-3`}>
+          {t("irParaLogin")}
+        </Link>
+      </PaginaAuth>
     );
   }
 
   return (
-    <main className="animate-fade-in flex flex-1 flex-col items-center justify-center gap-6 p-8">
-      <div className="flex max-w-sm flex-col items-center gap-2 text-center">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-          {t("boasVindas", { nome: usuario!.name ?? "" })}
-        </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">{t("defineSenha")}</p>
-      </div>
+    <PaginaAuth titulo={t("boasVindas", { nome: usuario!.name ?? "" })} descricao={t("defineSenha")}>
       <FormularioDefinirSenha token={token} />
-    </main>
+    </PaginaAuth>
   );
 }

@@ -5,9 +5,10 @@ import bcrypt from "bcryptjs";
 import { getTranslations } from "next-intl/server";
 
 import { signIn } from "@/auth";
-import { gastarTempoDeComparacao } from "@/lib/hashFalso";
-import { buscarUsuarioPorIdentificador } from "@/lib/identificador";
-import { usuarioBloqueadoPorLogin } from "@/lib/loginSeguranca";
+import { destinoPosLogin } from "@/lib/seguranca/destinoLogin";
+import { gastarTempoDeComparacao } from "@/lib/seguranca/hashFalso";
+import { buscarUsuarioPorIdentificador } from "@/lib/conta/identificador";
+import { usuarioBloqueadoPorLogin } from "@/lib/seguranca/loginSeguranca";
 
 export type LoginFormState =
   | {
@@ -68,7 +69,10 @@ export async function login(
       identificador,
       senha,
       codigoTotp: typeof codigoTotp === "string" ? codigoTotp : undefined,
-      redirectTo: "/painel",
+      // O papel vem do cadastro lido acima; só vale se a senha conferir (o signIn
+      // recusa antes de redirecionar). O caminho pedido passa pelo filtro de
+      // caminho interno - nunca vai direto da query string para o redirecionamento.
+      redirectTo: destinoPosLogin(usuario?.papel, formData.get("callbackUrl")),
     });
   } catch (erro) {
     if (erro instanceof AuthError) {

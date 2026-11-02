@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
+import { PaginaAuth } from "@/components/ui/pagina-auth";
 import { prisma } from "@/lib/prisma";
 import { emailDoTokenRedefinicao } from "@/lib/email";
-import { botaoPrimario, cartao } from "@/lib/estilos";
+import { botaoPrimario } from "@/lib/estilos";
 
 import { FormularioRedefinirSenha } from "./formulario";
 
@@ -20,31 +21,20 @@ export default async function RedefinirSenhaPage({
 
   if (!valido) {
     return (
-      <main className="animate-fade-in flex flex-1 flex-col items-center justify-center gap-4 p-8">
-        <div className={`flex w-full max-w-sm flex-col items-center gap-3 text-center ${cartao}`}>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-            {t("linkInvalidoTitulo")}
-          </h1>
-          <p className="text-sm text-slate-600 dark:text-slate-400">{t("linkInvalidoDesc")}</p>
-          <Link href="/esqueci-senha" className={botaoPrimario}>
-            {t("pedirNovoLink")}
-          </Link>
-        </div>
-      </main>
+      <PaginaAuth titulo={t("linkInvalidoTitulo")} descricao={t("linkInvalidoDesc")}>
+        <Link href="/esqueci-senha" className={`${botaoPrimario} w-full py-3`}>
+          {t("pedirNovoLink")}
+        </Link>
+      </PaginaAuth>
     );
   }
 
   return (
-    <main className="animate-fade-in flex flex-1 flex-col items-center justify-center gap-6 p-8">
-      <div className="flex max-w-sm flex-col items-center gap-2 text-center">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-          {t("criarNovaSenha")}
-        </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          {t("escolhaNovaSenha", { email: usuario!.email })}
-        </p>
-      </div>
+    <PaginaAuth
+      titulo={t("criarNovaSenha")}
+      descricao={t("escolhaNovaSenha", { email: usuario!.email })}
+    >
       <FormularioRedefinirSenha token={token} />
-    </main>
+    </PaginaAuth>
   );
 }

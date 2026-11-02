@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { SeletorCategoria } from "@/components/categoria-select";
-import { SeletorCidade } from "@/components/cidade-combobox";
-import { botaoPrimario, campoInput, cartao } from "@/lib/estilos";
+import { SeletorCategoria } from "@/components/reclamacao/categoria-select";
+import { SeletorCidade } from "@/components/formulario/cidade-combobox";
+import { botaoPrimario, campoInput } from "@/lib/estilos";
 
 interface Categoria {
   id: string;
@@ -32,18 +32,25 @@ function Chip({
   ariaLabel: string;
 }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 py-1 pl-2.5 pr-1 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-      {children}
+    <span className="inline-flex max-w-full items-center gap-1 rounded-md border border-line bg-sunken py-1 pr-1 pl-2.5 text-sm text-ink-2">
+      <span className="truncate">{children}</span>
       <button
         type="button"
         onClick={onRemover}
         aria-label={ariaLabel}
-        className="rounded-full p-0.5 hover:bg-slate-200 dark:hover:bg-slate-700"
+        className="shrink-0 rounded-[3px] p-0.5 text-ink-muted hover:bg-line hover:text-ink"
       >
-        <X className="h-3 w-3" aria-hidden />
+        <X className="h-3.5 w-3.5" aria-hidden />
       </button>
     </span>
   );
+}
+
+// Rótulo visível de um filtro. Nos dois seletores (cidade e categoria) o nome
+// acessível do controle é o próprio valor/placeholder, então o rótulo é só um
+// título acima: ligá-lo com `for` mudaria o nome do botão da categoria.
+function RotuloFiltro({ children }: { children: React.ReactNode }) {
+  return <span className="kicker">{children}</span>;
 }
 
 // Cidade e categoria aplicam o filtro assim que escolhidas (navegação
@@ -80,80 +87,81 @@ export function FiltroReclamacoes({
   const temFiltroAtivo = Boolean(cidadeFiltro || categoriaFiltro || buscaFiltro);
 
   return (
-    <div className={`flex flex-col gap-3 ${cartao}`}>
-      <form className="flex flex-col gap-3" action="/reclamacoes">
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Search
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
-              aria-hidden
-            />
-            <input
-              type="text"
-              name="q"
-              defaultValue={buscaFiltro ?? ""}
-              placeholder={t("buscarPalavraChave")}
-              className={`w-full pl-9 ${campoInput}`}
-            />
-          </div>
-          <button type="submit" className={botaoPrimario}>
-            {t("filtrar")}
-          </button>
-        </div>
+    <div className="flex flex-col gap-5 rounded-lg border border-line bg-surface p-5">
+      <h2 className="kicker">{t("filtros")}</h2>
 
-        <div className="flex flex-wrap gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
-          <div className="min-w-48 flex-1">
-            <SeletorCidade
-              key={cidadeFiltro?.id ?? "sem-cidade"}
-              placeholder={t("buscarCidadeEstado")}
-              defaultValue={
-                cidadeFiltro
-                  ? { id: cidadeFiltro.id, nome: cidadeFiltro.nome, uf: cidadeFiltro.estado.uf }
-                  : null
-              }
-              onSelecionar={(cidade) => navegar({ cidadeId: cidade.id })}
-            />
-          </div>
-          <div className="min-w-48 flex-1">
-            <SeletorCategoria
-              categorias={categorias}
-              selecionadaId={categoriaIdFiltro ?? null}
-              placeholder={t("todasCategorias")}
-              onSelecionar={(id) => navegar({ categoriaId: id })}
-            />
-          </div>
-        </div>
+      <form className="flex flex-col gap-2" action="/reclamacoes">
+        <label htmlFor="filtro-q" className="kicker">
+          {t("rotuloBusca")}
+        </label>
+        <input
+          id="filtro-q"
+          type="text"
+          name="q"
+          defaultValue={buscaFiltro ?? ""}
+          placeholder={t("buscarPalavraChave")}
+          className={`w-full ${campoInput}`}
+        />
+        <button type="submit" className={`${botaoPrimario} w-full`}>
+          {t("filtrar")}
+        </button>
       </form>
 
+      <div className="flex flex-col gap-2 border-t border-line pt-5">
+        <RotuloFiltro>{t("rotuloCidade")}</RotuloFiltro>
+        <SeletorCidade
+          key={cidadeFiltro?.id ?? "sem-cidade"}
+          placeholder={t("buscarCidadeEstado")}
+          defaultValue={
+            cidadeFiltro
+              ? { id: cidadeFiltro.id, nome: cidadeFiltro.nome, uf: cidadeFiltro.estado.uf }
+              : null
+          }
+          onSelecionar={(cidade) => navegar({ cidadeId: cidade.id })}
+        />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <RotuloFiltro>{t("rotuloCategoria")}</RotuloFiltro>
+        <SeletorCategoria
+          categorias={categorias}
+          selecionadaId={categoriaIdFiltro ?? null}
+          placeholder={t("todasCategorias")}
+          onSelecionar={(id) => navegar({ categoriaId: id })}
+        />
+      </div>
+
       {temFiltroAtivo && (
-        <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
-          <span>{t("filtrosAtivos")}</span>
-          {buscaFiltro && (
-            <Chip ariaLabel={t("removerFiltro", { filtro: buscaFiltro })} onRemover={() => navegar({ q: null })}>
-              &quot;{buscaFiltro}&quot;
-            </Chip>
-          )}
-          {categoriaFiltro && (
-            <Chip
-              ariaLabel={t("removerFiltro", { filtro: categoriaFiltro.nome })}
-              onRemover={() => navegar({ categoriaId: null })}
-            >
-              {categoriaFiltro.nome}
-            </Chip>
-          )}
-          {cidadeFiltro && (
-            <Chip
-              ariaLabel={t("removerFiltro", {
-                filtro: `${cidadeFiltro.nome} - ${cidadeFiltro.estado.uf}`,
-              })}
-              onRemover={() => navegar({ cidadeId: null })}
-            >
-              <Link href={`/cidades/${cidadeFiltro.slug}`} className="hover:underline">
-                {cidadeFiltro.nome} - {cidadeFiltro.estado.uf}
-              </Link>
-            </Chip>
-          )}
-          <Link href="/reclamacoes" className="text-primary underline">
+        <div className="flex flex-col gap-2.5 border-t border-line pt-5">
+          <span className="kicker">{t("filtrosAtivos")}</span>
+          <div className="flex flex-wrap items-center gap-2">
+            {buscaFiltro && (
+              <Chip ariaLabel={t("removerFiltro", { filtro: buscaFiltro })} onRemover={() => navegar({ q: null })}>
+                &quot;{buscaFiltro}&quot;
+              </Chip>
+            )}
+            {categoriaFiltro && (
+              <Chip
+                ariaLabel={t("removerFiltro", { filtro: categoriaFiltro.nome })}
+                onRemover={() => navegar({ categoriaId: null })}
+              >
+                {categoriaFiltro.nome}
+              </Chip>
+            )}
+            {cidadeFiltro && (
+              <Chip
+                ariaLabel={t("removerFiltro", {
+                  filtro: `${cidadeFiltro.nome} - ${cidadeFiltro.estado.uf}`,
+                })}
+                onRemover={() => navegar({ cidadeId: null })}
+              >
+                <Link href={`/cidades/${cidadeFiltro.slug}`} className="hover:underline">
+                  {cidadeFiltro.nome} - {cidadeFiltro.estado.uf}
+                </Link>
+              </Chip>
+            )}
+          </div>
+          <Link href="/reclamacoes" className="w-fit text-sm font-medium text-brand underline underline-offset-2">
             {t("limpar")}
           </Link>
         </div>

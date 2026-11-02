@@ -1,24 +1,34 @@
 import * as z from "zod";
 import type { getTranslations } from "next-intl/server";
 
+import type { TomRetorno } from "@/lib/acoes/resultado";
+
 type T = Awaited<ReturnType<typeof getTranslations>>;
 
-// Só telefone é editável aqui - nome não é um campo que o usuário deve
-// poder ficar trocando livremente (é usado como identificação pública
-// em comentários e, no caso de conta de órgão, remonta à pessoa
-// responsável cadastrada na solicitação de acesso).
+// Telefone e cidade padrão são editáveis aqui - nome não é um campo que o
+// usuário deve poder ficar trocando livremente (é usado como
+// identificação pública em comentários e, no caso de conta de órgão,
+// remonta à pessoa responsável cadastrada na solicitação de acesso).
+// cidadeId vazio = sem cidade padrão; a existência da cidade é checada na
+// action (aqui só o formato).
 export function criarPerfilSchema() {
   return z.object({
     telefone: z.string().trim().max(20).optional().or(z.literal("")),
+    cidadeId: z.string().trim().max(50).optional().or(z.literal("")),
   });
 }
 
 export type PerfilFormState =
   | {
-      erros?: { telefone?: string[] };
+      erros?: { telefone?: string[]; cidadeId?: string[] };
       mensagem?: string;
+      // Sem `tipo`, a mensagem é um erro (o caso comum); sucesso e info são marcados.
+      tipo?: TomRetorno;
     }
   | undefined;
+
+// Ações que só devolvem uma frase (preferências, reenviar verificação).
+export type MensagemFormState = { mensagem?: string; tipo?: TomRetorno } | undefined;
 
 export function criarTrocaEmailSchema(t: T) {
   return z.object({
@@ -31,6 +41,8 @@ export type TrocaEmailFormState =
   | {
       erros?: { novoEmail?: string[]; senhaAtual?: string[] };
       mensagem?: string;
+      // Sem `tipo`, a mensagem é um erro (o caso comum); sucesso e info são marcados.
+      tipo?: TomRetorno;
     }
   | undefined;
 
@@ -55,19 +67,26 @@ export type SenhaFormState =
         confirmarNovaSenha?: string[];
       };
       mensagem?: string;
+      // Sem `tipo`, a mensagem é um erro (o caso comum); sucesso e info são marcados.
+      tipo?: TomRetorno;
     }
   | undefined;
 
-export function criarExclusaoSchema(t: T) {
+// Ações que só pedem a senha atual como confirmação (excluir conta,
+// desativar 2FA, gerar códigos de backup). `t` precisa ser o tradutor de
+// "Conta", que é onde mora erroSenhaAtual.
+export function criarSenhaAtualSchema(t: T) {
   return z.object({
     senhaAtual: z.string().min(1, { error: t("erroSenhaAtual") }).max(100),
   });
 }
 
-export type ExclusaoFormState =
+export type SenhaAtualFormState =
   | {
       erros?: { senhaAtual?: string[] };
       mensagem?: string;
+      // Sem `tipo`, a mensagem é um erro (o caso comum); sucesso e info são marcados.
+      tipo?: TomRetorno;
     }
   | undefined;
 
@@ -81,19 +100,12 @@ export type ConfirmarTotpFormState =
   | {
       erros?: { codigo?: string[] };
       mensagem?: string;
+      // Sem `tipo`, a mensagem é um erro (o caso comum); sucesso e info são marcados.
+      tipo?: TomRetorno;
       codigosBackup?: string[];
     }
   | undefined;
 
-export function criarDesativarTotpSchema(t: T) {
-  return z.object({
-    senhaAtual: z.string().min(1, { error: t("erroSenhaAtual") }).max(100),
-  });
-}
-
-export type DesativarTotpFormState =
-  | {
-      erros?: { senhaAtual?: string[] };
-      mensagem?: string;
-    }
+export type RegenerarCodigosFormState =
+  | (NonNullable<SenhaAtualFormState> & { codigosBackup?: string[] })
   | undefined;

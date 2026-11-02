@@ -1,26 +1,56 @@
 import Link from "next/link";
+import { CircleCheck } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
-import { Paginacao } from "@/components/paginacao";
-import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
-import { botaoPrimario, botaoSecundario, cartao, containerPagina } from "@/lib/estilos";
+import { AvatarIniciais } from "@/components/ui/avatar-iniciais";
+import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
+import { EstadoVazio } from "@/components/ui/estado-vazio";
+import { BotaoAcao, FormularioAcao } from "@/components/ui/formulario-acao";
+import { Etiqueta } from "@/components/ui/etiqueta";
+import { Paginacao } from "@/components/ui/paginacao";
+import { ResumoLateral } from "@/components/ui/resumo-lateral";
+import { Secao } from "@/components/ui/secao";
+import { TempoNaFila } from "@/components/moderacao/tempo-na-fila";
+import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/util/paginacao";
+import {
+  blocoCitacao,
+  botaoPerigo,
+  botaoPrimario,
+  botaoSecundario,
+  campoInput,
+  cartaoSecao,
+  colunaLateral,
+  colunaPrincipal,
+  grade,
+  pagina,
+  painelSuave,
+} from "@/lib/estilos";
+import { formatarDataHora } from "@/lib/util/formatarData";
+import { metadataDaPagina } from "@/lib/metadata";
+import { usuarioTemDoisFatores } from "@/lib/seguranca/doisFatores";
 
 import { exigirModerador } from "../moderacao/exigir-moderador";
 import { banirAutor, marcarImprocedente, marcarProcedente } from "./actions";
 
+export const generateMetadata = metadataDaPagina("Denuncias");
+
 export default async function DenunciasPage({ searchParams }: PageProps<"/denuncias">) {
   const t = await getTranslations("Denuncias");
   const tMotivo = await getTranslations("MotivoDenuncia");
+  const tNav = await getTranslations("AdminNav");
   const locale = await getLocale();
   const session = await exigirModerador();
   const ehAdmin = session.user.papel === "ADMIN";
+
+  // Só admin bane; banimento permanente pede senha e código de duas etapas.
+  const temDoisFatores = ehAdmin ? await usuarioTemDoisFatores(session.user.id) : false;
 
   const { page } = await searchParams;
   const paginaAtual = lerPaginaAtual(page);
   const filtro = { status: "ABERTA" as const };
 
-  const [denuncias, totalDenuncias] = await Promise.all([
+  const [denuncias, totalDenuncias, porTipo] = await Promise.all([
     prisma.denuncia.findMany({
       where: filtro,
       orderBy: { createdAt: "asc" },
@@ -29,8 +59,10 @@ export default async function DenunciasPage({ searchParams }: PageProps<"/denunc
       take: ITENS_POR_PAGINA,
     }),
     prisma.denuncia.count({ where: filtro }),
+    prisma.denuncia.groupBy({ by: ["alvoTipo"], where: filtro, _count: { _all: true } }),
   ]);
   const totalPaginas = calcularTotalPaginas(totalDenuncias);
+  const contagemPorTipo = new Map(porTipo.map((linha) => [linha.alvoTipo, linha._count._all]));
 
   const idsReclamacao = denuncias.filter((d) => d.alvoTipo === "RECLAMACAO").map((d) => d.alvoId);
   const idsComentario = denuncias.filter((d) => d.alvoTipo === "COMENTARIO").map((d) => d.alvoId);
@@ -39,7 +71,13 @@ export default async function DenunciasPage({ searchParams }: PageProps<"/denunc
     idsReclamacao.length
       ? prisma.reclamacao.findMany({
           where: { id: { in: idsReclamacao } },
-          select: { id: true, protocolo: true, titulo: true, descricao: true },
+          select: {
+            id: true,
+            protocolo: true,
+            titulo: true,
+            descricao: true,
+            autor: { select: { name: true, email: true } },
+          },
         })
       : Promise.resolve([]),
     // MIDIA fica de fora por enquanto - nada no app cria denúncia com esse
@@ -60,112 +98,179 @@ export default async function DenunciasPage({ searchParams }: PageProps<"/denunc
   const comentarioPorId = new Map(comentarios.map((c) => [c.id, c]));
 
   return (
-    <main className={`${containerPagina} max-w-3xl`}>
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-        {t("titulo")}
-      </h1>
+    <main className={pagina}>
+      <CabecalhoPagina
+        kicker={tNav("kickerModeracao")}
+        titulo={t("titulo")}
+        descricao={t("resumoAbertas", { count: totalDenuncias })}
+      />
 
-      {denuncias.length === 0 && (
-        <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumaEmAberto")}</p>
-      )}
-
-      {denuncias.map((denuncia) => {
-        const reclamacao =
-          denuncia.alvoTipo === "RECLAMACAO" ? reclamacaoPorId.get(denuncia.alvoId) : undefined;
-        const comentario =
-          denuncia.alvoTipo === "COMENTARIO" ? comentarioPorId.get(denuncia.alvoId) : undefined;
-        const alvoExiste = Boolean(reclamacao ?? comentario);
-
-        return (
-          <div key={denuncia.id} className={`flex flex-col gap-2 ${cartao}`}>
-            {reclamacao && (
-              <Link
-                href={`/reclamacoes/${reclamacao.protocolo}`}
-                className="font-medium text-slate-900 hover:underline dark:text-slate-100"
-              >
-                {reclamacao.titulo}
-              </Link>
-            )}
-            {reclamacao && (
-              <p className="text-sm text-slate-600 dark:text-slate-400">{reclamacao.descricao}</p>
+      <div className={grade}>
+        <div className={colunaPrincipal}>
+          <Secao id="abertas" titulo={t("resumoRotulo")}>
+            {denuncias.length === 0 && (
+              <EstadoVazio
+                icone={CircleCheck}
+                titulo={t("nenhumaEmAberto")}
+                descricao={t("nenhumaEmAbertoDesc")}
+              />
             )}
 
-            {comentario && (
-              <>
-                <Link
-                  href={`/reclamacoes/${comentario.reclamacao.protocolo}`}
-                  className="font-medium text-slate-900 hover:underline dark:text-slate-100"
-                >
-                  {t("comentarioEm", { titulo: comentario.reclamacao.titulo })}
-                </Link>
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  {t("comentarioDe", {
-                    autor: comentario.autor.name ?? comentario.autor.email,
-                  })}{" "}
-                  “{comentario.texto}”
-                </p>
-              </>
-            )}
+            {denuncias.map((denuncia) => {
+              const reclamacao =
+                denuncia.alvoTipo === "RECLAMACAO" ? reclamacaoPorId.get(denuncia.alvoId) : undefined;
+              const comentario =
+                denuncia.alvoTipo === "COMENTARIO" ? comentarioPorId.get(denuncia.alvoId) : undefined;
+              const alvoExiste = Boolean(reclamacao ?? comentario);
+              // Quem postou o conteúdo denunciado: é quem o diálogo de banimento nomeia.
+              const autorAlvo = reclamacao?.autor ?? comentario?.autor;
+              const nomeAutor = autorAlvo ? (autorAlvo.name ?? autorAlvo.email) : "";
+              const nomeDenunciante = denuncia.denunciante.name ?? denuncia.denunciante.email;
 
-            {!alvoExiste && (
-              <p className="font-medium text-slate-400 dark:text-slate-500">
-                {t("conteudoRemovido")}
-              </p>
-            )}
+              return (
+                <article key={denuncia.id} className={`flex flex-col gap-5 ${cartaoSecao}`}>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Etiqueta tom="neutro">
+                        {denuncia.alvoTipo === "COMENTARIO" ? t("tipoComentario") : t("tipoReclamacao")}
+                      </Etiqueta>
+                      <Etiqueta tom="erro">{tMotivo(denuncia.motivo)}</Etiqueta>
+                    </div>
+                    <TempoNaFila desde={denuncia.createdAt} />
+                  </div>
 
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              {t("motivo")} <strong>{tMotivo(denuncia.motivo)}</strong> · {t("denunciadoPor")}{" "}
-              {denuncia.denunciante.name ?? denuncia.denunciante.email} {t("em")}{" "}
-              {denuncia.createdAt.toLocaleString(locale)}
-            </p>
-            {denuncia.descricao && (
-              <p className="text-sm italic text-slate-600 dark:text-slate-400">
-                “{denuncia.descricao}”
-              </p>
-            )}
+                  {reclamacao && (
+                    <h3 className="text-xl leading-snug font-extrabold tracking-tight">
+                      <Link
+                        href={`/reclamacoes/${reclamacao.protocolo}`}
+                        className="text-ink hover:text-brand"
+                      >
+                        {reclamacao.titulo}
+                      </Link>
+                    </h3>
+                  )}
+                  {reclamacao && <p className={blocoCitacao}>{reclamacao.descricao}</p>}
 
-            <div className="flex flex-wrap items-center gap-2">
-              <form action={marcarProcedente.bind(null, denuncia.id)}>
-                <button type="submit" className={botaoPrimario}>
-                  {denuncia.alvoTipo === "COMENTARIO"
-                    ? t("procedenteComentario")
-                    : t("procedenteReclamacao")}
-                </button>
-              </form>
-              <form action={marcarImprocedente.bind(null, denuncia.id)}>
-                <button type="submit" className={botaoSecundario}>
-                  {t("improcedente")}
-                </button>
-              </form>
+                  {comentario && (
+                    <>
+                      <p className="text-sm text-ink-muted">
+                        {t("comentarioDe", {
+                          autor: comentario.autor.name ?? comentario.autor.email,
+                        })}
+                      </p>
+                      <p className={blocoCitacao}>“{comentario.texto}”</p>
+                      <Link
+                        href={`/reclamacoes/${comentario.reclamacao.protocolo}`}
+                        className="w-fit text-sm font-semibold text-brand underline underline-offset-2"
+                      >
+                        {t("comentarioEm", { titulo: comentario.reclamacao.titulo })}
+                      </Link>
+                    </>
+                  )}
 
-              {ehAdmin && (
-                <form
-                  action={banirAutor.bind(null, denuncia.id)}
-                  className="flex items-center gap-2"
-                >
-                  <select
-                    name="duracao"
-                    defaultValue="7"
-                    className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
-                  >
-                    <option value="7">{t("seteDias")}</option>
-                    <option value="30">{t("trintaDias")}</option>
-                    <option value="permanente">{t("permanente")}</option>
-                  </select>
-                  <button
-                    type="submit"
-                    className="rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-700 transition hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950/40"
-                  >
-                    {t("banirAutor")}
-                  </button>
-                </form>
-              )}
-            </div>
-          </div>
-        );
-      })}
+                  {!alvoExiste && <p className="font-medium text-ink-muted">{t("conteudoRemovido")}</p>}
 
-      <Paginacao paginaAtual={paginaAtual} totalPaginas={totalPaginas} basePath="/denuncias" />
+                  <div className={`flex flex-col gap-2 ${painelSuave}`}>
+                    <div className="flex items-center gap-2 text-sm text-ink-muted">
+                      <AvatarIniciais nome={nomeDenunciante} />
+                      <span>
+                        {t("denunciadoPor")}{" "}
+                        <span className="font-medium text-ink">{nomeDenunciante}</span> {t("em")}{" "}
+                        <time dateTime={denuncia.createdAt.toISOString()}>
+                          {formatarDataHora(denuncia.createdAt, locale)}
+                        </time>
+                      </span>
+                    </div>
+                    {denuncia.descricao && (
+                      <p className="text-sm text-ink-2 italic">“{denuncia.descricao}”</p>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 border-t border-line pt-5">
+                    {/* Sem o conteúdo (já removido), "procedente" e banir não têm no que
+                        agir: só resta fechar a denúncia como improcedente. */}
+                    {alvoExiste && (
+                      <FormularioAcao
+                        action={marcarProcedente.bind(null, denuncia.id)}
+                        confirmacao={
+                          denuncia.alvoTipo === "COMENTARIO"
+                            ? {
+                                titulo: t("confirmarComentarioTitulo"),
+                                descricao: t("confirmarComentarioDescricao"),
+                                confirmar: t("confirmarComentarioBotao"),
+                                tom: "perigo",
+                              }
+                            : {
+                                titulo: t("confirmarReclamacaoTitulo"),
+                                descricao: t("confirmarReclamacaoDescricao"),
+                                confirmar: t("confirmarReclamacaoBotao"),
+                                tom: "perigo",
+                              }
+                        }
+                      >
+                        <BotaoAcao className={botaoPrimario}>
+                          {denuncia.alvoTipo === "COMENTARIO"
+                            ? t("procedenteComentario")
+                            : t("procedenteReclamacao")}
+                        </BotaoAcao>
+                      </FormularioAcao>
+                    )}
+                    <FormularioAcao action={marcarImprocedente.bind(null, denuncia.id)}>
+                      <BotaoAcao className={botaoSecundario}>{t("improcedente")}</BotaoAcao>
+                    </FormularioAcao>
+
+                    {ehAdmin && alvoExiste && (
+                      <FormularioAcao
+                        action={banirAutor.bind(null, denuncia.id)}
+                        className="flex items-center gap-2 sm:ml-auto"
+                        confirmacao={{
+                          titulo: t("confirmarBanirTitulo", { nome: nomeAutor }),
+                          // {duracao} é o campo do formulário: o diálogo troca pelo rótulo da opção marcada.
+                          descricao: t("confirmarBanirDescricao", { duracao: "{duracao}" }),
+                          detalhes: [
+                            t("confirmarBanirDetalheConteudo"),
+                            t("confirmarBanirDetalheReverter"),
+                          ],
+                          confirmar: t("confirmarBanirBotao"),
+                          tom: "perigo",
+                          // Banimento permanente pede a senha e o código de duas etapas de quem bane.
+                          senha: { campo: "duracao", valor: "permanente" },
+                          segundoFator: temDoisFatores ? "ativo" : "ausente",
+                        }}
+                      >
+                        <select
+                          name="duracao"
+                          defaultValue="7"
+                          aria-label={t("duracaoBanimento")}
+                          className={`${campoInput} py-2`}
+                        >
+                          <option value="7">{t("seteDias")}</option>
+                          <option value="30">{t("trintaDias")}</option>
+                          <option value="permanente">{t("permanente")}</option>
+                        </select>
+                        <BotaoAcao className={botaoPerigo}>{t("banirAutor")}</BotaoAcao>
+                      </FormularioAcao>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
+
+            <Paginacao paginaAtual={paginaAtual} totalPaginas={totalPaginas} basePath="/denuncias" />
+          </Secao>
+        </div>
+
+        <aside className={colunaLateral}>
+          <ResumoLateral
+            rotulo={t("resumoRotulo")}
+            valor={totalDenuncias}
+            itens={[
+              { rotulo: t("tipoReclamacao"), valor: contagemPorTipo.get("RECLAMACAO") ?? 0 },
+              { rotulo: t("tipoComentario"), valor: contagemPorTipo.get("COMENTARIO") ?? 0 },
+            ]}
+          />
+        </aside>
+      </div>
     </main>
   );
 }

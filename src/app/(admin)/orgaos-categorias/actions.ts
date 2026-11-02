@@ -5,10 +5,12 @@ import { Prisma } from "@prisma/client";
 import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
+import { falha, informacao, sucesso, type ResultadoAcao } from "@/lib/acoes/resultado";
+import { registrarAuditoria } from "@/lib/auditoria";
 import { criarTokenVerificacao, enviarEmailAcessoOrgao } from "@/lib/email";
 import { idiomaOuPadrao } from "@/i18n/config";
 
-import { criarAtualizarDadosOrgaoSchema } from "./definitions";
+import { criarAtualizarDadosOrgaoSchema, type EstadoConvite } from "./definitions";
 import { exigirAdmin } from "../solicitacoes-orgao/exigir-admin";
 
 // Nome/sigla/e-mail vêm direto do que o cidadão digitou no formulário de
@@ -18,7 +20,10 @@ import { exigirAdmin } from "../solicitacoes-orgao/exigir-admin";
 // é algo que muda na prática (a secretaria de uma cidade não "muda de
 // cidade"), e trocar arrastaria a validação de todas as respostas
 // oficiais já ligadas a reclamações da cidade antiga.
-export async function atualizarDadosOrgao(orgaoId: string, formData: FormData) {
+export async function atualizarDadosOrgao(
+  orgaoId: string,
+  formData: FormData
+): Promise<ResultadoAcao> {
   await exigirAdmin();
 
   const t = await getTranslations("OrgaosCategorias");
@@ -28,7 +33,7 @@ export async function atualizarDadosOrgao(orgaoId: string, formData: FormData) {
     email: formData.get("email"),
   });
   if (!validado.success) {
-    return;
+    return falha(validado.error.issues[0]?.message ?? t("erroNomeOrgao"));
   }
 
   try {
@@ -42,27 +47,39 @@ export async function atualizarDadosOrgao(orgaoId: string, formData: FormData) {
     });
   } catch (erro) {
     // P2002 = já existe outro órgão com esse nome nesta mesma cidade
-    // (constraint @@unique([cidadeId, nome])) - ignora em vez de deixar
-    // virar 500; sem feedback de erro nesta tela ainda, mas evita quebrar
-    // a página por uma colisão de nome.
-    if (erro instanceof Prisma.PrismaClientKnownRequestError && erro.code === "P2002") {
-      return;
+    // (constraint @@unique([cidadeId, nome])) - vira uma mensagem na tela em
+    // vez de um 500; P2025 = o órgão sumiu entre a página carregar e o envio.
+    if (erro instanceof Prisma.PrismaClientKnownRequestError) {
+      if (erro.code === "P2002") {
+        return falha(t("erroNomeDuplicado"));
+      }
+      if (erro.code === "P2025") {
+        return falha(t("erroOrgaoNaoEncontrado"));
+      }
     }
     throw erro;
   }
 
   revalidatePath("/orgaos-categorias");
+
+  return sucesso(t("dadosSalvos", { nome: validado.data.nome }));
 }
 
-export async function atualizarCategoriasOrgao(orgaoId: string, formData: FormData) {
+export async function atualizarCategoriasOrgao(
+  orgaoId: string,
+  formData: FormData
+): Promise<ResultadoAcao> {
   await exigirAdmin();
+  const t = await getTranslations("OrgaosCategorias");
 
   const categoriaIds = [
     ...new Set(formData.getAll("categoriaIds").filter((v): v is string => typeof v === "string")),
   ];
 
   const orgao = await prisma.orgao.findUnique({ where: { id: orgaoId } });
-  if (!orgao) return;
+  if (!orgao) {
+    return falha(t("erroOrgaoNaoEncontrado"));
+  }
 
   if (categoriaIds.length > 0) {
     // Formulário desatualizado (categoria removida entre carregar a
@@ -73,7 +90,7 @@ export async function atualizarCategoriasOrgao(orgaoId: string, formData: FormDa
       where: { id: { in: categoriaIds } },
     });
     if (categoriasValidas !== categoriaIds.length) {
-      return;
+      return falha(t("erroCategoriaInvalida"));
     }
   }
 
@@ -83,6 +100,12 @@ export async function atualizarCategoriasOrgao(orgaoId: string, formData: FormDa
   });
 
   revalidatePath("/orgaos-categorias");
+
+  return sucesso(
+    categoriaIds.length === 0
+      ? t("categoriasSalvasTodas", { nome: orgao.nome })
+      : t("categoriasSalvas", { nome: orgao.nome, count: categoriaIds.length })
+  );
 }
 
 // O token do convite original (enviado na aprovação da solicitação, ver
@@ -94,7 +117,12 @@ export async function atualizarCategoriasOrgao(orgaoId: string, formData: FormDa
 // logar ainda. criarTokenVerificacao() já invalida o token antigo ao
 // criar um novo, então reenviar não deixa dois links válidos ao mesmo
 // tempo.
-export async function reenviarConviteOrgao(userId: string) {
+//
+// Devolve o que aconteceu com o envio (não só "feito"): o provedor de e-mail
+// pode recusar (ex.: o remetente de teste do Resend só entrega pro e-mail da
+// própria conta) e, sem isto, o admin clicava, nada aparecia e o e-mail
+// simplesmente não chegava.
+export async function reenviarConviteOrgao(userId: string): Promise<EstadoConvite> {
   await exigirAdmin();
 
   const usuario = await prisma.user.findUnique({
@@ -102,11 +130,11 @@ export async function reenviarConviteOrgao(userId: string) {
     include: { orgao: true },
   });
   if (!usuario || usuario.papel !== "ORGAO" || usuario.senhaHash || !usuario.orgao) {
-    return;
+    return { status: "indisponivel" };
   }
 
   const token = await criarTokenVerificacao(usuario.email);
-  await enviarEmailAcessoOrgao({
+  return enviarEmailAcessoOrgao({
     email: usuario.email,
     token,
     nomeOrgao: usuario.orgao.nome,
@@ -119,13 +147,47 @@ export async function reenviarConviteOrgao(userId: string) {
 // filtra listagens públicas em cidades/orgaos) mas nada na aplicação
 // nunca escrevia nele: um órgão extinto ou cadastrado por engano não
 // tinha como ser desativado sem mexer direto no banco.
-export async function alternarAtivoOrgao(orgaoId: string, novoAtivo: boolean) {
-  await exigirAdmin();
+export async function alternarAtivoOrgao(
+  orgaoId: string,
+  novoAtivo: boolean
+): Promise<ResultadoAcao> {
+  const session = await exigirAdmin();
+  const t = await getTranslations("OrgaosCategorias");
 
-  await prisma.orgao.update({
+  const orgao = await prisma.orgao.findUnique({
     where: { id: orgaoId },
-    data: { ativo: novoAtivo },
+    select: { nome: true },
+  });
+  if (!orgao) {
+    return falha(t("erroOrgaoNaoEncontrado"));
+  }
+
+  // Só grava se o estado atual for o OPOSTO do pedido: dois admins desativando o
+  // mesmo órgão (ou um clique em tela desatualizada) viram "nada foi alterado".
+  const alterado = await prisma.$transaction(async (tx) => {
+    const atualizacao = await tx.orgao.updateMany({
+      where: { id: orgaoId, ativo: !novoAtivo },
+      data: { ativo: novoAtivo },
+    });
+    if (atualizacao.count === 0) {
+      return false;
+    }
+    await registrarAuditoria(
+      {
+        acao: novoAtivo ? "ORGAO_REATIVADO" : "ORGAO_DESATIVADO",
+        atorId: session.user.id,
+        alvoTipo: "ORGAO",
+        alvoId: orgaoId,
+      },
+      tx
+    );
+    return true;
   });
 
   revalidatePath("/orgaos-categorias");
+
+  if (!alterado) {
+    return informacao(t("orgaoJaNoEstado"));
+  }
+  return sucesso(t(novoAtivo ? "orgaoReativado" : "orgaoDesativado", { nome: orgao.nome }));
 }

@@ -1,8 +1,8 @@
 import type { MetadataRoute } from "next";
 
 import { prisma } from "@/lib/prisma";
-import { urlBase } from "@/lib/url";
-import { STATUS_PUBLICOS } from "@/lib/statusPublicos";
+import { urlBase } from "@/lib/util/url";
+import { STATUS_PUBLICOS } from "@/lib/reclamacoes/statusPublicos";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = urlBase();

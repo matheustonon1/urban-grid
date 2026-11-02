@@ -1,17 +1,22 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Building2 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
-import { cartao } from "@/lib/estilos";
-import { calcularMetricasOrgao, classificarIndice } from "@/lib/reputacaoOrgao";
-import { STATUS_PUBLICOS } from "@/lib/statusPublicos";
+import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
+import { EstadoVazio } from "@/components/ui/estado-vazio";
+import { PainelNumeros } from "@/components/ui/painel-numeros";
+import { Secao } from "@/components/ui/secao";
+import { pagina } from "@/lib/estilos";
+import { calcularMetricasOrgao, classificarIndice } from "@/lib/orgaos/reputacaoOrgao";
+import { STATUS_PUBLICOS } from "@/lib/reclamacoes/statusPublicos";
 
 const LIMITE_ORGAOS = 100;
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("Transparencia");
-  return { title: `${t("titulo")} · Urban Grid`, description: t("subtitulo") };
+  return { title: t("titulo"), description: t("subtitulo") };
 }
 
 export default async function TransparenciaPage() {
@@ -43,87 +48,88 @@ export default async function TransparenciaPage() {
     totalPublicas > 0 ? Math.round((totalResolvidas / totalPublicas) * 100) : null;
 
   const resumo = [
-    [t("publicas"), String(totalPublicas)],
-    [t("resolvidas"), String(totalResolvidas)],
-    [t("indiceGeral"), indiceGeral !== null ? `${indiceGeral}%` : "—"],
-    [t("respondidasPorOrgaos"), String(totalRespondidas)],
+    { rotulo: t("publicas"), valor: String(totalPublicas) },
+    { rotulo: t("resolvidas"), valor: String(totalResolvidas) },
+    { rotulo: t("indiceGeral"), valor: indiceGeral !== null ? `${indiceGeral}%` : "—" },
+    { rotulo: t("respondidasPorOrgaos"), valor: String(totalRespondidas) },
   ];
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 p-6 sm:p-8">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-          {t("titulo")}
-        </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">{t("subtitulo")}</p>
-      </div>
+    <main className={pagina}>
+      <CabecalhoPagina kicker={t("kicker")} titulo={t("titulo")} descricao={t("subtitulo")} />
 
-      {/* Painel único com divisórias internas, números em mono/tabular -
-          mesmo vocabulário do painel de estatísticas da home (ver
-          app/page.tsx), não quatro cartões de stat soltos. */}
-      <dl className="flex w-full flex-wrap divide-x divide-slate-300 border border-slate-300 bg-white/70 dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-900/50">
-        {resumo.map(([rotulo, valor]) => (
-          <div key={rotulo} className="flex min-w-30 flex-1 flex-col gap-0.5 px-4 py-3">
-            <dt className="text-xs text-slate-500 dark:text-slate-400">{rotulo}</dt>
-            <dd className="font-mono text-2xl font-semibold tabular-nums text-slate-900 dark:text-slate-100">
-              {valor}
-            </dd>
-          </div>
-        ))}
-      </dl>
+      <PainelNumeros itens={resumo} />
 
-      <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          {t("rankingTitulo")}
-        </h2>
-        <p className="text-sm text-slate-500 dark:text-slate-400">{t("rankingNota")}</p>
-
+      <Secao
+        id="ranking"
+        titulo={t("rankingTitulo")}
+        contador={ranking.length}
+        descricao={t("rankingNota")}
+      >
         {ranking.length === 0 ? (
-          <p className="text-sm text-slate-500 dark:text-slate-400">{t("semDados")}</p>
+          <EstadoVazio icone={Building2} titulo={t("semDados")} />
         ) : (
-          <div className={`overflow-x-auto p-0 ${cartao}`}>
+          <div className="overflow-x-auto rounded-lg border border-line bg-surface">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+              <thead className="border-b border-line bg-sunken/60">
                 <tr>
-                  <th scope="col" className="px-4 py-2 font-medium">{t("colOrgao")}</th>
-                  <th scope="col" className="px-4 py-2 font-medium">{t("colRespondidas")}</th>
-                  <th scope="col" className="px-4 py-2 font-medium">{t("colResolucao")}</th>
-                  <th scope="col" className="px-4 py-2 font-medium">{t("colTempo")}</th>
-                  <th scope="col" className="px-4 py-2 font-medium">{t("colNota")}</th>
+                  <th scope="col" className="kicker px-4 py-3">
+                    {t("colOrgao")}
+                  </th>
+                  <th scope="col" className="kicker px-4 py-3">
+                    {t("colRespondidas")}
+                  </th>
+                  <th scope="col" className="kicker px-4 py-3">
+                    {t("colResolucao")}
+                  </th>
+                  <th scope="col" className="kicker px-4 py-3">
+                    {t("colTempo")}
+                  </th>
+                  <th scope="col" className="kicker px-4 py-3">
+                    {t("colNota")}
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {ranking.map(({ orgao, metricas }) => {
+                {ranking.map(({ orgao, metricas }, indice) => {
                   const selo = classificarIndice(metricas.indiceResolucao, metricas.totalRespondidas);
                   return (
                     <tr
                       key={orgao.id}
-                      className="border-b border-slate-100 last:border-0 dark:border-slate-800"
+                      className="border-b border-line transition-colors last:border-0 hover:bg-sunken/50"
                     >
-                      <th scope="row" className="px-4 py-3 font-normal">
-                        <Link href={`/orgaos/${orgao.id}`} className="font-medium text-primary underline">
-                          {orgao.sigla ?? orgao.nome}
-                        </Link>
-                        <span className="block text-xs text-slate-500 dark:text-slate-400">
-                          {orgao.cidade.nome}
-                        </span>
+                      <th scope="row" className="px-4 py-3.5 font-normal">
+                        <div className="flex items-center gap-3">
+                          <span aria-hidden className="w-6 shrink-0 font-mono text-base text-ink-muted tabular-nums">
+                            {String(indice + 1).padStart(2, "0")}
+                          </span>
+                          <div className="min-w-0">
+                            <Link
+                              href={`/orgaos/${orgao.id}`}
+                              className="font-bold text-ink hover:text-brand hover:underline"
+                            >
+                              {orgao.sigla ?? orgao.nome}
+                            </Link>
+                            <span className="block text-xs text-ink-muted">{orgao.cidade.nome}</span>
+                          </div>
+                        </div>
                       </th>
-                      <td className="px-4 py-3">{metricas.totalRespondidas}</td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3.5 font-mono tabular-nums">{metricas.totalRespondidas}</td>
+                      <td className="px-4 py-3.5">
                         <span
-                          className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${selo.className}`}
+                          className={`inline-block rounded-[5px] px-2 py-0.5 text-xs font-semibold ${selo.className}`}
                         >
                           {metricas.indiceResolucao !== null ? `${metricas.indiceResolucao}%` : "—"}
                           {" · "}
                           {tSelo(selo.chave)}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3.5 font-mono tabular-nums">
                         {metricas.tempoMedioRespostaDias !== null
                           ? `${metricas.tempoMedioRespostaDias}d`
                           : "—"}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3.5 font-mono tabular-nums">
                         {metricas.notaMedia !== null ? `${metricas.notaMedia}/5` : "—"}
                       </td>
                     </tr>
@@ -133,7 +139,7 @@ export default async function TransparenciaPage() {
             </table>
           </div>
         )}
-      </section>
+      </Secao>
     </main>
   );
 }

@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { prisma } from "@/lib/prisma";
 
-import { criarAdminTeste, emailTeste, limparDadosTeste } from "./helpers";
+import { confirmarDialogo, criarAdminTeste, emailTeste, limparDadosTeste } from "./helpers";
 
 const cidadesCriadas: string[] = [];
 
@@ -51,7 +51,10 @@ test("solicitar cidade nova, aprovar como admin e criar a Cidade de verdade", as
   const cartao = page.locator(`text=${nomeCidade} - SP`).locator("..");
   await cartao.locator('input[name="codigoIbge"]').fill(codigoIbge);
   await cartao.getByRole("button", { name: "Aprovar e criar cidade" }).click();
-  await page.waitForTimeout(1000);
+  await confirmarDialogo(page, "Criar cidade");
+  // Com e-mail real configurado o aviso pode vir como "criada, mas o e-mail não saiu"
+  // (example.com não recebe): o que importa é o retorno dizer que a cidade foi criada.
+  await expect(page.getByText(`Cidade ${nomeCidade} criada`)).toBeVisible();
 
   const solicitacaoFinal = await prisma.solicitacaoCidade.findUniqueOrThrow({
     where: { id: solicitacao.id },
@@ -87,7 +90,8 @@ test("rejeitar solicitação de cidade não cria a Cidade e registra o motivo", 
   const cartao = page.locator(`text=${nomeCidade} - RJ`).locator("..");
   await cartao.locator('textarea[name="motivo"]').fill("Município fora da área de cobertura piloto.");
   await cartao.getByRole("button", { name: "Rejeitar" }).click();
-  await page.waitForTimeout(1000);
+  await confirmarDialogo(page, "Rejeitar solicitação");
+  await expect(page.getByText(/Solicitação rejeitada/)).toBeVisible();
 
   const solicitacao = await prisma.solicitacaoCidade.findFirstOrThrow({
     where: { nomeCidade, email },

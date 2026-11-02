@@ -1,102 +1,172 @@
 ---
 name: frontend-design
-description: Diretrizes de design visual do Urban Grid (Next.js + Tailwind v4) para toda tela, componente ou revisão de front-end deste repositório — evita o visual genérico de "site feito por IA" (gradiente roxo-azul, cartão com risca lateral, tudo com o mesmo radius/sombra) e reaproveita os tokens/componentes já estabelecidos no projeto em vez de inventar novos. Use esta skill sempre que for criar uma página ou componente novo, redesenhar algo existente, revisar visualmente uma tela antes de dar por pronta, ou quando o usuário pedir pra "melhorar o design", "deixar mais bonito/profissional" ou "não parecer feito por IA" — mesmo que ele não cite "design" ou "front-end" explicitamente.
+description: Diretrizes de design visual do Urban Grid (Next.js + Tailwind v4) para toda tela, componente ou revisão de front-end deste repositório — a identidade "sinalização urbana + planta" (papel azul-acinzentado, tinta, azul de placa, amarelo de obra, Archivo + Plex), os tokens semânticos que já trocam no escuro, os componentes base e os tiques de "site feito por IA" a evitar. Use sempre que for criar uma página ou componente, redesenhar algo, revisar visualmente uma tela antes de dar por pronta, ou quando o usuário pedir "melhorar o design", "deixar mais bonito/profissional" ou "não parecer feito por IA" — mesmo sem citar "design" ou "front-end".
 ---
 
 # Design do Urban Grid
 
-Este projeto já tem identidade visual deliberada — fontes, paleta e componentes
-foram escolhidos com justificativa, não são o default de nenhum gerador. O
-trabalho aqui é **estender** essa base com a mesma intenção, não substituí-la
-por hábito nem preencher qualquer lacuna com o primeiro padrão genérico que
-vier à cabeça.
+A identidade é **"sinalização urbana + planta"**: o site parece uma planta técnica
+de cidade com a placa de obra no lugar certo — séria, legível, pública. Foi
+redesenhada por inteiro em 2026-10 (antes era azul Tailwind + terracota + cinza
+frio); estenda esta base com a mesma intenção, não a substitua por hábito.
 
-## A base já existente (confira antes de assumir — estes arquivos são a fonte da verdade)
+## A base (estes arquivos são a fonte da verdade — confira antes de assumir)
 
-- **Tipografia** (`src/app/layout.tsx`): Space Grotesk nos títulos
-  (`--font-display`, geométrica/técnica, remete a planta urbana — combina com
-  o nome do produto) + IBM Plex Sans no corpo (`--font-plex-sans`, legibilidade
-  alta, associada a serviços públicos digitais) + IBM Plex Mono para dados/código
-  (`--font-plex-mono`). Nunca Inter/Geist por padrão — já foi trocado de propósito.
-- **Paleta** (`src/app/globals.css`): `--background`/`--foreground`, `--primary`
-  (azul), e um `--accent` terracota deliberadamente escolhido como contraponto
-  **quente** ao azul — não é mais um gradiente "SaaS" no botão principal, é um
-  acento usado com moderação (o comentário no próprio CSS explica a decisão).
-  Os dois têm variantes dark já calibradas.
-- **Dark mode**: classe `.dark` no `<html>`, alternada por
-  `src/components/theme-toggle.tsx`, persistida em `localStorage`. Isto NÃO é
-  `prefers-color-scheme`/`data-theme` — é a classe `.dark` do Tailwind mesmo.
-  Qualquer cor nova precisa de um par claro/escuro seguindo essa mesma convenção.
-- **Componentes de estilo** (`src/lib/estilos.ts`): `botaoPrimario`,
-  `botaoSecundario`, `campoInput`, `cartao`, `cartaoDestaque`, `linkSutil`,
-  `containerPagina`. Reaproveite essas classes em vez de escrever um botão/card
-  do zero — se nenhuma serve, é um sinal pra adicionar uma nova constante ali
-  (reutilizável), não pra improvisar classes soltas só naquele componente.
+- **`src/app/globals.css`** — tokens e utilitários. Tudo de cor é **token semântico**
+  (CSS variável com par claro/escuro, ligado ao Tailwind por `@theme inline`):
 
-Se o pedido for para mudar fonte, paleta ou esses componentes base, confirme
-que é isso mesmo antes de agir — são decisões já tomadas de propósito, não
-lacunas esquecidas.
+  | Token | Uso |
+  |---|---|
+  | `paper` / `surface` / `sunken` | fundo da página / cartão, campo / painel rebaixado, trilho, chip |
+  | `line` / `line-strong` | fio de 1px (divisor, borda) / borda de campo e botão secundário |
+  | `ink` / `ink-2` / `ink-muted` / `ink-faint` | texto principal / corpo / secundário (≥ 4,5:1) / só decoração |
+  | `brand`, `brand-strong`, `brand-soft`, `brand-ink`, `on-brand` | **única cor interativa** (azul de placa): botão, link, foco, aba ativa |
+  | `signal`, `signal-soft`, `signal-ink`, `on-signal` | amarelo de obra: acento **raro** (marca-texto, "ao vivo", contador, faixa) |
+  | `ok-*`, `warn-*`, `danger-*`, `progress-*` (`-soft` e `-ink`) | estados (sucesso, atenção, erro, em andamento) |
+  | `danger` / `on-danger` | botão destrutivo sólido (excluir conta) |
+  | `night` / `chalk` | faixas escuras que **não** trocam no `.dark` (painel de entrada, chamada da home) |
+
+  Como o token troca sozinho com a classe `.dark` no `<html>` (alternada por
+  `components/layout/theme-toggle.tsx`), **não escreva `dark:`** por cima: `text-ink`,
+  não `text-slate-900 dark:text-slate-100`. Cor nova = token novo em `globals.css`,
+  com valor claro **e** escuro. (As escalas `slate-*`/`blue-*` do Tailwind foram
+  redefinidas para a paleta do projeto, só para código legado não destoar.)
+- **Utilitários de identidade** (`@utility`): `kicker` (rótulo mono em caixa alta —
+  protocolo, índice, legenda), `marca-texto` (grifo amarelo atrás de uma palavra do
+  título), `faixa-obra` (listras amarelo/tinta, fina e rara), `bg-planta` /
+  `bg-planta-clara` (quadrícula de quarteirões que some em degradê), `scrollbar-none`.
+- **Tipografia** (`src/app/layout.tsx`): **Archivo** nos títulos (`--font-display`,
+  grotesca de placa, 700–800, `tracking-tight`), **IBM Plex Sans** no corpo,
+  **IBM Plex Mono** em protocolo e números (`font-mono tabular-nums`). Nada de
+  Inter/Geist por padrão.
+- **`src/lib/estilos.ts`** — `botaoPrimario`, `botaoSecundario`, `botaoPerigo`,
+  `campoInput`/`campoInputInvalido`, `cartao`, `cartaoSecao`, `linkSutil`, `painelSuave`,
+  `blocoCitacao`, `rotuloSecao` e a **estrutura de página**: `containerSite` (faixas de
+  largura total) e `pagina` / `grade` / `colunaPrincipal` / `colunaLateral` /
+  `colunaFiltros` / `colunaResultados` (ver "Estrutura de página" abaixo). Se nenhuma
+  serve, vira constante **ali**, não classe improvisada na tela.
+- **Componentes** (`src/components/`, por papel):
+  - `ui/` — `Marca`, `CabecalhoPagina` (kicker + título + régua), `Secao` (título de
+    seção com régua), `CabecalhoCartao` (ícone + título de bloco de formulário),
+    `ResumoLateral` (número grande + quebra, coluna lateral das filas), `FormularioRejeicao`
+    (motivo + rejeitar das filas de decisão), `EstadoVazio`, `Aviso` (erro anuncia com
+    `role="alert"`), `Etiqueta` (base de `StatusBadge`/`DecisaoBadge`/`Selo`),
+    `PainelNumeros`, `Esqueleto*`, `Paginacao`, `Revelar`, `AvatarIniciais`,
+    `PaginaAuth` (moldura de login/cadastro/redefinição: painel escuro + formulário)
+  - `layout/` — cabeçalho fixo, rodapé, menus, sino, tema, idioma, abas do admin
+  - `formulario/` — `Campo` (rótulo + dica/erro, `aria-describedby`), `cidade-combobox`,
+    termos
+  - `reclamacao/` e `moderacao/` — cartão de reclamação, `PlacaProtocolo` (protocolo em
+    placa), `RespostaOficial`, badges, pontuações da IA, `GuiaPontuacoes` (legenda dos cortes)…
+
+Se o pedido for mudar fonte, paleta, tokens ou esses componentes base, confirme
+que é isso mesmo: foram decisões deliberadas, não lacunas.
+
+Vai trazer um componente de catálogo externo (React Bits, 21st.dev, Uiverse…)? Leia
+antes `componentes-externos.md`, nesta pasta.
+
+## Como a identidade se expressa
+
+- **Plana, com fio.** Cartão = fundo `surface` + borda `line`. **Sombra só em quem
+  flutua** (menu, popover, diálogo) e na "ficha" da home. Hover de cartão clicável:
+  borda escurece (`hover:border-ink-faint`) e o título vira `brand` — nada de
+  levantar e projetar sombra em tudo.
+- **Raio por papel**: botão/campo `rounded-md`; cartão `rounded-lg`; etiqueta de estado
+  `rounded-[5px]` com quadradinho de cor (como placa); ficha de destaque `rounded-xl`;
+  `rounded-full` só em avatar de pessoa, ponto e barra de progresso.
+- **Hierarquia editorial.** Título de página (`h1`) 3xl–4xl `font-extrabold`; seção
+  (`h2`, via `Secao`) `text-xl font-extrabold` com régua de tinta de 2px embaixo;
+  bloco dentro da seção `h3`; rótulo = `kicker`. Números grandes em mono (`font-mono tabular-nums`).
+  Alinhamento **à esquerda** por padrão; centralizar é exceção (estado vazio, erro).
+- **Régua e índice.** Passo a passo = sequência numerada (`01`–`04`) sobre uma linha;
+  bloco de destaque = `border-t-2 border-ink`; seção de página inteira alterna
+  `paper` e `surface` com fio entre elas.
+- **Conteúdo real é o ornamento.** A home abre com a reclamação mais recente de verdade
+  numa "ficha" (protocolo, mapinha de quarteirões em SVG, etapas, confirmações) em
+  vez de ilustração genérica.
+- **Amarelo é tempero.** `signal` aparece em: grifo de uma palavra no título, ponto
+  "ao vivo", contador de pendências, barra da aba ativa, faixa de obra, botão sobre
+  fundo `night`. Nunca como cor de botão em fundo claro nem de texto corrido.
+- **Movimento discreto:** `animate-fade-in` / `Revelar` (uma vez, ao entrar na tela),
+  transição de cor. Respeite `prefers-reduced-motion` (`motion-reduce:`). Sem fundo
+  "respirando" ou grade deslizando.
+
+## Estrutura de página
+
+Toda página interna (e todo `loading.tsx`) segue o **mesmo eixo**: o do cabeçalho e do
+rodapé (`max-w-6xl`), título à esquerda, conteúdo numa grade de 12 colunas.
+
+```tsx
+<main className={pagina}>
+  <CabecalhoPagina kicker="Moderação" titulo="…" descricao="…" acoes={…} />
+  <div className={grade}>
+    <div className={colunaPrincipal}>          {/* 8 colunas */}
+      <Secao id="fila" titulo="Aguardando revisão" contador={n}>…</Secao>
+    </div>
+    <aside className={colunaLateral}>          {/* 4 colunas, sticky no desktop */}
+      <ResumoLateral rotulo="…" valor={n} itens={[…]} />
+    </aside>
+  </div>
+</main>
+```
+
+- Lista com filtros: `colunaFiltros` (3) + `colunaResultados` (9). Texto corrido
+  (termos): `pagina` + `max-w-3xl` dentro dele, sempre alinhado à esquerda.
+- **Uma `Secao` por assunto**: ela é o único `h2` da página (a hierarquia h1 → h2 → h3
+  não pode pular nível — o axe reclama) e dá nome à região (`aria-labelledby`).
+- A lateral só entra se **diz algo que o corpo não diz** (quebra do número, legenda dos
+  cortes, atalhos, reputação) — não repita ali o que o cabeçalho já afirma.
+- Lista de itens leves (histórico, usuários, banidos) = `ul.divide-y` dentro da `Secao`;
+  item com formulário/decisão = `article` com `cartaoSecao`.
+- O `loading.tsx` usa a **mesma** grade (`EsqueletoListaGenerica`): o conteúdo não pode
+  "pular" de largura ao chegar.
+- **Contrato com os testes E2E:** specs localizam o cartão pelo texto e sobem `..` até
+  ele (`text=protocolo` → `..` → `..`). Mudar o aninhamento de um cartão de admin
+  (fila, usuários, banidos, órgãos, solicitações) quebra o spec sem erro visual — leia o
+  `.spec.ts` antes e rode-o depois.
 
 ## Tiques de "design genérico de IA" — evite sem que o usuário peça
 
-Estes são os padrões que mais entregam uma tela feita às pressas por um
-gerador, porque aparecem com frequência suspeita em sites gerados por IA sem
-direção visual específica. Evite por padrão; só use algum deles se o usuário
-pedir explicitamente:
+- Gradiente roxo→azul ou qualquer "hero de SaaS"; **bege cremoso + serifa + terracota**
+  (o tique de 2025–26 de "site editorial feito por IA" — foi descartado de propósito).
+- Cartão com risca de cor na lateral só pra decorar.
+- O mesmo `rounded-lg` + sombra em **tudo**.
+- Emoji como marcador de seção ou item.
+- Tudo centralizado (hero, cartões, botões).
+- Ícone do lucide colado em todo título/label sem função (ícone vale quando carrega
+  significado: estado, ação, tipo de conteúdo).
+- Selo "✨ novo" / pílula de aviso acima do título.
+- Texto de preenchimento (`Lorem ipsum`, "Título aqui") — aqui é sempre reclamação
+  urbana de verdade: buraco na rua, poste apagado, lixo acumulado.
+- Hero com altura de tela inteira quando o conteúdo cabe em menos.
+- Cinza puro misturado à paleta; cor hex solta; `dark:` por cima de um token.
 
-- Gradiente roxo→azul (ou qualquer gradiente "hero" de SaaS genérico) — o
-  projeto já resolveu isso com o par azul/terracota.
-- Cartão com uma risca/barra de cor na lateral só pra "decorar".
-- O mesmo `rounded-lg` e a mesma sombra em **tudo**, sem variar por
-  importância do elemento.
-- Emoji como marcador de seção ou de item de lista.
-- Tudo centralizado (texto, botões, cards) só porque "parece mais limpo".
-- Ícone decorativo do lucide-react colado em todo título/label sem function
-  real (diferencia de um ícone que carrega significado, tipo status ou ação).
-- Texto de preenchimento óbvio (`Lorem ipsum`, "Título aqui", "descrição da
-  reclamação") em vez de conteúdo real do domínio — aqui é sempre reclamação
-  urbana de verdade: buraco na rua, poste apagado, lixo acumulado, etc.
-- Hero gigante (altura de tela inteira) quando o conteúdo real cabe em bem
-  menos espaço.
+## Fundamentos
 
-## Fundamentos que valem pra qualquer tela nova ou revisão
-
-- **Hierarquia tipográfica de verdade**: a diferença entre título e corpo não
-  é só `font-size` maior — pesa peso (`font-display` já é mais pesado),
-  tracking (`letter-spacing: -0.01em` já aplicado em h1-h3) e espaçamento ao
-  redor. Não adicione mais um nível de hierarquia sem necessidade.
-- **Espaçamento por `gap` de flex/grid**, não margin avulsa em cada filho —
-  mais fácil de manter consistente e evita margin colapsando/dobrando.
-- **Cinza com leve viés de matiz**, não cinza puro — o Tailwind `slate-*` já
-  usado no projeto tem esse viés frio embutido; continue nessa escala em vez
-  de misturar `gray-*` puro no meio.
-- **Nem tudo é cartão**: borda, fundo e sombra comunicam "isto é um objeto
-  separado" — gaste isso com intenção (destacar o que realmente precisa) em
-  vez de embrulhar cada bloco de conteúdo em `cartao` por reflexo.
-- **Paridade claro/escuro**: toda cor nova precisa funcionar nos dois temas
-  antes de considerar pronto — não só "não quebrar", mas manter contraste e
-  legibilidade equivalentes nos dois.
-- **Responsividade real**: teste a 375px de largura, não só redimensione a
-  janela do desktop. Overflow horizontal em mobile é o bug visual mais comum
-  e mais fácil de não notar sem testar de verdade.
-- **Conteúdo real em vez de placeholder**: ao mostrar um exemplo de tela
-  (screenshot, protótipo, dado de demonstração), use um caso plausível do
-  domínio (uma reclamação de buraco na rua, não "Reclamação de exemplo 1").
+- Espaçamento por `gap` de flex/grid, não margem avulsa em cada filho.
+- **Nem tudo é cartão**: borda/fundo dizem "objeto separado" — gaste com intenção.
+  Listas de itens relacionados são **linhas com divisória** (`divide-y divide-line`),
+  não uma pilha de cartões.
+- **Formulário**: sempre rótulo visível (`Campo`), nunca só placeholder; erro por
+  campo com ícone + texto (`MensagemErro`), `aria-invalid` + `aria-describedby`
+  (`descritoPor`), `campoInputInvalido`; erro geral em `Aviso tom="erro"`.
+- **Paridade claro/escuro** vem dos tokens — confira os dois mesmo assim (contraste,
+  sobreposição de texto sobre imagem, faixas `night`/`chalk`).
+- **Responsividade real**: teste a 375px; o cabeçalho foi apertado de propósito
+  (`gap-2`, ícones `p-1.5`) para caber logo + busca + entrar + idioma + tema. O
+  E2E `responsividade.spec.ts` falha com 1px de rolagem horizontal.
+- **Acessibilidade** é parte do design: skill `acessibilidade`. Texto de interface:
+  skill `ux-writing`.
 
 ## Checklist antes de dar uma tela por pronta
 
-1. Reaproveitei os componentes de `lib/estilos.ts` em vez de inventar classes
-   novas onde já existe equivalente?
-2. Testei em claro **e** escuro — as duas versões têm contraste e hierarquia
-   equivalentes, não só "não quebrou"?
-3. Testei em ~375px de largura — sem overflow horizontal, sem texto cortado?
-4. Reli a lista de tiques genéricos acima — algum apareceu sem eu ter decidido
-   conscientemente usá-lo?
-5. O conteúdo exibido é real/plausível do domínio (reclamação urbana), não
-   placeholder genérico?
-6. Se adicionei uma cor nova: ela tem par claro/escuro e passa pelo mesmo
-   crivo de "por que essa cor e não `--primary`/`--accent`"?
+1. Usei tokens e `lib/estilos.ts` (nada de `dark:`, hex ou `slate-*` novos)?
+2. Claro **e** escuro conferidos nas imagens, não só "compila"?
+3. 375px sem rolagem horizontal (script de `verificacao-visual`)?
+4. Reli a lista de tiques — algum apareceu sem decisão consciente?
+5. O conteúdo exibido é real/plausível do domínio?
+6. Estados vazio, erro e carregando existem e combinam com o resto?
+7. Cor nova? Tem token com par claro/escuro e justificativa (por que não `brand`/`signal`)?
 
-Isto não substitui ver a tela renderizada de verdade (screenshot real,
-`tsc`/`eslint`/testes) — é o filtro de design a aplicar **antes** dessa
-verificação técnica, não depois dela.
+Este filtro vem **antes** de `tsc`/`eslint`/testes e da verificação visual
+(skill `verificacao-visual`), não no lugar delas.

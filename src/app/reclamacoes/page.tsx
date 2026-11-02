@@ -1,22 +1,31 @@
 import Link from "next/link";
-import { getLocale, getTranslations } from "next-intl/server";
+import { Plus, SearchX } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
-import { StatusBadge } from "@/components/status-badge";
-import { CategoriaIcon } from "@/components/categoria-icon";
-import { Paginacao } from "@/components/paginacao";
-import { formatarTempoRelativo } from "@/lib/tempo-relativo";
-import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/paginacao";
-import { cartao, containerPagina } from "@/lib/estilos";
-import { STATUS_PUBLICOS } from "@/lib/statusPublicos";
+import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
+import { CartaoReclamacao } from "@/components/reclamacao/cartao-reclamacao";
+import { EstadoVazio } from "@/components/ui/estado-vazio";
+import { Paginacao } from "@/components/ui/paginacao";
+import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/util/paginacao";
+import {
+  botaoPrimario,
+  colunaFiltros,
+  colunaResultados,
+  grade,
+  pagina,
+} from "@/lib/estilos";
+import { STATUS_PUBLICOS } from "@/lib/reclamacoes/statusPublicos";
+import { metadataDaPagina } from "@/lib/metadata";
 
 import { FiltroReclamacoes } from "./filtro";
+
+export const generateMetadata = metadataDaPagina("Reclamacoes");
 
 export default async function ReclamacoesPublicasPage({
   searchParams,
 }: PageProps<"/reclamacoes">) {
   const t = await getTranslations("Reclamacoes");
-  const locale = await getLocale();
   const { cidadeId, categoriaId, q, page } = await searchParams;
   const cidadeIdFiltro =
     typeof cidadeId === "string" && cidadeId ? cidadeId : undefined;
@@ -75,73 +84,82 @@ export default async function ReclamacoesPublicasPage({
     ? [...categoriasAtivas, categoriaFiltroInativa]
     : categoriasAtivas;
 
+  const novaReclamacao = (
+    <Link href="/reclamacoes/nova" className={botaoPrimario}>
+      <Plus className="h-4 w-4" aria-hidden />
+      {t("registrar")}
+    </Link>
+  );
+
   return (
-    <main className={containerPagina}>
-      <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-        {t("titulo")}
-      </h1>
-
-      <FiltroReclamacoes
-        categorias={categoriasParaFiltro}
-        categoriaIdFiltro={categoriaIdFiltro}
-        cidadeFiltro={
-          cidadeFiltro
-            ? {
-                id: cidadeFiltro.id,
-                nome: cidadeFiltro.nome,
-                slug: cidadeFiltro.slug,
-                estado: { uf: cidadeFiltro.estado.uf },
-              }
-            : null
-        }
-        buscaFiltro={buscaFiltro}
+    <main className={pagina}>
+      <CabecalhoPagina
+        titulo={t("titulo")}
+        descricao={t("subtitulo")}
+        // No estado vazio o mesmo botão já aparece dentro dele.
+        acoes={reclamacoes.length > 0 ? novaReclamacao : undefined}
       />
 
-      {reclamacoes.length === 0 && (
-        <p className="text-sm text-slate-500 dark:text-slate-400">{t("nenhumaPublicada")}</p>
-      )}
+      <div className={grade}>
+        <aside aria-label={t("filtros")} className={colunaFiltros}>
+          <FiltroReclamacoes
+            categorias={categoriasParaFiltro}
+            categoriaIdFiltro={categoriaIdFiltro}
+            cidadeFiltro={
+              cidadeFiltro
+                ? {
+                    id: cidadeFiltro.id,
+                    nome: cidadeFiltro.nome,
+                    slug: cidadeFiltro.slug,
+                    estado: { uf: cidadeFiltro.estado.uf },
+                  }
+                : null
+            }
+            buscaFiltro={buscaFiltro}
+          />
+        </aside>
 
-      {reclamacoes.map((reclamacao) => (
-        <Link
-          key={reclamacao.id}
-          href={`/reclamacoes/${reclamacao.protocolo}`}
-          className={`flex items-start gap-3 transition hover:border-slate-300 hover:shadow dark:hover:border-slate-600 ${cartao}`}
-        >
-          {reclamacao.midias[0] ? (
-            // eslint-disable-next-line @next/next/no-img-element -- imagem externa (Vercel Blob), sem domínio fixo pra configurar no next/image
-            <img
-              src={reclamacao.midias[0].urlTratada ?? reclamacao.midias[0].url}
-              alt=""
-              className="h-14 w-14 shrink-0 rounded-lg border border-slate-200 object-cover dark:border-slate-700"
-            />
+        <div className={colunaResultados}>
+          {reclamacoes.length === 0 ? (
+            <EstadoVazio
+              icone={SearchX}
+              titulo={t("nenhumaPublicada")}
+              descricao={t("nenhumaPublicadaDesc")}
+            >
+              {novaReclamacao}
+            </EstadoVazio>
           ) : (
-            <CategoriaIcon
-              icone={reclamacao.categoria.icone}
-              className="mt-0.5 h-5 w-5 shrink-0 text-slate-400 dark:text-slate-500"
-            />
+            <>
+              <p className="kicker" aria-live="polite">
+                {t("resultados", { count: totalReclamacoes })}
+              </p>
+              <ul className="flex flex-col gap-3">
+                {reclamacoes.map((reclamacao) => (
+                  <li key={reclamacao.id}>
+                    <CartaoReclamacao
+                      protocolo={reclamacao.protocolo}
+                      titulo={reclamacao.titulo}
+                      status={reclamacao.status}
+                      categoria={{ nome: reclamacao.categoria.nome, icone: reclamacao.categoria.icone }}
+                      local={reclamacao.cidade.nome}
+                      fotoUrl={reclamacao.midias[0] ? (reclamacao.midias[0].urlTratada ?? reclamacao.midias[0].url) : null}
+                      confirmacoes={reclamacao._count.confirmacoes}
+                      data={reclamacao.publicadaEm ?? reclamacao.createdAt}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
-          <div className="flex-1">
-            <div className="flex items-center justify-between gap-2">
-              <p className="font-medium text-slate-900 dark:text-slate-100">{reclamacao.titulo}</p>
-              <StatusBadge status={reclamacao.status} />
-            </div>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              {reclamacao.categoria.nome} · {reclamacao.cidade.nome} ·{" "}
-              {formatarTempoRelativo(reclamacao.publicadaEm ?? reclamacao.createdAt, locale)}
-            </p>
-            <p className="mt-1 text-sm font-medium text-primary">
-              {t("confirmacoes", { count: reclamacao._count.confirmacoes })}
-            </p>
-          </div>
-        </Link>
-      ))}
 
-      <Paginacao
-        paginaAtual={paginaAtual}
-        totalPaginas={totalPaginas}
-        basePath="/reclamacoes"
-        searchParams={{ cidadeId: cidadeIdFiltro, categoriaId: categoriaIdFiltro, q: buscaFiltro }}
-      />
+          <Paginacao
+            paginaAtual={paginaAtual}
+            totalPaginas={totalPaginas}
+            basePath="/reclamacoes"
+            searchParams={{ cidadeId: cidadeIdFiltro, categoriaId: categoriaIdFiltro, q: buscaFiltro }}
+          />
+        </div>
+      </div>
     </main>
   );
 }

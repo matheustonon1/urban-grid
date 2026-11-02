@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { criarCidadaoTeste, limparDadosTeste } from "./helpers";
+import { criarCidadaoTeste, limparDadosTeste, sairDaSessao } from "./helpers";
 import { prisma } from "@/lib/prisma";
 import { criarTokenRedefinicaoSenha, criarTokenVerificacao } from "@/lib/email";
 
@@ -40,7 +40,7 @@ test("fluxo completo: solicitar, redefinir e logar com a senha nova", async ({ p
   expect(tokenAinda).toBeNull();
 
   // Senha antiga não funciona mais, só a nova.
-  await page.context().clearCookies();
+  await sairDaSessao(page);
   await page.goto("/login");
   await page.fill('input[name="identificador"]', email);
   await page.fill('input[name="senha"]', senha);

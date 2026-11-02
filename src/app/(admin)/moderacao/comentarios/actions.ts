@@ -2,7 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 
+import { getTranslations } from "next-intl/server";
+
 import { prisma } from "@/lib/prisma";
+import { informacao, sucesso, type ResultadoAcao } from "@/lib/acoes/resultado";
 
 import { exigirModerador } from "../exigir-moderador";
 
@@ -31,12 +34,13 @@ async function revalidarReclamacaoDoComentario(reclamacaoId: string) {
 // Comentário não tem fila de "aguardando revisão" (decisão da IA é
 // sempre final na hora) - "revisar" aqui é sempre uma correção
 // retroativa de um comentário já reprovado, feita a partir do log.
-export async function aprovarComentarioReprovado(comentarioId: string) {
+export async function aprovarComentarioReprovado(comentarioId: string): Promise<ResultadoAcao> {
   const session = await exigirModerador();
+  const t = await getTranslations("ModeracaoComentarios");
 
   const comentario = await prisma.comentario.findUnique({ where: { id: comentarioId } });
   if (!comentario || comentario.statusModeracao !== "REPROVADO") {
-    return;
+    return informacao(t("jaRevisado"));
   }
 
   const log = await buscarLogPendente(comentarioId);
@@ -64,20 +68,23 @@ export async function aprovarComentarioReprovado(comentarioId: string) {
   });
 
   if (!aplicado) {
-    return;
+    return informacao(t("jaRevisado"));
   }
 
   await revalidarReclamacaoDoComentario(comentario.reclamacaoId);
   revalidatePath("/moderacao/comentarios");
   revalidatePath("/moderacao/historico/comentarios");
+
+  return sucesso(t("aprovadoOk"));
 }
 
-export async function confirmarRejeicaoComentario(comentarioId: string) {
+export async function confirmarRejeicaoComentario(comentarioId: string): Promise<ResultadoAcao> {
   const session = await exigirModerador();
+  const t = await getTranslations("ModeracaoComentarios");
 
   const log = await buscarLogPendente(comentarioId);
   if (!log) {
-    return;
+    return informacao(t("jaRevisado"));
   }
 
   // updateMany com revisadoEm ainda nulo na condição - evita que esta ação
@@ -89,9 +96,11 @@ export async function confirmarRejeicaoComentario(comentarioId: string) {
     data: { revisadoPorId: session.user.id, decisaoFinal: "REPROVAR", revisadoEm: new Date() },
   });
   if (atualizacao.count === 0) {
-    return;
+    return informacao(t("jaRevisado"));
   }
 
   revalidatePath("/moderacao/comentarios");
   revalidatePath("/moderacao/historico/comentarios");
+
+  return sucesso(t("rejeicaoConfirmada"));
 }

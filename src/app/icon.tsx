@@ -3,10 +3,14 @@ import { ImageResponse } from "next/og";
 export const size = { width: 32, height: 32 };
 export const contentType = "image/png";
 
-// "UG" (Urban Grid) no lugar do favicon genérico do Next.js - mesma
-// paleta do logo no cabeçalho (fundo escuro, "U" neutro/branco, "G" na
-// cor primária do tema, igual ao "Grid" azul em "Urban Grid").
+// A marca do cabeçalho (quatro quarteirões separados por ruas) sobre o fundo
+// escuro da identidade - o fundo sólido garante leitura em aba clara e escura.
+// Cores: giz, azul claro, azul claro e amarelo de obra (ver globals.css).
 export default function Icon() {
+  const quarteirao = (cor: string) => (
+    <div style={{ width: 11, height: 11, borderRadius: 2, background: cor }} />
+  );
+
   return new ImageResponse(
     (
       <div
@@ -14,17 +18,22 @@ export default function Icon() {
           width: "100%",
           height: "100%",
           display: "flex",
-          alignItems: "center",
+          flexDirection: "column",
           justifyContent: "center",
-          background: "#0f172a",
-          fontFamily: "sans-serif",
-          fontWeight: 700,
-          fontSize: 20,
-          letterSpacing: -1,
+          alignItems: "center",
+          gap: 2,
+          background: "#0e1520",
+          borderRadius: 7,
         }}
       >
-        <span style={{ color: "#ffffff" }}>U</span>
-        <span style={{ color: "#1d4ed8" }}>G</span>
+        <div style={{ display: "flex", gap: 2 }}>
+          {quarteirao("#f2f4f7")}
+          {quarteirao("#7ea6ff")}
+        </div>
+        <div style={{ display: "flex", gap: 2 }}>
+          {quarteirao("#7ea6ff")}
+          {quarteirao("#ffc20e")}
+        </div>
       </div>
     ),
     { ...size }

@@ -4,6 +4,10 @@ import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
+import { exigirReautenticacao } from "@/lib/acoes/confirmarSenha";
+import { falha, informacao, sucesso, type ResultadoAcao } from "@/lib/acoes/resultado";
+import { registrarAuditoria } from "@/lib/auditoria";
+import { criarNotificacao } from "@/lib/notificacoes";
 
 import { criarAlterarPapelSchema } from "./definitions";
 import { exigirAdmin } from "../solicitacoes-orgao/exigir-admin";
@@ -11,34 +15,86 @@ import { exigirAdmin } from "../solicitacoes-orgao/exigir-admin";
 // Único jeito de alguém virar MODERADOR/ADMIN hoje era escrever direto no
 // banco (seed ou acesso manual) - não existia nenhuma tela pra promover
 // (ou rebaixar) um usuário pela própria aplicação.
-export async function alterarPapelUsuario(userId: string, formData: FormData) {
+//
+// Muda o que uma conta PODE fazer, então tem três travas além do guard de
+// admin: não vale para a própria conta, exige a senha de quem está agindo
+// (confirmação no diálogo da tela, conferida aqui de novo) e a pessoa afetada
+// recebe um aviso no sininho - privilégio nunca muda em silêncio.
+export async function alterarPapelUsuario(
+  userId: string,
+  formData: FormData
+): Promise<ResultadoAcao> {
   const session = await exigirAdmin();
+  const t = await getTranslations("Usuarios");
+  const tPapel = await getTranslations("Papel");
 
   // Bloqueia alterar o próprio papel em vez de tentar prever todo caso de
   // borda de "é o último admin?" - mais simples e mais seguro: qualquer
   // mudança de privilégio de uma conta passa pelo crivo de outra pessoa,
   // nunca só de quem seria afetado por ela.
   if (userId === session.user.id) {
-    return;
+    return falha(t("vocêMesmo"));
   }
 
-  const t = await getTranslations("Usuarios");
   const validado = criarAlterarPapelSchema(t).safeParse({ papel: formData.get("papel") });
   if (!validado.success) {
-    return;
+    return falha(validado.error.issues[0]?.message ?? t("erroPapelInvalido"));
   }
+  const novoPapel = validado.data.papel;
 
   const usuario = await prisma.user.findUnique({ where: { id: userId } });
   // ORGAO fica de fora daqui (ver comentário em ./definitions) - nada a
   // fazer com uma conta desse papel nesta tela.
   if (!usuario || usuario.papel === "ORGAO") {
-    return;
+    return falha(t("erroUsuarioIndisponivel"));
   }
 
-  await prisma.user.update({
-    where: { id: userId },
-    data: { papel: validado.data.papel },
+  const nome = usuario.name ?? usuario.email;
+  if (usuario.papel === novoPapel) {
+    return informacao(t("papelInalterado", { nome, papel: tPapel(novoPapel) }));
+  }
+
+  // Senha E código de duas etapas: mudar papel concede ou tira poder de outra conta.
+  const reautenticacao = await exigirReautenticacao(session.user.id, formData);
+  if (reautenticacao) {
+    return reautenticacao;
+  }
+
+  // O papel lido acima na condição: se outro admin mexeu nesta conta entre o
+  // findUnique e aqui, ou ela virou conta de órgão, nada é gravado.
+  // A mudança e o registro de auditoria saem juntos: sem transação, uma falha entre
+  // os dois deixaria um papel alterado sem rastro de quem o alterou.
+  const aplicado = await prisma.$transaction(async (tx) => {
+    const atualizacao = await tx.user.updateMany({
+      where: { id: userId, papel: usuario.papel },
+      data: { papel: novoPapel },
+    });
+    if (atualizacao.count === 0) {
+      return false;
+    }
+    await registrarAuditoria(
+      {
+        acao: "PAPEL_ALTERADO",
+        atorId: session.user.id,
+        alvoUserId: userId,
+        detalhes: { de: usuario.papel, para: novoPapel },
+      },
+      tx
+    );
+    return true;
+  });
+  if (!aplicado) {
+    return falha(t("erroUsuarioIndisponivel"));
+  }
+
+  await criarNotificacao({
+    userId,
+    tipo: "CONTA_SEGURANCA",
+    // O papel vai cru (MODERADOR...) e o texto o traduz no idioma de quem recebe.
+    texto: { chave: "papelAlterado", params: { papel: novoPapel } },
   });
 
   revalidatePath("/usuarios");
+
+  return sucesso(t("papelAlterado", { nome, papel: tPapel(novoPapel) }));
 }

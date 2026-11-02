@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { enviarResumosSemanaisPendentes } from "@/lib/resumoSemanal";
+import { enviarResumosSemanaisPendentes } from "@/lib/notificacoes/resumoSemanal";
 
 // Vercel Cron manda "Authorization: Bearer $CRON_SECRET" automaticamente
 // quando essa env var está configurada no projeto (ver vercel.json) - sem

@@ -1,7 +1,15 @@
 // ---------------------------------------------------------------------------
 // Seed do banco: estados e municípios (API do IBGE), categorias e admin.
 // Idempotente — usa upsert/skipDuplicates, pode rodar quantas vezes quiser.
+//
+// Geografia: vem da API do IBGE; se ela falhar (ou com SEED_IBGE=local, que é o que o CI usa),
+// vem do arquivo prisma/dados/ibge-localidades.json, um retrato dos mesmos dados (regerado por
+// `npx tsx prisma/gerar-snapshot-ibge.ts`). A API do IBGE dá timeout de conexão nos runners do
+// GitHub Actions, então o CI não pode depender dela.
 // ---------------------------------------------------------------------------
+
+import fs from "fs";
+import path from "path";
 
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
@@ -40,17 +48,50 @@ function emLotes<T>(itens: T[], tamanho: number): T[][] {
 }
 
 async function buscarJson<T>(url: string): Promise<T> {
-  const resposta = await fetch(url);
+  const resposta = await fetch(url, { signal: AbortSignal.timeout(30_000) });
   if (!resposta.ok) {
     throw new Error(`Falha ao buscar ${url}: ${resposta.status}`);
   }
   return resposta.json() as Promise<T>;
 }
 
+type EstadoComMunicipios = EstadoIbge & { municipios: MunicipioIbge[] };
+
+async function baixarLocalidades(): Promise<EstadoComMunicipios[]> {
+  const estados = await buscarJson<EstadoIbge[]>(`${IBGE_BASE}/estados?orderBy=nome`);
+  const completos: EstadoComMunicipios[] = [];
+  for (const estado of estados) {
+    const municipios = await buscarJson<MunicipioIbge[]>(
+      `${IBGE_BASE}/estados/${estado.sigla}/municipios?orderBy=nome`
+    );
+    completos.push({ ...estado, municipios });
+  }
+  return completos;
+}
+
+function lerLocalidadesDoArquivo(): EstadoComMunicipios[] {
+  const arquivo = path.join(process.cwd(), "prisma", "dados", "ibge-localidades.json");
+  return JSON.parse(fs.readFileSync(arquivo, "utf8")).estados as EstadoComMunicipios[];
+}
+
+async function carregarLocalidades(): Promise<EstadoComMunicipios[]> {
+  if (process.env.SEED_IBGE === "local") {
+    console.log("Geografia: usando prisma/dados/ibge-localidades.json (SEED_IBGE=local).");
+    return lerLocalidadesDoArquivo();
+  }
+  try {
+    return await baixarLocalidades();
+  } catch (erro) {
+    console.warn(
+      "API do IBGE indisponível; usando prisma/dados/ibge-localidades.json:",
+      erro instanceof Error ? erro.message : erro
+    );
+    return lerLocalidadesDoArquivo();
+  }
+}
+
 async function seedGeografia() {
-  const estados = await buscarJson<EstadoIbge[]>(
-    `${IBGE_BASE}/estados?orderBy=nome`
-  );
+  const estados = await carregarLocalidades();
 
   const estadoIdPorUf = new Map<string, string>();
 
@@ -68,9 +109,7 @@ async function seedGeografia() {
   let totalCidades = 0;
 
   for (const estado of estados) {
-    const municipios = await buscarJson<MunicipioIbge[]>(
-      `${IBGE_BASE}/estados/${estado.sigla}/municipios?orderBy=nome`
-    );
+    const municipios = estado.municipios;
 
     const estadoId = estadoIdPorUf.get(estado.sigla);
     if (!estadoId) continue;

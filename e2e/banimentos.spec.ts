@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { prisma } from "@/lib/prisma";
 
-import { criarAdminTeste, criarCidadaoTeste, limparDadosTeste } from "./helpers";
+import { confirmarDialogo, criarAdminTeste, criarCidadaoTeste, limparDadosTeste, sairDaSessao } from "./helpers";
 
 test.afterAll(async () => {
   await limparDadosTeste();
@@ -33,7 +33,8 @@ test("admin reverte um banimento e a conta volta a logar", async ({ page }) => {
   await page.goto("/banimentos");
   const cartao = page.locator(`text=${usuario.name}`).locator("..").locator("..");
   await cartao.getByRole("button", { name: "Reverter banimento" }).click();
-  await page.waitForTimeout(500);
+  await confirmarDialogo(page, "Reverter banimento");
+  await expect(page.getByText(/Banimento de .* revertido/)).toBeVisible();
 
   const usuarioAtualizado = await prisma.user.findUniqueOrThrow({ where: { id: usuario.id } });
   expect(usuarioAtualizado.banidoAte).toBeNull();
@@ -41,7 +42,7 @@ test("admin reverte um banimento e a conta volta a logar", async ({ page }) => {
   // Sessão do admin precisa ser encerrada antes de tentar logar como o
   // cidadão - sem isto, o formulário de login nem aparece (redirect pra
   // /painel de quem já está autenticado).
-  await page.context().clearCookies();
+  await sairDaSessao(page);
   await page.goto("/login");
   await page.fill('input[name="identificador"]', email);
   await page.fill('input[name="senha"]', senha);

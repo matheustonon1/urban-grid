@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-import { urlBase } from "@/lib/url";
+import { urlBase } from "@/lib/util/url";
 
 export default function robots(): MetadataRoute.Robots {
   return {

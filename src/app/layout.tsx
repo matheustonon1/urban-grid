@@ -1,20 +1,20 @@
-import type { Metadata } from "next";
-import Link from "next/link";
-import { IBM_Plex_Mono, IBM_Plex_Sans, Space_Grotesk } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Archivo, IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import "./globals.css";
 
-import { SiteHeader } from "@/components/site-header";
+import { Rodape } from "@/components/layout/rodape";
+import { SiteHeader } from "@/components/layout/site-header";
+import { AvisosProvider } from "@/components/ui/avisos";
 
-// Space Grotesk nos títulos (geométrica, técnica - remete a planta/grade
-// urbana, combina com o nome do produto) + IBM Plex Sans no corpo
-// (legibilidade alta, associada a serviços digitais públicos/cívicos) no
-// lugar do par Geist/Geist Mono padrão do create-next-app.
-const spaceGrotesk = Space_Grotesk({
+// Archivo nos títulos: grotesca de placa de rua, firme e sem enfeite. IBM Plex
+// Sans no corpo (legibilidade alta, associada a serviços digitais públicos) e
+// Plex Mono para protocolo e números. Nenhuma é o par Geist/Geist Mono padrão do
+// create-next-app. Archivo é variável: sem `weight`, entram todos os pesos.
+const archivo = Archivo({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: ["500", "600", "700"],
 });
 
 const plexSans = IBM_Plex_Sans({
@@ -32,20 +32,29 @@ const plexMono = IBM_Plex_Mono({
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("Metadata");
   return {
-    title: "Urban Grid",
+    // Cada página define só o próprio título; o sufixo vem daqui.
+    title: { default: "Urban Grid", template: "%s · Urban Grid" },
     description: t("descricao"),
   };
 }
 
+// A barra do navegador no celular acompanha o papel do tema.
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f2f4f7" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b0f16" },
+  ],
+};
+
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const locale = await getLocale();
   const messages = await getMessages();
-  const t = await getTranslations("Footer");
+  const t = await getTranslations("Header");
 
   return (
     <html
       lang={locale}
-      className={`${spaceGrotesk.variable} ${plexSans.variable} ${plexMono.variable} h-full antialiased`}
+      className={`${archivo.variable} ${plexSans.variable} ${plexMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <head>
@@ -57,14 +66,23 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="flex min-h-full flex-col">
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <SiteHeader />
-          {children}
-          <footer className="flex flex-col items-center gap-1 border-t border-slate-200 py-4 text-center text-xs text-slate-400 dark:border-slate-800 dark:text-slate-500">
-            <span>{t("tcc")}</span>
-            <Link href="/termos" className="underline hover:text-slate-600 dark:hover:text-slate-300">
-              {t("termos")}
-            </Link>
-          </footer>
+          {/* Avisos flutuantes (confirmação e erro das ações) vivem aqui, acima das
+              páginas: a ação revalida a lista e o cartão que a gerou some. */}
+          <AvisosProvider>
+            <a
+              href="#conteudo"
+              className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:bg-ink focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-paper"
+            >
+              {t("pularConteudo")}
+            </a>
+            <SiteHeader />
+            {/* Alvo do "pular para o conteúdo". Cada página tem o próprio <main>;
+                este contêiner só dá o ponto de foco e mantém o rodapé embaixo. */}
+            <div id="conteudo" tabIndex={-1} className="flex flex-1 flex-col outline-none">
+              {children}
+            </div>
+            <Rodape />
+          </AvisosProvider>
         </NextIntlClientProvider>
       </body>
     </html>
