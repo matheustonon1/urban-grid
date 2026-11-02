@@ -94,6 +94,13 @@ existe" e "o e-mail não saiu" são resposta, não silêncio.
   `WHERE`, e avisa os responsáveis ativos dos órgãos que responderam
   (`lib/notificacoes/orgaos`). Resolvida de novo, o autor pode avaliar outra vez e a nova avaliação
   substitui a contestada (`lib/reclamacoes/avaliacao`: `podeAvaliar`); confirmação é definitiva.
+- **Resposta oficial não se reescreve.** É registro público: `corrigirRespostaOficial` só aceita
+  o erro de quem acabou de enviar - 15 minutos (`JANELA_CORRECAO_MS`), só a resposta MAIS
+  RECENTE da reclamação, só antes de o autor avaliar, só texto e prazo (o status anunciado não
+  se desfaz) - e grava `editadaEm`, que aparece na resposta como "Editada em". A regra mora em
+  `lib/orgaos/correcaoResposta` (pura, testada) e a ação a repete dentro da transação (janela e
+  "ainda é a mais recente" no `WHERE`/contagem), porque a tela pode ter sido aberta antes. Passada
+  a janela, o caminho é uma nova resposta.
 - **Filtro Prisma com NULL.** `NOT: { rel: { campo: x } }` e `campo: { not: x }` viram SQL com
   NULL (`NOT (campo = ?)` não é verdadeiro) e **esvaziam a lista** de quem tem o campo nulo.
   Escreva `OR: [{ campo: null }, { campo: { not: x } }]` e confira a contagem no banco.

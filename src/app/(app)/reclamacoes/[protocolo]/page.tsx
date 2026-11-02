@@ -27,7 +27,8 @@ import {
   pagina,
   painelSuave,
 } from "@/lib/estilos";
-import { formatarDataHora } from "@/lib/util/formatarData";
+import { formatarDataHora, formatarHora } from "@/lib/util/formatarData";
+import { limiteDaCorrecao, motivoSemCorrecao } from "@/lib/orgaos/correcaoResposta";
 import { orgaoAtendeCategoria } from "@/lib/orgaos/orgaoCategoria";
 import { podeAvaliar as autorPodeAvaliar } from "@/lib/reclamacoes/avaliacao";
 import { STATUS_PUBLICOS } from "@/lib/reclamacoes/statusPublicos";
@@ -37,6 +38,7 @@ import {
   alternarConfirmacao,
   avaliarReclamacao,
   contestarRejeicao,
+  corrigirRespostaOficial,
   criarDenuncia,
   criarDenunciaComentario,
   responderReclamacao,
@@ -182,6 +184,23 @@ export default async function ReclamacaoPage({
 
   const podeAvaliar =
     ehAutor && session?.user?.papel !== "ORGAO" && autorPodeAvaliar(reclamacao, reclamacao.avaliacao);
+
+  // A resposta que o órgão ainda pode corrigir (regras em lib/orgaos/correcaoResposta): só
+  // a mais recente, dentro da janela, antes de o autor avaliar. A ação confere de novo.
+  const ultimaResposta = reclamacao.respostas.at(-1);
+  const respostaCorrigivel =
+    ultimaResposta &&
+    orgaoDoUsuario?.ativo &&
+    motivoSemCorrecao({
+      resposta: ultimaResposta,
+      orgaoIdDoUsuario: orgaoDoUsuario.id,
+      agora: new Date(),
+      haRespostaPosterior: false,
+      avaliadaDepois:
+        !!reclamacao.avaliacao && reclamacao.avaliacao.createdAt > ultimaResposta.createdAt,
+    }) === null
+      ? ultimaResposta
+      : null;
 
   const linhaDoTempo = construirLinhaDoTempo(
     reclamacao,
@@ -370,11 +389,60 @@ export default async function ReclamacaoPage({
                     data={resposta.createdAt}
                     novoStatus={resposta.novoStatus}
                     prazoEstimado={resposta.prazoEstimado}
+                    editadaEm={resposta.editadaEm}
+                    acao={
+                      resposta.id === respostaCorrigivel?.id ? (
+                        <details className="border-t border-brand/20 pt-4">
+                          <summary className={`${botaoSecundario} w-fit cursor-pointer list-none`}>
+                            {t("corrigirResposta")}
+                          </summary>
+                          <FormularioAcao
+                            action={corrigirRespostaOficial.bind(null, resposta.id, protocolo)}
+                            recolherAoSucesso
+                            className="animate-fade-in mt-4 flex flex-col gap-4"
+                          >
+                            <p className="text-sm text-ink-muted">
+                              {t("corrigirAte", {
+                                hora: formatarHora(limiteDaCorrecao(resposta.createdAt), locale),
+                              })}
+                            </p>
+                            <Campo id={`correcao-texto-${resposta.id}`} rotulo={t("respostaOficial")}>
+                              <textarea
+                                id={`correcao-texto-${resposta.id}`}
+                                name="texto"
+                                required
+                                minLength={10}
+                                rows={4}
+                                defaultValue={resposta.texto}
+                                className={campoInput}
+                              />
+                            </Campo>
+                            <Campo
+                              id={`correcao-prazo-${resposta.id}`}
+                              rotulo={t("prazoRotulo")}
+                              opcional={t("opcional")}
+                            >
+                              <input
+                                id={`correcao-prazo-${resposta.id}`}
+                                type="date"
+                                name="prazoEstimado"
+                                defaultValue={resposta.prazoEstimado?.toISOString().slice(0, 10) ?? ""}
+                                className={campoInput}
+                              />
+                            </Campo>
+                            <BotaoAcao className={`${botaoPrimario} w-fit`}>{t("salvarCorrecao")}</BotaoAcao>
+                          </FormularioAcao>
+                        </details>
+                      ) : undefined
+                    }
                     locale={locale}
                     rotulos={{
                       respostaOficial: t("respostaOficial"),
                       novoStatus: t("novoStatusRotulo"),
                       prazo: t("prazoRotulo"),
+                      editada: resposta.editadaEm
+                        ? t("respostaEditada", { data: formatarDataHora(resposta.editadaEm, locale) })
+                        : undefined,
                     }}
                   />
                 ))}

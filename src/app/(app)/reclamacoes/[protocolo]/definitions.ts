@@ -19,6 +19,17 @@ export function criarRespostaOficialSchema(t: T) {
   });
 }
 
+// A correção de uma resposta já enviada mexe só no texto e no prazo: o status que ela
+// anunciou (resolvida, em andamento) não se desfaz por aqui.
+export function criarCorrecaoRespostaSchema(t: T) {
+  return z.object({
+    texto: z.string().trim().min(10, { error: t("erroRespostaCurta") }),
+    prazoEstimado: z
+      .union([z.literal(""), z.iso.date({ error: t("erroDataInvalida") })])
+      .transform((valor) => (valor === "" ? undefined : valor)),
+  });
+}
+
 export function criarAvaliacaoSchema() {
   return z.object({
     nota: z.coerce.number().int().min(1).max(5),

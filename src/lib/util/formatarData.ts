@@ -8,3 +8,8 @@ export function formatarData(data: Date, locale: string = "pt-BR"): string {
 export function formatarDataHora(data: Date, locale: string = "pt-BR"): string {
   return new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(data);
 }
+
+// Só a hora ("14:32" / "2:32 PM"), no mesmo fuso das outras datas da tela.
+export function formatarHora(data: Date, locale: string = "pt-BR"): string {
+  return new Intl.DateTimeFormat(locale, { timeStyle: "short" }).format(data);
+}

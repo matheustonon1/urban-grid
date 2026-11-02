@@ -15,6 +15,8 @@ export function RespostaOficial({
   data,
   novoStatus,
   prazoEstimado,
+  editadaEm,
+  acao,
   locale,
   rotulos,
 }: {
@@ -23,8 +25,12 @@ export function RespostaOficial({
   data: Date;
   novoStatus: StatusReclamacao | null;
   prazoEstimado: Date | null;
+  // A correção nunca é silenciosa: quando a resposta foi editada, a data aparece junto dela.
+  editadaEm?: Date | null;
+  // Só para quem pode agir sobre a resposta (hoje, corrigi-la): um formulário abaixo do texto.
+  acao?: ReactNode;
   locale: string;
-  rotulos: { respostaOficial: string; novoStatus: string; prazo: string };
+  rotulos: { respostaOficial: string; novoStatus: string; prazo: string; editada?: string };
 }) {
   const fatos: { rotulo: string; valor: ReactNode }[] = [];
   if (novoStatus) fatos.push({ rotulo: rotulos.novoStatus, valor: <StatusBadge status={novoStatus} /> });
@@ -52,12 +58,14 @@ export function RespostaOficial({
             <span className="font-bold text-ink">{orgao}</span>
           </span>
         </p>
-        <time
-          dateTime={data.toISOString()}
-          className="text-xs tabular-nums text-ink-muted"
-        >
-          {formatarDataHora(data, locale)}
-        </time>
+        <p className="flex flex-col items-end gap-0.5 text-xs tabular-nums text-ink-muted">
+          <time dateTime={data.toISOString()}>{formatarDataHora(data, locale)}</time>
+          {editadaEm && rotulos.editada && (
+            <time dateTime={editadaEm.toISOString()} className="font-semibold">
+              {rotulos.editada}
+            </time>
+          )}
+        </p>
       </header>
 
       <p className="text-base leading-relaxed whitespace-pre-line text-ink">{texto}</p>
@@ -72,6 +80,8 @@ export function RespostaOficial({
           ))}
         </dl>
       )}
+
+      {acao}
     </article>
   );
 }

@@ -533,6 +533,11 @@ responde ao que uma conta do próprio órgão abriu (a reputação pública não
 por quem a recebe). Quando o autor contesta uma resolução ("não foi resolvido"), a
 reclamação **reabre**, o órgão é avisado e, resolvida de novo, o autor avalia outra vez.
 
+A resposta oficial é registro público, então **não se reescreve**: o órgão pode corrigir o erro de
+quem acabou de enviar (texto e prazo) por 15 minutos, só na resposta mais recente da reclamação e
+antes de o autor avaliar a resolução, e a correção aparece marcada como "Editada em…". Passada a
+janela, o caminho é enviar uma nova resposta, e a anterior continua visível na linha do tempo.
+
 Por padrão, um órgão vê e pode responder qualquer reclamação da sua
 cidade. Um **ADMIN** pode restringir isso em `/orgaos-categorias`,
 atribuindo categorias específicas a cada órgão (ex.: só "Buracos e

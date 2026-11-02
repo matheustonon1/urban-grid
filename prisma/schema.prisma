@@ -626,6 +626,11 @@ model RespostaOficial {
   novoStatus    StatusReclamacao?
   prazoEstimado DateTime?
 
+  // Corrigir uma resposta (typo, prazo errado) só é possível numa janela curta depois de
+  // enviada (lib/orgaos/correcaoResposta). A resposta oficial é registro público, então a
+  // correção nunca é silenciosa: esta data aparece junto da resposta como "Editada em".
+  editadaEm DateTime?
+
   createdAt DateTime @default(now())
 
   @@index([reclamacaoId])

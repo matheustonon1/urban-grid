@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { falha, informacao, sucesso, type ResultadoAcao } from "@/lib/acoes/resultado";
 import { criarNotificacao } from "@/lib/notificacoes";
 import { responsaveisAtivosDosOrgaos } from "@/lib/notificacoes/orgaos";
+import { JANELA_CORRECAO_MS, motivoSemCorrecao } from "@/lib/orgaos/correcaoResposta";
 import { orgaoAtendeCategoria } from "@/lib/orgaos/orgaoCategoria";
 import { precisaVerificarEmail } from "@/lib/conta/verificacao";
 import { podeAvaliar } from "@/lib/reclamacoes/avaliacao";
@@ -17,6 +18,7 @@ import { exigirSessao } from "@/lib/seguranca/sessao";
 
 import {
   criarAvaliacaoSchema,
+  criarCorrecaoRespostaSchema,
   criarDenunciaSchema,
   criarRecursoSchema,
   criarRespostaOficialSchema,
@@ -371,6 +373,91 @@ export async function responderReclamacao(
   return sucesso(
     t(validado.data.novoStatus === "RESOLVIDA" ? "respostaEnviadaResolvida" : "respostaEnviada")
   );
+}
+
+// Corrige o texto e o prazo de uma resposta oficial recém-enviada (regras e porquê em
+// lib/orgaos/correcaoResposta). A tela só mostra o botão quando a regra permite; aqui o
+// servidor confere de novo, e a escrita repete a janela e "ainda é a mais recente" dentro da
+// transação: uma resposta nova ou o fim da janela entre a leitura e a gravação não passam.
+export async function corrigirRespostaOficial(
+  respostaId: string,
+  protocolo: string,
+  formData: FormData
+): Promise<ResultadoAcao> {
+  const session = await exigirOrgao();
+  const t = await getTranslations("ReclamacaoDetalhe");
+
+  const validado = criarCorrecaoRespostaSchema(t).safeParse({
+    texto: formData.get("texto"),
+    prazoEstimado: formData.get("prazoEstimado"),
+  });
+  if (!validado.success) {
+    return falha(validado.error.issues[0]?.message ?? t("erroRespostaCurta"));
+  }
+
+  // Escopo pelo órgão da sessão no próprio WHERE da leitura: a resposta de outro órgão
+  // responde igual a uma que não existe, sem confirmar que o id é válido.
+  const resposta = await prisma.respostaOficial.findFirst({
+    where: { id: respostaId, orgaoId: session.user.orgaoId! },
+    include: { reclamacao: { select: { id: true, avaliacao: { select: { createdAt: true } } } } },
+  });
+  if (!resposta) {
+    return falha(t("erroCorrecaoIndisponivel"));
+  }
+
+  const orgao = await prisma.orgao.findUnique({
+    where: { id: resposta.orgaoId },
+    select: { ativo: true },
+  });
+  if (!orgao?.ativo) {
+    return falha(t("erroOrgaoInativo"));
+  }
+
+  const agora = new Date();
+  const posteriores = await prisma.respostaOficial.count({
+    where: { reclamacaoId: resposta.reclamacaoId, createdAt: { gt: resposta.createdAt } },
+  });
+  const avaliacao = resposta.reclamacao.avaliacao;
+  const motivo = motivoSemCorrecao({
+    resposta,
+    orgaoIdDoUsuario: session.user.orgaoId,
+    agora,
+    haRespostaPosterior: posteriores > 0,
+    avaliadaDepois: !!avaliacao && avaliacao.createdAt > resposta.createdAt,
+  });
+  if (motivo) {
+    return informacao(t(`erroCorrecao.${motivo}`));
+  }
+
+  const { texto, prazoEstimado } = validado.data;
+  const gravou = await prisma.$transaction(async (tx) => {
+    const maisRecente = await tx.respostaOficial.count({
+      where: { reclamacaoId: resposta.reclamacaoId, createdAt: { gt: resposta.createdAt } },
+    });
+    if (maisRecente > 0) return false;
+
+    const atualizada = await tx.respostaOficial.updateMany({
+      where: {
+        id: respostaId,
+        orgaoId: session.user.orgaoId!,
+        createdAt: { gte: new Date(agora.getTime() - JANELA_CORRECAO_MS) },
+      },
+      data: {
+        texto,
+        prazoEstimado: prazoEstimado ? new Date(prazoEstimado) : null,
+        editadaEm: agora,
+      },
+    });
+    return atualizada.count === 1;
+  });
+  if (!gravou) {
+    return informacao(t("erroCorrecaoMudou"));
+  }
+
+  revalidatePath(`/reclamacoes/${protocolo}`);
+  revalidatePath("/orgao");
+
+  return sucesso(t("correcaoSalva"));
 }
 
 export async function avaliarReclamacao(
