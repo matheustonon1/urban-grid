@@ -1,7 +1,7 @@
 name: CI
 
 # Dois jobs, em paralelo:
-# - verificar: tipos, lint, testes unitários e auditoria de dependências (rápido, sem banco);
+# - verificar: tipos, lint, testes unitários e gate de auditoria de dependências (rápido, sem banco);
 # - e2e: a suíte Playwright inteira contra um build de produção e um MySQL descartável. Os
 #   testes de ponta a ponta já pegaram regressão que tipos e unitários não pegam (um filtro
 #   que esvaziava a fila do órgão, um redirecionamento do login); rodar só na máquina de quem
@@ -55,12 +55,11 @@ jobs:
       - name: Testes unitários
         run: npm test
 
-      # Informativo por enquanto: há vulnerabilidades conhecidas em dependências de produção
-      # (Next, sharp...) que dependem de uma atualização planejada. Quando ela sair, tirar o
-      # `continue-on-error` para o passo passar a barrar o PR.
+      # Barra o PR se houver advisory alto ou crítico em dependência de PRODUÇÃO que não esteja na
+      # lista de exceções (com motivo e data de revisão) de scripts/auditar-dependencias.mjs. Não
+      # usa `npm audit --audit-level`, que barraria também o que já foi avaliado e aceito.
       - name: Auditoria de dependências (produção)
-        run: npm audit --omit=dev --audit-level=high
-        continue-on-error: true
+        run: node scripts/auditar-dependencias.mjs
 
   e2e:
     name: Testes de ponta a ponta (Playwright)

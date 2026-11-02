@@ -213,8 +213,9 @@ npm run db:seed:demo # reclamações de demonstração para ver o site como órg
 ```
 
 O GitHub Actions (`.github/workflows/ci.yml`) roda a cada push na `main` e a cada PR dois jobs em
-paralelo: **verificar** (tipos `tsc`, lint, testes unitários e `npm audit` das dependências de
-produção, este ainda informativo) e **e2e**, a suíte Playwright inteira contra um build de produção
+paralelo: **verificar** (tipos `tsc`, lint, testes unitários e o gate de auditoria
+`scripts/auditar-dependencias.mjs`, que barra o PR se houver vulnerabilidade alta ou crítica em
+dependência de produção sem exceção registrada) e **e2e**, a suíte Playwright inteira contra um build de produção
 e um MySQL 8.4 descartável: aplica todas as migrations num banco vazio, roda o seed (com a
 geografia lida de `prisma/dados/ibge-localidades.json`, porque a API do IBGE dá timeout nos
 runners do GitHub), faz o build e executa os testes. Sem chaves
