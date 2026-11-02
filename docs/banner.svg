@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="360" viewBox="0 0 1280 360" role="img" aria-label="Urban Grid: reclamações urbanas com resposta pública e moderação assistida por IA">
+  <defs>
+    <pattern id="planta" width="64" height="64" patternUnits="userSpaceOnUse">
+      <path d="M64 0H0V64" fill="none" stroke="#1B2536" stroke-width="2"/>
+    </pattern>
+    <pattern id="obra" width="48" height="48" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <rect width="24" height="48" fill="#FFC20E"/>
+      <rect x="24" width="24" height="48" fill="#0E1520"/>
+    </pattern>
+  </defs>
+
+  <!-- Fundo: tinta com a quadrícula da planta -->
+  <rect width="1280" height="360" fill="#0E1520"/>
+  <rect width="1280" height="336" fill="url(#planta)"/>
+
+  <!-- Quarteirões à direita, com o ponto da reclamação -->
+  <g fill="#121823" stroke="#2A3850" stroke-width="2">
+    <rect x="880" y="56" width="100" height="60" rx="6"/>
+    <rect x="1000" y="56" width="128" height="60" rx="6"/>
+    <rect x="1148" y="56" width="84" height="60" rx="6"/>
+    <rect x="880" y="136" width="100" height="76" rx="6"/>
+    <rect x="1148" y="136" width="84" height="76" rx="6"/>
+    <rect x="880" y="232" width="100" height="60" rx="6"/>
+    <rect x="1000" y="232" width="128" height="60" rx="6"/>
+    <rect x="1148" y="232" width="84" height="60" rx="6"/>
+  </g>
+  <rect x="1000" y="136" width="128" height="76" rx="6" fill="#FFC20E" fill-opacity="0.22" stroke="#FFC20E" stroke-width="2"/>
+  <path d="M850 292 L1260 96" fill="none" stroke="#7EA6FF" stroke-width="3" stroke-dasharray="10 8" stroke-linecap="round"/>
+  <circle cx="1064" cy="174" r="13" fill="#FFC20E" stroke="#0E1520" stroke-width="4"/>
+
+  <!-- Marca: quatro quarteirões separados por ruas -->
+  <rect x="96" y="96" width="64" height="64" rx="8" fill="#EDF1F7"/>
+  <rect x="172" y="96" width="64" height="64" rx="8" fill="#7EA6FF"/>
+  <rect x="96" y="172" width="64" height="64" rx="8" fill="#7EA6FF"/>
+  <rect x="172" y="172" width="64" height="64" rx="8" fill="#FFC20E"/>
+
+  <!-- Nome e frase -->
+  <text x="282" y="172" font-family="Archivo, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="84" font-weight="800" letter-spacing="-2" fill="#EDF1F7">Urban <tspan fill="#7EA6FF">Grid</tspan></text>
+  <text x="284" y="222" font-family="'IBM Plex Sans', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="28" fill="#A9B5C6">Reclamações urbanas com resposta pública</text>
+  <text x="284" y="258" font-family="'IBM Plex Sans', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="28" fill="#A9B5C6">e moderação assistida por IA</text>
+
+  <!-- Faixa de obra -->
+  <rect y="336" width="1280" height="24" fill="url(#obra)"/>
+</svg>

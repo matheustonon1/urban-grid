@@ -62,6 +62,19 @@ Dois limitadores, escolhidos pelo que a ação faz:
 Ao adicionar um limite, escolha escopo e chave que o atacante não consiga trocar de graça (id de
 usuário ou IP, não um campo do formulário).
 
+## Dependências
+
+O CI roda `node scripts/auditar-dependencias.mjs` (`npm audit --omit=dev`) e **barra o PR** se
+houver advisory alto ou crítico de produção fora da lista `EXCECOES` do script. Exceção é um ID de
+advisory (não um nome de pacote), com motivo e quando revisar: um advisory novo no mesmo pacote
+continua derrubando o CI. Hoje há uma, o `deepmerge-ts` do CLI do Prisma, que só sai ao migrar para o
+Prisma 7. Atualizar o Next é a prioridade quando sair patch de segurança (o app usa Server Actions,
+`next/image` e `next/og`, e o Next já teve RCE e DoS nessas áreas): `next` e `eslint-config-next` ficam
+pinados na mesma versão exata, e a cadeia `@vercel/blob` → `@vercel/cli-config` leva um `override` do
+`zod` até sair uma versão estável corrigida. Atualize numa cópia limpa e rode a suíte E2E inteira
+(`testes`), nunca por cima de um `node_modules` com o `npm run dev` rodando (no Windows ele trava os
+binários nativos do Next e do Prisma).
+
 ## Cabeçalhos e CSP (`next.config.ts`)
 
 - CSP com `script-src 'self' 'unsafe-inline'` **porque o tema é aplicado por um

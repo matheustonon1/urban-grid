@@ -23,17 +23,21 @@ const comportamentoDoProvedor: {
 } = { erro: null, lancar: null };
 
 vi.mock("resend", () => ({
-  Resend: vi.fn().mockImplementation(() => ({
-    emails: {
-      send: vi.fn(async (parametros: (typeof enviosCapturados)[number]) => {
-        enviosCapturados.push(parametros);
-        if (comportamentoDoProvedor.lancar) throw comportamentoDoProvedor.lancar;
-        return comportamentoDoProvedor.erro
-          ? { data: null, error: comportamentoDoProvedor.erro }
-          : { data: { id: "teste" }, error: null };
-      }),
-    },
-  })),
+  // function (e não seta): o código faz `new Resend(...)`, e no Vitest 4+ um mock chamado com `new`
+  // precisa ser function ou classe.
+  Resend: vi.fn().mockImplementation(function () {
+    return {
+      emails: {
+        send: vi.fn(async (parametros: (typeof enviosCapturados)[number]) => {
+          enviosCapturados.push(parametros);
+          if (comportamentoDoProvedor.lancar) throw comportamentoDoProvedor.lancar;
+          return comportamentoDoProvedor.erro
+            ? { data: null, error: comportamentoDoProvedor.erro }
+            : { data: { id: "teste" }, error: null };
+        }),
+      },
+    };
+  }),
 }));
 
 import {
