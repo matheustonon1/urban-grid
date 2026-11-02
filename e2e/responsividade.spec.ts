@@ -41,6 +41,38 @@ test("ranking de órgãos com nome longo não estoura a largura em 375px", async
   await semEstouroHorizontal(page);
 });
 
+// A tabela do ranking em /transparencia não cabe em 375px: ela rola dentro do próprio contêiner
+// (a página não), e a coluna do órgão fica fixa para que as notas não percam o dono ao rolar.
+test("ranking de /transparencia rola de lado e mantém o órgão à vista em 375px", async ({ page }) => {
+  const cidade = await prisma.cidade.findFirstOrThrow();
+  await criarOrgaoNoRanking(cidade.id);
+
+  await page.goto("/transparencia");
+  await expect(page.getByRole("heading", { name: "Ranking de órgãos" })).toBeVisible();
+  await semEstouroHorizontal(page);
+
+  const rolagem = page.locator("main .rolagem-x").first();
+  const colunaOrgao = rolagem.locator("tbody th[scope=row]").first();
+  const antes = await colunaOrgao.boundingBox();
+  expect(antes).not.toBeNull();
+
+  const escondido = await rolagem.evaluate((el) => el.scrollWidth - el.clientWidth);
+  expect(escondido).toBeGreaterThan(0);
+
+  await rolagem.evaluate((el) => {
+    el.scrollLeft = el.scrollWidth;
+  });
+  const depois = await colunaOrgao.boundingBox();
+  expect(Math.abs(depois!.x - antes!.x)).toBeLessThanOrEqual(1);
+
+  // Rolado até o fim, a última coluna (Nota) cabe dentro do contêiner.
+  const caixa = await rolagem.boundingBox();
+  const nota = await rolagem.getByRole("columnheader", { name: "Nota" }).boundingBox();
+  expect(nota!.x + nota!.width).toBeLessThanOrEqual(caixa!.x + caixa!.width + 1);
+
+  await semEstouroHorizontal(page);
+});
+
 test("cabeçalho não estoura a largura da tela em 375px, logado", async ({ page }) => {
   const { email, senha } = await criarCidadaoTeste();
 
