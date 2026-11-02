@@ -47,11 +47,20 @@ claro; o porquê vem junto para você saber quando a regra se aplica a um caso n
 
 ## Limites de abuso
 
-`lib/seguranca/rateLimitMemoria.ts` conta por processo. Serve para uma instância;
-se o deploy escalar para várias funções serverless, o limite deixa de ser global e
-precisa de armazenamento compartilhado (Redis/Upstash). Ao adicionar um limite,
-escolha escopo e chave que o atacante não consiga trocar de graça (id de usuário
-ou IP, não um campo do formulário).
+Dois limitadores, escolhidos pelo que a ação faz:
+
+- **`excedeuLimiteCompartilhado`** (`lib/seguranca/limiteCompartilhado`, assíncrono, tabela
+  `LimiteAbuso`) para o que **manda e-mail ou mexe em credencial**: redefinir senha, reenviar
+  verificação, trocar e-mail, novo link de convite. O contador mora no banco, então vale entre
+  instâncias serverless (o em memória, por processo, deixaria quem martela o botão cair em
+  funções diferentes sem nunca chegar ao limite). A chave vira HMAC (`AUTH_SECRET`): a tabela
+  nunca guarda IP nem e-mail em claro. Se o banco falhar, cai para o contador em memória.
+- **`excedeuLimitePorIp`** (`lib/seguranca/rateLimitMemoria`, síncrono, por processo) só para
+  leitura chamada a cada tecla (`/api/cep`, `/api/cidades`), onde gravar no banco seria custo sem
+  ganho de segurança.
+
+Ao adicionar um limite, escolha escopo e chave que o atacante não consiga trocar de graça (id de
+usuário ou IP, não um campo do formulário).
 
 ## Cabeçalhos e CSP (`next.config.ts`)
 

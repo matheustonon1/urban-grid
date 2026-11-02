@@ -348,6 +348,19 @@ model AssinaturaCidade {
   @@index([ultimoEnvioEm])
 }
 
+// Contador de limite de abuso compartilhado entre instâncias (lib/seguranca/limiteCompartilhado).
+// O limite em memória vale por processo, e em serverless cada função tem o seu: quem manda
+// e-mail ou mexe em credencial precisa de um contador que todas enxerguem. O id é um HMAC de
+// "escopo:chave" - nunca o IP ou o e-mail em claro, que seriam dado pessoal numa tabela que
+// ninguém pensa em exportar nem apagar. Linhas vencidas são varridas aos poucos.
+model LimiteAbuso {
+  id       String   @id @db.VarChar(64)
+  contagem Int
+  expiraEm DateTime
+
+  @@index([expiraEm])
+}
+
 model Orgao {
   id       String  @id @default(cuid())
   nome     String

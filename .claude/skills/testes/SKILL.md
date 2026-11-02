@@ -92,10 +92,12 @@ conteúdo tem `truncate`.
 
 ## Armadilhas que já custaram horas
 
-1. **Limite por IP em memória.** O servidor guarda contadores (ex.: 5 pedidos de
-   redefinição de senha por hora). Rodar a suíte várias vezes seguidas faz
-   `redefinir-senha` e `seguranca-sessao` falharem **sem ser regressão**. Reinicie o
-   servidor (ou use um `next start` novo) para zerar.
+1. **Limite por IP.** Os limites que mandam e-mail (ex.: 5 pedidos de redefinição de senha por
+   hora) ficam na tabela `LimiteAbuso` e **não zeram ao reiniciar o servidor**; por isso
+   `limparDadosTeste()` apaga os contadores no fim de cada spec. Se rodar um spec isolado
+   várias vezes seguidas e `redefinir-senha`/`seguranca-sessao` falharem **sem ser regressão**,
+   limpe a tabela (`DELETE FROM LimiteAbuso`). Os limites em memória (`/api/cep`, `/api/cidades`)
+   ainda zeram reiniciando o servidor.
 2. **Turnstile no `.env`** bloqueia, corretamente, o navegador automatizado: os
    testes de cadastro em `auth.spec.ts` falham. Comente as duas variáveis
    (`NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`) e reinicie/rebuild —

@@ -10,7 +10,7 @@ import { falha, informacao, sucesso, type ResultadoAcao } from "@/lib/acoes/resu
 import { criarTokenVerificacao, enviarEmailVerificacao } from "@/lib/email";
 import { idiomaOuPadrao } from "@/i18n/config";
 import { exigirSessao } from "@/lib/seguranca/sessao";
-import { excedeuLimitePorIp } from "@/lib/seguranca/rateLimitMemoria";
+import { excedeuLimiteCompartilhado } from "@/lib/seguranca/limiteCompartilhado";
 import { ESCOPO_REENVIO_VERIFICACAO } from "@/lib/conta/verificacao";
 
 export async function sair() {
@@ -28,7 +28,7 @@ export async function reenviarVerificacao(): Promise<ResultadoAcao> {
     return informacao(t("emailJaVerificado"));
   }
   // Mesmo limite do botão de "Minha conta" (ver conta/actions.ts).
-  if (excedeuLimitePorIp(ESCOPO_REENVIO_VERIFICACAO, usuario.id, 3, 10 * 60 * 1000)) {
+  if (await excedeuLimiteCompartilhado(ESCOPO_REENVIO_VERIFICACAO, usuario.id, 3, 10 * 60 * 1000)) {
     return falha(t("erroMuitosEnvios"));
   }
 

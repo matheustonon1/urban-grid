@@ -16,7 +16,7 @@ import {
 } from "@/lib/email";
 import { idiomaOuPadrao } from "@/i18n/config";
 import { exigirSessao } from "@/lib/seguranca/sessao";
-import { excedeuLimitePorIp } from "@/lib/seguranca/rateLimitMemoria";
+import { excedeuLimiteCompartilhado } from "@/lib/seguranca/limiteCompartilhado";
 import { verificarSenhaAtual } from "@/lib/conta/senhaAtual";
 import { ESCOPO_REENVIO_VERIFICACAO } from "@/lib/conta/verificacao";
 
@@ -105,7 +105,7 @@ export async function reenviarVerificacaoEmail(): Promise<NonNullable<MensagemFo
   // Cada clique manda um e-mail de verdade (cota do provedor) - sem limite,
   // o botão podia ser martelado. Escopo compartilhado com o reenvio do
   // painel (painel/actions.ts), pra um não burlar o outro.
-  if (excedeuLimitePorIp(ESCOPO_REENVIO_VERIFICACAO, session.user.id, 3, 10 * 60 * 1000)) {
+  if (await excedeuLimiteCompartilhado(ESCOPO_REENVIO_VERIFICACAO, session.user.id, 3, 10 * 60 * 1000)) {
     return { mensagem: t("erroMuitosEnvios") };
   }
 
@@ -177,7 +177,7 @@ export async function solicitarTrocaEmail(
   // (mesmo com a senha certa) podia usar isto pra encher a caixa de um
   // terceiro e queimar a cota do provedor. Fica depois das checagens acima
   // pra só contar pedidos que de fato enviariam algo.
-  if (excedeuLimitePorIp("troca-email", usuario.id, 5, 60 * 60 * 1000)) {
+  if (await excedeuLimiteCompartilhado("troca-email", usuario.id, 5, 60 * 60 * 1000)) {
     return { mensagem: t("erroMuitosEnvios") };
   }
 

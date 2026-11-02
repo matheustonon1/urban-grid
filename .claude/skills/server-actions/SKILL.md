@@ -30,10 +30,11 @@ Ordem fixa, nessa sequência:
    `session.user.id` (ou `orgaoId` do papel ORGAO) no próprio `where`. Receber um
    `id` do cliente e buscar só por ele é falha.
 4. **Limite de abuso** quando a ação envia e-mail, gasta cota (Gemini, Blob) ou
-   testa credencial: `excedeuLimitePorIp(escopo, chave, limite, janelaMs)` de
-   `lib/seguranca/rateLimitMemoria`. Fica *depois* das checagens baratas, para só
-   contar pedidos que de fato fariam algo. É por processo, em memória (ver a
-   limitação no topo do arquivo — com várias instâncias precisa de Redis).
+   testa credencial: `await excedeuLimiteCompartilhado(escopo, chave, limite, janelaMs)` de
+   `lib/seguranca/limiteCompartilhado` (contador no banco, vale entre instâncias). Fica
+   *depois* das checagens baratas, para só contar pedidos que de fato fariam algo. O
+   `excedeuLimitePorIp` (em memória, por processo) é só para leitura chamada a cada tecla
+   (`/api/cep`, `/api/cidades`); ver `seguranca-app`.
 5. **Escrita protegida contra corrida** (próxima seção).
 6. **`revalidatePath`** das páginas que mostram o dado.
 7. **Retorno de estado** (`{ mensagem }` / `{ erros }`), nunca exceção para erro

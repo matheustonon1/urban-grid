@@ -282,6 +282,12 @@ export async function apagarLogsDeModeracao(where: Prisma.ReclamacaoWhereInput) 
 // mascarar uma falha real do teste em si).
 export async function limparDadosTeste() {
   try {
+    // Os limites de abuso que mandam e-mail ficam no banco (limiteCompartilhado) e, ao contrário
+    // do contador em memória, NÃO zeram ao reiniciar o servidor: sem isto, rodar a suíte de novo
+    // dentro de uma hora esbarraria no limite por IP (redefinir senha, por exemplo) e pareceria
+    // regressão. São contadores efêmeros e com chave em HMAC: apagar todos é inofensivo.
+    await prisma.limiteAbuso.deleteMany({});
+
     const usuarios = await prisma.user.findMany({
       where: { email: { contains: PREFIXO_TESTE } },
       select: { id: true },

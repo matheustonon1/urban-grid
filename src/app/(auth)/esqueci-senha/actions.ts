@@ -5,7 +5,7 @@ import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import { criarTokenRedefinicaoSenha, enviarEmailRedefinicaoSenha } from "@/lib/email";
-import { excedeuLimitePorIp } from "@/lib/seguranca/rateLimitMemoria";
+import { excedeuLimiteCompartilhado } from "@/lib/seguranca/limiteCompartilhado";
 import { idiomaOuPadrao } from "@/i18n/config";
 
 import { criarEsqueciSenhaSchema, type EsqueciSenhaFormState } from "./definitions";
@@ -33,8 +33,8 @@ export async function solicitarRedefinicaoSenha(
   // que alguém descubra quais e-mails têm conta só testando aqui, mesmo
   // princípio já usado no login (nunca revela se a conta existe).
   if (
-    excedeuLimitePorIp("redefinir-senha-ip", ip, LIMITE_POR_IP_HORA, 60 * 60 * 1000) ||
-    excedeuLimitePorIp("redefinir-senha-email", email, LIMITE_POR_EMAIL_HORA, 60 * 60 * 1000)
+    (await excedeuLimiteCompartilhado("redefinir-senha-ip", ip, LIMITE_POR_IP_HORA, 60 * 60 * 1000)) ||
+    (await excedeuLimiteCompartilhado("redefinir-senha-email", email, LIMITE_POR_EMAIL_HORA, 60 * 60 * 1000))
   ) {
     return { mensagem: mensagemGenerica };
   }

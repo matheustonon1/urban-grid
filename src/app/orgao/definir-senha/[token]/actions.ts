@@ -8,7 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { signIn } from "@/auth";
 import { atencao, falha, sucesso, type ResultadoAcao } from "@/lib/acoes/resultado";
 import { criarTokenVerificacao, enviarEmailAcessoOrgao } from "@/lib/email";
-import { excedeuLimitePorIp } from "@/lib/seguranca/rateLimitMemoria";
+import { excedeuLimiteCompartilhado } from "@/lib/seguranca/limiteCompartilhado";
 import { idiomaOuPadrao } from "@/i18n/config";
 
 import { criarDefinirSenhaSchema, type DefinirSenhaFormState } from "./definitions";
@@ -35,7 +35,7 @@ export async function reenviarConviteExpirado(token: string): Promise<ResultadoA
   }
 
   // Depois das checagens baratas: só conta pedido que de fato mandaria e-mail.
-  if (excedeuLimitePorIp("convite-orgao-reenvio", token, LIMITE_NOVOS_LINKS_POR_HORA, 60 * 60 * 1000)) {
+  if (await excedeuLimiteCompartilhado("convite-orgao-reenvio", token, LIMITE_NOVOS_LINKS_POR_HORA, 60 * 60 * 1000)) {
     return falha(t("novoLinkLimite"));
   }
 
