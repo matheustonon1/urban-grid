@@ -7,14 +7,18 @@ vi.stubEnv("RESEND_API_KEY", "re_teste_fake");
 const enviosCapturados: Array<{ to: string; subject: string }> = [];
 
 vi.mock("resend", () => ({
-  Resend: vi.fn().mockImplementation(() => ({
-    emails: {
-      send: vi.fn(async (parametros: { to: string; subject: string }) => {
-        enviosCapturados.push(parametros);
-        return { data: { id: "teste" }, error: null };
-      }),
-    },
-  })),
+  // function (e não seta): o código faz `new Resend(...)`, e no Vitest 4+ um mock chamado com `new`
+  // precisa ser function ou classe.
+  Resend: vi.fn().mockImplementation(function () {
+    return {
+      emails: {
+        send: vi.fn(async (parametros: { to: string; subject: string }) => {
+          enviosCapturados.push(parametros);
+          return { data: { id: "teste" }, error: null };
+        }),
+      },
+    };
+  }),
 }));
 
 vi.mock("@/lib/prisma", () => ({

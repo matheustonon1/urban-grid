@@ -25,6 +25,9 @@ algo por pronto**, mais olhar a tela de verdade (skill `verificacao-visual`).
 - `vitest.config.ts` fixa `AUTH_SECRET` de teste (o `hashCpf` precisa) e exclui
   `e2e/**`. Não dependa do `.env`: `vi.stubEnv` o que importa (veja
   `lib/email/index.test.ts`, que fixa `RESEND_API_KEY`).
+- **Mock que o código chama com `new`** (`new Resend(...)`) precisa ser `function` ou classe:
+  `vi.fn().mockImplementation(function () { return {...}; })`. Com arrow function o Vitest 4+
+  lança "is not a constructor" (no 3 passava, por isso o erro só apareceu ao atualizar).
 - Mock de módulo externo com `vi.mock("resend", …)`; prefira injetar a dependência
   a mockar o Prisma (os módulos puros — `moderacao/estatisticas`,
   `util/paginacao` — existem justamente para não precisar de banco).

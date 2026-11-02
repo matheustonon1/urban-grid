@@ -69,7 +69,7 @@ As versões do Prisma estão fixadas propositalmente. A CLI passou por reestrutu
 
 ## Pré-requisitos
 
-- **Node.js** 20 ou superior — [nodejs.org](https://nodejs.org)
+- **Node.js** 22.12 ou superior (o CI usa a 24; o Vitest 5 exige 22.12+) — [nodejs.org](https://nodejs.org)
 - **Docker Desktop** — [docker.com](https://www.docker.com/products/docker-desktop)
 - **Git** — [git-scm.com](https://git-scm.com)
 
