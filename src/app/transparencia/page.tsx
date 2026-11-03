@@ -69,11 +69,16 @@ export default async function TransparenciaPage() {
         {ranking.length === 0 ? (
           <EstadoVazio icone={Building2} titulo={t("semDados")} />
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-line bg-surface">
-            <table className="w-full text-left text-sm">
+          /* No celular a tabela não cabe: cada linha fica numa linha só, o nome do órgão
+             fica fixo à esquerda e a sombra da borda avisa que há mais colunas. */
+          <div className="rolagem-x rounded-lg border border-line">
+            <table className="w-full text-left text-sm whitespace-nowrap">
               <thead className="border-b border-line bg-sunken/60">
                 <tr>
-                  <th scope="col" className="kicker px-4 py-3">
+                  <th
+                    scope="col"
+                    className="kicker px-4 py-3 max-sm:sticky max-sm:left-0 max-sm:bg-[color-mix(in_srgb,var(--sunken)_60%,var(--surface))] max-sm:shadow-[1px_0_0_var(--line)]"
+                  >
                     {t("colOrgao")}
                   </th>
                   <th scope="col" className="kicker px-4 py-3">
@@ -98,12 +103,19 @@ export default async function TransparenciaPage() {
                       key={orgao.id}
                       className="border-b border-line transition-colors last:border-0 hover:bg-sunken/50"
                     >
-                      <th scope="row" className="px-4 py-3.5 font-normal">
+                      <th
+                        scope="row"
+                        className="px-4 py-3.5 font-normal whitespace-normal max-sm:sticky max-sm:left-0 max-sm:bg-surface max-sm:shadow-[1px_0_0_var(--line)]"
+                      >
                         <div className="flex items-center gap-3">
-                          <span aria-hidden className="w-6 shrink-0 font-mono text-base text-ink-muted tabular-nums">
+                          <span
+                            aria-hidden
+                            className="w-6 shrink-0 font-mono text-base text-ink-muted tabular-nums max-sm:hidden"
+                          >
                             {String(indice + 1).padStart(2, "0")}
                           </span>
-                          <div className="min-w-0">
+                          {/* Nome longo quebra em linhas: sem o limite, a coluna fixa tomaria a tela toda. */}
+                          <div className="min-w-0 break-words max-sm:w-28">
                             <Link
                               href={`/orgaos/${orgao.id}`}
                               className="font-bold text-ink hover:text-brand hover:underline"

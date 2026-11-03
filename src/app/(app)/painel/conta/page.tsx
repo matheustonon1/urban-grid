@@ -92,7 +92,7 @@ export default async function ContaPage() {
         {/* Navegação por seções: coluna fixa no desktop, faixa rolável no celular.
             São âncoras simples (sem JS): cada seção abaixo tem o id correspondente. */}
         <nav aria-label={t("navegacaoSecoes")} className="min-w-0 lg:sticky lg:top-24 lg:col-span-3">
-          <ul className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:-mx-8 sm:px-8 lg:mx-0 lg:flex-col lg:gap-0.5 lg:overflow-visible lg:px-0 lg:pb-0">
+          <ul className="rolagem-x -mx-4 flex gap-1.5 px-4 pb-1 [--rolagem-fundo:var(--paper)] sm:-mx-8 sm:px-8 lg:mx-0 lg:flex-col lg:gap-0.5 lg:overflow-visible lg:px-0 lg:pb-0">
             {SECOES.map(({ id, chave, perigo }) => (
               <li key={id} className="shrink-0">
                 <a

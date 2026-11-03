@@ -297,6 +297,37 @@
   }
 }
 
+/* Pista de rolagem horizontal: uma sombra na borda que ainda tem conteúdo
+   escondido, e nenhuma onde a rolagem já chegou ao fim. Sem JavaScript: as duas
+   "tampas" (fundo `local`, rolam com o conteúdo) cobrem as sombras (fundo
+   `scroll`, fixas na borda do contêiner) enquanto aquela borda está à vista.
+   A tampa e o fundo usam --rolagem-fundo, que tem de ser a cor REAL de trás do
+   contêiner (padrão: surface; em cima do papel da página, passe
+   `[--rolagem-fundo:var(--paper)]`). Com outra cor, aparece uma faixa colorida
+   nas bordas mesmo sem rolagem. Cada tampa é sólida por 40% dos 2rem, que é
+   mais que os 0,75rem da sombra: por isso ela some por inteiro no início. */
+@utility rolagem-x {
+  overflow-x: auto;
+  background-color: var(--rolagem-fundo, var(--surface));
+  background-image:
+    linear-gradient(to right, var(--rolagem-fundo, var(--surface)) 40%, transparent),
+    linear-gradient(to left, var(--rolagem-fundo, var(--surface)) 40%, transparent),
+    linear-gradient(to right, var(--line-strong), transparent),
+    linear-gradient(to left, var(--line-strong), transparent);
+  background-position:
+    left center,
+    right center,
+    left center,
+    right center;
+  background-repeat: no-repeat;
+  background-size:
+    2rem 100%,
+    2rem 100%,
+    0.75rem 100%,
+    0.75rem 100%;
+  background-attachment: local, local, scroll, scroll;
+}
+
 /* --------------------------------------------------------------------------
    Animação
    -------------------------------------------------------------------------- */

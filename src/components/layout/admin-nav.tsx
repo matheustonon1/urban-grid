@@ -90,7 +90,7 @@ export function AdminNav({
       // sobra), então "centralizar" não corta nada e a rolagem continua
       // alcançando as duas pontas. "relative" faz o nav ser o offsetParent
       // dos links, pro cálculo de auto-scroll abaixo ser preciso.
-      className="scrollbar-none relative mb-2 overflow-x-auto border-b border-line"
+      className="rolagem-x scrollbar-none relative mb-2 border-b border-line [--rolagem-fundo:var(--paper)]"
     >
       <div className={`flex w-max min-w-full flex-nowrap justify-start ${compacto ? "" : "gap-1"}`}>
         {itens.map((item) => {

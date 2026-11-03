@@ -21,7 +21,14 @@ export function VersoesDoPrompt({ linhas }: { linhas: LinhaVersao[] }) {
 
   return (
     <Secao id="versoes" titulo={t("versoesTitulo")} descricao={t("versoesDescricao")}>
-      <div className="-mx-1 overflow-x-auto px-1">
+      {/* Rolável no celular: a região recebe foco (teclado) e nome, e a sombra da
+          borda avisa que há mais colunas. */}
+      <div
+        role="region"
+        aria-label={t("versoesTitulo")}
+        tabIndex={0}
+        className="rolagem-x -mx-1 rounded px-1 [--rolagem-fundo:var(--paper)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+      >
         <table className="w-full min-w-136 text-left text-sm tabular-nums">
           <thead className="text-xs text-ink-muted">
             <tr className="border-b border-line">
@@ -32,7 +39,7 @@ export function VersoesDoPrompt({ linhas }: { linhas: LinhaVersao[] }) {
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-line">
+          <tbody className="divide-y divide-line whitespace-nowrap">
             {linhas.map((linha) => (
               <tr key={`${linha.tipo}-${linha.versao}`}>
                 <td className="px-2 py-2.5 text-ink-2">
