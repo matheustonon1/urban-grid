@@ -41,6 +41,11 @@ async function escolherTema(page: Page, tema: (typeof TEMAS)[number]) {
 }
 
 async function violacoesGraves(page: Page) {
+  // O Next transmite o metadata depois do conteúdo: a cada navegação ou refresh o <title>
+  // some por alguns décimos de segundo. Sem esperar, o axe pode cair nessa janela e acusar
+  // document-title à toa. Se o título nunca voltar, o teste ainda falha aqui.
+  await page.waitForFunction(() => document.title !== "", undefined, { timeout: 10_000 });
+
   const resultado = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
     .analyze();
