@@ -23,7 +23,12 @@
   <a href="#começando">Começando</a> ·
   <a href="#testes">Testes</a> ·
   <a href="#segurança-e-privacidade">Segurança</a> ·
-  <a href="#problemas-comuns">Problemas comuns</a>
+  <a href="#problemas-comuns">Problemas comuns</a> ·
+  <a href="#autoria">Autoria</a>
+</p>
+
+<p>
+  <sub>Trabalho de Conclusão de Curso · Matheus Tonon dos Reis e Pablo Aragão Amaral Almeida</sub>
 </p>
 
 </div>
@@ -772,9 +777,18 @@ Extensões sugeridas para o VSCode:
 
 ---
 
+## Autoria
+
+Trabalho de Conclusão de Curso desenvolvido em dupla por:
+
+- **Matheus Tonon dos Reis** ([@matheustonon1](https://github.com/matheustonon1))
+- **Pablo Aragão Amaral Almeida**
+
+---
+
 ## Licença
 
-MIT.
+MIT © 2026 Matheus Tonon dos Reis e Pablo Aragão Amaral Almeida. Texto completo em [LICENSE](LICENSE).
 
 <div align="center">
   <br>
