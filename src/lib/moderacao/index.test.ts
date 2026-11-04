@@ -30,6 +30,9 @@ vi.mock("./gemini", () => ({
 vi.mock("@/lib/notificacoes", () => ({
   criarNotificacao: vi.fn(),
 }));
+vi.mock("@/lib/notificacoes/orgaos", () => ({
+  avisarOrgaosDaPublicacao: vi.fn(),
+}));
 
 const reclamacaoFake = {
   id: "reclamacao-1",
@@ -52,6 +55,7 @@ vi.mock("@/lib/prisma", () => ({
 }));
 
 const { prisma } = await import("@/lib/prisma");
+const { avisarOrgaosDaPublicacao } = await import("@/lib/notificacoes/orgaos");
 const { moderarReclamacao } = await import("./index");
 
 function respostaGemini(json: object) {
@@ -75,6 +79,7 @@ beforeEach(() => {
   vi.mocked(prisma.reclamacao.update).mockReset();
   vi.mocked(prisma.logModeracao.create).mockReset();
   vi.mocked(prisma.midia.updateMany).mockReset();
+  vi.mocked(avisarOrgaosDaPublicacao).mockReset();
 });
 
 describe("moderarReclamacao - avaliação de imagem obrigatória quando há imagem anexada", () => {
@@ -134,6 +139,22 @@ describe("moderarReclamacao - avaliação de imagem obrigatória quando há imag
     expect(resultado.decisao).toBe("APROVAR");
     const [chamada] = generateContentMock.mock.calls[0];
     expect(chamada.config.responseSchema.required).not.toContain("scoreImagemImpropria");
+  });
+
+  it("publicar avisa o órgão que atende a reclamação; mandar para revisão não avisa", async () => {
+    generateContentMock.mockResolvedValue(respostaGemini(scoresBaixosSemImagem));
+    await moderarReclamacao("reclamacao-1", [], {});
+    expect(avisarOrgaosDaPublicacao).toHaveBeenCalledWith("reclamacao-1");
+
+    // Com imagem e sem os campos de imagem a decisão é revisão humana: nada publicado.
+    vi.mocked(avisarOrgaosDaPublicacao).mockClear();
+    generateContentMock.mockResolvedValue(respostaGemini(scoresBaixosSemImagem));
+    await moderarReclamacao(
+      "reclamacao-1",
+      [{ buffer: Buffer.from("imagem-fake"), mimeType: "image/jpeg" }],
+      {}
+    );
+    expect(avisarOrgaosDaPublicacao).not.toHaveBeenCalled();
   });
 
   it("com imagem e resposta completa (todos os campos), aprova normalmente", async () => {

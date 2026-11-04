@@ -108,7 +108,14 @@ export function FormularioPerfil({
   );
 }
 
-export function FormularioPreferenciasNotificacao({ notificarPorEmail }: { notificarPorEmail: boolean }) {
+export function FormularioPreferenciasNotificacao({
+  notificarPorEmail,
+  resumoOrgao = false,
+}: {
+  notificarPorEmail: boolean;
+  // Conta de órgão: a mesma preferência desliga também o resumo semanal da fila sem resposta.
+  resumoOrgao?: boolean;
+}) {
   const t = useTranslations("Conta");
   const [state, action, pending] = useActionState(atualizarPreferenciasNotificacao, undefined);
 
@@ -123,7 +130,12 @@ export function FormularioPreferenciasNotificacao({ notificarPorEmail }: { notif
           defaultChecked={notificarPorEmail}
           className="mt-0.5"
         />
-        <span>{t("notificarPorEmailDesc")}</span>
+        <span className="flex flex-col gap-1">
+          <span>{t("notificarPorEmailDesc")}</span>
+          {resumoOrgao && (
+            <span className="text-ink-muted">{t("notificarPorEmailResumoOrgao")}</span>
+          )}
+        </span>
       </label>
 
       <MensagemForm estado={state} />

@@ -7,7 +7,13 @@ import { idiomaOuPadrao } from "@/i18n/config";
 import { nomeCategoriaTraduzido } from "@/lib/reclamacoes/categoriaI18n";
 import { STATUS_PUBLICOS } from "@/lib/reclamacoes/statusPublicos";
 
-export const INTERVALO_RESUMO_MS = 7 * 24 * 60 * 60 * 1000;
+// O cron roda toda segunda às 9h (ver vercel.json), mas o horário real varia: no plano Hobby da
+// Vercel a execução cai em qualquer minuto da hora. `ultimoEnvioEm` guarda o INÍCIO da execução
+// anterior, então exigir 7 dias cravados pularia a semana inteira sempre que a seguinte
+// começasse alguns segundos antes. Com 6 dias de folga o resumo continua semanal (o cron só
+// dispara de 7 em 7) e a variação do horário deixa de importar. Vale também para o resumo do
+// órgão (resumoOrgao.ts).
+export const INTERVALO_MINIMO_RESUMO_MS = 6 * 24 * 60 * 60 * 1000;
 
 // Processa no máximo isso por chamada - o cron roda uma vez por semana
 // (ver vercel.json), então nunca deveria ter uma fila grande, mas evita
@@ -74,7 +80,7 @@ async function processarAssinatura(
 }
 
 // Dispara o resumo semanal de cada assinatura elegível (nunca enviado, ou
-// enviado há 7 dias ou mais) e sempre marca ultimoEnvioEm = agora ao
+// enviado há 6 dias ou mais - ver INTERVALO_MINIMO_RESUMO_MS) e sempre marca ultimoEnvioEm = agora ao
 // processar - mesmo quando não há reclamação nova pra contar - pra manter
 // o ritmo semanal e não escanear a mesma janela vazia em toda execução do
 // cron. Retorna quantas assinaturas foram processadas e em quantas saiu
@@ -84,7 +90,7 @@ export async function enviarResumosSemanaisPendentes(): Promise<{
   comConteudo: number;
 }> {
   const agora = new Date();
-  const limiteUltimoEnvio = new Date(agora.getTime() - INTERVALO_RESUMO_MS);
+  const limiteUltimoEnvio = new Date(agora.getTime() - INTERVALO_MINIMO_RESUMO_MS);
 
   const assinaturas = await prisma.assinaturaCidade.findMany({
     where: {

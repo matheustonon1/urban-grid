@@ -6,6 +6,7 @@ import {
   montarEmailConfirmarTrocaEmail,
   montarEmailNotificacao,
   montarEmailRedefinicaoSenha,
+  montarEmailResumoOrgao,
   montarEmailResumoSemanal,
   montarEmailSenhaAlterada,
   montarEmailSolicitacaoCidadeRejeitada,
@@ -188,5 +189,41 @@ export async function enviarEmailResumoSemanal({
   await enviarEmail({
     to: email,
     ...(await montarEmailResumoSemanal({ nomeCidade, nomeCategoria, total, url, locale })),
+  });
+}
+
+export async function enviarEmailResumoOrgao({
+  email,
+  nomeOrgao,
+  nomeCidade,
+  semResposta,
+  novas,
+  vencidas,
+  prazoDias,
+  url,
+  locale = IDIOMA_PADRAO,
+}: {
+  email: string;
+  nomeOrgao: string;
+  nomeCidade: string;
+  semResposta: number;
+  novas: number;
+  vencidas: number;
+  prazoDias: number;
+  url: string;
+  locale?: Idioma;
+}) {
+  await enviarEmail({
+    to: email,
+    ...(await montarEmailResumoOrgao({
+      nomeOrgao,
+      nomeCidade,
+      semResposta,
+      novas,
+      vencidas,
+      prazoDias,
+      url,
+      locale,
+    })),
   });
 }

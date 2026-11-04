@@ -44,6 +44,7 @@ import {
   enviarEmailAcessoOrgao,
   enviarEmailCidadeAprovada,
   esc,
+  enviarEmailResumoOrgao,
   enviarEmailResumoSemanal,
   enviarEmailVerificacao,
 } from "./index";
@@ -192,5 +193,58 @@ describe("enviarEmailResumoSemanal (assunto vs. corpo)", () => {
     expect(enviosCapturados[0].subject).not.toContain("&#39;");
     // No corpo (HTML de verdade), o mesmo nome precisa vir escapado.
     expect(enviosCapturados[0].html).toContain("Santa Isabel D&#39;Oeste");
+  });
+});
+
+describe("enviarEmailResumoOrgao", () => {
+  const resumo = {
+    email: "secretaria@exemplo.gov.br",
+    nomeOrgao: "Obras & Serviços <D'Oeste>",
+    nomeCidade: "Santa Isabel D'Oeste",
+    semResposta: 12,
+    novas: 4,
+    vencidas: 3,
+    prazoDias: 15,
+    url: "http://localhost:3000/orgao",
+  };
+
+  it("assunto em texto puro; nome do órgão escapado no corpo e no rodapé (sem injetar HTML)", async () => {
+    await enviarEmailResumoOrgao(resumo);
+
+    expect(enviosCapturados).toHaveLength(1);
+    expect(enviosCapturados[0].subject).toContain("12 reclamações aguardam resposta de Obras & Serviços <D'Oeste>");
+    const html = enviosCapturados[0].html;
+    expect(html).toContain("Obras &amp; Serviços &lt;D&#39;Oeste&gt;");
+    expect(html).not.toContain("<D'Oeste>");
+  });
+
+  it("traz os três números e o link para a fila", async () => {
+    await enviarEmailResumoOrgao(resumo);
+
+    const html = enviosCapturados[0].html;
+    expect(html).toContain("12");
+    expect(html).toContain("4 delas chegaram nos últimos 7 dias");
+    expect(html).toContain("3 esperam há mais de 15 dias");
+    expect(html).toContain("http://localhost:3000/orgao");
+  });
+
+  it("singular e sem a frase do prazo quando nenhuma passou dele", async () => {
+    await enviarEmailResumoOrgao({ ...resumo, semResposta: 1, novas: 1, vencidas: 0 });
+
+    expect(enviosCapturados[0].subject).toContain("1 reclamação aguarda resposta");
+    expect(enviosCapturados[0].html).toContain("1 delas chegou nos últimos 7 dias");
+    expect(enviosCapturados[0].html).not.toContain("mais de 15 dias");
+  });
+
+  it("sai no idioma de quem recebe", async () => {
+    await enviarEmailResumoOrgao({ ...resumo, locale: "en" });
+
+    expect(enviosCapturados[0].subject).toContain("complaints are waiting for a response");
+  });
+
+  it("leva List-Unsubscribe apontando para Minha conta", async () => {
+    await enviarEmailResumoOrgao(resumo);
+
+    expect(enviosCapturados[0].headers?.["List-Unsubscribe"]).toMatch(/\/painel\/conta>$/);
   });
 });

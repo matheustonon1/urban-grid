@@ -87,6 +87,15 @@ existe" e "o e-mail não saiu" são resposta, não silêncio.
   Texto escrito por uma pessoa (resposta oficial, comentário) vai em `mensagemBruta`,
   sem tradução. Chave nova: entrada em `ChaveNotificacao`, em `EXEMPLOS` de
   `textos.test.ts` e nas duas línguas.
+- **Publicar avisa o órgão.** Toda transição para `PUBLICADA` (hoje três: IA em
+  `moderarReclamacao`, `finalizarPublicacaoAprovada` e `aprovarReclamacao`) chama
+  `avisarOrgaosDaPublicacao(id)` (`lib/notificacoes/orgaos`) logo depois de avisar o autor:
+  sininho (`NOVA_RECLAMACAO_NA_FILA`, sem e-mail por reclamação) para as contas dos órgãos ativos
+  que atendem a cidade e a categoria. Ela nunca lança. Se criar um quarto caminho que publica,
+  chame-a também. O e-mail do órgão é o resumo semanal da fila (`lib/notificacoes/resumoOrgao.ts`,
+  mesmo cron de `resumoSemanal.ts`, respeita `User.notificarPorEmail`).
+- **"Do órgão" tem uma definição só**: `lib/orgaos/escopoOrgao.ts` (cidade, categorias atendidas,
+  autor de fora). Fila do painel, aviso e resumo usam ela; não monte o filtro de novo.
 - **Quem abre não responde, nem avalia.** Conta de órgão não registra reclamação (página e
   `criarReclamacao` recusam), não avalia (`avaliarReclamacao`) e não responde ao que uma conta
   do próprio órgão abriu (`responderReclamacao`; o painel também a tira da fila). Senão o

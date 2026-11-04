@@ -177,3 +177,18 @@ describe("enviarResumosSemanaisPendentes", () => {
     expect(enviosCapturados).toHaveLength(0);
   });
 });
+
+describe("elegibilidade por intervalo (tolerância à variação do horário do cron)", () => {
+  it("quem recebeu há 6 dias ou mais já é elegível: 7 dias cravados pulariam a semana", async () => {
+    vi.mocked(prisma.assinaturaCidade.findMany).mockResolvedValue([]);
+
+    const antes = Date.now();
+    await enviarResumosSemanaisPendentes();
+
+    const consulta = vi.mocked(prisma.assinaturaCidade.findMany).mock.calls[0][0]!;
+    const corte = (consulta.where!.OR as Array<{ ultimoEnvioEm?: { lte: Date } }>)[1]!.ultimoEnvioEm!
+      .lte;
+    const seisDias = 6 * 24 * 60 * 60 * 1000;
+    expect(Math.abs(antes - corte.getTime() - seisDias)).toBeLessThan(5_000);
+  });
+});

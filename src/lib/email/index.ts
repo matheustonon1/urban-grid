@@ -26,6 +26,7 @@ export {
   enviarEmailConfirmarTrocaEmail,
   enviarEmailNotificacao,
   enviarEmailRedefinicaoSenha,
+  enviarEmailResumoOrgao,
   enviarEmailResumoSemanal,
   enviarEmailSenhaAlterada,
   enviarEmailSolicitacaoCidadeRejeitada,

@@ -22,6 +22,7 @@ const EXEMPLOS: Record<ChaveNotificacao, TextoNotificacao> = {
   },
   pedidoAvaliacao: { chave: "pedidoAvaliacao", params: { orgao: "Obras", titulo: "Buraco" } },
   reclamacaoReaberta: { chave: "reclamacaoReaberta", params: { titulo: "Buraco" } },
+  novaReclamacaoNaFila: { chave: "novaReclamacaoNaFila", params: { titulo: "Buraco" } },
   reclamacaoReabertaComComentario: {
     chave: "reclamacaoReabertaComComentario",
     params: { titulo: "Buraco", comentario: "Continua igual." },
