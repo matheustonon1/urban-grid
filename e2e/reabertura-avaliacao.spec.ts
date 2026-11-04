@@ -8,6 +8,7 @@ import {
   criarOrgaoTeste,
   criarReclamacaoTeste,
   limparDadosTeste,
+  completarDoisFatoresSeSolicitado,
 } from "./helpers";
 
 // "Resolvida" é o órgão que diz; o autor confirma ou contesta. Contestar REABRE a reclamação
@@ -29,6 +30,7 @@ async function entrarEmContexto(browser: Browser, email: string, senha: string):
   await page.fill('input[name="identificador"]', email);
   await page.fill('input[name="senha"]', senha);
   await page.click('button[type="submit"]');
+  await completarDoisFatoresSeSolicitado(page, email);
   await page.waitForURL(/\/(painel|orgao)$/);
   return page;
 }
@@ -193,6 +195,7 @@ test("duas contestações ao mesmo tempo reabrem uma vez só e gravam uma avalia
   await paginaA.fill('input[name="identificador"]', email);
   await paginaA.fill('input[name="senha"]', senha);
   await paginaA.click('button[type="submit"]');
+  await completarDoisFatoresSeSolicitado(paginaA, email);
   await paginaA.waitForURL(/\/painel$/);
   const paginaB = await contexto.newPage();
 

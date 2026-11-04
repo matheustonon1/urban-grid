@@ -33,6 +33,13 @@ claro; o porquê vem junto para você saber quando a regra se aplica a um caso n
   inexistente gasta o mesmo tempo de um real (`gastarTempoDeComparacao`).
 - **TOTP**: segredo cifrado (AES-256-GCM), **sem replay** (o `timeStep` do último
   código aceito é reservado atomicamente) e códigos de backup de uso único.
+- **2FA obrigatório para conta de órgão** (`lib/seguranca/doisFatoresObrigatorios.ts`): quem
+  responde em nome de uma prefeitura é o alvo que mais vale invadir. Sem o 2FA a conta não vê
+  `/orgao` nem responde (`exigirOrgao()` na página e nas actions, `proxy.ts`, e
+  `destinoPosLogin` que a leva direto a "Minha conta"), e **não consegue desativá-lo**
+  (`desativarTotp` recusa no servidor; a tela só esconde o botão). `session.user.doisFatores`
+  é relido do banco a cada leitura (callback `jwt`), então ativar vale na requisição seguinte,
+  sem novo login. Papel novo que precise disso entra em `PAPEIS_COM_DOIS_FATORES_OBRIGATORIOS`.
 - Troca de credencial (senha, e-mail, 2FA) pede a senha atual com limite de
   tentativas e **avisa o endereço antigo**.
 - Token de verificação de e-mail e de redefinição de senha **não são

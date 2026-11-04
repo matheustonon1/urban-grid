@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { prisma } from "@/lib/prisma";
 
-import { criarAdminTeste, criarOrgaoTeste, limparDadosTeste } from "./helpers";
+import { criarAdminTeste, criarOrgaoTeste, limparDadosTeste, completarDoisFatoresSeSolicitado } from "./helpers";
 
 // O admin decide um pedido de acesso como órgão com o que o solicitante digitou. O cartão agora
 // mostra o que ele não via: o tipo do domínio do e-mail, um órgão que já existe com aquele nome
@@ -17,6 +17,7 @@ async function login(page: import("@playwright/test").Page, email: string, senha
   await page.fill('input[name="identificador"]', email);
   await page.fill('input[name="senha"]', senha);
   await page.click('button[type="submit"]');
+  await completarDoisFatoresSeSolicitado(page, email);
   await page.waitForURL(/\/painel$/);
 }
 

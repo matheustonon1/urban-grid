@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { prisma } from "@/lib/prisma";
 
-import { criarCidadaoTeste, criarOrgaoTeste, criarReclamacaoTeste, limparDadosTeste } from "./helpers";
+import { criarCidadaoTeste, criarOrgaoTeste, criarReclamacaoTeste, limparDadosTeste, completarDoisFatoresSeSolicitado } from "./helpers";
 
 test.afterAll(async () => {
   await limparDadosTeste();
@@ -35,6 +35,7 @@ test("órgão restrito a uma categoria só vê e responde reclamações dela", a
   await page.fill('input[name="identificador"]', emailOrgao);
   await page.fill('input[name="senha"]', senhaOrgao);
   await page.click('button[type="submit"]');
+  await completarDoisFatoresSeSolicitado(page, emailOrgao);
   await page.waitForURL(/\/(painel|orgao)$/);
 
   await page.goto("/orgao");

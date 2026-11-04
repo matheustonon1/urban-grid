@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { prisma } from "@/lib/prisma";
 
-import { criarCidadaoTeste, criarOrgaoTeste, limparDadosTeste } from "./helpers";
+import { criarCidadaoTeste, criarOrgaoTeste, limparDadosTeste, completarDoisFatoresSeSolicitado } from "./helpers";
 
 // O login leva a pessoa para onde ela pediu (callbackUrl), mas só para um caminho INTERNO: a
 // query string é de quem escreveu o link, e uma URL absoluta seria open redirect.
@@ -16,6 +16,7 @@ async function entrar(page: Page, email: string, senha: string, url = "/login") 
   await page.fill('input[name="identificador"]', email);
   await page.fill('input[name="senha"]', senha);
   await page.click('button[type="submit"]');
+  await completarDoisFatoresSeSolicitado(page, email);
 }
 
 test("o órgão cai direto no painel ao entrar, e o /painel de cidadão manda para ele", async ({
@@ -55,6 +56,7 @@ test("uma página protegida leva ao login e, depois dele, de volta a ela", async
   await page.fill('input[name="identificador"]', email);
   await page.fill('input[name="senha"]', senha);
   await page.click('button[type="submit"]');
+  await completarDoisFatoresSeSolicitado(page, email);
   await page.waitForURL(/\/orgao$/);
 });
 

@@ -11,6 +11,7 @@ import {
   criarOrgaoTeste,
   criarReclamacaoTeste,
   limparDadosTeste,
+  completarDoisFatoresSeSolicitado,
 } from "./helpers";
 import { prisma } from "@/lib/prisma";
 
@@ -65,6 +66,7 @@ async function entrar(page: Page, email: string, senha: string) {
   await page.fill('input[name="identificador"]', email);
   await page.fill('input[name="senha"]', senha);
   await page.click('button[type="submit"]');
+  await completarDoisFatoresSeSolicitado(page, email);
   await page.waitForURL((url) => !url.pathname.startsWith("/login"));
 }
 

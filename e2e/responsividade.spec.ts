@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { prisma } from "@/lib/prisma";
 
-import { criarCidadaoTeste, criarOrgaoNoRanking, limparDadosTeste } from "./helpers";
+import { criarCidadaoTeste, criarOrgaoNoRanking, limparDadosTeste, completarDoisFatoresSeSolicitado } from "./helpers";
 
 // 375px = largura de telas pequenas comuns (iPhone SE/12/13 mini) - o
 // cabeçalho já transbordou 40px nessa largura por causa da quantidade de
@@ -80,6 +80,7 @@ test("cabeçalho não estoura a largura da tela em 375px, logado", async ({ page
   await page.fill('input[name="identificador"]', email);
   await page.fill('input[name="senha"]', senha);
   await page.click('button[type="submit"]');
+  await completarDoisFatoresSeSolicitado(page, email);
   await page.waitForURL(/\/painel$/);
 
   await semEstouroHorizontal(page);

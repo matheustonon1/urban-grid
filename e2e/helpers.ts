@@ -137,9 +137,34 @@ export async function criarAdminTeste(overrides?: { email?: string; senha?: stri
   return { usuario, email, senha };
 }
 
+// Códigos de backup (um uso cada) das contas de órgão criadas com 2FA, por e-mail: o login de
+// teste de um órgão digita um deles quando o formulário pede o segundo fator.
+const codigosDeLoginPorEmail = new Map<string, string[]>();
+
+// Segunda etapa do login de uma conta de órgão: o 2FA é obrigatório para o papel, então a conta
+// de teste já nasce com ele e o formulário pede o código depois da senha. Chamar logo após o
+// clique em "Entrar". Não faz nada para e-mail que não é de órgão de teste (cidadão, admin).
+export async function completarDoisFatoresSeSolicitado(page: Page, email: string) {
+  const codigos = codigosDeLoginPorEmail.get(email);
+  if (!codigos || codigos.length === 0) return;
+
+  const campo = page.locator('input[name="codigoTotp"]');
+  await campo.waitFor({ state: "visible" });
+  await campo.fill(codigos.shift()!);
+  await page.click('button[type="submit"]');
+}
+
 export async function criarOrgaoTeste(
   cidadeId: string,
-  overrides?: { email?: string; senha?: string; categoriaIds?: string[] }
+  overrides?: {
+    email?: string;
+    senha?: string;
+    categoriaIds?: string[];
+    // O 2FA é obrigatório para conta de órgão: por padrão a conta de teste já o tem (e o login
+    // pede o código, ver completarDoisFatoresSeSolicitado). `false` cria a conta como ela chega
+    // da aprovação, sem o segundo fator, para testar o bloqueio e a ativação.
+    doisFatores?: boolean;
+  }
 ) {
   const email = overrides?.email ?? emailTeste("orgao");
   const senha = overrides?.senha ?? "SenhaForte123";
@@ -167,6 +192,11 @@ export async function criarOrgaoTeste(
     },
   });
 
+  if (overrides?.doisFatores !== false) {
+    const { codigosBackup } = await ativarDoisFatoresTeste(usuario.id, 8);
+    codigosDeLoginPorEmail.set(email, [...codigosBackup]);
+  }
+
   return { orgao, usuario, email, senha };
 }
 
@@ -176,7 +206,7 @@ export async function criarOrgaoTeste(
 // estoura a largura, ou um número com pouco contraste, passa despercebido.
 export async function criarOrgaoNoRanking(cidadeId: string) {
   const { usuario: autor } = await criarCidadaoTeste();
-  const { orgao, usuario: responsavel } = await criarOrgaoTeste(cidadeId);
+  const { orgao, usuario: responsavel } = await criarOrgaoTeste(cidadeId, { doisFatores: false });
   await prisma.orgao.update({
     where: { id: orgao.id },
     data: {
