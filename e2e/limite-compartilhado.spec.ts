@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
-import { PrismaClient } from "@prisma/client";
+import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 
+import { PrismaClient } from "@/generated/prisma/client";
+import { configDoAdapter } from "@/lib/bancoDeDados";
 import { prisma } from "@/lib/prisma";
 import { excedeuLimiteCompartilhado } from "@/lib/seguranca/limiteCompartilhado";
 
@@ -32,7 +34,9 @@ test("o estado vem do banco: o que outra conexão gravou vale aqui", async () =>
   expect(await excedeuLimiteCompartilhado(e, "chave", 3, 60_000)).toBe(false);
 
   // Uma segunda "instância" (outra conexão, outro cliente) leva o contador ao limite.
-  const outra = new PrismaClient();
+  const outra = new PrismaClient({
+    adapter: new PrismaMariaDb(configDoAdapter(process.env.DATABASE_URL!)),
+  });
   try {
     const linhas = await outra.limiteAbuso.findMany();
     expect(linhas.length).toBeGreaterThan(0);

@@ -1,7 +1,7 @@
 "use server";
 
 import { headers } from "next/headers";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@/generated/prisma/client";
 import { AuthError } from "next-auth";
 import bcrypt from "bcryptjs";
 import { getTranslations } from "next-intl/server";

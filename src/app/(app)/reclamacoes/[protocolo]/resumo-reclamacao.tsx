@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import type { StatusReclamacao } from "@prisma/client";
+import type { StatusReclamacao } from "@/generated/prisma/client";
 import { CalendarDays, MapPin, Users, type LucideIcon } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 

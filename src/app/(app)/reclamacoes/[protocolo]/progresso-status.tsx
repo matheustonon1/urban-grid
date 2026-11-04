@@ -1,4 +1,4 @@
-import type { StatusReclamacao } from "@prisma/client";
+import type { StatusReclamacao } from "@/generated/prisma/client";
 import { Check } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 

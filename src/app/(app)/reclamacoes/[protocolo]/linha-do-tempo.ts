@@ -1,4 +1,4 @@
-import type { Avaliacao, Orgao, Reclamacao, RespostaOficial } from "@prisma/client";
+import type { Avaliacao, Orgao, Reclamacao, RespostaOficial } from "@/generated/prisma/client";
 import type { getTranslations } from "next-intl/server";
 
 export interface EventoTimeline {

@@ -12,15 +12,10 @@
 // Uma exceção que deixou de aparecer é avisada, para a lista não acumular entulho.
 import { execSync } from "node:child_process";
 
-const EXCECOES = {
-  "GHSA-ggr8-5vv4-36mx": {
-    pacote: "deepmerge-ts (via @prisma/config, parte do CLI do Prisma)",
-    motivo:
-      "estouro de pilha ao mesclar objetos recursivos. É o CLI do Prisma lendo a configuração do próprio " +
-      "projeto (generate/migrate), não o servidor, e nenhum dado de usuário chega ali.",
-    revisar: "ao migrar para o Prisma 7 (a correção exige essa versão major)",
-  },
-};
+// Nenhuma exceção aberta. A última (GHSA-ggr8-5vv4-36mx, deepmerge-ts via @prisma/config) saiu com
+// a migração para o Prisma 7, cuja versão do CLI já não depende da biblioteca afetada. Para
+// aceitar um advisory de novo: chave = ID do advisory, com pacote, motivo e quando revisar.
+const EXCECOES = {};
 
 const SEVERIDADES_QUE_BARRAM = new Set(["high", "critical"]);
 

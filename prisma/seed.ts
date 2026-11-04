@@ -8,13 +8,14 @@
 // GitHub Actions, então o CI não pode depender dela.
 // ---------------------------------------------------------------------------
 
+import "dotenv/config";
 import fs from "fs";
 import path from "path";
 
-import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient();
+// O mesmo client (e adapter) do app: a DATABASE_URL vem do ambiente ou do .env (prisma.config.ts).
+import { prisma } from "@/lib/prisma";
 
 const IBGE_BASE = "https://servicodados.ibge.gov.br/api/v1/localidades";
 const LOTE = 500;

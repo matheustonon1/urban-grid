@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { StatusReclamacao } from "@prisma/client";
+import { StatusReclamacao } from "@/generated/prisma/client";
 import { getLocale, getTranslations } from "next-intl/server";
 import { CircleCheck, MessageSquareText, SearchX } from "lucide-react";
 

@@ -1,6 +1,6 @@
 ---
 name: prisma-mysql
-description: Como mexer no banco do Urban Grid (Prisma 6 + MySQL 8.4 local em Docker, TiDB Cloud Serverless em produção) — alterar o schema e gerar migration, escrever migration com backfill, modelar unicidade, consultar sem N+1, lidar com relações sem FK e tocar o seed. Use ao editar `prisma/schema.prisma`, criar/rever uma migration, escrever uma query nova ou investigar lentidão e erro de banco (P1001, P2002, P2003, P3009…) — mesmo que o pedido diga só "adicionar um campo" ou "salvar isso no banco".
+description: Como mexer no banco do Urban Grid (Prisma 7 + MySQL 8.4 local em Docker, TiDB Cloud Serverless em produção) — alterar o schema e gerar migration, escrever migration com backfill, modelar unicidade, consultar sem N+1, lidar com relações sem FK e tocar o seed. Use ao editar `prisma/schema.prisma`, criar/rever uma migration, escrever uma query nova ou investigar lentidão e erro de banco (P1001, P2002, P2003, P3009…) — mesmo que o pedido diga só "adicionar um campo" ou "salvar isso no banco".
 ---
 
 # Banco de dados (Prisma + MySQL/TiDB)
@@ -10,11 +10,19 @@ mexer) e `prisma/migrations/` (versionadas — são o que sincroniza os
 desenvolvedores). O cliente é `@/lib/prisma` (singleton em `globalThis` no dev,
 para o HMR não abrir uma conexão por recarga).
 
+**Prisma 7:** o client é gerado em `src/generated/prisma` (fora do git; o `postinstall` e o CI
+rodam `prisma generate`) e importado de `@/generated/prisma/client` (tipos, enums, `Prisma.*`).
+Fala com o banco por um driver adapter (`@prisma/adapter-mariadb`), configurado a partir da
+`DATABASE_URL` em `src/lib/bancoDeDados.ts`; o CLI lê a mesma URL em `prisma.config.ts` (que também
+tem o comando do seed). Script solto com `tsx` que usa o banco carrega `import "dotenv/config"`
+(o Prisma deixou de ler o `.env` sozinho). Não crie `new PrismaClient()` à mão: use `@/lib/prisma`.
+
 ## Fluxo para mudar o schema
 
 ```bash
 # 1. edite prisma/schema.prisma
-npx prisma migrate dev --name descricao_curta_em_snake_case   # local: gera SQL, aplica, regenera o client
+npx prisma migrate dev --name descricao_curta_em_snake_case   # local: gera SQL e aplica
+npx prisma generate                                           # o migrate dev NÃO regenera o client no Prisma 7
 git add prisma/                                               # a migration entra no mesmo commit do código
 ```
 
@@ -102,7 +110,7 @@ nele sozinho se a API falhar. Para atualizá-lo (município criado ou extinto):
 | `P2002` | unicidade violada (e-mail, CPF, `categoriaChave`…) |
 | `P2003` | FK impedindo apagar/inserir (ver "FK sem cascade") |
 | `P3009`/`P3006` | migration falhou ou banco divergente → resolva, não force `--accept-data-loss` |
-| client desatualizado | `npx prisma generate` |
+| client desatualizado (tipo ou campo que não existe) | `npx prisma generate`: o client mora em `src/generated/prisma`, fora do git, e o `migrate dev` não o regenera mais |
 
 Recomeçar do zero (apaga tudo): `docker compose down -v && docker compose up -d
 && npx prisma migrate dev && npx prisma db seed`. Só no banco local.

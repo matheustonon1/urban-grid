@@ -80,3 +80,6 @@ next-env.d.ts
 # starter baixado do TiDB Cloud pra pegar a string de conexão - não é
 # parte do projeto, tem seu próprio repositório git
 /tidb-nodejs-prisma-quickstart/
+
+# prisma 7: client gerado (npx prisma generate)
+/src/generated/

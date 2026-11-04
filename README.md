@@ -9,7 +9,7 @@
   <img alt="Next.js 16" src="https://img.shields.io/badge/Next.js-16-0A52C4?style=flat-square&labelColor=0E1520&logo=nextdotjs&logoColor=white">
   <img alt="React 19" src="https://img.shields.io/badge/React-19-0A52C4?style=flat-square&labelColor=0E1520&logo=react&logoColor=white">
   <img alt="TypeScript 5" src="https://img.shields.io/badge/TypeScript-5-0A52C4?style=flat-square&labelColor=0E1520&logo=typescript&logoColor=white">
-  <img alt="Prisma 6" src="https://img.shields.io/badge/Prisma-6-0A52C4?style=flat-square&labelColor=0E1520&logo=prisma&logoColor=white">
+  <img alt="Prisma 7" src="https://img.shields.io/badge/Prisma-7-0A52C4?style=flat-square&labelColor=0E1520&logo=prisma&logoColor=white">
   <img alt="MySQL 8.4" src="https://img.shields.io/badge/MySQL-8.4-0A52C4?style=flat-square&labelColor=0E1520&logo=mysql&logoColor=white">
   <img alt="Tailwind CSS 4" src="https://img.shields.io/badge/Tailwind_CSS-4-0A52C4?style=flat-square&labelColor=0E1520&logo=tailwindcss&logoColor=white">
   <img alt="Licença MIT" src="https://img.shields.io/badge/Licen%C3%A7a-MIT-FFC20E?style=flat-square&labelColor=0E1520">
@@ -163,7 +163,7 @@ Todas as decisões são registradas com o retorno do modelo, a versão do prompt
 | Estilização | Tailwind CSS v4 com design system próprio (tokens semânticos claro/escuro em `globals.css`, sem biblioteca de componentes); fontes Archivo, IBM Plex Sans e IBM Plex Mono |
 | Back-end | Next.js Route Handlers e Server Actions |
 | Banco de dados | MySQL 8.4 (TiDB Cloud em produção) |
-| ORM | Prisma 6 |
+| ORM | Prisma 7 (client gerado em `src/generated/prisma`, driver adapter do MariaDB/MySQL) |
 | Autenticação | Auth.js (NextAuth), login por e-mail ou CPF |
 | Validação | Zod |
 | Internacionalização | next-intl (pt-BR e en) |
@@ -284,7 +284,7 @@ npx auth secret
 
 | Variável | Quando | Para quê |
 |---|---|---|
-| `DATABASE_URL` | obrigatória | Conexão com o MySQL. O exemplo acima aponta para o container do `docker compose`. |
+| `DATABASE_URL` | obrigatória | Conexão com o MySQL. O exemplo acima aponta para o container do `docker compose`. É lida por `prisma.config.ts` (CLI) e por `src/lib/bancoDeDados.ts` (aplicação). Para um banco com TLS (TiDB Cloud), acrescente `?sslaccept=strict`; `connection_limit` (padrão 5) e `connect_timeout` (segundos, padrão 10) também valem. |
 | `AUTH_SECRET` | obrigatória | Assina a sessão. Dele também derivam o hash do CPF e a chave que cifra o segredo do 2FA: **trocá-lo invalida os CPFs e os segredos de 2FA já gravados**. |
 | `GEMINI_API_KEY` | obrigatória | Moderação por IA de reclamações e comentários. |
 | `BLOB_READ_WRITE_TOKEN` | para enviar fotos | Upload de imagem das reclamações. Crie um Blob store gratuito em [vercel.com](https://vercel.com) → Storage → Create → Blob e copie o token; funciona em desenvolvimento local, não é preciso publicar o projeto na Vercel. Sem ele, o restante do app funciona; só o envio de fotos falha. |
@@ -376,7 +376,7 @@ docker compose logs -f db  # acompanha os logs
 ```bash
 npx prisma studio                    # interface visual do banco (localhost:5555)
 npx prisma migrate dev --name nome   # cria e aplica uma migration
-npx prisma generate                  # regenera o client após alterar o schema
+npx prisma generate                  # regenera o client (src/generated/prisma) após alterar o schema
 ```
 
 ### Recomeçar o banco do zero
@@ -694,7 +694,7 @@ Existe um arquivo `prisma.config.ts` na raiz do projeto, resíduo de uma versão
 
 <br>
 
-O Prisma Client precisa ser regenerado: `npx prisma generate`.
+O Prisma Client precisa ser regenerado: `npx prisma generate`. Desde o Prisma 7 ele é gerado dentro do projeto (`src/generated/prisma`, fora do git) e **não** é mais regenerado sozinho pelo `migrate dev`; o `npm install` o gera (script `postinstall`).
 
 </details>
 
@@ -703,7 +703,7 @@ O Prisma Client precisa ser regenerado: `npx prisma generate`.
 
 <br>
 
-O `npm run dev` mantém abertos os binários nativos do Prisma e do Next, e o Windows não deixa substituí-los. Pare o servidor de desenvolvimento, rode o comando e suba o servidor de novo. O mesmo vale depois de atualizar dependências: pare o servidor, `npm ci`, `npx prisma generate`, reinicie.
+O `npm run dev` mantém abertos os binários nativos do Next (e do `sharp`), e o Windows não deixa substituí-los. Pare o servidor de desenvolvimento, rode o comando e suba o servidor de novo. O mesmo vale depois de atualizar dependências: pare o servidor, `npm ci`, reinicie. (O Prisma 7 não traz mais o motor nativo que travava o `prisma generate`.)
 
 </details>
 

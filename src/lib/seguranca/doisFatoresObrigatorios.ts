@@ -1,4 +1,4 @@
-import type { Papel } from "@prisma/client";
+import type { Papel } from "@/generated/prisma/client";
 
 // Quem publica "resposta oficial" fala em nome de uma prefeitura ou secretaria: uma conta de
 // órgão invadida vale mais do que a de um cidadão (e o ranking público depende dela). Por isso
