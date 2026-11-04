@@ -87,10 +87,24 @@ export async function definirSenhaOrgao(
   // Diferente do token de verificação de e-mail, este é de uso único de
   // verdade (define a senha inicial) - apagar impede reaproveitar o
   // mesmo link depois.
-  await prisma.$transaction([
-    prisma.user.update({ where: { id: usuario.id }, data: { senhaHash } }),
-    prisma.verificationToken.delete({ where: { token } }),
-  ]);
+  //
+  // Duas guardas contra enviar o mesmo link duas vezes ao mesmo tempo (duplo clique, duas abas):
+  // a senha só é gravada onde `senhaHash` ainda é nulo, e o token sai com deleteMany (que não
+  // falha se o outro pedido já o apagou). Quem perde vê "link já usado", em vez de um erro
+  // interno ou de sobrescrever a senha que o outro acabou de definir.
+  const gravou = await prisma.$transaction(async (tx) => {
+    const atualizacao = await tx.user.updateMany({
+      where: { id: usuario.id, senhaHash: null },
+      data: { senhaHash },
+    });
+    if (atualizacao.count === 0) return false;
+
+    await tx.verificationToken.deleteMany({ where: { token } });
+    return true;
+  });
+  if (!gravou) {
+    return { mensagem: t("erroLinkUsado") };
+  }
 
   try {
     await signIn("credentials", {
