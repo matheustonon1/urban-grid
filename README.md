@@ -56,11 +56,11 @@ flowchart LR
 
 <div align="center">
 
-| 24 | 21 | 228 | 158 |
+| 24 | 25 | 324 | 169 |
 |:---:|:---:|:---:|:---:|
 | tabelas no banco | migrações versionadas | testes unitários (Vitest) | testes de ponta a ponta (Playwright) |
 
-<sub>Números de 02/11/2026.</sub>
+<sub>Números de 04/11/2026.</sub>
 
 </div>
 
@@ -112,10 +112,12 @@ flowchart LR
 
 ### Para o órgão público
 
-- **Cadastro com aprovação**: prefeituras e secretarias solicitam acesso publicamente, um administrador aprova ou rejeita, e só então a conta é criada e um link de definição de senha é enviado
+- **Cadastro com aprovação**: prefeituras e secretarias solicitam acesso publicamente, informando o **CNPJ** e o **site oficial**; um administrador confere (inclusive consultando o CNPJ na Receita pelo cartão do pedido), aprova ou rejeita, e só então a conta é criada e um link de definição de senha é enviado
+- **Segundo fator obrigatório**: a conta de órgão só abre o painel e responde reclamações depois de ativar a autenticação em duas etapas
 - **Painel do órgão** com duas filas (**sem resposta** e **em acompanhamento**), busca por protocolo ou título e filtro de categoria
+- **Avisos ao órgão**: um aviso no sino, na hora, quando é publicada uma reclamação da cidade e da categoria dele, e um **resumo semanal por e-mail** com a fila sem resposta (quantas, quantas chegaram na semana, quantas já passaram de 15 dias). O mesmo cron do resumo dos assinantes; quem não quer o e-mail desliga em "Minha conta"
 - **Resposta oficial** com novo status e prazo estimado, e correção do texto e do prazo por 15 minutos
-- **Reputação pública**, nos moldes do Reclame Aqui: selo (Ótimo, Bom, Regular ou Ruim) calculado a partir do índice de resolução, do tempo médio de resposta e da nota dos cidadãos
+- **Reputação pública**, nos moldes do Reclame Aqui: selo (Ótimo, Bom, Regular ou Ruim) calculado a partir do índice de resolução, que **conta como não resolvida a reclamação que ficou mais de 15 dias sem nenhuma resposta** (só as publicadas depois de o órgão entrar na plataforma; se outro órgão responde, ela deixa de contar contra os demais). O tempo médio de resposta e a nota dos cidadãos aparecem ao lado, sem entrar no selo
 - **Categorias atendidas**: por padrão o órgão atende tudo da cidade; um administrador pode restringir por categoria
 
 ### Para moderação e administração
@@ -498,7 +500,7 @@ urban-grid/
 │   │   ├── auditoria/       # registro de quem mudou acesso ou decidiu em nome da plataforma
 │   │   ├── conta/           # identificador (e-mail/CPF), verificação de e-mail, senha atual, exportação de dados (LGPD)
 │   │   ├── email/           # tokens, templates, layout HTML, envio (Resend) e prévia; ver o index.ts
-│   │   ├── notificacoes/    # notificações in-app + e-mail, avisos ao órgão e resumo semanal por assinatura
+│   │   ├── notificacoes/    # notificações in-app + e-mail, aviso em tempo real e resumo semanal ao órgão, resumo semanal por assinatura
 │   │   ├── moderacao/       # pipeline de IA (texto + imagem), comentários, cortes de pontuação, estatísticas e filas
 │   │   ├── imagens/         # phash, EXIF, desfoque de rosto/placa, validação por conteúdo, upload (Vercel Blob)
 │   │   ├── reclamacoes/     # protocolo (UG-AAAA-NNNNNNN), status públicos, avaliação, limites de imagem, categorias traduzidas
@@ -536,13 +538,13 @@ O sistema trata dados pessoais e observa a Lei Geral de Proteção de Dados (Lei
 
 ### Autenticação em duas etapas
 
-Qualquer usuário pode ativar 2FA por aplicativo autenticador (Google Authenticator, Authy etc.) em "Minha conta". O segredo TOTP é cifrado em repouso (AES-256-GCM, chave derivada de `AUTH_SECRET`): nunca fica em texto puro no banco. Um código já usado não vale de novo na mesma janela de 30 segundos. Códigos de backup de uso único cobrem a perda do dispositivo, e o login bloqueia temporariamente após 5 tentativas de código incorretas. SMS e e-mail como segundo fator ainda não foram implementados: dependem da escolha de um provedor.
+Qualquer usuário pode ativar 2FA por aplicativo autenticador (Google Authenticator, Authy etc.) em "Minha conta". O segredo TOTP é cifrado em repouso (AES-256-GCM, chave derivada de `AUTH_SECRET`): nunca fica em texto puro no banco. Um código já usado não vale de novo na mesma janela de 30 segundos. Códigos de backup de uso único cobrem a perda do dispositivo, e o login bloqueia temporariamente após 5 tentativas de código incorretas. Para contas de **órgão** o 2FA é obrigatório: sem ele, o login leva direto a "Minha conta" para ativá-lo, o painel não abre e o formulário de resposta oficial vira um aviso com o link (a conta não consegue desativá-lo). A sessão é recalculada a cada leitura, então ativar libera o painel na mesma sessão. Quem perde o aplicativo e os códigos de backup pede a um administrador que redefina o segundo fator (em Órgãos, com a senha e o código do próprio admin): a conta perde o segredo, os códigos e as sessões abertas, o fato fica registrado na auditoria, a pessoa é avisada por sininho e e-mail e volta a entrar só com a senha, sendo levada a ativá-lo de novo. SMS e e-mail como segundo fator ainda não foram implementados: dependem da escolha de um provedor.
 
 ### Acesso de órgão
 
-Contas de órgão não são autoatendimento como a de cidadão: uma prefeitura ou secretaria solicita acesso em `/cadastro`, alternando para o modo "Órgão público" num switch animado (também acessível direto em `/orgao/solicitar`, que redireciona para lá), informa nome, cidade, responsável e contato, e a conta só é criada depois que um **ADMIN** aprova o pedido em `/solicitacoes-orgao`. Na aprovação, o solicitante recebe um e-mail com link de uso único para definir a senha. Essa restrição existe porque uma conta de órgão pode postar "resposta oficial" em nome da prefeitura, o mesmo nível de confiança já exigido para banir usuário. O `seed.ts` continua criando um órgão de demonstração pronto (veja `SEED_ORGAO_EMAIL` e `SEED_ORGAO_SENHA`), útil para testar sem passar pelo fluxo de aprovação.
+Contas de órgão não são autoatendimento como a de cidadão: uma prefeitura ou secretaria solicita acesso em `/cadastro`, alternando para o modo "Órgão público" num switch animado (também acessível direto em `/orgao/solicitar`, que redireciona para lá), informa nome, cidade, **CNPJ** (numérico ou o alfanumérico da Receita, com os dígitos verificadores conferidos), **site oficial**, responsável e contato, e a conta só é criada depois que um **ADMIN** aprova o pedido em `/solicitacoes-orgao`. Na aprovação, o solicitante recebe um e-mail com link de uso único para definir a senha. Essa restrição existe porque uma conta de órgão pode postar "resposta oficial" em nome da prefeitura, o mesmo nível de confiança já exigido para banir usuário. O `seed.ts` continua criando um órgão de demonstração pronto (veja `SEED_ORGAO_EMAIL` e `SEED_ORGAO_SENHA`), útil para testar sem passar pelo fluxo de aprovação.
 
-Ao decidir um pedido, o ADMIN vê no cartão o que confere: o tipo do domínio do e-mail (institucional `.gov.br`/`.leg.br`…, pessoal ou próprio), se **já existe um órgão com aquele nome na cidade** (aprovar adiciona a conta nova a ele, sem criar outro) e se aquele e-mail já teve um pedido rejeitado. São indícios, não comprovação: o nome e o e-mail são digitados por quem pede, e o vínculo deve ser conferido no site oficial do órgão ou por telefone. Quem deixa o convite vencer (vale 24 h) pede outro na própria página do link.
+Ao decidir um pedido, o ADMIN vê no cartão o que confere: o tipo do domínio do e-mail (institucional `.gov.br`/`.leg.br`…, pessoal ou próprio), se **já existe um órgão com aquele nome na cidade** (aprovar adiciona a conta nova a ele, sem criar outro) se aquele e-mail já teve um pedido rejeitado, se o **CNPJ já está cadastrado em outro órgão** e como o **site informado** se relaciona com o e-mail (site institucional, no mesmo domínio do e-mail ou em outro). O botão "Consultar CNPJ na Receita" chama a BrasilAPI pelo servidor, só para o admin e com limite por hora, e mostra a situação cadastral e se a natureza jurídica é de administração pública; o resultado não é guardado e, se o serviço estiver fora, a decisão segue livre. São indícios, não comprovação: o nome e o e-mail são digitados por quem pede, e o vínculo deve ser conferido no site oficial do órgão ou por telefone. Quem deixa o convite vencer (vale 24 h) pede outro na própria página do link.
 
 A conta de órgão entra direto em `/orgao`, onde as reclamações aparecem em duas filas, **sem resposta** e **em acompanhamento** (já respondidas e ainda abertas), com busca por protocolo ou título e filtro de categoria. Ela **não registra nem avalia reclamação** e não responde ao que uma conta do próprio órgão abriu (a reputação pública não pode ser inflada por quem a recebe). Quando o autor contesta uma resolução ("não foi resolvido"), a reclamação **reabre**, o órgão é avisado e, resolvida de novo, o autor avalia outra vez.
 
@@ -750,16 +752,17 @@ O Turnstile está configurado no `.env` e bloqueou corretamente o navegador auto
 **Limites conhecidos**
 
 - A IA aponta indícios; não confirma que o problema existe (ver a nota metodológica em [Moderação por IA](#moderação-por-ia)).
-- Órgãos são validados por sinais (tipo de domínio do e-mail, órgão já cadastrado, rejeições anteriores), não por documentos: o vínculo ainda é conferido por fora pelo administrador.
-- O segundo fator é só por aplicativo autenticador (sem SMS nem e-mail), e ainda não é exigido das contas de órgão.
-- A reputação do órgão considera apenas as reclamações que ele respondeu.
+- Órgãos são validados por sinais (tipo de domínio do e-mail, órgão já cadastrado, rejeições anteriores, CNPJ e site informados, consulta pública do CNPJ), não por documentos: o vínculo entre quem pede e o órgão ainda é conferido por fora pelo administrador. A consulta depende de um serviço público externo e nunca bloqueia a decisão.
+- O segundo fator é só por aplicativo autenticador (sem SMS, e-mail nem chave de segurança). É obrigatório para contas de órgão, mas continua opcional para as demais.
+- O prazo de 15 dias sem resposta, que pesa na reputação, é único para a plataforma: não distingue categoria nem urgência. E a regra só vale daqui para frente: os órgãos que já existiam começam sem passivo.
+- O aviso em tempo real ao órgão é só no sino (o e-mail seria spam em cidade grande); o e-mail é o resumo semanal.
 
 **Próximos passos**
 
-- Avisos em tempo real e resumo periódico para o órgão (hoje ele consulta o painel).
-- Validação de órgão por CNPJ e link oficial.
-- Índice de reputação que também considere o que ficou sem resposta.
-- Segundo fator para contas de órgão e migração para o Prisma 7.
+- Prazo de resposta por categoria ou urgência na reputação (hoje são 15 dias para tudo).
+- Conferir o vínculo do órgão por uma fonte oficial além do CNPJ informado.
+- Outros segundos fatores (chave de segurança, passkeys).
+- Migração para o Prisma 7 (já preparada em um PR; falta validar a conexão com o TiDB antes de mesclar).
 
 ---
 
