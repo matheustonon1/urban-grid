@@ -5,6 +5,10 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 vi.stubEnv("RESEND_API_KEY", "re_teste_fake");
 
 const enviosCapturados: Array<{ to: string; subject: string; html: string }> = [];
+// Liga a recusa do provedor (domínio não verificado, fora do ar) nos testes que a exercitam.
+let provedorRecusa = false;
+// Se definido, o provedor recusa só os envios para este endereço.
+let recusarPara: string | null = null;
 
 vi.mock("resend", () => ({
   // function (e não seta): o código faz `new Resend(...)`, e no Vitest 4+ um mock chamado com `new`
@@ -13,6 +17,9 @@ vi.mock("resend", () => ({
     return {
       emails: {
         send: vi.fn(async (parametros: { to: string; subject: string; html: string }) => {
+          if (provedorRecusa || parametros.to === recusarPara) {
+            return { data: null, error: { message: "domínio não verificado" } };
+          }
           enviosCapturados.push(parametros);
           return { data: { id: "teste" }, error: null };
         }),
@@ -37,6 +44,9 @@ const { prisma } = await import("@/lib/prisma");
 const { enviarResumosSemanaisPendentes } = await import("./resumoSemanal");
 
 beforeEach(() => {
+  provedorRecusa = false;
+  recusarPara = null;
+  vi.spyOn(console, "error").mockImplementation(() => {});
   enviosCapturados.length = 0;
   vi.mocked(prisma.assinaturaCidade.findMany).mockReset();
   vi.mocked(prisma.assinaturaCidade.update).mockReset();
@@ -65,7 +75,7 @@ describe("enviarResumosSemanaisPendentes", () => {
 
     const resultado = await enviarResumosSemanaisPendentes();
 
-    expect(resultado).toEqual({ processadas: 1, comConteudo: 1 });
+    expect(resultado).toEqual({ processadas: 1, comConteudo: 1, falhas: 0 });
     expect(enviosCapturados).toHaveLength(1);
     expect(enviosCapturados[0].subject).toContain("Curitiba");
     expect(enviosCapturados[0].html).toContain("3");
@@ -81,8 +91,49 @@ describe("enviarResumosSemanaisPendentes", () => {
 
     const resultado = await enviarResumosSemanaisPendentes();
 
-    expect(resultado).toEqual({ processadas: 1, comConteudo: 0 });
+    expect(resultado).toEqual({ processadas: 1, comConteudo: 0, falhas: 0 });
     expect(enviosCapturados).toHaveLength(0);
+    expect(prisma.assinaturaCidade.update).toHaveBeenCalledTimes(1);
+  });
+
+  it("provedor recusou o e-mail: não marca a assinatura (volta na próxima execução) e conta a falha", async () => {
+    provedorRecusa = true;
+    vi.mocked(prisma.assinaturaCidade.findMany).mockResolvedValue([assinaturaBase] as never);
+    vi.mocked(prisma.reclamacao.count).mockResolvedValue(3);
+
+    const resultado = await enviarResumosSemanaisPendentes();
+
+    expect(resultado).toEqual({ processadas: 1, comConteudo: 0, falhas: 1 });
+    expect(prisma.assinaturaCidade.update).not.toHaveBeenCalled();
+  });
+
+  it("a recusa de uma assinatura não impede marcar as outras", async () => {
+    vi.mocked(prisma.assinaturaCidade.findMany).mockResolvedValue([
+      assinaturaBase,
+      { ...assinaturaBase, id: "assinatura-2", user: { email: "outra@exemplo.com", idioma: "pt-BR" } },
+    ] as never);
+    vi.mocked(prisma.reclamacao.count).mockResolvedValue(1);
+    // Só a assinatura "assinatura-1" é recusada: o provedor recusa o destinatário dela.
+    recusarPara = "pessoa@exemplo.com";
+
+    const resultado = await enviarResumosSemanaisPendentes();
+
+    expect(resultado).toEqual({ processadas: 2, comConteudo: 1, falhas: 1 });
+    expect(prisma.assinaturaCidade.update).toHaveBeenCalledTimes(1);
+    expect(prisma.assinaturaCidade.update).toHaveBeenCalledWith({
+      where: { id: "assinatura-2" },
+      data: { ultimoEnvioEm: expect.any(Date) },
+    });
+  });
+
+  it("sem reclamação nova a recusa do provedor não entra em jogo: marca a semana", async () => {
+    provedorRecusa = true;
+    vi.mocked(prisma.assinaturaCidade.findMany).mockResolvedValue([assinaturaBase] as never);
+    vi.mocked(prisma.reclamacao.count).mockResolvedValue(0);
+
+    const resultado = await enviarResumosSemanaisPendentes();
+
+    expect(resultado).toEqual({ processadas: 1, comConteudo: 0, falhas: 0 });
     expect(prisma.assinaturaCidade.update).toHaveBeenCalledTimes(1);
   });
 
@@ -155,7 +206,7 @@ describe("enviarResumosSemanaisPendentes", () => {
 
     const resultado = await enviarResumosSemanaisPendentes();
 
-    expect(resultado).toEqual({ processadas: total, comConteudo: total });
+    expect(resultado).toEqual({ processadas: total, comConteudo: total, falhas: 0 });
     expect(enviosCapturados).toHaveLength(total);
     expect(prisma.assinaturaCidade.update).toHaveBeenCalledTimes(total);
     // Cada assinatura foi atualizada individualmente (id certo), não só
@@ -173,7 +224,7 @@ describe("enviarResumosSemanaisPendentes", () => {
 
     const resultado = await enviarResumosSemanaisPendentes();
 
-    expect(resultado).toEqual({ processadas: 0, comConteudo: 0 });
+    expect(resultado).toEqual({ processadas: 0, comConteudo: 0, falhas: 0 });
     expect(enviosCapturados).toHaveLength(0);
   });
 });

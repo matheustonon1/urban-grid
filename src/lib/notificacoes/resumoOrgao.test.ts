@@ -4,12 +4,19 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 vi.stubEnv("RESEND_API_KEY", "re_teste_fake");
 
 const enviosCapturados: Array<{ to: string; subject: string; html: string; text?: string }> = [];
+// Liga a recusa do provedor (domínio não verificado, fora do ar) nos testes que a exercitam.
+let provedorRecusa = false;
+// Se definido, o provedor recusa só os envios para este endereço.
+let recusarPara: string | null = null;
 
 vi.mock("resend", () => ({
   Resend: vi.fn().mockImplementation(function () {
     return {
       emails: {
         send: vi.fn(async (parametros: { to: string; subject: string; html: string }) => {
+          if (provedorRecusa || parametros.to === recusarPara) {
+            return { data: null, error: { message: "domínio não verificado" } };
+          }
           enviosCapturados.push(parametros);
           return { data: { id: "teste" }, error: null };
         }),
@@ -30,6 +37,8 @@ const { enviarResumosDeOrgaosPendentes } = await import("./resumoOrgao");
 const { INTERVALO_MINIMO_RESUMO_MS } = await import("./resumoSemanal");
 
 beforeEach(() => {
+  provedorRecusa = false;
+  recusarPara = null;
   enviosCapturados.length = 0;
   vi.mocked(prisma.user.findMany).mockReset();
   vi.mocked(prisma.user.update).mockReset();
@@ -72,7 +81,7 @@ describe("enviarResumosDeOrgaosPendentes", () => {
 
     const resultado = await enviarResumosDeOrgaosPendentes();
 
-    expect(resultado).toEqual({ processadas: 1, comConteudo: 1 });
+    expect(resultado).toEqual({ processadas: 1, comConteudo: 1, falhas: 0 });
     expect(enviosCapturados).toHaveLength(1);
     expect(enviosCapturados[0].to).toBe("ana@curitiba.pr.gov.br");
     expect(enviosCapturados[0].subject).toContain("12 reclamações aguardam");
@@ -83,6 +92,46 @@ describe("enviarResumosDeOrgaosPendentes", () => {
       where: { id: "ana" },
       data: { ultimoResumoOrgaoEm: expect.any(Date) },
     });
+  });
+
+  it("provedor recusou o e-mail: não marca a conta (volta na próxima execução) e conta a falha", async () => {
+    provedorRecusa = true;
+    vi.mocked(prisma.user.findMany).mockResolvedValue([conta("ana")] as never);
+    contagens(12, 4, 3);
+
+    const resultado = await enviarResumosDeOrgaosPendentes();
+
+    expect(resultado).toEqual({ processadas: 1, comConteudo: 0, falhas: 1 });
+    expect(prisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it("a recusa de uma conta não impede marcar as outras do lote", async () => {
+    vi.mocked(prisma.user.findMany).mockResolvedValue([
+      conta("ana"),
+      conta("bia", { orgao: { ...orgao, id: "orgao-2" } }),
+    ] as never);
+    vi.mocked(prisma.reclamacao.count).mockResolvedValue(2);
+    recusarPara = "ana@curitiba.pr.gov.br";
+
+    const resultado = await enviarResumosDeOrgaosPendentes();
+
+    expect(resultado).toEqual({ processadas: 2, comConteudo: 1, falhas: 1 });
+    expect(prisma.user.update).toHaveBeenCalledTimes(1);
+    expect(prisma.user.update).toHaveBeenCalledWith({
+      where: { id: "bia" },
+      data: { ultimoResumoOrgaoEm: expect.any(Date) },
+    });
+  });
+
+  it("fila zerada com o provedor fora do ar não é falha: marca a semana", async () => {
+    provedorRecusa = true;
+    vi.mocked(prisma.user.findMany).mockResolvedValue([conta("ana")] as never);
+    contagens(0, 0, 0);
+
+    const resultado = await enviarResumosDeOrgaosPendentes();
+
+    expect(resultado).toEqual({ processadas: 1, comConteudo: 0, falhas: 0 });
+    expect(prisma.user.update).toHaveBeenCalledTimes(1);
   });
 
   it("a fila é a mesma do painel: escopo, abertas e sem resposta alguma", async () => {
@@ -108,7 +157,7 @@ describe("enviarResumosDeOrgaosPendentes", () => {
 
     const resultado = await enviarResumosDeOrgaosPendentes();
 
-    expect(resultado).toEqual({ processadas: 1, comConteudo: 0 });
+    expect(resultado).toEqual({ processadas: 1, comConteudo: 0, falhas: 0 });
     expect(enviosCapturados).toHaveLength(0);
     expect(prisma.user.update).toHaveBeenCalledTimes(1);
   });
@@ -128,7 +177,7 @@ describe("enviarResumosDeOrgaosPendentes", () => {
 
     const resultado = await enviarResumosDeOrgaosPendentes();
 
-    expect(resultado).toEqual({ processadas: 2, comConteudo: 2 });
+    expect(resultado).toEqual({ processadas: 2, comConteudo: 2, falhas: 0 });
     expect(prisma.reclamacao.count).toHaveBeenCalledTimes(3);
     expect(enviosCapturados.map((e) => e.to).sort()).toEqual([
       "ana@curitiba.pr.gov.br",
@@ -189,14 +238,18 @@ describe("enviarResumosDeOrgaosPendentes", () => {
 
     const resultado = await enviarResumosDeOrgaosPendentes();
 
-    expect(resultado).toEqual({ processadas: 2, comConteudo: 1 });
+    expect(resultado).toEqual({ processadas: 2, comConteudo: 1, falhas: 0 });
     expect(prisma.user.update).toHaveBeenCalledTimes(2);
   });
 
   it("sem contas elegíveis, não processa nada", async () => {
     vi.mocked(prisma.user.findMany).mockResolvedValue([] as never);
 
-    expect(await enviarResumosDeOrgaosPendentes()).toEqual({ processadas: 0, comConteudo: 0 });
+    expect(await enviarResumosDeOrgaosPendentes()).toEqual({
+      processadas: 0,
+      comConteudo: 0,
+      falhas: 0,
+    });
     expect(prisma.user.update).not.toHaveBeenCalled();
   });
 });
