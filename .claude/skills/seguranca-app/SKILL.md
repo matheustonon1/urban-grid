@@ -40,6 +40,13 @@ claro; o porquê vem junto para você saber quando a regra se aplica a um caso n
   (`desativarTotp` recusa no servidor; a tela só esconde o botão). `session.user.doisFatores`
   é relido do banco a cada leitura (callback `jwt`), então ativar vale na requisição seguinte,
   sem novo login. Papel novo que precise disso entra em `PAPEIS_COM_DOIS_FATORES_OBRIGATORIOS`.
+  **Recuperação:** quem perde o aplicativo E os códigos de backup só volta pelo admin, em
+  Órgãos (`redefinirDoisFatoresOrgao`): senha + código de duas etapas de quem age, só conta
+  `ORGAO`, apaga segredo e códigos, encerra as sessões da conta (`senhaAlteradaEm`: senão uma
+  sessão alheia ativaria um 2FA próprio e trancaria a dona), audita (`DOIS_FATORES_REDEFINIDO`)
+  e avisa a conta por sininho + e-mail. A conta volta ao estado de recém-aprovada (só senha) e o
+  gate a leva a ativar de novo. Não existe ação equivalente para os outros papéis: lá o 2FA é
+  opcional e a própria pessoa o desativa.
 - Troca de credencial (senha, e-mail, 2FA) pede a senha atual com limite de
   tentativas e **avisa o endereço antigo**.
 - Token de verificação de e-mail e de redefinição de senha **não são

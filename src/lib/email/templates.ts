@@ -120,6 +120,23 @@ export async function montarEmailSenhaAlterada({
   });
 }
 
+export async function montarEmailDoisFatoresRedefinidos({
+  locale = IDIOMA_PADRAO,
+}: Base = {}): Promise<EmailMontado> {
+  const t = await tradutor(locale);
+  return compor(t, locale, {
+    assunto: t("doisFatoresRedefinidos.assunto"),
+    preheader: t("doisFatoresRedefinidos.preheader"),
+    categoria: "seguranca",
+    titulo: t("doisFatoresRedefinidos.titulo"),
+    tom: "alerta",
+    blocos: [
+      { tipo: "paragrafo", html: t("doisFatoresRedefinidos.corpo") },
+      { tipo: "destaque", html: `<strong>${esc(t("doisFatoresRedefinidos.aviso"))}</strong>` },
+    ],
+  });
+}
+
 export async function montarEmailConfirmarTrocaEmail({
   token,
   emailAtual,

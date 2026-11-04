@@ -5,9 +5,11 @@ import { Prisma } from "@prisma/client";
 import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
-import { falha, informacao, sucesso, type ResultadoAcao } from "@/lib/acoes/resultado";
+import { exigirReautenticacao } from "@/lib/acoes/confirmarSenha";
+import { atencao, falha, informacao, sucesso, type ResultadoAcao } from "@/lib/acoes/resultado";
 import { registrarAuditoria } from "@/lib/auditoria";
 import { criarTokenVerificacao, enviarEmailAcessoOrgao } from "@/lib/email";
+import { alertarDoisFatoresRedefinidos } from "@/lib/notificacoes";
 import { idiomaOuPadrao } from "@/i18n/config";
 
 import { criarAtualizarDadosOrgaoSchema, type EstadoConvite } from "./definitions";
@@ -190,4 +192,85 @@ export async function alternarAtivoOrgao(
     return informacao(t("orgaoJaNoEstado"));
   }
   return sucesso(t(novoAtivo ? "orgaoReativado" : "orgaoDesativado", { nome: orgao.nome }));
+}
+
+// Conta de órgão que perdeu o aplicativo autenticador E os códigos de backup não consegue entrar: o
+// login pede o segundo fator e, para este papel, ele é obrigatório (não se desativa em "Minha
+// conta", ver desativarTotp). Sem esta ação a conta ficava presa até alguém mexer no banco.
+//
+// Devolve a conta ao estado de uma recém-aprovada (só a senha entra, e o proxy / exigirOrgao levam
+// direto a ativar o segundo fator de novo), então tem as mesmas travas de privilégio de mudar
+// papel: só admin; senha E código de duas etapas de quem age, conferidos aqui no servidor;
+// auditoria na mesma transação; e aviso à conta afetada (sininho + e-mail).
+//
+// Também encerra as sessões abertas dela (`senhaAlteradaEm`, ver o callback jwt em auth.ts): se a
+// conta estiver nas mãos de outra pessoa, essa sessão não pode ativar um segundo fator PRÓPRIO e
+// trancar a dona legítima do lado de fora.
+export async function redefinirDoisFatoresOrgao(
+  userId: string,
+  formData: FormData
+): Promise<ResultadoAcao> {
+  const session = await exigirAdmin();
+  const t = await getTranslations("OrgaosCategorias");
+
+  const conta = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { email: true, papel: true, orgaoId: true, totpConfirmadoEm: true },
+  });
+  // Só conta de órgão: nos outros papéis o 2FA é opcional e a própria pessoa o desativa.
+  if (!conta || conta.papel !== "ORGAO" || !conta.orgaoId) {
+    return falha(t("erroContaIndisponivel"));
+  }
+  const { email } = conta;
+  if (!conta.totpConfirmadoEm) {
+    return informacao(t("doisFatoresJaRedefinidos", { email }));
+  }
+
+  // Senha E código de duas etapas: devolver uma conta a "só senha" é conceder acesso.
+  const reautenticacao = await exigirReautenticacao(session.user.id, formData);
+  if (reautenticacao) {
+    return reautenticacao;
+  }
+
+  const agora = new Date();
+  const aplicado = await prisma.$transaction(async (tx) => {
+    // Guarda no WHERE: dois admins redefinindo a mesma conta (ou a pessoa ativando de novo entre a
+    // leitura e aqui) viram "nada foi alterado".
+    const atualizacao = await tx.user.updateMany({
+      where: { id: userId, papel: "ORGAO", totpConfirmadoEm: { not: null } },
+      data: {
+        totpSecret: null,
+        totpConfirmadoEm: null,
+        totpTentativasFalhas: 0,
+        totpBloqueadoAte: null,
+        totpUltimoTimeStep: null,
+        senhaAlteradaEm: agora,
+      },
+    });
+    if (atualizacao.count === 0) {
+      return false;
+    }
+    await tx.totpBackupCode.deleteMany({ where: { userId } });
+    // Sem copiar e-mail nem nome para `detalhes`: a tela de auditoria lê da conta de origem.
+    await registrarAuditoria(
+      { acao: "DOIS_FATORES_REDEFINIDO", atorId: session.user.id, alvoUserId: userId },
+      tx
+    );
+    return true;
+  });
+
+  revalidatePath("/orgaos-categorias");
+  revalidatePath("/auditoria");
+
+  if (!aplicado) {
+    return informacao(t("doisFatoresJaRedefinidos", { email }));
+  }
+
+  // A redefinição já valeu; o aviso é o que a torna segura. Se o e-mail não saiu, o admin precisa
+  // saber agora para avisar a pessoa por outro canal.
+  const aviso = await alertarDoisFatoresRedefinidos(userId);
+  if (!aviso || aviso.status !== "enviado") {
+    return atencao(t("doisFatoresRedefinidosSemAviso", { email }));
+  }
+  return sucesso(t("doisFatoresRedefinidos", { email }));
 }

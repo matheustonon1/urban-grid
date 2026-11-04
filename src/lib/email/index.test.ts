@@ -43,6 +43,7 @@ vi.mock("resend", () => ({
 import {
   enviarEmailAcessoOrgao,
   enviarEmailCidadeAprovada,
+  enviarEmailDoisFatoresRedefinidos,
   esc,
   enviarEmailResumoSemanal,
   enviarEmailVerificacao,
@@ -192,5 +193,35 @@ describe("enviarEmailResumoSemanal (assunto vs. corpo)", () => {
     expect(enviosCapturados[0].subject).not.toContain("&#39;");
     // No corpo (HTML de verdade), o mesmo nome precisa vir escapado.
     expect(enviosCapturados[0].html).toContain("Santa Isabel D&#39;Oeste");
+  });
+});
+
+describe("enviarEmailDoisFatoresRedefinidos (alerta de segurança)", () => {
+  it("avisa em português, em tom de alerta, com versão em texto puro e sem link", async () => {
+    const resultado = await enviarEmailDoisFatoresRedefinidos({ email: "orgao@curitiba.pr.gov.br" });
+
+    expect(resultado).toEqual({ status: "enviado" });
+    const [envio] = enviosCapturados;
+    expect(envio.to).toBe("orgao@curitiba.pr.gov.br");
+    expect(envio.subject).toContain("segundo fator");
+    expect(envio.html).toContain("redefiniu a autenticação em duas etapas");
+    expect(envio.html).toContain("troque a sua senha");
+    expect(envio.text).toBeTruthy();
+    expect(envio.text).not.toMatch(/<[a-z/][^>]*>/i);
+  });
+
+  it("sai em inglês quando o destinatário usa inglês", async () => {
+    await enviarEmailDoisFatoresRedefinidos({ email: "agency@example.com", locale: "en" });
+
+    expect(enviosCapturados[0].subject).toContain("two-factor");
+    expect(enviosCapturados[0].html).toContain("reset two-factor authentication");
+  });
+
+  it("devolve 'falhou' quando o provedor recusa (a tela do admin avisa que o e-mail não saiu)", async () => {
+    comportamentoDoProvedor.erro = { message: "domínio não verificado" };
+
+    const resultado = await enviarEmailDoisFatoresRedefinidos({ email: "orgao@curitiba.pr.gov.br" });
+
+    expect(resultado).toEqual({ status: "falhou", motivo: "domínio não verificado" });
   });
 });

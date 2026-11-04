@@ -14,6 +14,7 @@ import {
   montarEmailAcessoOrgao,
   montarEmailCidadeAprovada,
   montarEmailConfirmarTrocaEmail,
+  montarEmailDoisFatoresRedefinidos,
   montarEmailNotificacao,
   montarEmailRedefinicaoSenha,
   montarEmailResumoSemanal,
@@ -41,6 +42,7 @@ async function main() {
       }),
       "redefinicao-senha": await montarEmailRedefinicaoSenha({ token: TOKEN, locale }),
       "senha-alterada": await montarEmailSenhaAlterada({ locale }),
+      "dois-fatores-redefinidos": await montarEmailDoisFatoresRedefinidos({ locale }),
       "confirmar-troca-email": await montarEmailConfirmarTrocaEmail({
         token: TOKEN,
         emailAtual: "maria.silva@exemplo.com",

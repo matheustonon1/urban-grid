@@ -578,6 +578,19 @@
     "orgaoDesativado": "{nome} foi desativado. Ele sai das listas públicas e não responde mais reclamações.",
     "orgaoReativado": "{nome} foi reativado e já pode responder reclamações.",
     "orgaoJaNoEstado": "Nada foi alterado: o órgão já estava nesse estado.",
+    "contasComDoisFatores": "Segundo fator ativo",
+    "redefinirDoisFatores": "Redefinir 2FA",
+    "redefinirDoisFatoresConta": "Redefinir 2FA de {email}",
+    "confirmarRedefinirTitulo": "Redefinir o segundo fator de {email}?",
+    "confirmarRedefinirDescricao": "A conta perde o aplicativo autenticador e os códigos de backup. No próximo acesso, só com a senha, ela é levada a ativar o segundo fator de novo; até lá não abre o painel nem responde reclamações.",
+    "confirmarRedefinirDetalheSessoes": "Todas as sessões abertas dessa conta são encerradas.",
+    "confirmarRedefinirDetalheAviso": "A pessoa recebe um aviso no sininho e por e-mail.",
+    "confirmarRedefinirDetalheConferir": "Faça isto só depois de confirmar, por outro canal, que ela perdeu o acesso ao aplicativo.",
+    "confirmarRedefinirBotao": "Redefinir segundo fator",
+    "doisFatoresRedefinidos": "Segundo fator de {email} redefinido. No próximo acesso a pessoa precisa ativá-lo de novo.",
+    "doisFatoresRedefinidosSemAviso": "Segundo fator de {email} redefinido, mas o aviso por e-mail pode não ter saído. Avise a pessoa por outro canal.",
+    "doisFatoresJaRedefinidos": "Nada foi alterado: {email} não tem segundo fator ativo.",
+    "erroContaIndisponivel": "Não encontramos essa conta de órgão. Recarregue a página.",
     "erroOrgaoNaoEncontrado": "Não encontramos esse órgão. Recarregue a página.",
     "erroNomeDuplicado": "Já existe outro órgão com esse nome nesta cidade.",
     "erroCategoriaInvalida": "Alguma categoria marcada não existe mais. Recarregue a página e tente de novo.",
@@ -1167,6 +1180,13 @@
       "corpo": "A senha da sua conta foi alterada agora.",
       "aviso": "Se não foi você, sua conta pode estar comprometida — troque a senha imediatamente e entre em contato com o suporte."
     },
+    "doisFatoresRedefinidos": {
+      "assunto": "O segundo fator da sua conta foi redefinido — Urban Grid",
+      "titulo": "O segundo fator da sua conta foi redefinido",
+      "preheader": "Ative a autenticação em duas etapas de novo no próximo acesso.",
+      "corpo": "Um administrador do Urban Grid redefiniu a autenticação em duas etapas da sua conta. O aplicativo autenticador e os códigos de backup anteriores deixaram de valer, e as sessões abertas foram encerradas.",
+      "aviso": "Entre com a sua senha e ative o segundo fator de novo em Minha conta. Se você não pediu isso, troque a sua senha imediatamente e fale com a administração."
+    },
     "confirmarTrocaEmail": {
       "assunto": "Confirme seu novo e-mail — Urban Grid",
       "titulo": "Confirme seu novo e-mail",
@@ -1383,6 +1403,10 @@
       "titulo": "Seu papel na plataforma mudou",
       "mensagem": "Sua conta agora tem o papel de {papel, select, MODERADOR {Moderador} ADMIN {Administrador} CIDADAO {Cidadão} other {{papel}}}. Se você não esperava essa mudança, fale com a administração."
     },
+    "doisFatoresRedefinidos": {
+      "titulo": "O segundo fator da sua conta foi redefinido",
+      "mensagem": "A administração redefiniu a autenticação em duas etapas da sua conta. No próximo acesso, ative-a de novo em Minha conta. Se você não pediu isso, troque sua senha e fale com a administração."
+    },
     "senhaAlterada": {
       "titulo": "Sua senha foi alterada",
       "mensagem": "Se não foi você, entre em contato com o suporte imediatamente."
@@ -1403,6 +1427,7 @@
     "resumoUltimos7dias": "Nos últimos 7 dias",
     "resumoPapeis": "Mudanças de papel",
     "resumoBanimentos": "Banimentos e reversões",
+    "resumoSeguranca": "Segundos fatores redefinidos",
     "resumoOrgaos": "Órgãos e solicitações",
     "por": "por {ator}",
     "atorRemovido": "conta removida",
@@ -1417,7 +1442,8 @@
       "SOLICITACAO_ORGAO_APROVADA": "Solicitação de órgão aprovada",
       "SOLICITACAO_ORGAO_REJEITADA": "Solicitação de órgão rejeitada",
       "SOLICITACAO_CIDADE_APROVADA": "Solicitação de cidade aprovada",
-      "SOLICITACAO_CIDADE_REJEITADA": "Solicitação de cidade rejeitada"
+      "SOLICITACAO_CIDADE_REJEITADA": "Solicitação de cidade rejeitada",
+      "DOIS_FATORES_REDEFINIDO": "Segundo fator redefinido"
     },
     "detalhePapel": "{de} → {para}",
     "detalheBanimento": "{duracao}, até {ate}",

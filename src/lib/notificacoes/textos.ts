@@ -23,6 +23,7 @@ export type ChaveNotificacao =
   | "respostaComentario"
   | "atividadeSuspeita"
   | "papelAlterado"
+  | "doisFatoresRedefinidos"
   | "senhaAlterada"
   | "trocaEmailSolicitada";
 
