@@ -24,11 +24,14 @@ import { BotaoAcao, FormularioAcao } from "@/components/ui/formulario-acao";
 import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
 import { Selo } from "@/components/ui/selo";
 
+import { usuarioTemDoisFatores } from "@/lib/seguranca/doisFatores";
+
 import { exigirAdmin } from "../solicitacoes-orgao/exigir-admin";
 import {
   alternarAtivoOrgao,
   atualizarCategoriasOrgao,
   atualizarDadosOrgao,
+  redefinirDoisFatoresOrgao,
 } from "./actions";
 import { ReenviarConvite } from "./reenviar-convite";
 
@@ -39,7 +42,10 @@ export default async function OrgaosCategoriasPage({
 }: PageProps<"/orgaos-categorias">) {
   const t = await getTranslations("OrgaosCategorias");
   const tNav = await getTranslations("AdminNav");
-  await exigirAdmin();
+  const session = await exigirAdmin();
+  // Redefinir o segundo fator de uma conta pede o código de duas etapas de quem age: o diálogo
+  // precisa saber se este admin tem o dele ativo (senão mostra o caminho para ativar).
+  const temDoisFatores = await usuarioTemDoisFatores(session.user.id);
 
   const { page } = await searchParams;
   const paginaAtual = lerPaginaAtual(page);
@@ -70,6 +76,23 @@ export default async function OrgaosCategoriasPage({
     prisma.user.count({ where: { papel: "ORGAO", senhaHash: null } }),
   ]);
   const totalPaginas = calcularTotalPaginas(totalOrgaos);
+
+  // Contas de órgão com o segundo fator ativo, por órgão: é nelas que "Redefinir 2FA" faz sentido
+  // (a conta perdeu o aplicativo e os códigos de backup). Uma consulta para a página inteira.
+  const contasComDoisFatores = await prisma.user.findMany({
+    where: {
+      papel: "ORGAO",
+      orgaoId: { in: orgaos.map((orgao) => orgao.id) },
+      totpConfirmadoEm: { not: null },
+    },
+    select: { id: true, email: true, orgaoId: true },
+    orderBy: { email: "asc" },
+  });
+  const contasPorOrgao = new Map<string, { id: string; email: string }[]>();
+  for (const conta of contasComDoisFatores) {
+    if (!conta.orgaoId) continue;
+    contasPorOrgao.set(conta.orgaoId, [...(contasPorOrgao.get(conta.orgaoId) ?? []), conta]);
+  }
 
   return (
     <main className={pagina}>
@@ -133,6 +156,47 @@ export default async function OrgaosCategoriasPage({
                     </BotaoAcao>
                   </FormularioAcao>
                 </div>
+
+                {(contasPorOrgao.get(orgao.id) ?? []).length > 0 && (
+                  <div className="flex flex-col gap-2 border-t border-line pt-4">
+                    <p className="kicker">{t("contasComDoisFatores")}</p>
+                    <ul className="flex flex-col gap-2">
+                      {(contasPorOrgao.get(orgao.id) ?? []).map((conta) => (
+                        <li
+                          key={conta.id}
+                          className="flex flex-wrap items-center justify-between gap-3 text-sm"
+                        >
+                          <span className="min-w-0 break-all text-ink-2">{conta.email}</span>
+                          <FormularioAcao
+                            action={redefinirDoisFatoresOrgao.bind(null, conta.id)}
+                            confirmacao={{
+                              titulo: t("confirmarRedefinirTitulo", { email: conta.email }),
+                              descricao: t("confirmarRedefinirDescricao"),
+                              detalhes: [
+                                t("confirmarRedefinirDetalheSessoes"),
+                                t("confirmarRedefinirDetalheAviso"),
+                                t("confirmarRedefinirDetalheConferir"),
+                              ],
+                              confirmar: t("confirmarRedefinirBotao"),
+                              tom: "perigo",
+                              // Devolve a conta a "só senha": senha e código de duas etapas de quem age.
+                              senha: true,
+                              segundoFator: temDoisFatores ? "ativo" : "ausente",
+                            }}
+                          >
+                            <BotaoAcao className={botaoSecundario}>
+                              {/* Com vários responsáveis no mesmo órgão, o nome acessível diz de quem é. */}
+                              <span aria-hidden="true">{t("redefinirDoisFatores")}</span>
+                              <span className="sr-only">
+                                {t("redefinirDoisFatoresConta", { email: conta.email })}
+                              </span>
+                            </BotaoAcao>
+                          </FormularioAcao>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
                 <div className="flex flex-col gap-3 border-t border-line pt-4">
                   <details className="group text-sm">

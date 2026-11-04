@@ -7,7 +7,13 @@ import { idiomaOuPadrao } from "@/i18n/config";
 import { nomeCategoriaTraduzido } from "@/lib/reclamacoes/categoriaI18n";
 import { STATUS_PUBLICOS } from "@/lib/reclamacoes/statusPublicos";
 
-export const INTERVALO_RESUMO_MS = 7 * 24 * 60 * 60 * 1000;
+// O cron roda toda segunda às 9h (ver vercel.json), mas o horário real varia: no plano Hobby da
+// Vercel a execução cai em qualquer minuto da hora. `ultimoEnvioEm` guarda o INÍCIO da execução
+// anterior, então exigir 7 dias cravados pularia a semana inteira sempre que a seguinte
+// começasse alguns segundos antes. Com 6 dias de folga o resumo continua semanal (o cron só
+// dispara de 7 em 7) e a variação do horário deixa de importar. Vale também para o resumo do
+// órgão (resumoOrgao.ts).
+export const INTERVALO_MINIMO_RESUMO_MS = 6 * 24 * 60 * 60 * 1000;
 
 // Processa no máximo isso por chamada - o cron roda uma vez por semana
 // (ver vercel.json), então nunca deveria ter uma fila grande, mas evita
@@ -33,7 +39,7 @@ type AssinaturaComRelacoes = AssinaturaCidade & {
 async function processarAssinatura(
   assinatura: AssinaturaComRelacoes,
   agora: Date
-): Promise<{ teveConteudo: boolean }> {
+): Promise<{ teveConteudo: boolean; falhou: boolean }> {
   const desde = assinatura.ultimoEnvioEm ?? assinatura.createdAt;
 
   const total = await prisma.reclamacao.count({
@@ -45,10 +51,11 @@ async function processarAssinatura(
     },
   });
 
+  let falhou = false;
   if (total > 0) {
     try {
       const locale = idiomaOuPadrao(assinatura.user.idioma);
-      await enviarEmailResumoSemanal({
+      const envio = await enviarEmailResumoSemanal({
         email: assinatura.user.email,
         nomeCidade: assinatura.cidade.nome,
         nomeCategoria: assinatura.categoria
@@ -58,6 +65,7 @@ async function processarAssinatura(
         url: montarUrl(`/cidades/${assinatura.cidade.slug}`),
         locale,
       });
+      falhou = envio.status === "falhou";
     } catch (erro) {
       // Mesmo padrão de criarNotificacao(): uma falha de envio não pode
       // travar o processamento das outras assinaturas da fila.
@@ -65,26 +73,35 @@ async function processarAssinatura(
     }
   }
 
-  await prisma.assinaturaCidade.update({
-    where: { id: assinatura.id },
-    data: { ultimoEnvioEm: agora },
-  });
+  // Provedor recusou o e-mail: não marca. A assinatura continua elegível e o próximo resumo
+  // cobre desde o último envio de verdade (a janela é `desde`), então nada é perdido; marcar
+  // mesmo assim fazia o assinante pular a semana sem ninguém saber.
+  if (!falhou) {
+    await prisma.assinaturaCidade.update({
+      where: { id: assinatura.id },
+      data: { ultimoEnvioEm: agora },
+    });
+  }
 
-  return { teveConteudo: total > 0 };
+  return { teveConteudo: total > 0 && !falhou, falhou };
 }
 
 // Dispara o resumo semanal de cada assinatura elegível (nunca enviado, ou
-// enviado há 7 dias ou mais) e sempre marca ultimoEnvioEm = agora ao
+// enviado há 6 dias ou mais - ver INTERVALO_MINIMO_RESUMO_MS) e marca ultimoEnvioEm = agora ao
 // processar - mesmo quando não há reclamação nova pra contar - pra manter
 // o ritmo semanal e não escanear a mesma janela vazia em toda execução do
-// cron. Retorna quantas assinaturas foram processadas e em quantas saiu
-// e-mail de verdade (só quando há reclamação nova).
+// cron. A única exceção é o provedor de e-mail recusar o envio: aí não marca, e a próxima
+// execução tenta de novo (cobrindo desde o último envio de verdade). Retorna quantas assinaturas
+// foram processadas, em quantas saiu e-mail de verdade (só quando há reclamação nova) e em
+// quantas o provedor recusou.
 export async function enviarResumosSemanaisPendentes(): Promise<{
   processadas: number;
   comConteudo: number;
+  // Assinaturas cujo e-mail o provedor recusou: não foram marcadas e voltam na próxima execução.
+  falhas: number;
 }> {
   const agora = new Date();
-  const limiteUltimoEnvio = new Date(agora.getTime() - INTERVALO_RESUMO_MS);
+  const limiteUltimoEnvio = new Date(agora.getTime() - INTERVALO_MINIMO_RESUMO_MS);
 
   const assinaturas = await prisma.assinaturaCidade.findMany({
     where: {
@@ -112,6 +129,7 @@ export async function enviarResumosSemanaisPendentes(): Promise<{
   });
 
   let comConteudo = 0;
+  let falhas = 0;
 
   for (let inicio = 0; inicio < assinaturas.length; inicio += TAMANHO_DO_LOTE) {
     const lote = assinaturas.slice(inicio, inicio + TAMANHO_DO_LOTE);
@@ -119,7 +137,8 @@ export async function enviarResumosSemanaisPendentes(): Promise<{
       lote.map((assinatura) => processarAssinatura(assinatura, agora))
     );
     comConteudo += resultados.filter((resultado) => resultado.teveConteudo).length;
+    falhas += resultados.filter((resultado) => resultado.falhou).length;
   }
 
-  return { processadas: assinaturas.length, comConteudo };
+  return { processadas: assinaturas.length, comConteudo, falhas };
 }

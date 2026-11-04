@@ -15,8 +15,34 @@ import {
 } from "@/lib/email";
 import { idiomaOuPadrao } from "@/i18n/config";
 
-import { criarRejeitarSolicitacaoSchema } from "./definitions";
+import { consultarCnpj } from "@/lib/orgaos/consultaCnpj";
+import { excedeuLimiteCompartilhado } from "@/lib/seguranca/limiteCompartilhado";
+
+import { criarRejeitarSolicitacaoSchema, type ConsultaCnpjState } from "./definitions";
 import { exigirAdmin } from "./exigir-admin";
+
+const ESCOPO_CONSULTA_CNPJ = "consulta-cnpj";
+
+// Confere o CNPJ de um pedido no cadastro público da Receita. Só admin; o resultado vai para a
+// tela e não é guardado, e aprovar ou rejeitar nunca depende dele. O serviço é externo e
+// gratuito, então cada admin tem um teto por hora (um laço não gasta a boa vontade dele).
+export async function consultarCnpjDaSolicitacao(
+  solicitacaoId: string
+): Promise<ConsultaCnpjState> {
+  const session = await exigirAdmin();
+
+  if (await excedeuLimiteCompartilhado(ESCOPO_CONSULTA_CNPJ, session.user.id, 30, 60 * 60 * 1000)) {
+    return { ok: false, motivo: "limite" };
+  }
+
+  const solicitacao = await prisma.solicitacaoOrgao.findUnique({
+    where: { id: solicitacaoId },
+    select: { cnpj: true },
+  });
+  if (!solicitacao?.cnpj) return { ok: false, motivo: "semCnpj" };
+
+  return consultarCnpj(solicitacao.cnpj);
+}
 
 export async function aprovarSolicitacao(
   solicitacaoId: string,
@@ -80,8 +106,19 @@ export async function aprovarSolicitacao(
           sigla: solicitacao.sigla,
           cidadeId: solicitacao.cidadeId,
           email: solicitacao.email,
+          cnpj: solicitacao.cnpj,
+          linkOficial: solicitacao.linkOficial,
         },
       });
+
+      // Órgão que já existia (o upsert acima não mexe nele) e ainda não tinha CNPJ nem site:
+      // recebe os do pedido aprovado. Nunca sobrescreve o que já estava cadastrado.
+      if (solicitacao.cnpj && !orgao.cnpj) {
+        await tx.orgao.updateMany({
+          where: { id: orgao.id, cnpj: null },
+          data: { cnpj: solicitacao.cnpj, linkOficial: orgao.linkOficial ?? solicitacao.linkOficial },
+        });
+      }
 
       const novoUsuario = await tx.user.create({
         data: {

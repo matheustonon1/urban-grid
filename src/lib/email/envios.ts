@@ -4,8 +4,10 @@ import {
   montarEmailAcessoOrgao,
   montarEmailCidadeAprovada,
   montarEmailConfirmarTrocaEmail,
+  montarEmailDoisFatoresRedefinidos,
   montarEmailNotificacao,
   montarEmailRedefinicaoSenha,
+  montarEmailResumoOrgao,
   montarEmailResumoSemanal,
   montarEmailSenhaAlterada,
   montarEmailSolicitacaoCidadeRejeitada,
@@ -72,6 +74,16 @@ export async function enviarEmailSenhaAlterada({
   locale?: Idioma;
 }) {
   await enviarEmail({ to: email, ...(await montarEmailSenhaAlterada({ locale })) });
+}
+
+export async function enviarEmailDoisFatoresRedefinidos({
+  email,
+  locale = IDIOMA_PADRAO,
+}: {
+  email: string;
+  locale?: Idioma;
+}): Promise<ResultadoEnvio> {
+  return enviarEmail({ to: email, ...(await montarEmailDoisFatoresRedefinidos({ locale })) });
 }
 
 export async function enviarEmailConfirmarTrocaEmail({
@@ -184,9 +196,47 @@ export async function enviarEmailResumoSemanal({
   total: number;
   url: string;
   locale?: Idioma;
-}) {
-  await enviarEmail({
+}): Promise<ResultadoEnvio> {
+  // Devolve o resultado: o cron só marca a semana como cumprida quando o provedor não falhou.
+  return enviarEmail({
     to: email,
     ...(await montarEmailResumoSemanal({ nomeCidade, nomeCategoria, total, url, locale })),
+  });
+}
+
+export async function enviarEmailResumoOrgao({
+  email,
+  nomeOrgao,
+  nomeCidade,
+  semResposta,
+  novas,
+  vencidas,
+  prazoDias,
+  url,
+  locale = IDIOMA_PADRAO,
+}: {
+  email: string;
+  nomeOrgao: string;
+  nomeCidade: string;
+  semResposta: number;
+  novas: number;
+  vencidas: number;
+  prazoDias: number;
+  url: string;
+  locale?: Idioma;
+}): Promise<ResultadoEnvio> {
+  // Devolve o resultado, pelo mesmo motivo de enviarEmailResumoSemanal.
+  return enviarEmail({
+    to: email,
+    ...(await montarEmailResumoOrgao({
+      nomeOrgao,
+      nomeCidade,
+      semResposta,
+      novas,
+      vencidas,
+      prazoDias,
+      url,
+      locale,
+    })),
   });
 }

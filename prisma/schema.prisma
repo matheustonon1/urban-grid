@@ -102,6 +102,9 @@ enum TipoNotificacao {
   PEDIDO_AVALIACAO
   ATIVIDADE_SUSPEITA
   CONTA_SEGURANCA
+  // Aviso à conta de órgão: uma reclamação da categoria e da cidade dele acabou de ser
+  // publicada e espera a primeira resposta. Só sininho (o e-mail do órgão é o resumo semanal).
+  NOVA_RECLAMACAO_NA_FILA
 }
 
 // ===========================================================================
@@ -169,9 +172,16 @@ model User {
   // lib/notificacoes/index.ts) - a notificação no sininho continua sendo
   // criada de qualquer forma. Não afeta alertas de segurança (senha
   // alterada, troca de e-mail solicitada), que sempre saem por e-mail
-  // independente disto - nem o resumo semanal, que já é opt-in por si só
-  // via AssinaturaCidade.
+  // independente disto - nem o resumo semanal do cidadão, que já é opt-in
+  // por si só via AssinaturaCidade. O resumo semanal da conta de órgão (fila
+  // sem resposta) não tem assinatura própria: esta preferência é o botão de
+  // desligar dele.
   notificarPorEmail Boolean @default(true)
+
+  // Quando o resumo semanal da fila do órgão foi processado pela última vez
+  // para esta conta (só contas de órgão). Mesmo papel de
+  // AssinaturaCidade.ultimoEnvioEm: marca a semana mesmo sem nada a avisar.
+  ultimoResumoOrgaoEm DateTime?
 
   termosAceitosEm DateTime? // consentimento de termos/LGPD no cadastro
   criadoDeIp      String? // usado só pra limite de contas por IP
@@ -377,6 +387,12 @@ model Orgao {
   cidade   Cidade  @relation(fields: [cidadeId], references: [id])
   ativo    Boolean @default(true)
 
+  // Desde quando o órgão existe. O índice de reputação só conta contra ele a reclamação
+  // publicada DEPOIS disto e que ficou sem resposta (lib/orgaos/reputacaoOrgao.ts): um órgão
+  // novo não herda a fila antiga da cidade. Os órgãos que já existiam na migration ficam com a
+  // data dela, de propósito: a regra vale daqui para frente, sem condenar o passado.
+  createdAt DateTime @default(now())
+
   // Categorias de reclamação que este órgão atende. Vazio = atende
   // qualquer categoria da cidade (comportamento antigo, preservado como
   // padrão pra não esvaziar a fila de órgãos já existentes/sem
@@ -387,8 +403,15 @@ model Orgao {
   responsaveis User[]
   respostas    RespostaOficial[]
 
+  // Identificação do órgão, copiadas do pedido de acesso aprovado (SolicitacaoOrgao). Nulos nos
+  // órgãos anteriores a esse campo. O CNPJ NÃO é único: secretarias costumam usar o da
+  // prefeitura, então dois órgãos com o mesmo CNPJ são normais e só viram sinal para o admin.
+  cnpj         String? @db.VarChar(14) // só os 14 caracteres (dígitos ou letras maiúsculas)
+  linkOficial  String? @db.VarChar(500)
+
   @@unique([cidadeId, nome])
   @@index([cidadeId])
+  @@index([cnpj])
 }
 
 // Pedido público de acesso como órgão - não cria a conta direto (ao
@@ -406,6 +429,10 @@ model SolicitacaoOrgao {
   nomeResponsavel String
   email           String
   telefone        String?
+  // CNPJ e site oficial informados no pedido: o admin confere o vínculo por eles (sinais e
+  // consulta pública do CNPJ). Nulos nos pedidos anteriores a esses campos.
+  cnpj            String? @db.VarChar(14)
+  linkOficial     String? @db.VarChar(500)
   criadoDeIp      String? // usado só pra limite de solicitações por IP
   // Idioma de quem preencheu o formulário (cookie no momento do envio) -
   // ainda não existe User pra guardar isso; usado no e-mail de aprovação/
@@ -423,6 +450,7 @@ model SolicitacaoOrgao {
 
   @@index([cidadeId])
   @@index([status])
+  @@index([cnpj])
 }
 
 enum StatusSolicitacaoCidade {
@@ -732,6 +760,9 @@ enum AcaoAuditoria {
   SOLICITACAO_ORGAO_REJEITADA
   SOLICITACAO_CIDADE_APROVADA
   SOLICITACAO_CIDADE_REJEITADA
+  // Um admin apagou o segundo fator de uma conta de órgão que perdeu o aplicativo e os códigos
+  // de backup (ver redefinirDoisFatoresOrgao).
+  DOIS_FATORES_REDEFINIDO
 }
 
 model RegistroAuditoria {

@@ -57,6 +57,7 @@
     "erroExcluirConta": "Não foi possível excluir a conta.",
     "preferenciasNotificacao": "Preferências de notificação",
     "notificarPorEmailDesc": "Receber e-mail quando o status de uma reclamação mudar (resposta oficial, publicação, rejeição, pedido de avaliação). A notificação no sininho continua sempre ativa.",
+    "notificarPorEmailResumoOrgao": "Conta de órgão: inclui o resumo semanal da fila de reclamações sem resposta.",
     "preferenciasAtualizadas": "Preferências atualizadas.",
     "segurancaConta": "Segurança da conta",
     "duasEtapas": "Autenticação em duas etapas",
@@ -185,6 +186,7 @@
     "kicker": "Órgão público",
     "orgaoInativo": "Órgão inativo",
     "reclamacoesRespondidas": "{count, plural, =0 {Nenhuma reclamação respondida} one {# reclamação respondida} other {# reclamações respondidas}}",
+    "semRespostaVencidas": "{count, plural, one {# sem resposta há mais de {dias} dias} other {# sem resposta há mais de {dias} dias}}",
     "resolvidas": "Resolvidas",
     "tempoMedioResposta": "Tempo médio de resposta",
     "notaCidadaos": "Nota dos cidadãos",
@@ -224,6 +226,8 @@
     "atende": "Atende: {categorias}",
     "atendeTodas": "Atende todas as categorias desta cidade (nenhuma categoria específica atribuída).",
     "suaReputacao": "Sua reputação pública",
+    "semRespostaVencidas": "Sem resposta há mais de {dias} dias",
+    "reputacaoNota": "Reclamação da sua fila que passa de {dias} dias sem nenhuma resposta conta como não resolvida no seu índice. Se outro órgão responder, ela deixa de contar contra você.",
     "verComoOsCidadaosVeem": "Ver como os cidadãos veem",
     "resolvidas": "Resolvidas",
     "tempoMedioResposta": "Tempo médio de resposta",
@@ -578,6 +582,19 @@
     "orgaoDesativado": "{nome} foi desativado. Ele sai das listas públicas e não responde mais reclamações.",
     "orgaoReativado": "{nome} foi reativado e já pode responder reclamações.",
     "orgaoJaNoEstado": "Nada foi alterado: o órgão já estava nesse estado.",
+    "contasComDoisFatores": "Segundo fator ativo",
+    "redefinirDoisFatores": "Redefinir 2FA",
+    "redefinirDoisFatoresConta": "Redefinir 2FA de {email}",
+    "confirmarRedefinirTitulo": "Redefinir o segundo fator de {email}?",
+    "confirmarRedefinirDescricao": "A conta perde o aplicativo autenticador e os códigos de backup. No próximo acesso, só com a senha, ela é levada a ativar o segundo fator de novo; até lá não abre o painel nem responde reclamações.",
+    "confirmarRedefinirDetalheSessoes": "Todas as sessões abertas dessa conta são encerradas.",
+    "confirmarRedefinirDetalheAviso": "A pessoa recebe um aviso no sininho e por e-mail.",
+    "confirmarRedefinirDetalheConferir": "Faça isto só depois de confirmar, por outro canal, que ela perdeu o acesso ao aplicativo.",
+    "confirmarRedefinirBotao": "Redefinir segundo fator",
+    "doisFatoresRedefinidos": "Segundo fator de {email} redefinido. No próximo acesso a pessoa precisa ativá-lo de novo.",
+    "doisFatoresRedefinidosSemAviso": "Segundo fator de {email} redefinido, mas o aviso por e-mail pode não ter saído. Avise a pessoa por outro canal.",
+    "doisFatoresJaRedefinidos": "Nada foi alterado: {email} não tem segundo fator ativo.",
+    "erroContaIndisponivel": "Não encontramos essa conta de órgão. Recarregue a página.",
     "erroOrgaoNaoEncontrado": "Não encontramos esse órgão. Recarregue a página.",
     "erroNomeDuplicado": "Já existe outro órgão com esse nome nesta cidade.",
     "erroCategoriaInvalida": "Alguma categoria marcada não existe mais. Recarregue a página e tente de novo.",
@@ -629,6 +646,19 @@
     "confirmarAprovarDetalheOrgaoExistente": "{count, plural, =0 {Este órgão já existe nesta cidade, sem responsáveis ativos: a conta nova passa a responder por ele.} one {Este órgão já existe nesta cidade e tem # responsável: a conta nova passa a responder por ele junto com essa pessoa.} other {Este órgão já existe nesta cidade e tem # responsáveis: a conta nova passa a responder por ele junto com essas pessoas.}}",
     "confirmarAprovarBotao": "Aprovar e enviar acesso",
     "sinaisRotulo": "O que confere",
+    "cnpjRotulo": "CNPJ",
+    "linkOficialRotulo": "Site oficial",
+    "consultarCnpj": "Consultar CNPJ na Receita",
+    "consultandoCnpj": "Consultando...",
+    "cnpjSituacao": "Situação: {situacao}",
+    "cnpjAdministracaoPublica": "{natureza}: administração pública",
+    "cnpjNaoAdministracaoPublica": "{natureza}: não é administração pública",
+    "cnpjErro": {
+      "naoEncontrado": "CNPJ não encontrado na base pública. Pode ser um CNPJ novo ainda não publicado: confira por outro meio.",
+      "indisponivel": "Não foi possível consultar agora. A decisão não depende disso: tente de novo mais tarde ou confira o CNPJ por fora.",
+      "semCnpj": "Este pedido não informou CNPJ.",
+      "limite": "Muitas consultas seguidas. Aguarde um pouco e tente de novo."
+    },
     "sinaisAviso": "São indícios, não comprovação: o nome do órgão e o e-mail foram digitados por quem pediu. Confirme o vínculo no site oficial do órgão ou por telefone antes de aprovar.",
     "avisoOrgaoJaExiste": "Já existe um órgão com este nome nesta cidade. Aprovar não cria outro: adiciona {responsavel} como responsável dele. Confira se a pessoa pertence mesmo a esse órgão.",
     "sinais": {
@@ -636,6 +666,10 @@
       "dominioInstitucional": "Domínio institucional",
       "dominioPessoal": "E-mail pessoal",
       "dominioProprio": "Domínio próprio",
+      "cnpjEmOutroOrgao": "{count, plural, one {CNPJ também cadastrado em # outro órgão} other {CNPJ também cadastrado em # outros órgãos}}",
+      "linkInstitucional": "Site institucional ({dominio})",
+      "linkMesmoDominio": "Site no mesmo domínio do e-mail",
+      "linkOutroDominio": "Site em domínio diferente do e-mail ({dominio})",
       "jaRejeitada": "{count, plural, one {# pedido anterior rejeitado} other {# pedidos anteriores rejeitados}}"
     },
     "confirmarRejeitarTitulo": "Rejeitar a solicitação de {orgao}?",
@@ -753,13 +787,13 @@
     "diferencial1Titulo": "Moderação por IA",
     "diferencial1Desc": "Texto e imagem passam por checagens automáticas — conteúdo ofensivo, spam, dados pessoais, repostagem — antes de qualquer publicação.",
     "diferencial2Titulo": "Reputação pública de órgãos",
-    "diferencial2Desc": "Cada órgão tem um selo público (Ótimo, Bom, Regular, Ruim), calculado a partir do tempo de resposta e da taxa real de resolução.",
+    "diferencial2Desc": "Cada órgão tem um selo público (Ótimo, Bom, Regular, Ruim), calculado pela taxa real de resolução. Reclamação que passa de 15 dias sem resposta conta como não resolvida.",
     "diferencial3Titulo": "Comunidade ativa",
     "diferencial3Desc": "Confirme problemas que também afetam você e comente em qualquer reclamação — com moderação e fila de revisão humana.",
     "diferencial4Titulo": "Conta protegida",
     "diferencial4Desc": "Autenticação em duas etapas por aplicativo autenticador, CPF único por conta e verificação de e-mail.",
     "melhorAvaliados": "Órgãos mais bem avaliados",
-    "melhorAvaliadosSub": "Selo público calculado a partir do tempo de resposta e da taxa real de resolução — sem autoavaliação.",
+    "melhorAvaliadosSub": "Selo público calculado pela taxa real de resolução, contando o que ficou sem resposta — sem autoavaliação.",
     "reclamacoesRespondidas": "{count, plural, =0 {Nenhuma reclamação respondida} one {# reclamação respondida} other {# reclamações respondidas}}",
     "prontoParticipar": "Pronto para participar?",
     "prontoParticiparSub": "Cidadãos registram problemas do seu bairro. Órgãos públicos respondem oficialmente e constroem sua reputação.",
@@ -804,6 +838,10 @@
     "cidade": "Cidade",
     "seuNomeCompleto": "Seu nome completo",
     "emailInstitucional": "E-mail institucional",
+    "cnpjRotulo": "CNPJ do órgão",
+    "cnpjDica": "O CNPJ da prefeitura ou do órgão. Serve para conferirmos o vínculo antes de liberar o acesso.",
+    "linkOficialRotulo": "Site oficial do órgão",
+    "linkOficialDica": "Endereço do site da prefeitura ou do órgão, onde conste o seu cargo ou contato.",
     "telefone": "Telefone",
     "enviarSolicitacao": "Enviar solicitação",
     "solicitacaoEnviadaTitulo": "Solicitação enviada!",
@@ -811,6 +849,8 @@
     "erroNomeOrgao": "Informe o nome do órgão.",
     "erroCidade": "Selecione a cidade.",
     "erroNomeResponsavel": "Informe o nome do responsável.",
+    "erroCnpj": "Informe um CNPJ válido, com os 14 caracteres.",
+    "erroLinkOficial": "Informe o endereço de um site, como https://prefeitura.exemplo.gov.br.",
     "erroLimiteSolicitacoes": "Muitas solicitações a partir deste endereço recentemente. Tente novamente mais tarde.",
     "erroCidadeInvalida": "Cidade inválida.",
     "erroSolicitacaoPendente": "Já existe uma solicitação pendente com este e-mail. Aguarde a análise.",
@@ -1114,10 +1154,11 @@
     "indiceGeral": "Índice geral de resolução",
     "respondidasPorOrgaos": "Respondidas por órgãos",
     "rankingTitulo": "Ranking de órgãos",
-    "rankingNota": "Considera apenas reclamações que o órgão respondeu. Órgãos com menos de 3 respostas aparecem como “poucos dados”.",
-    "semDados": "Nenhum órgão respondeu reclamações ainda.",
+    "rankingNota": "A resolução considera as reclamações que o órgão respondeu e as que ele deixou mais de {dias} dias sem nenhuma resposta (só as publicadas depois de ele entrar na plataforma; se outro órgão responder, deixa de contar). Órgãos com menos de 3 reclamações nessa conta aparecem como “poucos dados”.",
+    "semDados": "Nenhum órgão tem reclamações respondidas ou sem resposta além do prazo ainda.",
     "colOrgao": "Órgão",
     "colRespondidas": "Respondidas",
+    "colSemResposta": "Sem resposta (+{dias} d)",
     "colResolucao": "Resolução",
     "colTempo": "Tempo médio",
     "colNota": "Nota"
@@ -1167,6 +1208,13 @@
       "corpo": "A senha da sua conta foi alterada agora.",
       "aviso": "Se não foi você, sua conta pode estar comprometida — troque a senha imediatamente e entre em contato com o suporte."
     },
+    "doisFatoresRedefinidos": {
+      "assunto": "O segundo fator da sua conta foi redefinido — Urban Grid",
+      "titulo": "O segundo fator da sua conta foi redefinido",
+      "preheader": "Ative a autenticação em duas etapas de novo no próximo acesso.",
+      "corpo": "Um administrador do Urban Grid redefiniu a autenticação em duas etapas da sua conta. O aplicativo autenticador e os códigos de backup anteriores deixaram de valer, e as sessões abertas foram encerradas.",
+      "aviso": "Entre com a sua senha e ative o segundo fator de novo em Minha conta. Se você não pediu isso, troque a sua senha imediatamente e fale com a administração."
+    },
     "confirmarTrocaEmail": {
       "assunto": "Confirme seu novo e-mail — Urban Grid",
       "titulo": "Confirme seu novo e-mail",
@@ -1203,6 +1251,17 @@
       "corpoComCategoria": "{total, plural, one {Foi publicada # reclamação nova} other {Foram publicadas # reclamações novas}} de {categoria} em {cidade} nos últimos dias.",
       "botao": "Ver reclamações",
       "rodape": "Você recebeu este e-mail porque assina o resumo semanal desta cidade. Cancele quando quiser em Minha conta > Assinaturas."
+    },
+    "resumoOrgao": {
+      "assunto": "{semResposta, plural, one {# reclamação aguarda} other {# reclamações aguardam}} resposta de {orgao} — Urban Grid",
+      "titulo": "A fila do seu órgão nesta semana",
+      "preheader": "{semResposta, plural, one {# reclamação sem resposta} other {# reclamações sem resposta}} em {cidade}.",
+      "numeroRotulo": "{semResposta, plural, one {reclamação sem resposta oficial} other {reclamações sem resposta oficial}}",
+      "corpo": "{semResposta, plural, one {Há # reclamação} other {Há # reclamações}} na fila de {orgao} em {cidade} sem nenhuma resposta oficial.",
+      "novas": "{novas, plural, =0 {Nenhuma delas chegou nos últimos 7 dias.} one {# delas chegou nos últimos 7 dias.} other {# delas chegaram nos últimos 7 dias.}}",
+      "vencidas": "{vencidas, plural, one {# espera há mais de {prazo} dias.} other {# esperam há mais de {prazo} dias.}}",
+      "botao": "Abrir a fila do órgão",
+      "rodape": "Você recebeu este e-mail porque sua conta responde por {orgao} no Urban Grid. Para parar de receber, desligue o e-mail em Minha conta > Preferências de notificação."
     },
     "cidadeAprovada": {
       "assunto": "{cidade} já está disponível no Urban Grid",
@@ -1365,6 +1424,10 @@
       "titulo": "Reclamação reaberta pelo autor",
       "mensagem": "O autor de \"{titulo}\" respondeu que o problema não foi resolvido. A reclamação voltou para Em andamento."
     },
+    "novaReclamacaoNaFila": {
+      "titulo": "Nova reclamação na sua fila",
+      "mensagem": "\"{titulo}\" foi publicada e aguarda a primeira resposta do órgão."
+    },
     "reclamacaoReabertaComComentario": {
       "titulo": "Reclamação reaberta pelo autor",
       "mensagem": "O autor de \"{titulo}\" respondeu que o problema não foi resolvido: {comentario}"
@@ -1382,6 +1445,10 @@
     "papelAlterado": {
       "titulo": "Seu papel na plataforma mudou",
       "mensagem": "Sua conta agora tem o papel de {papel, select, MODERADOR {Moderador} ADMIN {Administrador} CIDADAO {Cidadão} other {{papel}}}. Se você não esperava essa mudança, fale com a administração."
+    },
+    "doisFatoresRedefinidos": {
+      "titulo": "O segundo fator da sua conta foi redefinido",
+      "mensagem": "A administração redefiniu a autenticação em duas etapas da sua conta. No próximo acesso, ative-a de novo em Minha conta. Se você não pediu isso, troque sua senha e fale com a administração."
     },
     "senhaAlterada": {
       "titulo": "Sua senha foi alterada",
@@ -1403,6 +1470,7 @@
     "resumoUltimos7dias": "Nos últimos 7 dias",
     "resumoPapeis": "Mudanças de papel",
     "resumoBanimentos": "Banimentos e reversões",
+    "resumoSeguranca": "Segundos fatores redefinidos",
     "resumoOrgaos": "Órgãos e solicitações",
     "por": "por {ator}",
     "atorRemovido": "conta removida",
@@ -1417,7 +1485,8 @@
       "SOLICITACAO_ORGAO_APROVADA": "Solicitação de órgão aprovada",
       "SOLICITACAO_ORGAO_REJEITADA": "Solicitação de órgão rejeitada",
       "SOLICITACAO_CIDADE_APROVADA": "Solicitação de cidade aprovada",
-      "SOLICITACAO_CIDADE_REJEITADA": "Solicitação de cidade rejeitada"
+      "SOLICITACAO_CIDADE_REJEITADA": "Solicitação de cidade rejeitada",
+      "DOIS_FATORES_REDEFINIDO": "Segundo fator redefinido"
     },
     "detalhePapel": "{de} → {para}",
     "detalheBanimento": "{duracao}, até {ate}",

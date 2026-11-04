@@ -2,9 +2,11 @@ import type { TipoNotificacao } from "@/generated/prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import {
+  enviarEmailDoisFatoresRedefinidos,
   enviarEmailNotificacao,
   enviarEmailSenhaAlterada,
   enviarEmailTrocaEmailSolicitada,
+  type ResultadoEnvio,
 } from "@/lib/email";
 import { idiomaOuPadrao } from "@/i18n/config";
 
@@ -128,6 +130,38 @@ export async function alertarSenhaAlterada(userId: string) {
   }
 
   await enviarEmailSenhaAlterada({ email: usuario.email, locale });
+}
+
+// Um admin redefiniu o segundo fator desta conta (ver redefinirDoisFatoresOrgao): quem perdeu o
+// aplicativo sabe o que aconteceu; quem não pediu nada precisa saber a tempo de trocar a senha.
+// Mesmo desenho de alertarSenhaAlterada: sininho + e-mail de segurança, que sai mesmo sem e-mail
+// verificado. NUNCA lança: a redefinição já foi gravada e não pode virar erro por causa do aviso.
+// Devolve o resultado do e-mail (ou null se nem chegou a tentar) para a tela dizer se saiu.
+export async function alertarDoisFatoresRedefinidos(userId: string): Promise<ResultadoEnvio | null> {
+  try {
+    const usuario = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true, idioma: true },
+    });
+    if (!usuario) {
+      return null;
+    }
+
+    const locale = idiomaOuPadrao(usuario.idioma);
+    try {
+      const { titulo, mensagem } = await montarTexto(locale, { chave: "doisFatoresRedefinidos" });
+      await prisma.notificacao.create({
+        data: { userId, tipo: "CONTA_SEGURANCA", titulo, mensagem },
+      });
+    } catch (erro) {
+      console.error("Falha ao criar a notificação de segundo fator redefinido:", erro);
+    }
+
+    return await enviarEmailDoisFatoresRedefinidos({ email: usuario.email, locale });
+  } catch (erro) {
+    console.error("Falha ao avisar o segundo fator redefinido:", erro);
+    return null;
+  }
 }
 
 // Mesmo espírito de alertarSenhaAlterada: avisa o e-mail ATUAL assim que

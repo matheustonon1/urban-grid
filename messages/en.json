@@ -57,6 +57,7 @@
     "erroExcluirConta": "Couldn't delete the account.",
     "preferenciasNotificacao": "Notification preferences",
     "notificarPorEmailDesc": "Receive an email when a complaint's status changes (official response, publication, rejection, review request). The in-app bell notification always stays on.",
+    "notificarPorEmailResumoOrgao": "Agency account: includes the weekly summary of complaints still waiting for a response.",
     "preferenciasAtualizadas": "Preferences updated.",
     "segurancaConta": "Account security",
     "duasEtapas": "Two-factor authentication",
@@ -185,6 +186,7 @@
     "kicker": "Public agency",
     "orgaoInativo": "Inactive department",
     "reclamacoesRespondidas": "{count, plural, one {# complaint answered} other {# complaints answered}}",
+    "semRespostaVencidas": "{count, plural, one {# with no response for more than {dias} days} other {# with no response for more than {dias} days}}",
     "resolvidas": "Resolved",
     "tempoMedioResposta": "Average response time",
     "notaCidadaos": "Citizen rating",
@@ -224,6 +226,8 @@
     "atende": "Covers: {categorias}",
     "atendeTodas": "Covers all categories in this city (no specific category assigned).",
     "suaReputacao": "Your public reputation",
+    "semRespostaVencidas": "No response for more than {dias} days",
+    "reputacaoNota": "A complaint in your queue that goes past {dias} days with no response at all counts as unresolved in your index. If another agency answers, it stops counting against you.",
     "verComoOsCidadaosVeem": "See how citizens see it",
     "resolvidas": "Resolved",
     "tempoMedioResposta": "Average response time",
@@ -578,6 +582,19 @@
     "orgaoDesativado": "{nome} was deactivated. It leaves the public lists and can no longer answer complaints.",
     "orgaoReativado": "{nome} was reactivated and can answer complaints again.",
     "orgaoJaNoEstado": "Nothing was changed: the agency was already in that state.",
+    "contasComDoisFatores": "Two-factor on",
+    "redefinirDoisFatores": "Reset 2FA",
+    "redefinirDoisFatoresConta": "Reset 2FA for {email}",
+    "confirmarRedefinirTitulo": "Reset two-factor for {email}?",
+    "confirmarRedefinirDescricao": "The account loses its authenticator app and backup codes. Next time it signs in, with just the password, it is taken to turn two-factor on again; until then it can't open the panel or answer complaints.",
+    "confirmarRedefinirDetalheSessoes": "All open sessions of this account are ended.",
+    "confirmarRedefinirDetalheAviso": "The person gets a notification and an e-mail.",
+    "confirmarRedefinirDetalheConferir": "Only do this after confirming, through another channel, that they lost access to the app.",
+    "confirmarRedefinirBotao": "Reset two-factor",
+    "doisFatoresRedefinidos": "Two-factor for {email} was reset. Next time they sign in they must turn it on again.",
+    "doisFatoresRedefinidosSemAviso": "Two-factor for {email} was reset, but the e-mail notice may not have gone out. Tell the person through another channel.",
+    "doisFatoresJaRedefinidos": "Nothing was changed: {email} has no two-factor on.",
+    "erroContaIndisponivel": "We couldn't find that agency account. Reload the page.",
     "erroOrgaoNaoEncontrado": "We couldn't find that agency. Reload the page.",
     "erroNomeDuplicado": "Another agency with that name already exists in this city.",
     "erroCategoriaInvalida": "One of the selected categories no longer exists. Reload the page and try again.",
@@ -628,6 +645,19 @@
     "confirmarAprovarDetalheResposta": "This account's replies appear on complaints as the agency's official answers.",
     "confirmarAprovarDetalheOrgaoExistente": "{count, plural, =0 {This agency already exists in this city, with no active staff: the new account will answer for it.} one {This agency already exists in this city and has # staff member: the new account will answer for it alongside that person.} other {This agency already exists in this city and has # staff members: the new account will answer for it alongside those people.}}",
     "sinaisRotulo": "What checks out",
+    "cnpjRotulo": "CNPJ",
+    "linkOficialRotulo": "Official website",
+    "consultarCnpj": "Look up CNPJ at the Federal Revenue",
+    "consultandoCnpj": "Looking up...",
+    "cnpjSituacao": "Status: {situacao}",
+    "cnpjAdministracaoPublica": "{natureza}: public administration",
+    "cnpjNaoAdministracaoPublica": "{natureza}: not public administration",
+    "cnpjErro": {
+      "naoEncontrado": "CNPJ not found in the public database. It may be a new CNPJ not yet published: check another way.",
+      "indisponivel": "The lookup is unavailable right now. Your decision doesn't depend on it: try again later or check the CNPJ elsewhere.",
+      "semCnpj": "This request didn't include a CNPJ.",
+      "limite": "Too many lookups in a row. Wait a moment and try again."
+    },
     "sinaisAviso": "These are hints, not proof: the agency name and e-mail were typed by whoever asked. Confirm the link with the agency on its official website or by phone before approving.",
     "avisoOrgaoJaExiste": "An agency with this name already exists in this city. Approving doesn't create another: it adds {responsavel} as one of its staff. Check that the person really belongs to that agency.",
     "sinais": {
@@ -635,6 +665,10 @@
       "dominioInstitucional": "Institutional domain",
       "dominioPessoal": "Personal e-mail",
       "dominioProprio": "Own domain",
+      "cnpjEmOutroOrgao": "{count, plural, one {CNPJ also registered to # other agency} other {CNPJ also registered to # other agencies}}",
+      "linkInstitucional": "Institutional website ({dominio})",
+      "linkMesmoDominio": "Website on the same domain as the email",
+      "linkOutroDominio": "Website on a different domain than the email ({dominio})",
       "jaRejeitada": "{count, plural, one {# earlier request rejected} other {# earlier requests rejected}}"
     },
     "confirmarAprovarBotao": "Approve and send access",
@@ -753,13 +787,13 @@
     "diferencial1Titulo": "AI moderation",
     "diferencial1Desc": "Text and images go through automated checks — offensive content, spam, personal data, reposting — before anything is published.",
     "diferencial2Titulo": "Public department reputation",
-    "diferencial2Desc": "Each department has a public badge (Great, Good, Fair, Poor), calculated from response time and actual resolution rate.",
+    "diferencial2Desc": "Each department has a public badge (Great, Good, Fair, Poor), calculated from the actual resolution rate. A complaint left more than 15 days without a response counts as unresolved.",
     "diferencial3Titulo": "Active community",
     "diferencial3Desc": "Confirm problems that affect you too, and comment on any complaint — with moderation and a human review queue.",
     "diferencial4Titulo": "Protected account",
     "diferencial4Desc": "Two-factor authentication via authenticator app, a unique national ID per account, and email verification.",
     "melhorAvaliados": "Top-rated departments",
-    "melhorAvaliadosSub": "Public badge calculated from response time and actual resolution rate — no self-assessment.",
+    "melhorAvaliadosSub": "Public badge calculated from the actual resolution rate, counting what went unanswered — no self-assessment.",
     "reclamacoesRespondidas": "{count, plural, one {# complaint answered} other {# complaints answered}}",
     "prontoParticipar": "Ready to get involved?",
     "prontoParticiparSub": "Citizens report problems in their neighborhood. Public departments respond officially and build their reputation.",
@@ -804,6 +838,10 @@
     "cidade": "City",
     "seuNomeCompleto": "Your full name",
     "emailInstitucional": "Institutional email",
+    "cnpjRotulo": "Agency CNPJ",
+    "cnpjDica": "The CNPJ (Brazilian company registration number) of the city hall or agency. We use it to check the link before granting access.",
+    "linkOficialRotulo": "Agency's official website",
+    "linkOficialDica": "Address of the city hall's or agency's website, where your position or contact appears.",
     "telefone": "Phone",
     "enviarSolicitacao": "Submit request",
     "solicitacaoEnviadaTitulo": "Request submitted!",
@@ -811,6 +849,8 @@
     "erroNomeOrgao": "Enter the department's name.",
     "erroCidade": "Select the city.",
     "erroNomeResponsavel": "Enter the responsible person's name.",
+    "erroCnpj": "Enter a valid CNPJ with all 14 characters.",
+    "erroLinkOficial": "Enter a website address, such as https://city.example.gov.br.",
     "erroLimiteSolicitacoes": "Too many requests from this address recently. Try again later.",
     "erroCidadeInvalida": "Invalid city.",
     "erroSolicitacaoPendente": "There's already a pending request with this email. Please wait for the review.",
@@ -1114,10 +1154,11 @@
     "indiceGeral": "Overall resolution rate",
     "respondidasPorOrgaos": "Answered by agencies",
     "rankingTitulo": "Agency ranking",
-    "rankingNota": "Only counts complaints the agency answered. Agencies with fewer than 3 answers show as “not enough data”.",
-    "semDados": "No agency has answered complaints yet.",
+    "rankingNota": "Resolution counts the complaints the agency answered and those it left more than {dias} days without any response (only those published after it joined the platform; if another agency answers, it stops counting). Agencies with fewer than 3 complaints in that count show as “not enough data”.",
+    "semDados": "No agency has answered complaints or left them unanswered past the deadline yet.",
     "colOrgao": "Agency",
     "colRespondidas": "Answered",
+    "colSemResposta": "Unanswered (+{dias} d)",
     "colResolucao": "Resolution",
     "colTempo": "Avg. time",
     "colNota": "Rating"
@@ -1167,6 +1208,13 @@
       "corpo": "Your account's password was just changed.",
       "aviso": "If this wasn't you, your account may be compromised — change your password immediately and contact support."
     },
+    "doisFatoresRedefinidos": {
+      "assunto": "Your account's two-factor authentication was reset — Urban Grid",
+      "titulo": "Your account's two-factor authentication was reset",
+      "preheader": "Turn two-factor authentication on again the next time you sign in.",
+      "corpo": "An Urban Grid administrator reset two-factor authentication on your account. Your previous authenticator app and backup codes no longer work, and open sessions were ended.",
+      "aviso": "Sign in with your password and turn two-factor authentication on again in My account. If you didn't ask for this, change your password right away and contact the administration."
+    },
     "confirmarTrocaEmail": {
       "assunto": "Confirm your new e-mail — Urban Grid",
       "titulo": "Confirm your new e-mail",
@@ -1203,6 +1251,17 @@
       "corpoComCategoria": "{total, plural, one {# new complaint was} other {# new complaints were}} published about {categoria} in {cidade} in the last few days.",
       "botao": "View complaints",
       "rodape": "You received this e-mail because you subscribed to this city's weekly summary. Cancel anytime in My Account > Subscriptions."
+    },
+    "resumoOrgao": {
+      "assunto": "{semResposta, plural, one {# complaint is} other {# complaints are}} waiting for a response from {orgao} — Urban Grid",
+      "titulo": "Your agency's queue this week",
+      "preheader": "{semResposta, plural, one {# complaint} other {# complaints}} without a response in {cidade}.",
+      "numeroRotulo": "{semResposta, plural, one {complaint without an official response} other {complaints without an official response}}",
+      "corpo": "{semResposta, plural, one {There is # complaint} other {There are # complaints}} in the queue of {orgao} in {cidade} with no official response.",
+      "novas": "{novas, plural, =0 {None of them arrived in the last 7 days.} one {# of them arrived in the last 7 days.} other {# of them arrived in the last 7 days.}}",
+      "vencidas": "{vencidas, plural, one {# has been waiting for more than {prazo} days.} other {# have been waiting for more than {prazo} days.}}",
+      "botao": "Open the agency queue",
+      "rodape": "You received this e-mail because your account answers for {orgao} on Urban Grid. To stop receiving it, turn off e-mail in My Account > Notification preferences."
     },
     "cidadeAprovada": {
       "assunto": "{cidade} is now available on Urban Grid",
@@ -1361,6 +1420,10 @@
       "titulo": "Was the problem resolved?",
       "mensagem": "{orgao} marked \"{titulo}\" as resolved. Rate whether the problem was really resolved."
     },
+    "novaReclamacaoNaFila": {
+      "titulo": "New complaint in your queue",
+      "mensagem": "\"{titulo}\" was published and is waiting for the agency's first response."
+    },
     "reclamacaoReaberta": {
       "titulo": "Complaint reopened by its author",
       "mensagem": "The author of \"{titulo}\" said the problem was not resolved. The complaint is back to In progress."
@@ -1383,6 +1446,10 @@
       "titulo": "Your role on the platform changed",
       "mensagem": "Your account now has the role of {papel, select, MODERADOR {Moderator} ADMIN {Administrator} CIDADAO {Citizen} other {{papel}}}. If you weren't expecting this change, contact the administration."
     },
+    "doisFatoresRedefinidos": {
+      "titulo": "Your account's two-factor authentication was reset",
+      "mensagem": "The administration reset two-factor authentication on your account. Next time you sign in, turn it on again in My account. If you didn't ask for this, change your password and contact the administration."
+    },
     "senhaAlterada": {
       "titulo": "Your password was changed",
       "mensagem": "If this wasn't you, contact support immediately."
@@ -1403,6 +1470,7 @@
     "resumoUltimos7dias": "In the last 7 days",
     "resumoPapeis": "Role changes",
     "resumoBanimentos": "Bans and reversals",
+    "resumoSeguranca": "Two-factor resets",
     "resumoOrgaos": "Agencies and requests",
     "por": "by {ator}",
     "atorRemovido": "removed account",
@@ -1417,7 +1485,8 @@
       "SOLICITACAO_ORGAO_APROVADA": "Agency request approved",
       "SOLICITACAO_ORGAO_REJEITADA": "Agency request rejected",
       "SOLICITACAO_CIDADE_APROVADA": "City request approved",
-      "SOLICITACAO_CIDADE_REJEITADA": "City request rejected"
+      "SOLICITACAO_CIDADE_REJEITADA": "City request rejected",
+      "DOIS_FATORES_REDEFINIDO": "Two-factor reset"
     },
     "detalhePapel": "{de} → {para}",
     "detalheBanimento": "{duracao}, until {ate}",

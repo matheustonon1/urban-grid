@@ -22,6 +22,7 @@ const EXEMPLOS: Record<ChaveNotificacao, TextoNotificacao> = {
   },
   pedidoAvaliacao: { chave: "pedidoAvaliacao", params: { orgao: "Obras", titulo: "Buraco" } },
   reclamacaoReaberta: { chave: "reclamacaoReaberta", params: { titulo: "Buraco" } },
+  novaReclamacaoNaFila: { chave: "novaReclamacaoNaFila", params: { titulo: "Buraco" } },
   reclamacaoReabertaComComentario: {
     chave: "reclamacaoReabertaComComentario",
     params: { titulo: "Buraco", comentario: "Continua igual." },
@@ -30,6 +31,7 @@ const EXEMPLOS: Record<ChaveNotificacao, TextoNotificacao> = {
   respostaComentario: { chave: "respostaComentario", mensagemBruta: "Concordo." },
   atividadeSuspeita: { chave: "atividadeSuspeita", params: { confirmacoes: 15, minutos: 30 } },
   papelAlterado: { chave: "papelAlterado", params: { papel: "MODERADOR" } },
+  doisFatoresRedefinidos: { chave: "doisFatoresRedefinidos" },
   senhaAlterada: { chave: "senhaAlterada" },
   trocaEmailSolicitada: { chave: "trocaEmailSolicitada", params: { novoEmail: "novo@example.com" } },
 };

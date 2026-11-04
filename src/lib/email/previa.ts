@@ -14,8 +14,10 @@ import {
   montarEmailAcessoOrgao,
   montarEmailCidadeAprovada,
   montarEmailConfirmarTrocaEmail,
+  montarEmailDoisFatoresRedefinidos,
   montarEmailNotificacao,
   montarEmailRedefinicaoSenha,
+  montarEmailResumoOrgao,
   montarEmailResumoSemanal,
   montarEmailSenhaAlterada,
   montarEmailSolicitacaoCidadeRejeitada,
@@ -41,6 +43,7 @@ async function main() {
       }),
       "redefinicao-senha": await montarEmailRedefinicaoSenha({ token: TOKEN, locale }),
       "senha-alterada": await montarEmailSenhaAlterada({ locale }),
+      "dois-fatores-redefinidos": await montarEmailDoisFatoresRedefinidos({ locale }),
       "confirmar-troca-email": await montarEmailConfirmarTrocaEmail({
         token: TOKEN,
         emailAtual: "maria.silva@exemplo.com",
@@ -67,6 +70,16 @@ async function main() {
         mensagem:
           "A reclamação “Buraco profundo na Avenida Brasil” passou pela moderação e já está visível para todos.",
         protocolo: "UG-2026-0000042",
+        locale,
+      }),
+      "resumo-orgao": await montarEmailResumoOrgao({
+        nomeOrgao: "Secretaria de Obras & Serviços <D'Oeste>",
+        nomeCidade: "Santa Isabel D'Oeste",
+        semResposta: 12,
+        novas: 4,
+        vencidas: 3,
+        prazoDias: 15,
+        url: "http://localhost:3000/orgao",
         locale,
       }),
       "resumo-semanal": await montarEmailResumoSemanal({

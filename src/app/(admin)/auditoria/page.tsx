@@ -27,10 +27,12 @@ const TOM_ACAO = {
   SOLICITACAO_ORGAO_REJEITADA: "neutro",
   SOLICITACAO_CIDADE_APROVADA: "sucesso",
   SOLICITACAO_CIDADE_REJEITADA: "neutro",
+  DOIS_FATORES_REDEFINIDO: "atencao",
 } as const satisfies Record<string, TomEtiqueta>;
 
 const GRUPO_PAPEIS = ["PAPEL_ALTERADO"] as const;
 const GRUPO_BANIMENTOS = ["BANIMENTO_APLICADO", "BANIMENTO_REVERTIDO"] as const;
+const GRUPO_SEGURANCA = ["DOIS_FATORES_REDEFINIDO"] as const;
 const GRUPO_ORGAOS = [
   "ORGAO_DESATIVADO",
   "ORGAO_REATIVADO",
@@ -180,6 +182,7 @@ export default async function AuditoriaPage({ searchParams }: PageProps<"/audito
               { rotulo: t("resumoUltimos7dias"), valor: recentes },
               { rotulo: t("resumoPapeis"), valor: somar(GRUPO_PAPEIS) },
               { rotulo: t("resumoBanimentos"), valor: somar(GRUPO_BANIMENTOS) },
+              { rotulo: t("resumoSeguranca"), valor: somar(GRUPO_SEGURANCA) },
               { rotulo: t("resumoOrgaos"), valor: somar(GRUPO_ORGAOS) },
             ]}
           />

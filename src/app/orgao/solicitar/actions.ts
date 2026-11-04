@@ -5,6 +5,8 @@ import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
 import { obterIdiomaAtual } from "@/i18n/atual";
+import { normalizarCnpj } from "@/lib/orgaos/cnpj";
+import { normalizarLinkOficial } from "@/lib/orgaos/linkOficial";
 
 import { criarSolicitarOrgaoSchema, type SolicitarOrgaoFormState } from "./definitions";
 
@@ -21,6 +23,8 @@ export async function solicitarOrgao(
     cidadeId: formData.get("cidadeId"),
     nomeResponsavel: formData.get("nomeResponsavel"),
     email: formData.get("email"),
+    cnpj: formData.get("cnpj"),
+    linkOficial: formData.get("linkOficial"),
     telefone: formData.get("telefone"),
     aceitaTermos: formData.get("aceitaTermos"),
   });
@@ -29,6 +33,10 @@ export async function solicitarOrgao(
   }
 
   const { nomeOrgao, sigla, cidadeId, nomeResponsavel, email, telefone } = validado.data;
+  // Guardados normalizados (CNPJ só com os 14 caracteres; endereço padronizado, sem consulta
+  // nem usuário/senha): o schema já provou que os dois são válidos.
+  const cnpj = normalizarCnpj(validado.data.cnpj);
+  const linkOficial = normalizarLinkOficial(validado.data.linkOficial)!;
 
   const ip = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
   if (ip) {
@@ -66,6 +74,8 @@ export async function solicitarOrgao(
       nomeResponsavel,
       email,
       telefone: telefone || null,
+      cnpj,
+      linkOficial,
       criadoDeIp: ip,
       idioma: await obterIdiomaAtual(),
     },

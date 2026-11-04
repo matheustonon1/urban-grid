@@ -120,6 +120,23 @@ export async function montarEmailSenhaAlterada({
   });
 }
 
+export async function montarEmailDoisFatoresRedefinidos({
+  locale = IDIOMA_PADRAO,
+}: Base = {}): Promise<EmailMontado> {
+  const t = await tradutor(locale);
+  return compor(t, locale, {
+    assunto: t("doisFatoresRedefinidos.assunto"),
+    preheader: t("doisFatoresRedefinidos.preheader"),
+    categoria: "seguranca",
+    titulo: t("doisFatoresRedefinidos.titulo"),
+    tom: "alerta",
+    blocos: [
+      { tipo: "paragrafo", html: t("doisFatoresRedefinidos.corpo") },
+      { tipo: "destaque", html: `<strong>${esc(t("doisFatoresRedefinidos.aviso"))}</strong>` },
+    ],
+  });
+}
+
 export async function montarEmailConfirmarTrocaEmail({
   token,
   emailAtual,
@@ -306,5 +323,61 @@ export async function montarEmailResumoSemanal({
     // Quem não quer mais o resumo cancela na própria tela de assinaturas; o
     // cabeçalho deixa o cliente de e-mail mostrar "cancelar inscrição".
     headers: { "List-Unsubscribe": `<${montarUrl("/painel/assinaturas")}>` },
+  });
+}
+
+// Resumo semanal da fila de uma conta de órgão (lib/notificacoes/resumoOrgao.ts): quantas
+// reclamações do escopo dele estão sem resposta oficial, quantas chegaram nesta semana e quantas
+// já passaram do prazo. Os contadores vêm calculados por quem chama (a mesma regra do painel).
+// O nome do órgão e da cidade vêm do banco: negrito() escapa no corpo; o rodapé é escapado por
+// compor(); o assunto é texto puro.
+export async function montarEmailResumoOrgao({
+  nomeOrgao,
+  nomeCidade,
+  semResposta,
+  novas,
+  vencidas,
+  prazoDias,
+  url,
+  locale = IDIOMA_PADRAO,
+}: Base & {
+  nomeOrgao: string;
+  nomeCidade: string;
+  semResposta: number;
+  novas: number;
+  vencidas: number;
+  prazoDias: number;
+  url: string;
+}): Promise<EmailMontado> {
+  const t = await tradutor(locale);
+  const corpo = t("resumoOrgao.corpo", {
+    semResposta,
+    orgao: negrito(nomeOrgao),
+    cidade: negrito(nomeCidade),
+  });
+  const detalhes = [
+    t("resumoOrgao.novas", { novas }),
+    // Só entra quando há o que apontar: "0 esperam há mais de 15 dias" seria ruído.
+    ...(vencidas > 0 ? [t("resumoOrgao.vencidas", { vencidas, prazo: prazoDias })] : []),
+  ].join(" ");
+
+  return compor(t, locale, {
+    assunto: t("resumoOrgao.assunto", { semResposta, orgao: nomeOrgao }),
+    preheader: t("resumoOrgao.preheader", { semResposta, cidade: nomeCidade }),
+    categoria: "orgao",
+    titulo: t("resumoOrgao.titulo"),
+    blocos: [
+      {
+        tipo: "numero",
+        valor: String(semResposta),
+        rotulo: t("resumoOrgao.numeroRotulo", { semResposta }),
+      },
+      { tipo: "paragrafo", html: corpo },
+      { tipo: "paragrafo", html: esc(detalhes) },
+    ],
+    botao: { texto: t("resumoOrgao.botao"), url },
+    rodape: t("resumoOrgao.rodape", { orgao: nomeOrgao }),
+    // Quem não quer mais desliga o e-mail em Minha conta (preferências de notificação).
+    headers: { "List-Unsubscribe": `<${montarUrl("/painel/conta")}>` },
   });
 }

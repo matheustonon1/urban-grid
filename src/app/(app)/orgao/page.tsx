@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { StatusReclamacao } from "@/generated/prisma/client";
 import { getLocale, getTranslations } from "next-intl/server";
 import { CircleCheck, MessageSquareText, SearchX } from "lucide-react";
 
@@ -20,6 +19,8 @@ import {
   pagina,
   rotuloSecao,
 } from "@/lib/estilos";
+import { escopoDeReclamacoesDoOrgao, filtroAbertas } from "@/lib/orgaos/escopoOrgao";
+import { PRAZO_SEM_RESPOSTA_DIAS } from "@/lib/orgaos/prazoResposta";
 import { calcularMetricasOrgao, classificarIndice } from "@/lib/orgaos/reputacaoOrgao";
 import { nomeCategoriaTraduzido } from "@/lib/reclamacoes/categoriaI18n";
 import { idiomaOuPadrao } from "@/i18n/config";
@@ -82,25 +83,17 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
   const fila: "sem-resposta" | "acompanhamento" =
     filaParam === "acompanhamento" ? "acompanhamento" : "sem-resposta";
 
+  // O escopo (cidade, categorias atendidas, autor de fora) é o mesmo que o aviso em tempo real e
+  // o resumo semanal usam: ver lib/orgaos/escopoOrgao.ts. Aqui só se somam o filtro de categoria
+  // escolhido na tela (que cabe dentro do escopo) e a busca.
   const filtroBase = orgao
     ? {
-        cidadeId: orgao.cidadeId,
-        status: {
-          in: [StatusReclamacao.PUBLICADA, StatusReclamacao.EM_ANDAMENTO],
-        },
-        ...(categoriaFiltro
-          ? { categoriaId: categoriaFiltro }
-          : categoriaIds
-            ? { categoriaId: { in: categoriaIds } }
-            : {}),
+        ...escopoDeReclamacoesDoOrgao(orgao, categoriaIds),
+        ...filtroAbertas,
+        ...(categoriaFiltro ? { categoriaId: categoriaFiltro } : {}),
         ...(termo
           ? { OR: [{ protocolo: { contains: termo } }, { titulo: { contains: termo } }] }
           : {}),
-        // O órgão não responde ao que uma conta dele mesmo abriu (responderReclamacao recusa):
-        // listar na fila seria oferecer um "Responder" que só leva a um erro. O `orgaoId: null`
-        // explícito é essencial: o autor comum não tem órgão, e `NOT`/`not` sozinhos viram SQL
-        // com NULL (`NOT (orgaoId = ?)` é NULL, não verdadeiro) e esvaziariam a fila inteira.
-        autor: { OR: [{ orgaoId: null }, { orgaoId: { not: orgao.id } }] },
       }
     : null;
   const filtroSemResposta = filtroBase && { ...filtroBase, respostas: { none: {} } };
@@ -182,7 +175,7 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
   ];
 
   const classificacao = metricas
-    ? classificarIndice(metricas.indiceResolucao, metricas.totalRespondidas)
+    ? classificarIndice(metricas.indiceResolucao, metricas.baseDoIndice)
     : null;
 
   const agora = new Date();
@@ -520,6 +513,10 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
                     valor: metricas.notaMedia !== null ? `${metricas.notaMedia}/5` : "—",
                   },
                   { rotulo: t("avaliacoesRecebidas"), valor: String(metricas.totalAvaliacoes) },
+                  {
+                    rotulo: t("semRespostaVencidas", { dias: PRAZO_SEM_RESPOSTA_DIAS }),
+                    valor: String(metricas.semRespostaVencidas),
+                  },
                 ].map((item) => (
                   <div key={item.rotulo} className="flex items-baseline justify-between gap-4 py-3">
                     <dt className="text-sm text-ink-muted">{item.rotulo}</dt>
@@ -527,6 +524,10 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
                   </div>
                 ))}
               </dl>
+
+              <p className="text-sm text-ink-muted">
+                {t("reputacaoNota", { dias: PRAZO_SEM_RESPOSTA_DIAS })}
+              </p>
 
               <Link
                 href={`/orgaos/${orgao.id}`}

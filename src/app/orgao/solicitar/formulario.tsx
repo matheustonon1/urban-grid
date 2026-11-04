@@ -24,11 +24,11 @@ export function FormularioSolicitarOrgao() {
   const [state, action, pending] = useActionState(solicitarOrgao, undefined);
   const erros = state?.erros;
 
-  const atributos = (id: string, erro?: string) => ({
+  const atributos = (id: string, erro?: string, dica?: string) => ({
     id,
     className: erro ? campoInputInvalido : campoInput,
     "aria-invalid": erro ? true : undefined,
-    "aria-describedby": descritoPor(id, erro),
+    "aria-describedby": descritoPor(id, erro, dica),
   });
 
   if (state?.sucesso) {
@@ -84,6 +84,37 @@ export function FormularioSolicitarOrgao() {
           name="email"
           autoComplete="email"
           {...atributos("orgao-email", erros?.email?.[0])}
+        />
+      </Campo>
+
+      <Campo
+        id="orgao-cnpj"
+        rotulo={t("cnpjRotulo")}
+        dica={t("cnpjDica")}
+        erro={erros?.cnpj?.[0]}
+      >
+        <input
+          type="text"
+          name="cnpj"
+          autoComplete="off"
+          placeholder="00.000.000/0000-00"
+          {...atributos("orgao-cnpj", erros?.cnpj?.[0], t("cnpjDica"))}
+        />
+      </Campo>
+
+      <Campo
+        id="orgao-link"
+        rotulo={t("linkOficialRotulo")}
+        dica={t("linkOficialDica")}
+        erro={erros?.linkOficial?.[0]}
+      >
+        <input
+          type="text"
+          name="linkOficial"
+          inputMode="url"
+          autoComplete="url"
+          placeholder="https://"
+          {...atributos("orgao-link", erros?.linkOficial?.[0], t("linkOficialDica"))}
         />
       </Campo>
 

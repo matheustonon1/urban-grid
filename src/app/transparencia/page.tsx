@@ -9,6 +9,7 @@ import { EstadoVazio } from "@/components/ui/estado-vazio";
 import { PainelNumeros } from "@/components/ui/painel-numeros";
 import { Secao } from "@/components/ui/secao";
 import { pagina } from "@/lib/estilos";
+import { limiteDoPrazoSemResposta, PRAZO_SEM_RESPOSTA_DIAS } from "@/lib/orgaos/prazoResposta";
 import { calcularMetricasOrgao, classificarIndice } from "@/lib/orgaos/reputacaoOrgao";
 import { STATUS_PUBLICOS } from "@/lib/reclamacoes/statusPublicos";
 
@@ -27,7 +28,27 @@ export default async function TransparenciaPage() {
     prisma.reclamacao.count({ where: { status: { in: [...STATUS_PUBLICOS] } } }),
     prisma.reclamacao.count({ where: { status: "RESOLVIDA" } }),
     prisma.orgao.findMany({
-      where: { ativo: true, respostas: { some: {} } },
+      where: {
+        ativo: true,
+        OR: [
+          { respostas: { some: {} } },
+          // Nunca respondeu, mas há reclamação parada além do prazo na cidade dele: o silêncio
+          // também entra no ranking. Isto é só um pré-filtro barato (um superset); o corte
+          // exato (escopo de categorias, publicada depois de o órgão existir) é de
+          // calcularMetricasOrgao, e quem sai dele com base zero é descartado logo abaixo.
+          {
+            cidade: {
+              reclamacoes: {
+                some: {
+                  status: { in: ["PUBLICADA", "EM_ANDAMENTO"] },
+                  respostas: { none: {} },
+                  publicadaEm: { lte: limiteDoPrazoSemResposta(new Date()) },
+                },
+              },
+            },
+          },
+        ],
+      },
       select: { id: true, nome: true, sigla: true, cidade: { select: { nome: true } } },
       take: LIMITE_ORGAOS,
     }),
@@ -37,7 +58,9 @@ export default async function TransparenciaPage() {
     await Promise.all(
       orgaos.map(async (orgao) => ({ orgao, metricas: await calcularMetricasOrgao(orgao.id) }))
     )
-  ).sort(
+  )
+    .filter(({ metricas }) => metricas.baseDoIndice > 0)
+    .sort(
     (a, b) =>
       (b.metricas.indiceResolucao ?? -1) - (a.metricas.indiceResolucao ?? -1) ||
       b.metricas.totalRespondidas - a.metricas.totalRespondidas
@@ -64,7 +87,7 @@ export default async function TransparenciaPage() {
         id="ranking"
         titulo={t("rankingTitulo")}
         contador={ranking.length}
-        descricao={t("rankingNota")}
+        descricao={t("rankingNota", { dias: PRAZO_SEM_RESPOSTA_DIAS })}
       >
         {ranking.length === 0 ? (
           <EstadoVazio icone={Building2} titulo={t("semDados")} />
@@ -85,6 +108,9 @@ export default async function TransparenciaPage() {
                     {t("colRespondidas")}
                   </th>
                   <th scope="col" className="kicker px-4 py-3">
+                    {t("colSemResposta", { dias: PRAZO_SEM_RESPOSTA_DIAS })}
+                  </th>
+                  <th scope="col" className="kicker px-4 py-3">
                     {t("colResolucao")}
                   </th>
                   <th scope="col" className="kicker px-4 py-3">
@@ -97,7 +123,7 @@ export default async function TransparenciaPage() {
               </thead>
               <tbody>
                 {ranking.map(({ orgao, metricas }, indice) => {
-                  const selo = classificarIndice(metricas.indiceResolucao, metricas.totalRespondidas);
+                  const selo = classificarIndice(metricas.indiceResolucao, metricas.baseDoIndice);
                   return (
                     <tr
                       key={orgao.id}
@@ -127,6 +153,9 @@ export default async function TransparenciaPage() {
                         </div>
                       </th>
                       <td className="px-4 py-3.5 font-mono tabular-nums">{metricas.totalRespondidas}</td>
+                      <td className="px-4 py-3.5 font-mono tabular-nums">
+                        {metricas.semRespostaVencidas}
+                      </td>
                       <td className="px-4 py-3.5">
                         <span
                           className={`inline-block rounded-[5px] px-2 py-0.5 text-xs font-semibold ${selo.className}`}

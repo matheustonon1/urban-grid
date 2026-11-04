@@ -4,6 +4,7 @@ import {
   BellOff,
   CircleCheck,
   CircleX,
+  Inbox,
   MessageSquare,
   MessageSquareText,
   RefreshCw,
@@ -38,6 +39,7 @@ const ICONE_POR_TIPO: Record<TipoNotificacao, LucideIcon> = {
   PEDIDO_AVALIACAO: Star,
   ATIVIDADE_SUSPEITA: ShieldAlert,
   CONTA_SEGURANCA: ShieldCheck,
+  NOVA_RECLAMACAO_NA_FILA: Inbox,
 };
 
 export default async function NotificacoesPage({
