@@ -20,7 +20,8 @@ Ordem fixa, nessa sequência:
    área (`exigirModerador`, `exigirAdmin`, `exigirOrgao`). Cada page **e cada
    action** chama o seu: Server Functions postam para a URL da página, então um
    layout, ou uma checagem só no GET, não protege a mutação. `src/proxy.ts` é rede
-   de segurança extra, nunca o controle principal.
+   de segurança extra, nunca o controle principal. `exigirOrgao()` também exige o 2FA ativo
+   (ver `seguranca-app`): conta de órgão sem ele é redirecionada, na página e na action.
 2. **Validação com zod.** O schema vive em `definitions.ts` ao lado (arquivo
    `"use server"` só pode exportar funções assíncronas, então tipos e schemas ficam
    fora) e é uma *fábrica* que recebe o tradutor: `criarXSchema(t)`. Falhou →

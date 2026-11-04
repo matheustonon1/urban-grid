@@ -13,6 +13,7 @@ import {
   gerarSegredoTotp,
   prepararCodigosBackup,
 } from "@/lib/seguranca/totp";
+import { doisFatoresObrigatorio } from "@/lib/seguranca/doisFatoresObrigatorios";
 import { exigirSessao } from "@/lib/seguranca/sessao";
 
 import {
@@ -107,6 +108,11 @@ export async function desativarTotp(
   const session = await exigirSessao();
 
   const t = await getTranslations("Totp");
+  // Quem é obrigado a ter o 2FA (órgão) não o desativa: perderia o acesso ao próprio painel.
+  // A tela esconde o botão, mas quem decide é o servidor.
+  if (doisFatoresObrigatorio(session.user.papel)) {
+    return { mensagem: t("erroDesativarObrigatorio") };
+  }
   // O schema é compartilhado com excluirConta e pede as chaves de "Conta".
   const validado = criarSenhaAtualSchema(await getTranslations("Conta")).safeParse({
     senhaAtual: formData.get("senhaAtual"),

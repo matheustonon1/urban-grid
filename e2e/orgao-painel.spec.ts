@@ -8,6 +8,7 @@ import {
   criarOrgaoTeste,
   criarReclamacaoTeste,
   limparDadosTeste,
+  completarDoisFatoresSeSolicitado,
 } from "./helpers";
 
 // Painel do órgão e a experiência de quem atende os chamados: o que cada cartão mostra,
@@ -31,6 +32,7 @@ async function login(page: import("@playwright/test").Page, email: string, senha
   await page.fill('input[name="identificador"]', email);
   await page.fill('input[name="senha"]', senha);
   await page.click('button[type="submit"]');
+  await completarDoisFatoresSeSolicitado(page, email);
   await page.waitForURL(/\/(painel|orgao)$/);
 }
 

@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import { prisma } from "@/lib/prisma";
 
-import { criarAdminTeste, criarOrgaoTeste, limparDadosTeste } from "./helpers";
+import { criarAdminTeste, criarOrgaoTeste, limparDadosTeste, completarDoisFatoresSeSolicitado } from "./helpers";
 
 test.afterAll(async () => {
   await limparDadosTeste();
@@ -17,6 +17,7 @@ test("admin edita nome, sigla e e-mail de um órgão já aprovado", async ({ pag
   await page.fill('input[name="identificador"]', emailAdmin);
   await page.fill('input[name="senha"]', senhaAdmin);
   await page.click('button[type="submit"]');
+  await completarDoisFatoresSeSolicitado(page, emailAdmin);
   await page.waitForURL(/\/painel$/);
 
   await page.goto("/orgaos-categorias");

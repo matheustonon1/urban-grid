@@ -93,6 +93,7 @@ export function FormularioTotp({
   segredoManual,
   codigosRestantes,
   codigosTotal,
+  obrigatorio = false,
 }: {
   ativo: boolean;
   pendente: boolean;
@@ -100,6 +101,8 @@ export function FormularioTotp({
   segredoManual?: string;
   codigosRestantes: number;
   codigosTotal: number;
+  // Papel que não pode ficar sem o 2FA (órgão): não oferece desativar.
+  obrigatorio?: boolean;
 }) {
   const t = useTranslations("Totp");
   const [stateConfirmar, actionConfirmar, pendingConfirmar] = useActionState(
@@ -186,35 +189,39 @@ export function FormularioTotp({
           </form>
         </div>
 
-        <form action={actionDesativar} className="flex flex-col gap-3">
-          <div className="flex flex-col gap-1">
-            <label
-              htmlFor="totp-senha-desativar"
-              className="text-sm font-medium text-ink-2"
+        {obrigatorio ? (
+          <p className="text-sm text-ink-muted">{t("obrigatorioNaoDesativa")}</p>
+        ) : (
+          <form action={actionDesativar} className="flex flex-col gap-3">
+            <div className="flex flex-col gap-1">
+              <label
+                htmlFor="totp-senha-desativar"
+                className="text-sm font-medium text-ink-2"
+              >
+                {t("confirmeSenhaDesativar")}
+              </label>
+              <input
+                id="totp-senha-desativar"
+                type="password"
+                name="senhaAtual"
+                className={campoInput}
+              />
+              {stateDesativar?.erros?.senhaAtual && (
+                <p className="text-sm text-danger-ink">
+                  {stateDesativar.erros.senhaAtual[0]}
+                </p>
+              )}
+            </div>
+            <MensagemForm estado={stateDesativar} />
+            <button
+              type="submit"
+              disabled={pendingDesativar}
+              className="w-fit rounded-md border border-danger-ink/40 px-4 py-2.5 text-sm font-semibold text-danger-ink transition hover:bg-danger-soft active:translate-y-px disabled:opacity-50 disabled:active:translate-y-0"
             >
-              {t("confirmeSenhaDesativar")}
-            </label>
-            <input
-              id="totp-senha-desativar"
-              type="password"
-              name="senhaAtual"
-              className={campoInput}
-            />
-            {stateDesativar?.erros?.senhaAtual && (
-              <p className="text-sm text-danger-ink">
-                {stateDesativar.erros.senhaAtual[0]}
-              </p>
-            )}
-          </div>
-          <MensagemForm estado={stateDesativar} />
-          <button
-            type="submit"
-            disabled={pendingDesativar}
-            className="w-fit rounded-md border border-danger-ink/40 px-4 py-2.5 text-sm font-semibold text-danger-ink transition hover:bg-danger-soft active:translate-y-px disabled:opacity-50 disabled:active:translate-y-0"
-          >
-            {t("desativarAutenticador")}
-          </button>
-        </form>
+              {t("desativarAutenticador")}
+            </button>
+          </form>
+        )}
       </div>
     );
   }

@@ -8,6 +8,7 @@ import {
   criarOrgaoTeste,
   criarReclamacaoTeste,
   limparDadosTeste,
+  completarDoisFatoresSeSolicitado,
 } from "./helpers";
 
 // A resposta oficial é registro público: o órgão corrige o erro de quem acabou de enviar (typo,
@@ -28,6 +29,7 @@ async function login(page: Page, email: string, senha: string) {
   await page.fill('input[name="identificador"]', email);
   await page.fill('input[name="senha"]', senha);
   await page.click('button[type="submit"]');
+  await completarDoisFatoresSeSolicitado(page, email);
   await page.waitForURL(/\/(painel|orgao)$/);
 }
 

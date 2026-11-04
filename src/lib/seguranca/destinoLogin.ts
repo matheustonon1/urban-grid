@@ -1,5 +1,7 @@
 import type { Papel } from "@prisma/client";
 
+import { DESTINO_ATIVAR_DOIS_FATORES, faltaAtivarDoisFatores } from "./doisFatoresObrigatorios";
+
 // Para onde o login leva. O `callbackUrl` vem da query string - qualquer um pode escrever
 // `/login?callbackUrl=https://golpe.com` num link -, então só vale um caminho INTERNO:
 // URL absoluta, `//host` (protocolo relativo) e barra invertida (alguns navegadores a
@@ -24,6 +26,23 @@ export function caminhoInternoSeguro(valor: unknown): string | null {
 // Quem chegou pedindo uma página volta a ela; quem entrou direto cai na própria casa: a
 // conta de órgão trabalha em /orgao (o /painel é a lista de reclamações de cidadão, onde ela
 // nem registra nada).
-export function destinoPosLogin(papel: Papel | undefined, callbackUrl: unknown): string {
-  return caminhoInternoSeguro(callbackUrl) ?? (papel === "ORGAO" ? "/orgao" : "/painel");
+//
+// Órgão sem o segundo fator não usa o painel (ver doisFatoresObrigatorios): vai direto ao lugar
+// onde o ativa. Levá-lo a /orgao para o guard devolvê-lo dali funciona, mas, quando o destino é
+// renderizado dentro da própria server action de login, a barra de endereço ficaria em /orgao
+// com a tela de "Minha conta".
+export function destinoPosLogin(
+  papel: Papel | undefined,
+  callbackUrl: unknown,
+  doisFatores: boolean
+): string {
+  const destino =
+    caminhoInternoSeguro(callbackUrl) ?? (papel === "ORGAO" ? "/orgao" : "/painel");
+
+  const vaiParaOPainelDoOrgao = destino.split(/[?#]/)[0] === "/orgao";
+  if (vaiParaOPainelDoOrgao && faltaAtivarDoisFatores({ papel, doisFatores })) {
+    return DESTINO_ATIVAR_DOIS_FATORES;
+  }
+
+  return destino;
 }

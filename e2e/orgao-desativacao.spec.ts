@@ -9,6 +9,7 @@ import {
   criarOrgaoTeste,
   criarReclamacaoTeste,
   limparDadosTeste,
+  completarDoisFatoresSeSolicitado,
 } from "./helpers";
 
 test.afterAll(async () => {
@@ -29,6 +30,7 @@ async function login(page: import("@playwright/test").Page, email: string, senha
   await page.fill('input[name="identificador"]', email);
   await page.fill('input[name="senha"]', senha);
   await page.click('button[type="submit"]');
+  await completarDoisFatoresSeSolicitado(page, email);
   // A conta de órgão entra em /orgao; as demais em /painel.
   await page.waitForURL(/\/(painel|orgao)$/);
 }

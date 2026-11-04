@@ -103,7 +103,12 @@ test("solicita acesso como órgão, admin aprova, define senha e loga", async ({
   await page.fill('input[name="senha"]', senha);
   await page.fill('input[name="confirmarSenha"]', senha);
   await page.click('button[type="submit"]');
-  await page.waitForURL(/\/orgao$/);
+  // Conta de órgão nova ainda não tem o segundo fator, e sem ele o painel não abre: o convite
+  // já leva a Minha conta, na seção de segurança, onde ele é ativado.
+  await page.waitForURL(/\/painel\/conta/);
+  await expect(
+    page.getByText("A autenticação em duas etapas é obrigatória para contas de órgão.")
+  ).toBeVisible();
 
   const usuarioOrgao = await prisma.user.findUniqueOrThrow({ where: { email: emailOrgao } });
   expect(usuarioOrgao.papel).toBe("ORGAO");

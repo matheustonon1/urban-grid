@@ -8,6 +8,7 @@ import {
   criarOrgaoTeste,
   criarReclamacaoTeste,
   limparDadosTeste,
+  completarDoisFatoresSeSolicitado,
 } from "./helpers";
 
 // Quem abre uma reclamação e quem responde oficialmente não podem ser a mesma parte: um órgão
@@ -26,6 +27,7 @@ async function login(page: Page, email: string, senha: string) {
   await page.fill('input[name="identificador"]', email);
   await page.fill('input[name="senha"]', senha);
   await page.click('button[type="submit"]');
+  await completarDoisFatoresSeSolicitado(page, email);
   await page.waitForURL(/\/(painel|orgao)$/);
 }
 

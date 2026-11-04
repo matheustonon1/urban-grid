@@ -13,6 +13,10 @@ import { PlacaProtocolo } from "@/components/reclamacao/placa-protocolo";
 import { RespostaOficial } from "@/components/reclamacao/resposta-oficial";
 import { StatusBadge } from "@/components/reclamacao/status-badge";
 import { Aviso } from "@/components/ui/aviso";
+import {
+  DESTINO_ATIVAR_DOIS_FATORES,
+  faltaAtivarDoisFatores,
+} from "@/lib/seguranca/doisFatoresObrigatorios";
 import { BotaoAcao, FormularioAcao } from "@/components/ui/formulario-acao";
 import { AvatarIniciais } from "@/components/ui/avatar-iniciais";
 import { Secao } from "@/components/ui/secao";
@@ -177,7 +181,17 @@ export default async function ReclamacaoPage({
     orgaoDoUsuario.cidadeId === reclamacao.cidadeId &&
     orgaoAtendeCategoria(orgaoDoUsuario.categorias, reclamacao.categoriaId) &&
     autorDaReclamacao?.orgaoId !== orgaoDoUsuario.id;
-  const podeResponder = orgaoNoEscopo && !!orgaoDoUsuario?.ativo && reclamacaoAberta;
+  const podeResponderEmTese = orgaoNoEscopo && !!orgaoDoUsuario?.ativo && reclamacaoAberta;
+  // Resposta oficial fala em nome da prefeitura: a conta de órgão sem o segundo fator não
+  // envia (a server action também recusa, ver exigirOrgao). Sem isto o formulário sumiria
+  // sem explicação.
+  const orgaoSemDoisFatores =
+    podeResponderEmTese &&
+    faltaAtivarDoisFatores({
+      papel: session?.user?.papel,
+      doisFatores: session?.user?.doisFatores,
+    });
+  const podeResponder = podeResponderEmTese && !orgaoSemDoisFatores;
   // O órgão está no escopo desta reclamação, mas desativado: sem isto o formulário some
   // sem explicação e o responsável acha que a tela quebrou.
   const orgaoDesativadoNoEscopo = orgaoNoEscopo && !orgaoDoUsuario?.ativo && reclamacaoAberta;
@@ -457,6 +471,19 @@ export default async function ReclamacaoPage({
           )}
 
           {orgaoDesativadoNoEscopo && <Aviso tom="atencao">{t("orgaoDesativadoAviso")}</Aviso>}
+
+          {orgaoSemDoisFatores && (
+            <Aviso
+              tom="atencao"
+              acao={
+                <Link href={DESTINO_ATIVAR_DOIS_FATORES} className={botaoSecundario}>
+                  {t("ativarDoisFatores")}
+                </Link>
+              }
+            >
+              {t("doisFatoresObrigatorioResposta")}
+            </Aviso>
+          )}
 
           {podeResponder && (
             <FormularioAcao
