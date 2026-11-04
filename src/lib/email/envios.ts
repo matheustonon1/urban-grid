@@ -185,8 +185,9 @@ export async function enviarEmailResumoSemanal({
   total: number;
   url: string;
   locale?: Idioma;
-}) {
-  await enviarEmail({
+}): Promise<ResultadoEnvio> {
+  // Devolve o resultado: o cron só marca a semana como cumprida quando o provedor não falhou.
+  return enviarEmail({
     to: email,
     ...(await montarEmailResumoSemanal({ nomeCidade, nomeCategoria, total, url, locale })),
   });
@@ -212,8 +213,9 @@ export async function enviarEmailResumoOrgao({
   prazoDias: number;
   url: string;
   locale?: Idioma;
-}) {
-  await enviarEmail({
+}): Promise<ResultadoEnvio> {
+  // Devolve o resultado, pelo mesmo motivo de enviarEmailResumoSemanal.
+  return enviarEmail({
     to: email,
     ...(await montarEmailResumoOrgao({
       nomeOrgao,

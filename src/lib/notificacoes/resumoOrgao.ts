@@ -19,7 +19,9 @@ export interface SituacaoDaFila {
   semResposta: number;
   // Dessas, as que chegaram nos últimos 7 dias.
   novas: number;
-  // Dessas, as que já passaram do prazo (PRAZO_SEM_RESPOSTA_DIAS) e pesam no índice.
+  // Dessas, as que já passaram do prazo (PRAZO_SEM_RESPOSTA_DIAS). É um fato da fila inteira:
+  // inclui as publicadas antes de o órgão existir. O índice de reputação conta só as publicadas
+  // depois (ver reputacaoOrgao.ts), então este número pode ser maior que o do painel.
   vencidas: number;
 }
 
@@ -62,12 +64,18 @@ async function situacaoDaFila(
 // resposta (uma fila zerada não merece e-mail), mas a semana é marcada de qualquer jeito, como no
 // resumo do cidadão. O aviso em tempo real (sininho) fica em orgaos.ts.
 //
+// Se o provedor de e-mail recusar o envio (fora do ar, remetente sem domínio verificado), a conta
+// NÃO é marcada: ela continua elegível e a próxima execução manda o resumo com a fila de então.
+// Marcar mesmo assim fazia o órgão perder a semana sem ninguém saber (o cron contava como enviado).
+//
 // Respeita "Receber notificações por e-mail" (User.notificarPorEmail): o órgão não tem assinatura
 // própria, então essa preferência é o botão de desligar. Conta banida, excluída, sem e-mail
 // verificado ou de órgão desativado não recebe (não pode agir).
 export async function enviarResumosDeOrgaosPendentes(): Promise<{
   processadas: number;
   comConteudo: number;
+  // Contas cujo e-mail o provedor recusou: não foram marcadas e voltam na próxima execução.
+  falhas: number;
 }> {
   const agora = new Date();
   const limiteUltimoEnvio = new Date(agora.getTime() - INTERVALO_MINIMO_RESUMO_MS);
@@ -112,14 +120,14 @@ export async function enviarResumosDeOrgaosPendentes(): Promise<{
     return situacao;
   };
 
-  async function processar(conta: ContaDeOrgao): Promise<boolean> {
-    let enviou = false;
+  async function processar(conta: ContaDeOrgao): Promise<"enviado" | "vazio" | "falhou"> {
+    let resultado: "enviado" | "vazio" | "falhou" = "vazio";
 
     if (conta.orgao) {
       try {
         const situacao = await situacaoDoOrgao(conta.orgao);
         if (situacao.semResposta > 0) {
-          await enviarEmailResumoOrgao({
+          const envio = await enviarEmailResumoOrgao({
             email: conta.email,
             nomeOrgao: conta.orgao.nome,
             nomeCidade: conta.orgao.cidade.nome,
@@ -128,7 +136,9 @@ export async function enviarResumosDeOrgaosPendentes(): Promise<{
             url: montarUrl("/orgao"),
             locale: idiomaOuPadrao(conta.idioma),
           });
-          enviou = true;
+          // "simulado" (sem provedor configurado, e-mail só no log) conta como cumprido: sem
+          // isto, em desenvolvimento a mesma conta voltaria a cada execução.
+          resultado = envio.status === "falhou" ? "falhou" : "enviado";
         }
       } catch (erro) {
         // Uma conta com defeito não trava as outras da fila.
@@ -136,21 +146,25 @@ export async function enviarResumosDeOrgaosPendentes(): Promise<{
       }
     }
 
+    if (resultado === "falhou") return resultado;
+
     try {
       await prisma.user.update({ where: { id: conta.id }, data: { ultimoResumoOrgaoEm: agora } });
     } catch (erro) {
       // Sem a marca a conta volta na próxima execução; o que não pode é derrubar o lote.
       console.error("Falha ao marcar o resumo semanal do órgão:", erro);
     }
-    return enviou;
+    return resultado;
   }
 
   let comConteudo = 0;
+  let falhas = 0;
   for (let inicio = 0; inicio < contas.length; inicio += TAMANHO_DO_LOTE) {
     const lote = contas.slice(inicio, inicio + TAMANHO_DO_LOTE);
     const resultados = await Promise.all(lote.map(processar));
-    comConteudo += resultados.filter(Boolean).length;
+    comConteudo += resultados.filter((resultado) => resultado === "enviado").length;
+    falhas += resultados.filter((resultado) => resultado === "falhou").length;
   }
 
-  return { processadas: contas.length, comConteudo };
+  return { processadas: contas.length, comConteudo, falhas };
 }
