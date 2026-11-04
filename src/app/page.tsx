@@ -374,7 +374,7 @@ export default async function Home() {
                 {rankingOrgaos.map(({ orgao, metricas }, indice) => {
                   const classificacao = classificarIndice(
                     metricas.indiceResolucao,
-                    metricas.totalRespondidas
+                    metricas.baseDoIndice
                   );
                   return (
                     <li key={orgao.id}>

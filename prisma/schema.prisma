@@ -380,6 +380,12 @@ model Orgao {
   cidade   Cidade  @relation(fields: [cidadeId], references: [id])
   ativo    Boolean @default(true)
 
+  // Desde quando o órgão existe. O índice de reputação só conta contra ele a reclamação
+  // publicada DEPOIS disto e que ficou sem resposta (lib/orgaos/reputacaoOrgao.ts): um órgão
+  // novo não herda a fila antiga da cidade. Os órgãos que já existiam na migration ficam com a
+  // data dela, de propósito: a regra vale daqui para frente, sem condenar o passado.
+  createdAt DateTime @default(now())
+
   // Categorias de reclamação que este órgão atende. Vazio = atende
   // qualquer categoria da cidade (comportamento antigo, preservado como
   // padrão pra não esvaziar a fila de órgãos já existentes/sem

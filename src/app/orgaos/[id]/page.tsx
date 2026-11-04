@@ -14,6 +14,7 @@ import { Secao } from "@/components/ui/secao";
 import { StatusBadge } from "@/components/reclamacao/status-badge";
 import { pagina } from "@/lib/estilos";
 import { formatarDataHora } from "@/lib/util/formatarData";
+import { PRAZO_SEM_RESPOSTA_DIAS } from "@/lib/orgaos/prazoResposta";
 import { calcularMetricasOrgao, classificarIndice } from "@/lib/orgaos/reputacaoOrgao";
 import { formatarTempoRelativo } from "@/lib/util/tempo-relativo";
 
@@ -52,7 +53,7 @@ export default async function OrgaoPage({ params }: PageProps<"/orgaos/[id]">) {
     }),
   ]);
 
-  const classificacao = classificarIndice(metricas.indiceResolucao, metricas.totalRespondidas);
+  const classificacao = classificarIndice(metricas.indiceResolucao, metricas.baseDoIndice);
 
   return (
     <main className={pagina}>
@@ -72,6 +73,14 @@ export default async function OrgaoPage({ params }: PageProps<"/orgaos/[id]">) {
             <span className="text-sm text-ink-muted">
               {t("reclamacoesRespondidas", { count: metricas.totalRespondidas })}
             </span>
+            {metricas.semRespostaVencidas > 0 && (
+              <span className="text-sm font-semibold text-ink-2">
+                {t("semRespostaVencidas", {
+                  count: metricas.semRespostaVencidas,
+                  dias: PRAZO_SEM_RESPOSTA_DIAS,
+                })}
+              </span>
+            )}
             <span
               className={`inline-block rounded-[5px] px-2.5 py-1 text-sm font-semibold ${classificacao.className}`}
             >

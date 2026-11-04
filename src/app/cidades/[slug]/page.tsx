@@ -385,7 +385,7 @@ export default async function CidadePage({
                 {rankingOrgaos.map(({ orgao, metricas }) => {
                   const classificacao = classificarIndice(
                     metricas.indiceResolucao,
-                    metricas.totalRespondidas
+                    metricas.baseDoIndice
                   );
                   return (
                     <li key={orgao.id}>

@@ -20,6 +20,7 @@ import {
   rotuloSecao,
 } from "@/lib/estilos";
 import { escopoDeReclamacoesDoOrgao, filtroAbertas } from "@/lib/orgaos/escopoOrgao";
+import { PRAZO_SEM_RESPOSTA_DIAS } from "@/lib/orgaos/prazoResposta";
 import { calcularMetricasOrgao, classificarIndice } from "@/lib/orgaos/reputacaoOrgao";
 import { nomeCategoriaTraduzido } from "@/lib/reclamacoes/categoriaI18n";
 import { idiomaOuPadrao } from "@/i18n/config";
@@ -174,7 +175,7 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
   ];
 
   const classificacao = metricas
-    ? classificarIndice(metricas.indiceResolucao, metricas.totalRespondidas)
+    ? classificarIndice(metricas.indiceResolucao, metricas.baseDoIndice)
     : null;
 
   const agora = new Date();
@@ -512,6 +513,10 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
                     valor: metricas.notaMedia !== null ? `${metricas.notaMedia}/5` : "—",
                   },
                   { rotulo: t("avaliacoesRecebidas"), valor: String(metricas.totalAvaliacoes) },
+                  {
+                    rotulo: t("semRespostaVencidas", { dias: PRAZO_SEM_RESPOSTA_DIAS }),
+                    valor: String(metricas.semRespostaVencidas),
+                  },
                 ].map((item) => (
                   <div key={item.rotulo} className="flex items-baseline justify-between gap-4 py-3">
                     <dt className="text-sm text-ink-muted">{item.rotulo}</dt>
@@ -519,6 +524,10 @@ export default async function PainelOrgaoPage({ searchParams }: PageProps<"/orga
                   </div>
                 ))}
               </dl>
+
+              <p className="text-sm text-ink-muted">
+                {t("reputacaoNota", { dias: PRAZO_SEM_RESPOSTA_DIAS })}
+              </p>
 
               <Link
                 href={`/orgaos/${orgao.id}`}
