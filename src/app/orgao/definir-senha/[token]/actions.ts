@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { signIn } from "@/auth";
 import { atencao, falha, sucesso, type ResultadoAcao } from "@/lib/acoes/resultado";
 import { criarTokenVerificacao, enviarEmailAcessoOrgao } from "@/lib/email";
+import { DESTINO_ATIVAR_DOIS_FATORES } from "@/lib/seguranca/doisFatoresObrigatorios";
 import { excedeuLimiteCompartilhado } from "@/lib/seguranca/limiteCompartilhado";
 import { idiomaOuPadrao } from "@/i18n/config";
 
@@ -95,7 +96,10 @@ export async function definirSenhaOrgao(
     await signIn("credentials", {
       identificador: usuario.email,
       senha: validado.data.senha,
-      redirectTo: "/orgao",
+      // Conta de órgão recém-criada ainda não tem o segundo fator, e sem ele o painel não abre
+      // (`faltaAtivarDoisFatores`): leva direto a ativá-lo, em vez de passar pelo painel só
+      // para ser desviado e deixar `/orgao` na barra de endereço sobre a tela de Minha conta.
+      redirectTo: DESTINO_ATIVAR_DOIS_FATORES,
     });
   } catch (erro) {
     if (erro instanceof AuthError) {

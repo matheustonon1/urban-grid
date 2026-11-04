@@ -1,8 +1,13 @@
 import { getTranslations } from "next-intl/server";
 
 import { prisma } from "@/lib/prisma";
+import { Aviso } from "@/components/ui/aviso";
 import { Secao } from "@/components/ui/secao";
 import { grade, pagina } from "@/lib/estilos";
+import {
+  doisFatoresObrigatorio,
+  faltaAtivarDoisFatores,
+} from "@/lib/seguranca/doisFatoresObrigatorios";
 import {
   decifrarSegredoTotp,
   gerarQrCodeTotp,
@@ -68,6 +73,13 @@ export default async function ContaPage() {
 
   const nomeExibido = usuario.name || usuario.email;
 
+  // Conta de órgão sem 2FA só chega aqui porque foi mandada (painel e resposta oficial exigem o
+  // segundo fator): o aviso explica por quê, e o 2FA fica no cartão de segurança logo abaixo.
+  const precisaAtivarDoisFatores = faltaAtivarDoisFatores({
+    papel: session.user.papel,
+    doisFatores: totpAtivo,
+  });
+
   return (
     <main className={pagina}>
       <header className="flex items-center gap-5 border-b-2 border-ink pb-6">
@@ -87,6 +99,13 @@ export default async function ContaPage() {
           </div>
         </div>
       </header>
+
+      {precisaAtivarDoisFatores && (
+        <Aviso tom="atencao">
+          <strong className="font-semibold">{t("doisFatoresObrigatorioTitulo")}</strong>{" "}
+          {t("doisFatoresObrigatorioTexto")}
+        </Aviso>
+      )}
 
       <div className={grade}>
         {/* Navegação por seções: coluna fixa no desktop, faixa rolável no celular.
@@ -138,6 +157,7 @@ export default async function ContaPage() {
               segredoManual={segredoManual}
               codigosRestantes={codigosRestantes}
               codigosTotal={QUANTIDADE_CODIGOS_BACKUP}
+              obrigatorio={doisFatoresObrigatorio(session.user.papel)}
             />
           </Secao>
 

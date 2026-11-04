@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
+import {
+  DESTINO_ATIVAR_DOIS_FATORES,
+  faltaAtivarDoisFatores,
+} from "@/lib/seguranca/doisFatoresObrigatorios";
 
 // Rede de segurança extra além da checagem que cada page.tsx/actions.ts já
 // faz sozinho (não existe layout.tsx compartilhado nessas áreas) - se uma
@@ -39,6 +43,12 @@ export default auth((req) => {
 
   if (!papelPermitido) {
     return NextResponse.redirect(new URL("/painel", req.nextUrl));
+  }
+
+  // O órgão entra no painel só com o segundo fator ativo; sem ele, vai direto para a tela que
+  // o ativa (a mesma regra vale em exigirOrgao(), que cobre também as server actions).
+  if (exigeOrgao && faltaAtivarDoisFatores({ papel, doisFatores: req.auth.user?.doisFatores })) {
+    return NextResponse.redirect(new URL(DESTINO_ATIVAR_DOIS_FATORES, req.nextUrl));
   }
 
   return NextResponse.next();

@@ -72,7 +72,11 @@ export async function login(
       // O papel vem do cadastro lido acima; só vale se a senha conferir (o signIn
       // recusa antes de redirecionar). O caminho pedido passa pelo filtro de
       // caminho interno - nunca vai direto da query string para o redirecionamento.
-      redirectTo: destinoPosLogin(usuario?.papel, formData.get("callbackUrl")),
+      redirectTo: destinoPosLogin(
+        usuario?.papel,
+        formData.get("callbackUrl"),
+        Boolean(usuario?.totpConfirmadoEm)
+      ),
     });
   } catch (erro) {
     if (erro instanceof AuthError) {

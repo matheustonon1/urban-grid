@@ -116,6 +116,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           email: usuario.email,
           papel: usuario.papel,
           orgaoId: usuario.orgaoId,
+          doisFatores: Boolean(usuario.totpConfirmadoEm),
         };
       },
     }),
@@ -125,6 +126,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.papel = (user as { papel: typeof token.papel }).papel;
         token.orgaoId = (user as { orgaoId: string | null }).orgaoId;
+        token.doisFatores = (user as { doisFatores?: boolean }).doisFatores ?? false;
         token.sessaoEmitidaEm = Date.now();
         return token;
       }
@@ -140,7 +142,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (token.sub) {
         const usuario = await prisma.user.findUnique({
           where: { id: token.sub },
-          select: { senhaAlteradaEm: true, banidoAte: true, ativo: true },
+          select: {
+            senhaAlteradaEm: true,
+            banidoAte: true,
+            ativo: true,
+            totpConfirmadoEm: true,
+          },
         });
 
         // ativo=false é o que excluirConta() grava - sem isso, uma sessão
@@ -158,6 +165,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         ) {
           return null;
         }
+
+        // Ligar ou desligar o 2FA vale na próxima leitura, sem novo login: o acesso de quem é
+        // obrigado a ter o segundo fator (órgão, ver lib/seguranca/doisFatoresObrigatorios)
+        // abre ao confirmar e fecha ao desativar.
+        token.doisFatores = Boolean(usuario.totpConfirmadoEm);
       }
 
       return token;
@@ -167,6 +179,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.sub;
         session.user.papel = token.papel ?? session.user.papel;
         session.user.orgaoId = token.orgaoId ?? null;
+        session.user.doisFatores = token.doisFatores ?? false;
       }
       return session;
     },

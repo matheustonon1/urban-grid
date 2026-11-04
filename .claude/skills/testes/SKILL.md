@@ -60,6 +60,12 @@ entra na conta falha por timeout** — parece regressão e não é.
 - Helpers em `e2e/helpers.ts`: `criarCidadaoTeste`, `criarAdminTeste`,
   `criarOrgaoTeste`, `criarReclamacaoTeste` (direto no banco — evita Gemini e Blob),
   `gerarCodigoTotpAtual`, `aguardarHidratacao`, `apagarLogsDeModeracao`.
+- **Conta de órgão tem 2FA obrigatório**: `criarOrgaoTeste` já cria a conta com o segundo fator
+  (códigos de backup guardados por e-mail), e o login de teste chama
+  `completarDoisFatoresSeSolicitado(page, email)` logo depois do clique em "Entrar" (não faz
+  nada para cidadão/admin). `criarOrgaoTeste(cidade, { doisFatores: false })` cria a conta como
+  ela chega da aprovação, para testar o bloqueio e a ativação (`orgao-dois-fatores.spec.ts`).
+  Spec novo que entra como órgão e esquece a segunda etapa trava em `waitForURL`.
 - Fluxo real de criação de reclamação com imagem **não** é exercitado de ponta a
   ponta (chamaria Gemini/Blob); o spec do formulário só inspeciona a requisição de
   envio e a aborta.

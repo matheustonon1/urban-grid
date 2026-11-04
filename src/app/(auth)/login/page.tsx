@@ -12,7 +12,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
 
   const session = await auth();
   if (session?.user) {
-    redirect(destinoPosLogin(session.user.papel, callbackUrl));
+    redirect(destinoPosLogin(session.user.papel, callbackUrl, session.user.doisFatores));
   }
 
   const t = await getTranslations("Login");
