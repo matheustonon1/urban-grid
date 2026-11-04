@@ -579,6 +579,19 @@
     "orgaoDesativado": "{nome} was deactivated. It leaves the public lists and can no longer answer complaints.",
     "orgaoReativado": "{nome} was reactivated and can answer complaints again.",
     "orgaoJaNoEstado": "Nothing was changed: the agency was already in that state.",
+    "contasComDoisFatores": "Two-factor on",
+    "redefinirDoisFatores": "Reset 2FA",
+    "redefinirDoisFatoresConta": "Reset 2FA for {email}",
+    "confirmarRedefinirTitulo": "Reset two-factor for {email}?",
+    "confirmarRedefinirDescricao": "The account loses its authenticator app and backup codes. Next time it signs in, with just the password, it is taken to turn two-factor on again; until then it can't open the panel or answer complaints.",
+    "confirmarRedefinirDetalheSessoes": "All open sessions of this account are ended.",
+    "confirmarRedefinirDetalheAviso": "The person gets a notification and an e-mail.",
+    "confirmarRedefinirDetalheConferir": "Only do this after confirming, through another channel, that they lost access to the app.",
+    "confirmarRedefinirBotao": "Reset two-factor",
+    "doisFatoresRedefinidos": "Two-factor for {email} was reset. Next time they sign in they must turn it on again.",
+    "doisFatoresRedefinidosSemAviso": "Two-factor for {email} was reset, but the e-mail notice may not have gone out. Tell the person through another channel.",
+    "doisFatoresJaRedefinidos": "Nothing was changed: {email} has no two-factor on.",
+    "erroContaIndisponivel": "We couldn't find that agency account. Reload the page.",
     "erroOrgaoNaoEncontrado": "We couldn't find that agency. Reload the page.",
     "erroNomeDuplicado": "Another agency with that name already exists in this city.",
     "erroCategoriaInvalida": "One of the selected categories no longer exists. Reload the page and try again.",
@@ -1191,6 +1204,13 @@
       "corpo": "Your account's password was just changed.",
       "aviso": "If this wasn't you, your account may be compromised — change your password immediately and contact support."
     },
+    "doisFatoresRedefinidos": {
+      "assunto": "Your account's two-factor authentication was reset — Urban Grid",
+      "titulo": "Your account's two-factor authentication was reset",
+      "preheader": "Turn two-factor authentication on again the next time you sign in.",
+      "corpo": "An Urban Grid administrator reset two-factor authentication on your account. Your previous authenticator app and backup codes no longer work, and open sessions were ended.",
+      "aviso": "Sign in with your password and turn two-factor authentication on again in My account. If you didn't ask for this, change your password right away and contact the administration."
+    },
     "confirmarTrocaEmail": {
       "assunto": "Confirm your new e-mail — Urban Grid",
       "titulo": "Confirm your new e-mail",
@@ -1422,6 +1442,10 @@
       "titulo": "Your role on the platform changed",
       "mensagem": "Your account now has the role of {papel, select, MODERADOR {Moderator} ADMIN {Administrator} CIDADAO {Citizen} other {{papel}}}. If you weren't expecting this change, contact the administration."
     },
+    "doisFatoresRedefinidos": {
+      "titulo": "Your account's two-factor authentication was reset",
+      "mensagem": "The administration reset two-factor authentication on your account. Next time you sign in, turn it on again in My account. If you didn't ask for this, change your password and contact the administration."
+    },
     "senhaAlterada": {
       "titulo": "Your password was changed",
       "mensagem": "If this wasn't you, contact support immediately."
@@ -1442,6 +1466,7 @@
     "resumoUltimos7dias": "In the last 7 days",
     "resumoPapeis": "Role changes",
     "resumoBanimentos": "Bans and reversals",
+    "resumoSeguranca": "Two-factor resets",
     "resumoOrgaos": "Agencies and requests",
     "por": "by {ator}",
     "atorRemovido": "removed account",
@@ -1456,7 +1481,8 @@
       "SOLICITACAO_ORGAO_APROVADA": "Agency request approved",
       "SOLICITACAO_ORGAO_REJEITADA": "Agency request rejected",
       "SOLICITACAO_CIDADE_APROVADA": "City request approved",
-      "SOLICITACAO_CIDADE_REJEITADA": "City request rejected"
+      "SOLICITACAO_CIDADE_REJEITADA": "City request rejected",
+      "DOIS_FATORES_REDEFINIDO": "Two-factor reset"
     },
     "detalhePapel": "{de} → {para}",
     "detalheBanimento": "{duracao}, until {ate}",

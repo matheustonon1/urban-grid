@@ -31,6 +31,7 @@ const EXEMPLOS: Record<ChaveNotificacao, TextoNotificacao> = {
   respostaComentario: { chave: "respostaComentario", mensagemBruta: "Concordo." },
   atividadeSuspeita: { chave: "atividadeSuspeita", params: { confirmacoes: 15, minutos: 30 } },
   papelAlterado: { chave: "papelAlterado", params: { papel: "MODERADOR" } },
+  doisFatoresRedefinidos: { chave: "doisFatoresRedefinidos" },
   senhaAlterada: { chave: "senhaAlterada" },
   trocaEmailSolicitada: { chave: "trocaEmailSolicitada", params: { novoEmail: "novo@example.com" } },
 };

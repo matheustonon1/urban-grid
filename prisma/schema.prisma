@@ -747,6 +747,9 @@ enum AcaoAuditoria {
   SOLICITACAO_ORGAO_REJEITADA
   SOLICITACAO_CIDADE_APROVADA
   SOLICITACAO_CIDADE_REJEITADA
+  // Um admin apagou o segundo fator de uma conta de órgão que perdeu o aplicativo e os códigos
+  // de backup (ver redefinirDoisFatoresOrgao).
+  DOIS_FATORES_REDEFINIDO
 }
 
 model RegistroAuditoria {

@@ -4,6 +4,7 @@ import {
   montarEmailAcessoOrgao,
   montarEmailCidadeAprovada,
   montarEmailConfirmarTrocaEmail,
+  montarEmailDoisFatoresRedefinidos,
   montarEmailNotificacao,
   montarEmailRedefinicaoSenha,
   montarEmailResumoOrgao,
@@ -73,6 +74,16 @@ export async function enviarEmailSenhaAlterada({
   locale?: Idioma;
 }) {
   await enviarEmail({ to: email, ...(await montarEmailSenhaAlterada({ locale })) });
+}
+
+export async function enviarEmailDoisFatoresRedefinidos({
+  email,
+  locale = IDIOMA_PADRAO,
+}: {
+  email: string;
+  locale?: Idioma;
+}): Promise<ResultadoEnvio> {
+  return enviarEmail({ to: email, ...(await montarEmailDoisFatoresRedefinidos({ locale })) });
 }
 
 export async function enviarEmailConfirmarTrocaEmail({
