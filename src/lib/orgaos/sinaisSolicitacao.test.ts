@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { classificarDominioEmail, sinaisDaSolicitacao } from "./sinaisSolicitacao";
+import {
+  classificarDominioEmail,
+  relacionarLinkComEmail,
+  sinaisDaSolicitacao,
+} from "./sinaisSolicitacao";
 
 describe("classificarDominioEmail", () => {
   it.each([
@@ -72,5 +76,65 @@ describe("sinaisDaSolicitacao", () => {
       rejeicoesAnteriores: 0,
     });
     expect(sinal).toMatchObject({ chave: "dominioProprio", tom: "neutro" });
+  });
+});
+
+describe("relacionarLinkComEmail", () => {
+  it.each([
+    ["https://www.saolucas.sp.gov.br", "obras@gmail.com", "institucional", "saolucas.sp.gov.br"],
+    ["https://prefeituradeitu.com.br", "obras@prefeituradeitu.com.br", "mesmoDominio", "prefeituradeitu.com.br"],
+    ["https://www.prefeituradeitu.com.br", "obras@prefeituradeitu.com.br", "mesmoDominio", "prefeituradeitu.com.br"],
+    ["https://prefeituradeitu.com.br", "obras@mail.prefeituradeitu.com.br", "mesmoDominio", "prefeituradeitu.com.br"],
+    ["https://prefeituradeitu.com.br", "obras@gmail.com", "outroDominio", "prefeituradeitu.com.br"],
+    ["https://outra.com.br", "obras@prefeituradeitu.com.br", "outroDominio", "outra.com.br"],
+  ])("link %s com e-mail %s: %s", (link, email, relacao, dominio) => {
+    expect(relacionarLinkComEmail(link, email)).toEqual({ relacao, dominio });
+  });
+
+  it("não se deixa enganar por um .gov.br no meio do domínio", () => {
+    expect(relacionarLinkComEmail("https://saolucas.gov.br.golpe.com", "a@gmail.com").relacao).toBe(
+      "outroDominio"
+    );
+  });
+});
+
+describe("sinaisDaSolicitacao: site oficial e CNPJ", () => {
+  const base = {
+    email: "obras@prefeituradeitu.com.br",
+    responsaveisDoOrgaoExistente: null,
+    rejeicoesAnteriores: 0,
+  };
+
+  it("pedido sem site (anterior ao campo) não gera sinal de link", () => {
+    const chaves = sinaisDaSolicitacao(base).map((s) => s.chave);
+    expect(chaves).toEqual(["dominioProprio"]);
+  });
+
+  it("site .gov.br é positivo; mesmo domínio do e-mail é neutro; domínio sem relação pede atenção", () => {
+    expect(
+      sinaisDaSolicitacao({ ...base, linkOficial: "https://itu.sp.gov.br" }).at(-1)
+    ).toMatchObject({ chave: "linkInstitucional", tom: "sucesso", dominio: "itu.sp.gov.br" });
+    expect(
+      sinaisDaSolicitacao({ ...base, linkOficial: "https://prefeituradeitu.com.br" }).at(-1)
+    ).toMatchObject({ chave: "linkMesmoDominio", tom: "neutro" });
+    expect(
+      sinaisDaSolicitacao({ ...base, linkOficial: "https://outra-cidade.com.br" }).at(-1)
+    ).toMatchObject({ chave: "linkOutroDominio", tom: "atencao" });
+  });
+
+  it("CNPJ já cadastrado em outro órgão aparece logo depois do órgão que já existe, com a contagem", () => {
+    const sinais = sinaisDaSolicitacao({
+      ...base,
+      responsaveisDoOrgaoExistente: 1,
+      orgaosComMesmoCnpj: 2,
+    });
+    expect(sinais.slice(0, 2).map((s) => s.chave)).toEqual(["orgaoJaExiste", "cnpjEmOutroOrgao"]);
+    expect(sinais[1]).toMatchObject({ tom: "atencao", count: 2 });
+  });
+
+  it("CNPJ sem outro órgão não gera sinal", () => {
+    expect(
+      sinaisDaSolicitacao({ ...base, orgaosComMesmoCnpj: 0 }).some((s) => s.chave === "cnpjEmOutroOrgao")
+    ).toBe(false);
   });
 });

@@ -380,8 +380,15 @@ model Orgao {
   responsaveis User[]
   respostas    RespostaOficial[]
 
+  // Identificação do órgão, copiadas do pedido de acesso aprovado (SolicitacaoOrgao). Nulos nos
+  // órgãos anteriores a esse campo. O CNPJ NÃO é único: secretarias costumam usar o da
+  // prefeitura, então dois órgãos com o mesmo CNPJ são normais e só viram sinal para o admin.
+  cnpj         String? @db.VarChar(14) // só os 14 caracteres (dígitos ou letras maiúsculas)
+  linkOficial  String? @db.VarChar(500)
+
   @@unique([cidadeId, nome])
   @@index([cidadeId])
+  @@index([cnpj])
 }
 
 // Pedido público de acesso como órgão - não cria a conta direto (ao
@@ -399,6 +406,10 @@ model SolicitacaoOrgao {
   nomeResponsavel String
   email           String
   telefone        String?
+  // CNPJ e site oficial informados no pedido: o admin confere o vínculo por eles (sinais e
+  // consulta pública do CNPJ). Nulos nos pedidos anteriores a esses campos.
+  cnpj            String? @db.VarChar(14)
+  linkOficial     String? @db.VarChar(500)
   criadoDeIp      String? // usado só pra limite de solicitações por IP
   // Idioma de quem preencheu o formulário (cookie no momento do envio) -
   // ainda não existe User pra guardar isso; usado no e-mail de aprovação/
@@ -416,6 +427,7 @@ model SolicitacaoOrgao {
 
   @@index([cidadeId])
   @@index([status])
+  @@index([cnpj])
 }
 
 enum StatusSolicitacaoCidade {

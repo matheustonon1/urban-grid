@@ -11,6 +11,7 @@ import {
   colunaLateral,
   colunaPrincipal,
   grade,
+  linkSutil,
   pagina,
   rotuloSecao,
 } from "@/lib/estilos";
@@ -28,7 +29,10 @@ import { Selo } from "@/components/ui/selo";
 import { formatarDataHora } from "@/lib/util/formatarData";
 import { usuarioTemDoisFatores } from "@/lib/seguranca/doisFatores";
 
+import { formatarCnpj } from "@/lib/orgaos/cnpj";
+
 import { aprovarSolicitacao, rejeitarSolicitacao } from "./actions";
+import { ConsultarCnpj } from "./consultar-cnpj";
 import { exigirAdmin } from "./exigir-admin";
 
 export const generateMetadata = metadataDaPagina("SolicitacoesOrgao");
@@ -94,6 +98,22 @@ export default async function SolicitacoesOrgaoPage({
   ]);
   const rejeicoes = new Map(rejeicoesPorEmail.map((linha) => [linha.email, linha._count._all]));
 
+  // Outros órgãos já cadastrados com o mesmo CNPJ, de qualquer cidade (o do mesmo nome e cidade
+  // já aparece como "órgão já cadastrado"). Uma secretaria costuma usar o CNPJ da prefeitura,
+  // então isto não é erro: entra como sinal.
+  const orgaosComMesmoCnpj = await Promise.all(
+    pendentes.map((solicitacao) =>
+      solicitacao.cnpj
+        ? prisma.orgao.count({
+            where: {
+              cnpj: solicitacao.cnpj,
+              NOT: { cidadeId: solicitacao.cidadeId, nome: solicitacao.nomeOrgao },
+            },
+          })
+        : Promise.resolve(0)
+    )
+  );
+
   return (
     <main className={pagina}>
       <CabecalhoPagina
@@ -115,6 +135,8 @@ export default async function SolicitacoesOrgaoPage({
                 email: solicitacao.email,
                 responsaveisDoOrgaoExistente: responsaveisExistentes,
                 rejeicoesAnteriores: rejeicoes.get(solicitacao.email) ?? 0,
+                linkOficial: solicitacao.linkOficial,
+                orgaosComMesmoCnpj: orgaosComMesmoCnpj[indice] ?? 0,
               });
 
               return (
@@ -130,6 +152,29 @@ export default async function SolicitacoesOrgaoPage({
                   {t("responsavel")} {solicitacao.nomeResponsavel} · {solicitacao.email}
                   {solicitacao.telefone && ` · ${solicitacao.telefone}`}
                 </p>
+                {(solicitacao.cnpj || solicitacao.linkOficial) && (
+                  <div className="flex flex-col gap-1 text-sm text-ink-2">
+                    {solicitacao.cnpj && (
+                      <p>
+                        {t("cnpjRotulo")}:{" "}
+                        <span className="font-mono tabular-nums">{formatarCnpj(solicitacao.cnpj)}</span>
+                      </p>
+                    )}
+                    {solicitacao.linkOficial && (
+                      <p className="break-all">
+                        {t("linkOficialRotulo")}:{" "}
+                        <a
+                          href={solicitacao.linkOficial}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={linkSutil}
+                        >
+                          {solicitacao.linkOficial}
+                        </a>
+                      </p>
+                    )}
+                  </div>
+                )}
                 <p className="text-xs text-ink-muted">
                   {t("enviadoEm")} {formatarDataHora(solicitacao.createdAt, locale)}
                 </p>
@@ -141,10 +186,12 @@ export default async function SolicitacoesOrgaoPage({
                       <Etiqueta key={sinal.chave} tom={sinal.tom}>
                         {t(`sinais.${sinal.chave}`, {
                           count: "count" in sinal ? sinal.count : 0,
+                          dominio: "dominio" in sinal ? sinal.dominio : "",
                         })}
                       </Etiqueta>
                     ))}
                   </div>
+                  {solicitacao.cnpj && <ConsultarCnpj solicitacaoId={solicitacao.id} />}
                   {responsaveisExistentes !== null && (
                     <Aviso tom="atencao">
                       {t("avisoOrgaoJaExiste", { responsavel: solicitacao.nomeResponsavel })}
