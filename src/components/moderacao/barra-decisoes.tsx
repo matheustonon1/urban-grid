@@ -1,4 +1,4 @@
-import type { DecisaoModeracao } from "@prisma/client";
+import type { DecisaoModeracao } from "@/generated/prisma/client";
 import { useTranslations } from "next-intl";
 
 const ORDEM: DecisaoModeracao[] = ["APROVAR", "ENCAMINHAR_REVISAO", "REPROVAR"];

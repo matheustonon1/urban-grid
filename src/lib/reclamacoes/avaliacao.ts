@@ -1,4 +1,4 @@
-import type { StatusReclamacao } from "@prisma/client";
+import type { StatusReclamacao } from "@/generated/prisma/client";
 
 // Quando o autor pode avaliar uma reclamação resolvida.
 //

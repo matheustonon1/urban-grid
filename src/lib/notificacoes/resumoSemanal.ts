@@ -1,4 +1,4 @@
-import type { AssinaturaCidade, Categoria, Cidade, User } from "@prisma/client";
+import type { AssinaturaCidade, Categoria, Cidade, User } from "@/generated/prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { enviarEmailResumoSemanal } from "@/lib/email";

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { StatusReclamacao } from "@prisma/client";
+import type { StatusReclamacao } from "@/generated/prisma/client";
 import { CalendarClock, Landmark } from "lucide-react";
 
 import { StatusBadge } from "@/components/reclamacao/status-badge";

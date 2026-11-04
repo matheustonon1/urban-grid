@@ -1,4 +1,4 @@
-import type { Papel } from "@prisma/client";
+import type { Papel } from "@/generated/prisma/client";
 
 import { DESTINO_ATIVAR_DOIS_FATORES, faltaAtivarDoisFatores } from "./doisFatoresObrigatorios";
 

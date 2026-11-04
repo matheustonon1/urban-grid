@@ -1,4 +1,4 @@
-import type { DecisaoModeracao } from "@prisma/client";
+import type { DecisaoModeracao } from "@/generated/prisma/client";
 import { useTranslations } from "next-intl";
 
 import { Etiqueta, type TomEtiqueta } from "@/components/ui/etiqueta";

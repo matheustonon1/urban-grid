@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { Prisma } from "@/generated/prisma/client";
 
 // O que ainda está aberto para o órgão: publicada ou em andamento (resolvida e arquivada saem
 // da fila dele).

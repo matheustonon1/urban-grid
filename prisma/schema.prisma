@@ -1,15 +1,22 @@
 // ---------------------------------------------------------------------------
 // Urban Grid - modelo de dados
-// Prisma 6 | MySQL 8.4
+// Prisma 7 | MySQL 8.4
 // ---------------------------------------------------------------------------
 
+// Prisma 7: o client é gerado dentro do projeto (src/generated/prisma, ignorado pelo git; o
+// postinstall e o CI rodam `prisma generate`) e fala com o banco por um driver adapter
+// (src/lib/prisma.ts). A URL de conexão não mora mais aqui, e sim em prisma.config.ts.
 generator client {
-  provider = "prisma-client-js"
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  // CommonJS, como o resto do projeto (package.json sem "type": "module"): o Playwright e o tsx
+  // carregam o TypeScript dos specs e dos scripts como CJS e não engolem o `import.meta` do
+  // formato ESM.
+  moduleFormat = "cjs"
 }
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
 }
 
 // ===========================================================================

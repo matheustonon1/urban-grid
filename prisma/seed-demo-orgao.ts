@@ -9,10 +9,11 @@
 // entrar sem depender da senha que o seed.ts usou (SEED_ORGAO_SENHA). Tudo que é criado
 // aqui carrega o protocolo "UG-DEMO-" ou o e-mail "demo.*@urbangrid.local", e é só isso
 // que --limpar apaga.
+import "dotenv/config";
 import bcrypt from "bcryptjs";
-import { PrismaClient, type StatusReclamacao } from "@prisma/client";
+import type { StatusReclamacao } from "@/generated/prisma/client";
 
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 const PREFIXO_PROTOCOLO = "UG-DEMO-";
 const DOMINIO = "urbangrid.local";

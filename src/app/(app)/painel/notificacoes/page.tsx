@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { TipoNotificacao } from "@prisma/client";
+import type { TipoNotificacao } from "@/generated/prisma/client";
 import {
   BellOff,
   CircleCheck,

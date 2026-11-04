@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { StatusReclamacao } from "@prisma/client";
+import type { StatusReclamacao } from "@/generated/prisma/client";
 import { Users } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
