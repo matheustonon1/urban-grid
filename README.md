@@ -56,7 +56,7 @@ flowchart LR
 
 <div align="center">
 
-| 24 | 25 | 324 | 169 |
+| 24 | 25 | 329 | 169 |
 |:---:|:---:|:---:|:---:|
 | tabelas no banco | migrações versionadas | testes unitários (Vitest) | testes de ponta a ponta (Playwright) |
 
@@ -178,7 +178,7 @@ Todas as decisões são registradas com o retorno do modelo, a versão do prompt
 | Testes | Vitest (unitários) + Playwright (end-to-end) + axe-core (varredura de acessibilidade) |
 | Infraestrutura local | Docker Compose |
 
-As versões do Prisma estão fixadas propositalmente. A CLI passou por reestruturação em versões posteriores, com mudança de comandos e de formato de configuração. Fixar a versão garante reprodutibilidade do ambiente ao longo do desenvolvimento e na avaliação do trabalho.
+O Prisma fica na faixa `^7.10.1` e o `package-lock.json` trava a versão exata, então `npm ci` reproduz o mesmo ambiente. Uma troca de versão maior costuma mudar comandos e o formato de configuração (foi o caso do 6 para o 7: client gerado dentro do projeto, driver adapter e `prisma.config.ts`), por isso ela entra num PR próprio e é testada contra o TiDB antes de mesclar.
 
 ---
 
@@ -638,6 +638,7 @@ Ao alterar o `schema.prisma`, gere a migration e a inclua no commit:
 
 ```bash
 npx prisma migrate dev --name descricao_da_alteracao
+npx prisma generate          # o migrate dev não regenera mais o client
 git add prisma/
 ```
 
@@ -683,11 +684,11 @@ O Docker Desktop não está instalado ou o terminal foi aberto antes da instala�
 </details>
 
 <details>
-<summary><code>Prisma config detected, skipping environment variable loading</code></summary>
+<summary><code>prisma migrate</code> ou <code>prisma db seed</code> tentam conectar em um host chamado <code>sem-url</code></summary>
 
 <br>
 
-Existe um arquivo `prisma.config.ts` na raiz do projeto, resíduo de uma versão mais recente do Prisma. Ele impede a leitura do `.env`. Remova o arquivo.
+O CLI não encontrou a `DATABASE_URL`. O `prisma.config.ts` (obrigatório desde o Prisma 7, **não** o remova) carrega o `.env` da raiz do projeto, e uma `DATABASE_URL` já definida no ambiente vence o arquivo. Confira se o `.env` existe, está na raiz e tem a variável. Sem URL o `prisma generate` ainda funciona, porque ele não conecta no banco (é por isso que o `npm install` não quebra num checkout novo); `migrate` e `db seed` precisam da URL de verdade.
 
 </details>
 
