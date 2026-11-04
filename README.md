@@ -56,7 +56,7 @@ flowchart LR
 
 <div align="center">
 
-| 24 | 24 | 315 | 166 |
+| 24 | 25 | 324 | 169 |
 |:---:|:---:|:---:|:---:|
 | tabelas no banco | migrações versionadas | testes unitários (Vitest) | testes de ponta a ponta (Playwright) |
 
@@ -538,7 +538,7 @@ O sistema trata dados pessoais e observa a Lei Geral de Proteção de Dados (Lei
 
 ### Autenticação em duas etapas
 
-Qualquer usuário pode ativar 2FA por aplicativo autenticador (Google Authenticator, Authy etc.) em "Minha conta". O segredo TOTP é cifrado em repouso (AES-256-GCM, chave derivada de `AUTH_SECRET`): nunca fica em texto puro no banco. Um código já usado não vale de novo na mesma janela de 30 segundos. Códigos de backup de uso único cobrem a perda do dispositivo, e o login bloqueia temporariamente após 5 tentativas de código incorretas. Para contas de **órgão** o 2FA é obrigatório: sem ele, o login leva direto a "Minha conta" para ativá-lo, o painel não abre e o formulário de resposta oficial vira um aviso com o link (a conta não consegue desativá-lo). A sessão é recalculada a cada leitura, então ativar libera o painel na mesma sessão. SMS e e-mail como segundo fator ainda não foram implementados: dependem da escolha de um provedor.
+Qualquer usuário pode ativar 2FA por aplicativo autenticador (Google Authenticator, Authy etc.) em "Minha conta". O segredo TOTP é cifrado em repouso (AES-256-GCM, chave derivada de `AUTH_SECRET`): nunca fica em texto puro no banco. Um código já usado não vale de novo na mesma janela de 30 segundos. Códigos de backup de uso único cobrem a perda do dispositivo, e o login bloqueia temporariamente após 5 tentativas de código incorretas. Para contas de **órgão** o 2FA é obrigatório: sem ele, o login leva direto a "Minha conta" para ativá-lo, o painel não abre e o formulário de resposta oficial vira um aviso com o link (a conta não consegue desativá-lo). A sessão é recalculada a cada leitura, então ativar libera o painel na mesma sessão. Quem perde o aplicativo e os códigos de backup pede a um administrador que redefina o segundo fator (em Órgãos, com a senha e o código do próprio admin): a conta perde o segredo, os códigos e as sessões abertas, o fato fica registrado na auditoria, a pessoa é avisada por sininho e e-mail e volta a entrar só com a senha, sendo levada a ativá-lo de novo. SMS e e-mail como segundo fator ainda não foram implementados: dependem da escolha de um provedor.
 
 ### Acesso de órgão
 
