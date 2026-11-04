@@ -57,6 +57,7 @@
     "erroExcluirConta": "Couldn't delete the account.",
     "preferenciasNotificacao": "Notification preferences",
     "notificarPorEmailDesc": "Receive an email when a complaint's status changes (official response, publication, rejection, review request). The in-app bell notification always stays on.",
+    "notificarPorEmailResumoOrgao": "Agency account: includes the weekly summary of complaints still waiting for a response.",
     "preferenciasAtualizadas": "Preferences updated.",
     "segurancaConta": "Account security",
     "duasEtapas": "Two-factor authentication",
@@ -1227,6 +1228,17 @@
       "botao": "View complaints",
       "rodape": "You received this e-mail because you subscribed to this city's weekly summary. Cancel anytime in My Account > Subscriptions."
     },
+    "resumoOrgao": {
+      "assunto": "{semResposta, plural, one {# complaint is} other {# complaints are}} waiting for a response from {orgao} — Urban Grid",
+      "titulo": "Your agency's queue this week",
+      "preheader": "{semResposta, plural, one {# complaint} other {# complaints}} without a response in {cidade}.",
+      "numeroRotulo": "{semResposta, plural, one {complaint without an official response} other {complaints without an official response}}",
+      "corpo": "{semResposta, plural, one {There is # complaint} other {There are # complaints}} in the queue of {orgao} in {cidade} with no official response.",
+      "novas": "{novas, plural, =0 {None of them arrived in the last 7 days.} one {# of them arrived in the last 7 days.} other {# of them arrived in the last 7 days.}}",
+      "vencidas": "{vencidas, plural, one {# has been waiting for more than {prazo} days.} other {# have been waiting for more than {prazo} days.}}",
+      "botao": "Open the agency queue",
+      "rodape": "You received this e-mail because your account answers for {orgao} on Urban Grid. To stop receiving it, turn off e-mail in My Account > Notification preferences."
+    },
     "cidadeAprovada": {
       "assunto": "{cidade} is now available on Urban Grid",
       "titulo": "Your city is now on Urban Grid",
@@ -1383,6 +1395,10 @@
     "pedidoAvaliacao": {
       "titulo": "Was the problem resolved?",
       "mensagem": "{orgao} marked \"{titulo}\" as resolved. Rate whether the problem was really resolved."
+    },
+    "novaReclamacaoNaFila": {
+      "titulo": "New complaint in your queue",
+      "mensagem": "\"{titulo}\" was published and is waiting for the agency's first response."
     },
     "reclamacaoReaberta": {
       "titulo": "Complaint reopened by its author",

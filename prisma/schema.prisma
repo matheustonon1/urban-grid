@@ -95,6 +95,9 @@ enum TipoNotificacao {
   PEDIDO_AVALIACAO
   ATIVIDADE_SUSPEITA
   CONTA_SEGURANCA
+  // Aviso à conta de órgão: uma reclamação da categoria e da cidade dele acabou de ser
+  // publicada e espera a primeira resposta. Só sininho (o e-mail do órgão é o resumo semanal).
+  NOVA_RECLAMACAO_NA_FILA
 }
 
 // ===========================================================================
@@ -162,9 +165,16 @@ model User {
   // lib/notificacoes/index.ts) - a notificação no sininho continua sendo
   // criada de qualquer forma. Não afeta alertas de segurança (senha
   // alterada, troca de e-mail solicitada), que sempre saem por e-mail
-  // independente disto - nem o resumo semanal, que já é opt-in por si só
-  // via AssinaturaCidade.
+  // independente disto - nem o resumo semanal do cidadão, que já é opt-in
+  // por si só via AssinaturaCidade. O resumo semanal da conta de órgão (fila
+  // sem resposta) não tem assinatura própria: esta preferência é o botão de
+  // desligar dele.
   notificarPorEmail Boolean @default(true)
+
+  // Quando o resumo semanal da fila do órgão foi processado pela última vez
+  // para esta conta (só contas de órgão). Mesmo papel de
+  // AssinaturaCidade.ultimoEnvioEm: marca a semana mesmo sem nada a avisar.
+  ultimoResumoOrgaoEm DateTime?
 
   termosAceitosEm DateTime? // consentimento de termos/LGPD no cadastro
   criadoDeIp      String? // usado só pra limite de contas por IP

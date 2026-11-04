@@ -57,6 +57,7 @@
     "erroExcluirConta": "Não foi possível excluir a conta.",
     "preferenciasNotificacao": "Preferências de notificação",
     "notificarPorEmailDesc": "Receber e-mail quando o status de uma reclamação mudar (resposta oficial, publicação, rejeição, pedido de avaliação). A notificação no sininho continua sempre ativa.",
+    "notificarPorEmailResumoOrgao": "Conta de órgão: inclui o resumo semanal da fila de reclamações sem resposta.",
     "preferenciasAtualizadas": "Preferências atualizadas.",
     "segurancaConta": "Segurança da conta",
     "duasEtapas": "Autenticação em duas etapas",
@@ -1227,6 +1228,17 @@
       "botao": "Ver reclamações",
       "rodape": "Você recebeu este e-mail porque assina o resumo semanal desta cidade. Cancele quando quiser em Minha conta > Assinaturas."
     },
+    "resumoOrgao": {
+      "assunto": "{semResposta, plural, one {# reclamação aguarda} other {# reclamações aguardam}} resposta de {orgao} — Urban Grid",
+      "titulo": "A fila do seu órgão nesta semana",
+      "preheader": "{semResposta, plural, one {# reclamação sem resposta} other {# reclamações sem resposta}} em {cidade}.",
+      "numeroRotulo": "{semResposta, plural, one {reclamação sem resposta oficial} other {reclamações sem resposta oficial}}",
+      "corpo": "{semResposta, plural, one {Há # reclamação} other {Há # reclamações}} na fila de {orgao} em {cidade} sem nenhuma resposta oficial.",
+      "novas": "{novas, plural, =0 {Nenhuma delas chegou nos últimos 7 dias.} one {# delas chegou nos últimos 7 dias.} other {# delas chegaram nos últimos 7 dias.}}",
+      "vencidas": "{vencidas, plural, one {# espera há mais de {prazo} dias.} other {# esperam há mais de {prazo} dias.}}",
+      "botao": "Abrir a fila do órgão",
+      "rodape": "Você recebeu este e-mail porque sua conta responde por {orgao} no Urban Grid. Para parar de receber, desligue o e-mail em Minha conta > Preferências de notificação."
+    },
     "cidadeAprovada": {
       "assunto": "{cidade} já está disponível no Urban Grid",
       "titulo": "Sua cidade já está no Urban Grid",
@@ -1387,6 +1399,10 @@
     "reclamacaoReaberta": {
       "titulo": "Reclamação reaberta pelo autor",
       "mensagem": "O autor de \"{titulo}\" respondeu que o problema não foi resolvido. A reclamação voltou para Em andamento."
+    },
+    "novaReclamacaoNaFila": {
+      "titulo": "Nova reclamação na sua fila",
+      "mensagem": "\"{titulo}\" foi publicada e aguarda a primeira resposta do órgão."
     },
     "reclamacaoReabertaComComentario": {
       "titulo": "Reclamação reaberta pelo autor",

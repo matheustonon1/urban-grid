@@ -6,6 +6,7 @@ import { getTranslations } from "next-intl/server";
 import { prisma } from "@/lib/prisma";
 import { falha, informacao, sucesso, type ResultadoAcao } from "@/lib/acoes/resultado";
 import { criarNotificacao } from "@/lib/notificacoes";
+import { avisarOrgaosDaPublicacao } from "@/lib/notificacoes/orgaos";
 
 import { criarRejeitarSchema } from "./definitions";
 import { exigirModerador } from "./exigir-moderador";
@@ -83,10 +84,15 @@ export async function aprovarReclamacao(reclamacaoId: string): Promise<Resultado
     reclamacaoId: reclamacao.id,
     protocolo: reclamacao.protocolo,
   });
+  // Todo caminho que publica avisa o órgão. Este é o da aprovação manual, que inclui o recurso
+  // de uma reclamação rejeitada: o órgão nunca a tinha visto.
+  await avisarOrgaosDaPublicacao(reclamacao.id);
 
   revalidatePath("/moderacao");
   revalidatePath("/reclamacoes");
   revalidatePath(`/reclamacoes/${reclamacao.protocolo}`);
+  // O painel do órgão lista as reclamações abertas: quem abrir /orgao já vê a nova.
+  revalidatePath("/orgao");
 
   return sucesso(t("aprovadaOk"));
 }

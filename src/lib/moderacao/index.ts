@@ -3,6 +3,7 @@ import * as z from "zod";
 
 import { prisma } from "@/lib/prisma";
 import { criarNotificacao } from "@/lib/notificacoes";
+import { avisarOrgaosDaPublicacao } from "@/lib/notificacoes/orgaos";
 import { LIMITE_REPROVACAO, LIMITE_REVISAO } from "@/lib/moderacao/pontuacoes";
 
 import { getGeminiClient } from "./gemini";
@@ -377,6 +378,7 @@ export async function moderarReclamacao(
       reclamacaoId: reclamacao.id,
       protocolo: reclamacao.protocolo,
     });
+    await avisarOrgaosDaPublicacao(reclamacao.id);
   } else if (publicacaoAdiada) {
     await prisma.reclamacao.update({
       where: { id: reclamacao.id },
@@ -457,4 +459,5 @@ export async function finalizarPublicacaoAprovada(reclamacaoId: string) {
     reclamacaoId,
     protocolo: reclamacao.protocolo,
   });
+  await avisarOrgaosDaPublicacao(reclamacaoId);
 }

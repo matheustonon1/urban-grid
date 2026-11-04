@@ -139,7 +139,10 @@ export default async function ContaPage() {
                   : null
               }
             />
-            <FormularioPreferenciasNotificacao notificarPorEmail={usuario.notificarPorEmail} />
+            <FormularioPreferenciasNotificacao
+              notificarPorEmail={usuario.notificarPorEmail}
+              resumoOrgao={session.user.papel === "ORGAO"}
+            />
           </Secao>
 
           <Secao id="seguranca" titulo={t("secaoSeguranca")}>
