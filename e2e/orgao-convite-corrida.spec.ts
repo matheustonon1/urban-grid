@@ -14,7 +14,10 @@ test.afterAll(async () => {
 // Duas abas (ou um duplo clique) enviando o MESMO link de convite ao mesmo tempo. Antes, as duas
 // passavam pela checagem "ainda sem senha" e a segunda gravava por cima da senha da primeira,
 // ou estourava num erro interno ao apagar o token que a primeira já tinha apagado. Agora uma
-// vence e a outra vê "link já usado"; a senha que vale é a da vencedora.
+// vence e a outra vê um aviso de link usado (ou "expirou", se o primeiro envio já tinha apagado o
+// token quando o segundo chegou); a senha que vale é a da vencedora. A guarda em si é conferida de
+// forma determinística em actions.test.ts: a ordem exata dos dois envios aqui depende do relógio do
+// servidor, então este teste prova o resultado (uma senha, um token consumido, ninguém sem resposta).
 test("o mesmo convite enviado duas vezes ao mesmo tempo: uma define a senha, a outra vê link usado", async ({
   browser,
 }) => {
@@ -60,7 +63,7 @@ test("o mesmo convite enviado duas vezes ao mesmo tempo: uma define a senha, a o
   const desfechos = await Promise.all(
     paginas.map(async ({ senha, page }): Promise<{ senha: string; desfecho: Desfecho }> => {
       await page.click('button[type="submit"]');
-      const aviso = page.getByText("Este link já foi usado ou não é mais válido.");
+      const aviso = page.getByText(/Este link (já foi usado ou não é mais válido|expirou)/);
       let desfecho = "aguardando" as Desfecho;
       await expect
         .poll(
