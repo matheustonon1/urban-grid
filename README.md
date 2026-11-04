@@ -762,6 +762,7 @@ O Turnstile está configurado no `.env` e bloqueou corretamente o navegador auto
 - Prazo de resposta por categoria ou urgência na reputação (hoje são 15 dias para tudo).
 - Conferir o vínculo do órgão por uma fonte oficial além do CNPJ informado.
 - Outros segundos fatores (chave de segurança, passkeys).
+- Migração para o Prisma 7 (já preparada em um PR; falta validar a conexão com o TiDB antes de mesclar).
 
 ---
 
