@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import "./globals.css";
 
+import { InlineScript } from "@/components/layout/inline-script";
 import { Rodape } from "@/components/layout/rodape";
 import { SiteHeader } from "@/components/layout/site-header";
 import { AvisosProvider } from "@/components/ui/avisos";
@@ -58,10 +59,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
     >
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("tema");var e=t?t==="dark":window.matchMedia("(prefers-color-scheme: dark)").matches;document.documentElement.classList.toggle("dark",e)}catch(e){}})()`,
-          }}
+        <InlineScript
+          html={`(function(){try{var t=localStorage.getItem("tema");var e=t?t==="dark":window.matchMedia("(prefers-color-scheme: dark)").matches;document.documentElement.classList.toggle("dark",e)}catch(e){}})()`}
         />
       </head>
       <body className="flex min-h-full flex-col">
