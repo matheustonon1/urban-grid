@@ -107,6 +107,7 @@ nele sozinho se a API falhar. Para atualizá-lo (município criado ou extinto):
 | Código | Causa provável |
 |---|---|
 | `P1001` | container parado → `docker compose up -d`, aguarde ~20 s |
+| `ER_CANNOT_RETRIEVE_RSA_KEY` / `pool failed to retrieve a connection from pool` (código 45028) | MySQL no ar, mas o driver `mariadb` não pode pedir a chave RSA: o cache do `caching_sha2_password` esvazia a cada reinício do container. `configDoAdapter` liga `allowPublicKeyRetrieval` sozinho para host local sem TLS; em outro host sem TLS ponha `?allowPublicKeyRetrieval=true` na URL. O dev server guarda o client em `globalThis`: reinicie-o depois de mudar isso |
 | `P2002` | unicidade violada (e-mail, CPF, `categoriaChave`…) |
 | `P2003` | FK impedindo apagar/inserir (ver "FK sem cascade") |
 | `P3009`/`P3006` | migration falhou ou banco divergente → resolva, não force `--accept-data-loss` |

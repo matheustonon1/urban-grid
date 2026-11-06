@@ -14,7 +14,13 @@ import type { PoolConfig } from "mariadb";
 // - connection_limit            conexões no pool (padrão 5: cada instância serverless tem o seu);
 // - connect_timeout             segundos para abrir a conexão (padrão 10; o do driver, 1 s, é
 //   curto para um banco remoto que acorda de frio);
-// - allowPublicKeyRetrieval=true  só para MySQL local sem TLS com a autenticação padrão do 8.x.
+// - allowPublicKeyRetrieval     deixa o driver pedir ao servidor a chave pública RSA para cifrar a
+//   senha numa conexão SEM TLS. O MySQL 8.x autentica com caching_sha2_password: a cada reinício do
+//   servidor o cache de senhas fica vazio e o primeiro login exige essa troca; sem ela toda conexão
+//   falha com ER_CANNOT_RETRIEVE_RSA_KEY, o cache nunca é preenchido e o site cai (pool esgotado).
+//   Liga sozinha para host local (localhost, 127.0.0.1, ::1) sem TLS, que é o container do docker
+//   compose. `=true` ou `=false` na URL manda mais que esse padrão. Em host remoto o padrão fica
+//   desligado: sem TLS, aceitar a chave que o servidor entrega deixa um intermediário trocá-la.
 //
 // Sem nenhum parâmetro de TLS a conexão é sem TLS, o que serve ao MySQL local (Docker) e ao do CI.
 
@@ -25,6 +31,9 @@ function inteiroPositivo(valor: string | null, padrao: number): number {
   const numero = Number(valor);
   return Number.isInteger(numero) && numero > 0 ? numero : padrao;
 }
+
+// `new URL` mantém os colchetes do IPv6 em hostname ("[::1]").
+const HOSTS_LOCAIS = new Set(["localhost", "127.0.0.1", "[::1]", "::1"]);
 
 export function configDoAdapter(urlDeConexao: string): PoolConfig {
   const url = new URL(urlDeConexao);
@@ -40,6 +49,14 @@ export function configDoAdapter(urlDeConexao: string): PoolConfig {
     sslmode === "verify-full";
   const tlsSemValidacao = sslaccept === "accept_invalid_certs";
 
+  const pedidoNaUrl = parametros.get("allowPublicKeyRetrieval");
+  const buscarChavePublica =
+    pedidoNaUrl === "true"
+      ? true
+      : pedidoNaUrl === "false"
+        ? false
+        : !tlsComValidacao && !tlsSemValidacao && HOSTS_LOCAIS.has(url.hostname.toLowerCase());
+
   return {
     host: url.hostname,
     port: url.port ? Number(url.port) : 3306,
@@ -54,7 +71,7 @@ export function configDoAdapter(urlDeConexao: string): PoolConfig {
       : tlsSemValidacao
         ? { ssl: { rejectUnauthorized: false } }
         : {}),
-    ...(parametros.get("allowPublicKeyRetrieval") === "true"
+    ...(buscarChavePublica
       ? { allowPublicKeyRetrieval: true }
       : {}),
   };
