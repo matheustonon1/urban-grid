@@ -286,7 +286,7 @@ npx auth secret
 
 | Variável | Quando | Para quê |
 |---|---|---|
-| `DATABASE_URL` | obrigatória | Conexão com o MySQL. O exemplo acima aponta para o container do `docker compose`. É lida por `prisma.config.ts` (CLI) e por `src/lib/bancoDeDados.ts` (aplicação). Para um banco com TLS (TiDB Cloud), acrescente `?sslaccept=strict`; `connection_limit` (padrão 5) e `connect_timeout` (segundos, padrão 10) também valem. |
+| `DATABASE_URL` | obrigatória | Conexão com o MySQL. O exemplo acima aponta para o container do `docker compose`. É lida por `prisma.config.ts` (CLI) e por `src/lib/bancoDeDados.ts` (aplicação). Para um banco com TLS (TiDB Cloud), acrescente `?sslaccept=strict`; `connection_limit` (padrão 5) e `connect_timeout` (segundos, padrão 10) também valem. Em `localhost`, `127.0.0.1` ou `::1` sem TLS a aplicação liga sozinha o `allowPublicKeyRetrieval` (o MySQL 8.4 do container o exige depois de reiniciar); num outro host sem TLS, acrescente `?allowPublicKeyRetrieval=true` se aparecer `ER_CANNOT_RETRIEVE_RSA_KEY`. |
 | `AUTH_SECRET` | obrigatória | Assina a sessão. Dele também derivam o hash do CPF e a chave que cifra o segredo do 2FA: **trocá-lo invalida os CPFs e os segredos de 2FA já gravados**. |
 | `GEMINI_API_KEY` | obrigatória | Moderação por IA de reclamações e comentários. |
 | `BLOB_READ_WRITE_TOKEN` | para enviar fotos | Upload de imagem das reclamações. Crie um Blob store gratuito em [vercel.com](https://vercel.com) → Storage → Create → Blob e copie o token; funciona em desenvolvimento local, não é preciso publicar o projeto na Vercel. Sem ele, o restante do app funciona; só o envio de fotos falha. |
@@ -662,6 +662,15 @@ Arquivos de dump ou backup do banco **não** devem ser versionados.
 <br>
 
 O container não está em execução. Rode `docker compose up -d` e aguarde alguns segundos. Verifique também se o Docker Desktop está aberto.
+
+</details>
+
+<details>
+<summary><code>ER_CANNOT_RETRIEVE_RSA_KEY</code> ou <code>pool failed to retrieve a connection</code> (as páginas que leem o banco dão 500)</summary>
+
+<br>
+
+O MySQL está no ar, mas recusa a senha: o 8.4 autentica com `caching_sha2_password`, cujo cache de senhas fica vazio a cada reinício do container, e o primeiro login exige que o driver peça a chave pública RSA ao servidor. Sem isso toda conexão falha, o cache nunca é preenchido e o site não volta sozinho. Para `localhost`, `127.0.0.1` e `::1` sem TLS a aplicação já liga a opção (`src/lib/bancoDeDados.ts`). Se o erro aparecer mesmo assim, confira se a `DATABASE_URL` aponta para outro host (um IP da rede, por exemplo), caso em que se acrescenta `?allowPublicKeyRetrieval=true`, e se não há um `allowPublicKeyRetrieval=false` nela. Depois de mudar a URL ou o código, reinicie o `npm run dev`: o servidor de desenvolvimento guarda o client do banco entre recarregamentos.
 
 </details>
 

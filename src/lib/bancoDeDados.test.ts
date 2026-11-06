@@ -61,7 +61,42 @@ describe("configDoAdapter", () => {
     expect(ruim.connectTimeout).toBe(10_000);
   });
 
-  it("allowPublicKeyRetrieval só entra quando pedido", () => {
+  // Regressão: o MySQL 8.4 do docker compose, recém-reiniciado, recusa a primeira senha sem a chave
+  // RSA (ER_CANNOT_RETRIEVE_RSA_KEY) e a home dava 500 até alguém logar por outro caminho.
+  it.each([
+    "mysql://root:root@localhost:3306/db",
+    "mysql://root:root@LOCALHOST:3306/db",
+    "mysql://root:root@127.0.0.1:3306/db",
+    "mysql://root:root@[::1]:3306/db",
+  ])("host local sem TLS liga allowPublicKeyRetrieval sozinho (%s)", (url) => {
+    expect(configDoAdapter(url).allowPublicKeyRetrieval).toBe(true);
+  });
+
+  it("host local com TLS não precisa da chave RSA: a senha já vai cifrada", () => {
+    expect(
+      configDoAdapter("mysql://u:p@localhost:3306/db?sslaccept=strict").allowPublicKeyRetrieval
+    ).toBeUndefined();
+    expect(
+      configDoAdapter("mysql://u:p@localhost:3306/db?sslaccept=accept_invalid_certs")
+        .allowPublicKeyRetrieval
+    ).toBeUndefined();
+  });
+
+  it("allowPublicKeyRetrieval=false na URL desliga até em host local", () => {
+    expect(
+      configDoAdapter("mysql://u:p@localhost:3306/db?allowPublicKeyRetrieval=false")
+        .allowPublicKeyRetrieval
+    ).toBeUndefined();
+  });
+
+  it("host remoto sem TLS continua sem a opção, mesmo que o nome comece com 'localhost'", () => {
+    expect(configDoAdapter("mysql://u:p@db.exemplo.com:3306/db").allowPublicKeyRetrieval).toBeUndefined();
+    expect(
+      configDoAdapter("mysql://u:p@localhost.exemplo.com:3306/db").allowPublicKeyRetrieval
+    ).toBeUndefined();
+  });
+
+  it("allowPublicKeyRetrieval só entra em host remoto quando pedido", () => {
     expect(configDoAdapter("mysql://u:p@h/db").allowPublicKeyRetrieval).toBeUndefined();
     expect(configDoAdapter("mysql://u:p@h/db?allowPublicKeyRetrieval=true").allowPublicKeyRetrieval).toBe(
       true
