@@ -76,7 +76,12 @@ export function criarComentarioSchema(t: T) {
       .min(3, { error: t("erroComentarioCurto") })
       .max(1000, { error: t("erroComentarioLongo") }),
     paiId: z
-      .union([z.literal(""), z.string()])
-      .transform((valor) => (valor === "" ? undefined : valor)),
+      .string()
+      // O formulário do comentário de nível zero não envia `paiId` (só a resposta o manda, num
+      // campo escondido): `formData.get` devolve null, que o schema antigo recusava com o
+      // "Invalid input" padrão do zod, e ninguém conseguia comentar. Ausente, null e "" valem
+      // "sem comentário pai".
+      .nullish()
+      .transform((valor) => valor || undefined),
   });
 }

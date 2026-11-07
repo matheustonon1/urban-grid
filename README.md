@@ -558,7 +558,7 @@ Como a plataforma lida com reclamações sobre a cidade, incluindo, indiretament
 
 - CPF único por conta (hash) e Cloudflare Turnstile no cadastro (opcional)
 - Limite de contas criadas por IP e de reclamações e denúncias por usuário
-- E-mail verificado obrigatório para confirmar ("também sofro com isso") e denunciar, com contas anteriores à regra isentas
+- E-mail verificado obrigatório para comentar, confirmar ("também sofro com isso") e denunciar, com contas anteriores à regra isentas. Publicar uma reclamação não exige e-mail verificado (o que a limita são o teto diário e a moderação por IA)
 - Rajada de confirmações fora do padrão gera alerta para moderador/admin, nunca ação automática: um problema real pode legitimamente viralizar, então a decisão final é sempre humana
 - Denúncia de conteúdo publicado (`/denuncias`) e banimento de usuário (restrito a ADMIN) como consequência
 - Mudar o papel de uma conta, banir de forma permanente e aprovar um órgão pedem a **senha e o código de duas etapas de quem age** (conferidos no servidor, com o mesmo bloqueio por tentativas do login); a pessoa afetada recebe um aviso no sino
