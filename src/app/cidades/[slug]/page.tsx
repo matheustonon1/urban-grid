@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { ChevronRight, ListFilter, SearchX } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
-import { auth } from "@/auth";
+import { obterSessao } from "@/lib/seguranca/sessao";
 import { prisma } from "@/lib/prisma";
 import { CabecalhoPagina } from "@/components/ui/cabecalho-pagina";
 import { Secao } from "@/components/ui/secao";
@@ -21,7 +21,7 @@ import {
   pagina,
   rotuloSecao,
 } from "@/lib/estilos";
-import { calcularMetricasOrgao, classificarIndice } from "@/lib/orgaos/reputacaoOrgao";
+import { calcularMetricasDeOrgaos, classificarIndice } from "@/lib/orgaos/reputacaoOrgao";
 import { STATUS_PUBLICOS } from "@/lib/reclamacoes/statusPublicos";
 
 import { SeguirCidade } from "./seguir-cidade";
@@ -83,7 +83,7 @@ export default async function CidadePage({
     notFound();
   }
 
-  const session = await auth();
+  const session = await obterSessao();
   const jaAssinaCidade = session?.user
     ? Boolean(
         await prisma.assinaturaCidade.findFirst({
@@ -179,14 +179,10 @@ export default async function CidadePage({
 
   const totalPaginas = Math.max(1, Math.ceil(totalFeed / TAMANHO_PAGINA));
 
-  const rankingOrgaos = (
-    await Promise.all(
-      orgaosAtivos.map(async (orgao) => ({
-        orgao,
-        metricas: await calcularMetricasOrgao(orgao.id),
-      }))
-    )
-  ).sort((a, b) => (b.metricas.indiceResolucao ?? -1) - (a.metricas.indiceResolucao ?? -1));
+  const metricasPorOrgao = await calcularMetricasDeOrgaos(orgaosAtivos.map((orgao) => orgao.id));
+  const rankingOrgaos = orgaosAtivos
+    .map((orgao) => ({ orgao, metricas: metricasPorOrgao.get(orgao.id)! }))
+    .sort((a, b) => (b.metricas.indiceResolucao ?? -1) - (a.metricas.indiceResolucao ?? -1));
 
   return (
     <main className={pagina}>

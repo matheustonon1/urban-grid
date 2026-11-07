@@ -10,7 +10,7 @@ import { PainelNumeros } from "@/components/ui/painel-numeros";
 import { Secao } from "@/components/ui/secao";
 import { pagina } from "@/lib/estilos";
 import { limiteDoPrazoSemResposta, PRAZO_SEM_RESPOSTA_DIAS } from "@/lib/orgaos/prazoResposta";
-import { calcularMetricasOrgao, classificarIndice } from "@/lib/orgaos/reputacaoOrgao";
+import { calcularMetricasDeOrgaos, classificarIndice } from "@/lib/orgaos/reputacaoOrgao";
 import { STATUS_PUBLICOS } from "@/lib/reclamacoes/statusPublicos";
 
 const LIMITE_ORGAOS = 100;
@@ -54,11 +54,9 @@ export default async function TransparenciaPage() {
     }),
   ]);
 
-  const ranking = (
-    await Promise.all(
-      orgaos.map(async (orgao) => ({ orgao, metricas: await calcularMetricasOrgao(orgao.id) }))
-    )
-  )
+  const metricasPorOrgao = await calcularMetricasDeOrgaos(orgaos.map((orgao) => orgao.id));
+  const ranking = orgaos
+    .map((orgao) => ({ orgao, metricas: metricasPorOrgao.get(orgao.id)! }))
     .filter(({ metricas }) => metricas.baseDoIndice > 0)
     .sort(
     (a, b) =>

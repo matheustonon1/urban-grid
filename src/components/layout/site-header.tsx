@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
-import { auth } from "@/auth";
+import { obterSessao } from "@/lib/seguranca/sessao";
 import { Marca } from "@/components/ui/marca";
 import { prisma } from "@/lib/prisma";
 import { botaoPrimario } from "@/lib/estilos";
@@ -15,7 +15,7 @@ import { UserMenu } from "./user-menu";
 
 export async function SiteHeader() {
   const t = await getTranslations("Header");
-  const session = await auth();
+  const session = await obterSessao();
   const ehModerador =
     session?.user?.papel === "MODERADOR" || session?.user?.papel === "ADMIN";
   const ehOrgao = session?.user?.papel === "ORGAO";

@@ -9,21 +9,22 @@ import {
 } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
-import { auth } from "@/auth";
+import { obterSessao } from "@/lib/seguranca/sessao";
 import { CategoriaIcon } from "@/components/reclamacao/categoria-icon";
 import { StatusBadge } from "@/components/reclamacao/status-badge";
 import { Revelar } from "@/components/ui/revelar";
 import { prisma } from "@/lib/prisma";
 import { botaoPrimario, botaoSecundario, containerSite } from "@/lib/estilos";
-import { calcularMetricasOrgao, classificarIndice } from "@/lib/orgaos/reputacaoOrgao";
+import { calcularMetricasDeOrgaos, classificarIndice } from "@/lib/orgaos/reputacaoOrgao";
 import { STATUS_PUBLICOS } from "@/lib/reclamacoes/statusPublicos";
 
 // Etapas da vida pública de uma reclamação, na ordem em que a ficha as mostra.
 const ETAPAS_FICHA = ["PUBLICADA", "EM_ANDAMENTO", "RESOLVIDA"] as const;
 
 export default async function Home() {
-  const session = await auth();
-  const logado = Boolean(session?.user);
+  // A sessão e as consultas da página não dependem uma da outra: a leitura da sessão começa já e
+  // entra no mesmo Promise.all abaixo, em vez de segurar as consultas por uma ida ao banco.
+  const sessaoPromessa = obterSessao();
 
   const t = await getTranslations("Home");
   const tSelo = await getTranslations("Selo");
@@ -50,6 +51,7 @@ export default async function Home() {
     totalOrgaos,
     reclamacoesRecentes,
     candidatosResposta,
+    session,
   ] = await Promise.all([
     prisma.reclamacao.count({ where: { status: { in: [...STATUS_PUBLICOS] } } }),
     prisma.reclamacao.count({ where: { status: "RESOLVIDA" } }),
@@ -74,7 +76,9 @@ export default async function Home() {
       orderBy: { _count: { orgaoId: "desc" } },
       take: 6,
     }),
+    sessaoPromessa,
   ]);
+  const logado = Boolean(session?.user);
 
   const [destaque, ...outrasRecentes] = reclamacoesRecentes;
 
@@ -83,14 +87,9 @@ export default async function Home() {
     include: { cidade: true },
   });
 
-  const rankingOrgaos = (
-    await Promise.all(
-      orgaosCandidatos.map(async (orgao) => ({
-        orgao,
-        metricas: await calcularMetricasOrgao(orgao.id),
-      }))
-    )
-  )
+  const metricasPorOrgao = await calcularMetricasDeOrgaos(orgaosCandidatos.map((orgao) => orgao.id));
+  const rankingOrgaos = orgaosCandidatos
+    .map((orgao) => ({ orgao, metricas: metricasPorOrgao.get(orgao.id)! }))
     .filter(({ metricas }) => metricas.indiceResolucao !== null)
     .sort((a, b) => (b.metricas.indiceResolucao ?? 0) - (a.metricas.indiceResolucao ?? 0))
     .slice(0, 3);
