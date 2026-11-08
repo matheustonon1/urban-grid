@@ -1,18 +1,39 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { useTranslations } from "next-intl";
 
 import { Campo } from "@/components/formulario/campo";
 import { Aviso } from "@/components/ui/aviso";
 import { botaoPrimario, campoInput, linkSutil } from "@/lib/estilos";
 
-import { login } from "./actions";
+import { login, type LoginFormState } from "./actions";
 
 export function FormularioLogin({ callbackUrl }: { callbackUrl?: string }) {
   const t = useTranslations("Login");
-  const [state, action, pending] = useActionState(login, undefined);
+
+  // O React zera os campos de um <form action> ao fim da ação. Para a pessoa não redigitar a
+  // senha no passo do código (ou o e-mail depois de errar a senha), o que foi digitado fica
+  // guardado AQUI, só no navegador, e volta como defaultValue. O servidor não devolve mais a
+  // senha na resposta (ver LoginFormState). Os campos seguem não controlados de propósito:
+  // quem digita antes da hidratação não perde o texto.
+  const [digitado, setDigitado] = useState({ identificador: "", senha: "" });
+  const [state, action, pending] = useActionState(
+    async (anterior: LoginFormState, dados: FormData) => {
+      const identificador = String(dados.get("identificador") ?? "");
+      const senha = String(dados.get("senha") ?? "");
+      const resultado = await login(anterior, dados);
+      // Senha errada: o e-mail fica e a senha é limpa. Senha certa à espera do código, ou
+      // código errado: os dois ficam, e só o código é pedido de novo.
+      setDigitado({
+        identificador,
+        senha: resultado?.erro && !resultado.etapaTotp ? "" : senha,
+      });
+      return resultado;
+    },
+    undefined
+  );
 
   return (
     <form action={action} className="flex flex-col gap-5">
@@ -24,7 +45,7 @@ export function FormularioLogin({ callbackUrl }: { callbackUrl?: string }) {
           type="text"
           name="identificador"
           autoComplete="username"
-          defaultValue={state?.identificador ?? ""}
+          defaultValue={digitado.identificador}
           required
           className={campoInput}
         />
@@ -47,7 +68,7 @@ export function FormularioLogin({ callbackUrl }: { callbackUrl?: string }) {
           type="password"
           name="senha"
           autoComplete="current-password"
-          defaultValue={state?.senha ?? ""}
+          defaultValue={digitado.senha}
           required
           className={campoInput}
         />
