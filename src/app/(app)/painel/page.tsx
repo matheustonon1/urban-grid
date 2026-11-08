@@ -23,6 +23,7 @@ import {
   pagina,
 } from "@/lib/estilos";
 import { metadataDaPagina } from "@/lib/metadata";
+import { PARAM_EMAIL_NAO_ENVIADO } from "@/lib/conta/verificacao";
 import { formatarTempoRelativo } from "@/lib/util/tempo-relativo";
 
 import { reenviarVerificacao } from "./actions";
@@ -44,7 +45,8 @@ export default async function PainelPage({ searchParams }: PageProps<"/painel">)
     redirect("/orgao");
   }
 
-  const { page } = await searchParams;
+  const { page, email: emailParam } = await searchParams;
+  const emailNaoEnviado = emailParam === PARAM_EMAIL_NAO_ENVIADO;
   const paginaAtual = lerPaginaAtual(page);
   const filtro = { autorId: session.user.id };
 
@@ -102,7 +104,7 @@ export default async function PainelPage({ searchParams }: PageProps<"/painel">)
             </FormularioAcao>
           }
         >
-          {t("emailNaoVerificado")}
+          {emailNaoEnviado ? t("emailNaoEnviado") : t("emailNaoVerificado")}
         </Aviso>
       )}
 

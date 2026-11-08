@@ -176,6 +176,44 @@ describe("resultado do envio (enviarEmailAcessoOrgao)", () => {
   });
 });
 
+// Quem reenvia a verificação precisa saber se o e-mail saiu: antes a função não devolvia nada e a
+// tela dizia "enviamos" mesmo com o provedor recusando (remetente de teste, domínio não verificado).
+describe("resultado do envio (enviarEmailVerificacao)", () => {
+  let espiaoErro: ReturnType<typeof vi.spyOn>;
+  let espiaoLog: ReturnType<typeof vi.spyOn>;
+  beforeEach(() => {
+    espiaoErro = vi.spyOn(console, "error").mockImplementation(() => {});
+    espiaoLog = vi.spyOn(console, "log").mockImplementation(() => {});
+  });
+  afterEach(() => {
+    espiaoErro.mockRestore();
+    espiaoLog.mockRestore();
+    vi.stubEnv("RESEND_API_KEY", "re_teste_fake");
+  });
+
+  it("'enviado' quando o provedor aceita", async () => {
+    expect(await enviarEmailVerificacao({ email: "pessoa@exemplo.com", token: "abc" })).toEqual({
+      status: "enviado",
+    });
+  });
+
+  it("'falhou' quando o provedor recusa", async () => {
+    comportamentoDoProvedor.erro = { message: "domain is not verified" };
+    expect(await enviarEmailVerificacao({ email: "pessoa@exemplo.com", token: "abc" })).toEqual({
+      status: "falhou",
+      motivo: "domain is not verified",
+    });
+  });
+
+  it("'simulado' sem RESEND_API_KEY (dev/CI): nada é enviado", async () => {
+    vi.stubEnv("RESEND_API_KEY", "");
+    expect(await enviarEmailVerificacao({ email: "pessoa@exemplo.com", token: "abc" })).toEqual({
+      status: "simulado",
+    });
+    expect(enviosCapturados).toHaveLength(0);
+  });
+});
+
 describe("enviarEmailResumoSemanal (assunto vs. corpo)", () => {
   it("não escapa o assunto (cabeçalho texto puro), mas escapa o corpo HTML", async () => {
     await enviarEmailResumoSemanal({

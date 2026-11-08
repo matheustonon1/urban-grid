@@ -28,8 +28,10 @@ export async function enviarEmailVerificacao({
   email: string;
   token: string;
   locale?: Idioma;
-}) {
-  await enviarEmail({ to: email, ...(await montarEmailVerificacao({ token, locale })) });
+}): Promise<ResultadoEnvio> {
+  // Devolve o resultado (como o convite de órgão): quem chama precisa saber se o e-mail
+  // saiu, para não dizer à pessoa que ele foi enviado quando o provedor o recusou.
+  return enviarEmail({ to: email, ...(await montarEmailVerificacao({ token, locale })) });
 }
 
 export async function enviarEmailAcessoOrgao({

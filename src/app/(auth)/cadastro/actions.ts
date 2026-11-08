@@ -11,6 +11,7 @@ import { signIn } from "@/auth";
 import { hashCpf } from "@/lib/seguranca/cpf";
 import { criarTokenVerificacao, enviarEmailVerificacao } from "@/lib/email";
 import { obterIdiomaAtual } from "@/i18n/atual";
+import { destinoPosCadastro } from "@/lib/conta/verificacao";
 import { verificarTurnstile } from "@/lib/seguranca/turnstile";
 
 import { criarCadastroSchema, type CadastroFormState } from "./definitions";
@@ -95,13 +96,14 @@ export async function cadastrar(
   }
 
   const token = await criarTokenVerificacao(email);
-  await enviarEmailVerificacao({ email, token, locale: idioma });
+  const envio = await enviarEmailVerificacao({ email, token, locale: idioma });
 
   try {
     await signIn("credentials", {
       identificador: email,
       senha,
-      redirectTo: "/painel",
+      // Se o e-mail não saiu, o painel avisa em vez de a pessoa esperar uma mensagem que não chega.
+      redirectTo: destinoPosCadastro(envio),
     });
   } catch (erro) {
     if (erro instanceof AuthError) {

@@ -11,6 +11,14 @@ export function precisaVerificarEmail(usuario: {
   return usuario.createdAt >= DATA_EXIGENCIA_EMAIL && !usuario.emailVerified;
 }
 
+// Quem acabou de se cadastrar entra direto no painel. Se o e-mail de verificação não saiu, o painel
+// recebe este parâmetro e explica (a conta já existe; basta tentar o reenvio daqui a pouco).
+export const PARAM_EMAIL_NAO_ENVIADO = "nao-enviado";
+
+export function destinoPosCadastro(envio: { status: "enviado" | "simulado" | "falhou" }): string {
+  return envio.status === "falhou" ? `/painel?email=${PARAM_EMAIL_NAO_ENVIADO}` : "/painel";
+}
+
 // Escopo do limite de reenvio do e-mail de verificação (ver
 // seguranca/rateLimitMemoria.ts). Compartilhado entre o botão do painel e o de "Minha
 // conta" pra um não ser caminho de burla do outro; fica aqui porque um
