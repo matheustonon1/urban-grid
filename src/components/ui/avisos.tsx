@@ -79,13 +79,20 @@ export function AvisosProvider({ children }: { children: ReactNode }) {
 function ItemAviso({ aviso, aoFechar }: { aviso: Entrada; aoFechar: (id: number) => void }) {
   const t = useTranslations("Acao");
   const [pausado, setPausado] = useState(false);
+  const restante = useRef(DURACAO_MS);
   const { caixa, icone: Icone } = TONS_AVISO[aviso.tipo];
   const some = aviso.tipo === "sucesso" || aviso.tipo === "info";
 
   useEffect(() => {
     if (!some || pausado) return;
-    const timer = setTimeout(() => aoFechar(aviso.id), DURACAO_MS);
-    return () => clearTimeout(timer);
+    const inicio = performance.now();
+    const timer = setTimeout(() => aoFechar(aviso.id), restante.current);
+    return () => {
+      clearTimeout(timer);
+      // Ao pausar, guarda quanto faltava: a barra congela no mesmo ponto (animation-play-state) e,
+      // ao soltar, aviso e barra seguem juntos de onde pararam, em vez de recomeçar dos 7 s.
+      restante.current = Math.max(0, restante.current - (performance.now() - inicio));
+    };
   }, [some, pausado, aviso.id, aoFechar]);
 
   return (
@@ -94,7 +101,7 @@ function ItemAviso({ aviso, aoFechar }: { aviso: Entrada; aoFechar: (id: number)
       onMouseLeave={() => setPausado(false)}
       onFocus={() => setPausado(true)}
       onBlur={() => setPausado(false)}
-      className={`animate-fade-in pointer-events-auto flex items-start gap-3 rounded-md border px-3.5 py-3 text-sm shadow-lg ${caixa}`}
+      className={`animate-fade-in pointer-events-auto relative flex items-start gap-3 overflow-hidden rounded-md border px-3.5 py-3 text-sm shadow-lg ${caixa}`}
     >
       <Icone className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
       <p className="min-w-0 flex-1 leading-snug font-medium">{aviso.mensagem}</p>
@@ -106,6 +113,20 @@ function ItemAviso({ aviso, aoFechar }: { aviso: Entrada; aoFechar: (id: number)
       >
         <X className="h-4 w-4" aria-hidden />
       </button>
+      {/* Quanto falta para o aviso sumir. Só os que somem sozinhos têm barra (erro e atenção ficam
+          até serem fechados). Decorativa: o leitor de tela não precisa de uma contagem. Sem
+          movimento (prefers-reduced-motion) ela não aparece, como as outras animações do site. */}
+      {some && (
+        <span
+          aria-hidden
+          data-testid="barra-aviso"
+          className="animate-barra-aviso absolute inset-x-0 bottom-0 h-1 origin-left bg-current opacity-35 motion-reduce:hidden"
+          style={{
+            animationDuration: `${DURACAO_MS}ms`,
+            animationPlayState: pausado ? "paused" : "running",
+          }}
+        />
+      )}
     </div>
   );
 }
