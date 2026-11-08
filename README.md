@@ -89,9 +89,19 @@ flowchart LR
       <br><sub><b>Transparência.</b> Indicadores gerais e ranking de órgãos por resolução, tempo de resposta e nota.</sub>
     </td>
   </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="docs/capturas/nova-reclamacao.webp" alt="Formulário de nova reclamação preenchido, com a descrição, as categorias à vista, o endereço preenchido pelo CEP e o indicador de progresso ao lado" width="100%">
+      <br><sub><b>Nova reclamação.</b> Formulário guiado em etapas, categorias à vista, endereço pelo CEP e progresso ao lado.</sub>
+    </td>
+    <td width="50%" valign="top">
+      <img src="docs/capturas/painel-cidadao.webp" alt="Painel do cidadão com os indicadores, a lista de reclamações com o estado de cada uma e os atalhos para notificações, assinaturas e conta" width="100%">
+      <br><sub><b>Painel do cidadão.</b> Indicadores, o estado de cada reclamação (em revisão, publicada, em andamento, resolvida) e atalhos.</sub>
+    </td>
+  </tr>
 </table>
 
-<sub>Capturas em tema claro, com dados de demonstração (`npm run db:seed:demo`). O site também tem tema escuro e interface em português e inglês.</sub>
+<sub>Capturas em tema claro, com dados de demonstração (`npm run db:seed:demo` e reclamações fictícias de exemplo). O site também tem tema escuro e interface em português e inglês.</sub>
 
 ---
 
@@ -149,6 +159,21 @@ O diferencial técnico é o **pipeline de moderação automatizada**: todo conte
 | Decisão | Publicação automática, encaminhamento para revisão humana ou rejeição com justificativa e direito a recurso |
 
 Todas as decisões são registradas com o retorno do modelo, a versão do prompt utilizada e a latência, permitindo auditoria e análise posterior de precisão.
+
+<table>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="docs/capturas/moderacao-historico.webp" alt="Histórico de moderação com cada decisão da IA, as pontuações por eixo de risco, a justificativa, a versão do prompt, a latência e os totais por decisão" width="100%">
+      <br><sub><b>Histórico de decisões.</b> A pontuação por eixo de risco, a justificativa, a versão do prompt e a latência de cada análise, com a revisão humana registrada junto.</sub>
+    </td>
+    <td width="50%" valign="top">
+      <img src="docs/capturas/moderacao-fila.webp" alt="Fila de revisão humana com um caso encaminhado pela IA, a análise por eixo e os botões Aprovar e Rejeitar" width="100%">
+      <br><sub><b>Fila de revisão humana.</b> Casos encaminhados pela IA (pontuação a partir de 0,40) ou contestados pelo autor, com a análise por eixo e as ações Aprovar e Rejeitar.</sub>
+    </td>
+  </tr>
+</table>
+
+<sub>As decisões mostradas são retornos reais do modelo sobre reclamações fictícias de demonstração.</sub>
 
 > [!IMPORTANT]
 > **Nota metodológica sobre desinformação.** O sistema **não verifica fatos**. Nenhum modelo de linguagem consegue confirmar se existe de fato um buraco em determinada rua. O que o pipeline detecta são **indícios** de conteúdo não confiável: incoerência entre imagem e texto, metadados inconsistentes, imagem reciclada de outra ocorrência, linguagem sensacionalista, alegações amplas não verificáveis.
