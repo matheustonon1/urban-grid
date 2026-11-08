@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import "./globals.css";
 
+import { selecionarMensagens } from "@/i18n/mensagensDoCliente";
 import { InlineScript } from "@/components/layout/inline-script";
 import { Rodape } from "@/components/layout/rodape";
 import { SiteHeader } from "@/components/layout/site-header";
@@ -64,7 +65,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
         />
       </head>
       <body className="flex min-h-full flex-col">
-        <NextIntlClientProvider locale={locale} messages={messages}>
+        {/* Só os namespaces que componentes de cliente pedem (src/i18n/mensagensDoCliente.ts): o
+            catálogo inteiro ia no HTML de toda página. */}
+        <NextIntlClientProvider locale={locale} messages={selecionarMensagens(messages)}>
           {/* Avisos flutuantes (confirmação e erro das ações) vivem aqui, acima das
               páginas: a ação revalida a lista e o cartão que a gerou some. */}
           <AvisosProvider>

@@ -30,6 +30,18 @@ describe("configDoAdapter", () => {
     expect(config.connectTimeout).toBe(10_000);
   });
 
+  it("guarda 128 instruções preparadas por conexão (o adapter do Prisma 7 usaria 0)", () => {
+    expect(configDoAdapter("mysql://u:p@h:3306/db").prepareCacheLength).toBe(128);
+  });
+
+  it("prepareCacheLength na URL manda no padrão, inclusive 0 para desligar; lixo cai no padrão", () => {
+    expect(configDoAdapter("mysql://u:p@h:3306/db?prepareCacheLength=0").prepareCacheLength).toBe(0);
+    expect(configDoAdapter("mysql://u:p@h:3306/db?prepareCacheLength=32").prepareCacheLength).toBe(32);
+    expect(configDoAdapter("mysql://u:p@h:3306/db?prepareCacheLength=abc").prepareCacheLength).toBe(128);
+    expect(configDoAdapter("mysql://u:p@h:3306/db?prepareCacheLength=-5").prepareCacheLength).toBe(128);
+    expect(configDoAdapter("mysql://u:p@h:3306/db?prepareCacheLength=").prepareCacheLength).toBe(128);
+  });
+
   it("sslaccept=strict (a URL do TiDB Cloud) liga o TLS validando o certificado", () => {
     expect(
       configDoAdapter("mysql://u:p@gateway01.tidbcloud.com:4000/db?sslaccept=strict").ssl

@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import { Check, ChevronRight, ExternalLink, MessageSquare } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 
-import { auth } from "@/auth";
+import { obterSessao } from "@/lib/seguranca/sessao";
 import { prisma } from "@/lib/prisma";
 import { Campo } from "@/components/formulario/campo";
 import { FormularioDenuncia } from "@/components/reclamacao/formulario-denuncia";
@@ -103,7 +103,7 @@ export default async function ReclamacaoPage({
 
   const reclamacao = await buscarReclamacao(protocolo);
 
-  const session = await auth();
+  const session = await obterSessao();
   const ehAutor = reclamacao?.autorId === session?.user?.id;
   const ehModerador =
     session?.user?.papel === "MODERADOR" || session?.user?.papel === "ADMIN";

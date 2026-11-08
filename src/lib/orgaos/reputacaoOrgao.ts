@@ -50,43 +50,23 @@ export function calcularIndiceResolucao({
 // - publicada há mais de PRAZO_SEM_RESPOSTA_DIAS;
 // - publicada depois de o órgão existir (Orgao.createdAt): ele não herda a fila antiga.
 // Órgão desativado não acumula: não pode responder.
-export async function calcularMetricasOrgao(orgaoId: string): Promise<MetricasOrgao> {
-  const agora = new Date();
+// O que a busca traz do banco para UM órgão (ver calcularMetricasDeOrgaos).
+export interface DadosParaMetricas {
+  // Uma entrada por reclamação que o órgão respondeu, com a data da PRIMEIRA resposta dele.
+  primeirasRespostas: { reclamacaoId: string; primeiraEm: Date }[];
+  reclamacoes: { id: string; publicadaEm: Date | null; status: string }[];
+  notas: number[];
+  semRespostaVencidas: number;
+}
 
-  const [primeirasRespostas, orgao] = await Promise.all([
-    prisma.respostaOficial.groupBy({
-      by: ["reclamacaoId"],
-      where: { orgaoId },
-      _min: { createdAt: true },
-    }),
-    prisma.orgao.findUnique({
-      where: { id: orgaoId },
-      select: {
-        id: true,
-        cidadeId: true,
-        ativo: true,
-        createdAt: true,
-        categorias: { select: { id: true } },
-      },
-    }),
-  ]);
-
-  const semRespostaVencidas =
-    orgao && orgao.ativo
-      ? await prisma.reclamacao.count({
-          where: {
-            ...filtroSemRespostaDoOrgao(
-              orgao,
-              // Sem categoria atribuída o órgão atende qualquer uma (orgaoAtendeCategoria).
-              orgao.categorias.length > 0 ? orgao.categorias.map((c) => c.id) : null
-            ),
-            publicadaEm: { gte: orgao.createdAt, lte: limiteDoPrazoSemResposta(agora) },
-          },
-        })
-      : 0;
-
-  const reclamacaoIds = primeirasRespostas.map((r) => r.reclamacaoId);
-  const totalRespondidas = reclamacaoIds.length;
+// A parte pura do cálculo, sem banco: a mesma conta para um órgão ou para vários.
+export function montarMetricasOrgao({
+  primeirasRespostas,
+  reclamacoes,
+  notas,
+  semRespostaVencidas,
+}: DadosParaMetricas): MetricasOrgao {
+  const totalRespondidas = primeirasRespostas.length;
 
   if (totalRespondidas === 0) {
     const { base, indice } = calcularIndiceResolucao({
@@ -106,17 +86,6 @@ export async function calcularMetricasOrgao(orgaoId: string): Promise<MetricasOr
     };
   }
 
-  const [reclamacoes, avaliacoes] = await Promise.all([
-    prisma.reclamacao.findMany({
-      where: { id: { in: reclamacaoIds } },
-      select: { id: true, publicadaEm: true, status: true },
-    }),
-    prisma.avaliacao.findMany({
-      where: { reclamacaoId: { in: reclamacaoIds } },
-      select: { nota: true },
-    }),
-  ]);
-
   const resolvidas = reclamacoes.filter((r) => r.status === "RESOLVIDA").length;
   const { base, indice: indiceResolucao } = calcularIndiceResolucao({
     resolvidas,
@@ -125,7 +94,7 @@ export async function calcularMetricasOrgao(orgaoId: string): Promise<MetricasOr
   });
 
   const primeiraRespostaPorReclamacao = new Map(
-    primeirasRespostas.map((r) => [r.reclamacaoId, r._min.createdAt!])
+    primeirasRespostas.map((r) => [r.reclamacaoId, r.primeiraEm])
   );
   const temposMs = reclamacoes
     .filter((r) => r.publicadaEm)
@@ -141,8 +110,8 @@ export async function calcularMetricasOrgao(orgaoId: string): Promise<MetricasOr
       : null;
 
   const notaMedia =
-    avaliacoes.length > 0
-      ? Math.round((avaliacoes.reduce((a, b) => a + b.nota, 0) / avaliacoes.length) * 10) / 10
+    notas.length > 0
+      ? Math.round((notas.reduce((a, b) => a + b, 0) / notas.length) * 10) / 10
       : null;
 
   return {
@@ -153,8 +122,112 @@ export async function calcularMetricasOrgao(orgaoId: string): Promise<MetricasOr
     indiceResolucao,
     tempoMedioRespostaDias,
     notaMedia,
-    totalAvaliacoes: avaliacoes.length,
+    totalAvaliacoes: notas.length,
   };
+}
+
+// Métricas de vários órgãos de uma vez. A home, a transparência e a página da cidade chamam isto
+// para um ranking: antes era uma chamada por órgão, cada uma com 5 consultas em 3 ondas encadeadas
+// (cresce com o número de órgãos, e o pool de conexões é pequeno), o que a latência do banco em
+// produção multiplicava. Agora são 2 ondas e (4 + N) consultas, qualquer que seja o N:
+//   onda 1: primeiras respostas de todos (um groupBy) e os órgãos;
+//   onda 2: a contagem de "sem resposta vencida" de cada órgão (depende do escopo dele), as
+//           reclamações e as avaliações das reclamações respondidas por qualquer um deles.
+// Uma reclamação respondida por mais de um órgão entra nas contas de cada um, como antes.
+export async function calcularMetricasDeOrgaos(
+  orgaoIds: string[]
+): Promise<Map<string, MetricasOrgao>> {
+  const ids = [...new Set(orgaoIds)];
+  const resultado = new Map<string, MetricasOrgao>();
+  if (ids.length === 0) return resultado;
+
+  const agora = new Date();
+
+  const [respostas, orgaos] = await Promise.all([
+    prisma.respostaOficial.groupBy({
+      by: ["orgaoId", "reclamacaoId"],
+      where: { orgaoId: { in: ids } },
+      _min: { createdAt: true },
+    }),
+    prisma.orgao.findMany({
+      where: { id: { in: ids } },
+      select: {
+        id: true,
+        cidadeId: true,
+        ativo: true,
+        createdAt: true,
+        categorias: { select: { id: true } },
+      },
+    }),
+  ]);
+
+  const respostasPorOrgao = new Map<string, DadosParaMetricas["primeirasRespostas"]>();
+  for (const r of respostas) {
+    const lista = respostasPorOrgao.get(r.orgaoId) ?? [];
+    lista.push({ reclamacaoId: r.reclamacaoId, primeiraEm: r._min.createdAt! });
+    respostasPorOrgao.set(r.orgaoId, lista);
+  }
+  const orgaoPorId = new Map(orgaos.map((o) => [o.id, o]));
+  const reclamacaoIds = [...new Set(respostas.map((r) => r.reclamacaoId))];
+
+  const [semRespostaPorOrgao, reclamacoes, avaliacoes] = await Promise.all([
+    Promise.all(
+      ids.map((id) => {
+        const orgao = orgaoPorId.get(id);
+        if (!orgao || !orgao.ativo) return 0;
+        return prisma.reclamacao.count({
+          where: {
+            ...filtroSemRespostaDoOrgao(
+              orgao,
+              // Sem categoria atribuída o órgão atende qualquer uma (orgaoAtendeCategoria).
+              orgao.categorias.length > 0 ? orgao.categorias.map((c) => c.id) : null
+            ),
+            publicadaEm: { gte: orgao.createdAt, lte: limiteDoPrazoSemResposta(agora) },
+          },
+        });
+      })
+    ),
+    reclamacaoIds.length > 0
+      ? prisma.reclamacao.findMany({
+          where: { id: { in: reclamacaoIds } },
+          select: { id: true, publicadaEm: true, status: true },
+        })
+      : [],
+    reclamacaoIds.length > 0
+      ? prisma.avaliacao.findMany({
+          where: { reclamacaoId: { in: reclamacaoIds } },
+          select: { reclamacaoId: true, nota: true },
+        })
+      : [],
+  ]);
+
+  const reclamacaoPorId = new Map(reclamacoes.map((r) => [r.id, r]));
+  const notasPorReclamacao = new Map<string, number[]>();
+  for (const a of avaliacoes) {
+    const lista = notasPorReclamacao.get(a.reclamacaoId) ?? [];
+    lista.push(a.nota);
+    notasPorReclamacao.set(a.reclamacaoId, lista);
+  }
+
+  ids.forEach((id, i) => {
+    const primeirasRespostas = respostasPorOrgao.get(id) ?? [];
+    resultado.set(
+      id,
+      montarMetricasOrgao({
+        primeirasRespostas,
+        reclamacoes: primeirasRespostas.flatMap((r) => reclamacaoPorId.get(r.reclamacaoId) ?? []),
+        notas: primeirasRespostas.flatMap((r) => notasPorReclamacao.get(r.reclamacaoId) ?? []),
+        semRespostaVencidas: semRespostaPorOrgao[i],
+      })
+    );
+  });
+
+  return resultado;
+}
+
+// Um órgão só (painel do órgão, página do órgão): a mesma regra, pelo caminho em lote.
+export async function calcularMetricasOrgao(orgaoId: string): Promise<MetricasOrgao> {
+  return (await calcularMetricasDeOrgaos([orgaoId])).get(orgaoId)!;
 }
 
 export type SeloChave = "poucosDados" | "otimo" | "bom" | "regular" | "ruim";

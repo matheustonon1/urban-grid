@@ -22,14 +22,30 @@ import type { PoolConfig } from "mariadb";
 //   compose. `=true` ou `=false` na URL manda mais que esse padrão. Em host remoto o padrão fica
 //   desligado: sem TLS, aceitar a chave que o servidor entrega deixa um intermediário trocá-la.
 //
+// - prepareCacheLength          instruções preparadas que cada conexão do pool guarda (padrão 128). O
+//   adapter do Prisma 7 usa 0 quando ninguém define, e então TODA consulta vira PREPARE + EXECUTE +
+//   CLOSE no servidor: 3 idas e voltas em vez de 1. Medido com 30 ms de latência até o banco, com
+//   o mesmo código: home logada 892 -> 491 ms, detalhe da reclamação 667 -> 408 ms. 32 não basta
+//   com as páginas alternando (o cache é trocado a toda hora: soma das rotas 3227 ms contra 2371 ms
+//   com 128). `=0` volta ao comportamento do adapter. O que ocupa memória no servidor
+//   (max_prepared_stmt_count, 16382 no MySQL padrão) é o conjunto de instruções DISTINTAS em uso,
+//   não o tamanho do cache: o site usa ~54 por conexão (268 no total com as 5 conexões).
+//
 // Sem nenhum parâmetro de TLS a conexão é sem TLS, o que serve ao MySQL local (Docker) e ao do CI.
 
 const CONEXOES_PADRAO = 5;
 const SEGUNDOS_PARA_CONECTAR_PADRAO = 10;
+const INSTRUCOES_PREPARADAS_PADRAO = 128;
 
 function inteiroPositivo(valor: string | null, padrao: number): number {
   const numero = Number(valor);
   return Number.isInteger(numero) && numero > 0 ? numero : padrao;
+}
+
+// Como o anterior, mas aceita 0 (que aqui significa "desligado").
+function inteiroNaoNegativo(valor: string | null, padrao: number): number {
+  const numero = valor === null || valor === "" ? NaN : Number(valor);
+  return Number.isInteger(numero) && numero >= 0 ? numero : padrao;
 }
 
 // `new URL` mantém os colchetes do IPv6 em hostname ("[::1]").
@@ -66,6 +82,10 @@ export function configDoAdapter(urlDeConexao: string): PoolConfig {
     connectionLimit: inteiroPositivo(parametros.get("connection_limit"), CONEXOES_PADRAO),
     connectTimeout:
       inteiroPositivo(parametros.get("connect_timeout"), SEGUNDOS_PARA_CONECTAR_PADRAO) * 1000,
+    prepareCacheLength: inteiroNaoNegativo(
+      parametros.get("prepareCacheLength"),
+      INSTRUCOES_PREPARADAS_PADRAO
+    ),
     ...(tlsComValidacao
       ? { ssl: { rejectUnauthorized: true } }
       : tlsSemValidacao

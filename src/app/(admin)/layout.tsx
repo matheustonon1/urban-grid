@@ -1,4 +1,4 @@
-import { auth } from "@/auth";
+import { obterSessao } from "@/lib/seguranca/sessao";
 import { AdminNav } from "@/components/layout/admin-nav";
 import { contarPendenciasModeracao } from "@/lib/moderacao/pendencias";
 import { containerSite } from "@/lib/estilos";
@@ -9,7 +9,7 @@ import { containerSite } from "@/lib/estilos";
 // acesso: Server Functions postam pra própria URL da página, então uma
 // verificação aqui não cobriria as ações, só o GET inicial.
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth();
+  const session = await obterSessao();
   const ehAdmin = session?.user?.papel === "ADMIN";
   const ehModerador = ehAdmin || session?.user?.papel === "MODERADOR";
   // Só pra quem modera: este layout também envolve páginas cujo guard fica na
