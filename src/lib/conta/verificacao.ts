@@ -1,4 +1,4 @@
-// A partir desta data, confirmar ("também sofro com isso") e denunciar
+// A partir desta data, comentar, confirmar ("também sofro com isso") e denunciar
 // passam a exigir e-mail verificado. Contas criadas antes disso ficam
 // isentas — não é razoável exigir verificação retroativa de quem já
 // usava a plataforma.

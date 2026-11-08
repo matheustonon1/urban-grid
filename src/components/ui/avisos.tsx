@@ -6,6 +6,7 @@ import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { TONS_AVISO, type TomAviso } from "./aviso";
+import { empilharAviso } from "./avisos-fila";
 
 // Avisos flutuantes ("toasts") do site inteiro: confirmação do que acabou de
 // acontecer - "Papel de Ana alterado para Moderador", "Reclamação publicada" - ou
@@ -45,7 +46,7 @@ export function AvisosProvider({ children }: { children: ReactNode }) {
 
   const notificar = useCallback((aviso: NovoAviso) => {
     const id = ++proximoId.current;
-    setAvisos((atuais) => [...atuais, { ...aviso, id }].slice(-MAXIMO_NA_TELA));
+    setAvisos((atuais) => empilharAviso(atuais, { ...aviso, id }, MAXIMO_NA_TELA));
   }, []);
 
   const fechar = useCallback((id: number) => {
