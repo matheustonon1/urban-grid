@@ -362,6 +362,22 @@
   animation: pop-in 0.15s ease-out both;
 }
 
+/* Barra de tempo do aviso flutuante (components/ui/avisos.tsx): esvazia da direita para a
+   esquerda. A duração vem inline (é a mesma constante do temporizador que fecha o aviso);
+   com prefers-reduced-motion a barra some (motion-reduce:hidden no componente). */
+@keyframes barra-aviso {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+.animate-barra-aviso {
+  animation: barra-aviso linear forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in,
   .animate-pop-in {
