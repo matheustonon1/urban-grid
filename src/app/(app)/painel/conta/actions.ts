@@ -110,11 +110,15 @@ export async function reenviarVerificacaoEmail(): Promise<NonNullable<MensagemFo
   }
 
   const token = await criarTokenVerificacao(usuario.email);
-  await enviarEmailVerificacao({
+  const envio = await enviarEmailVerificacao({
     email: usuario.email,
     token,
     locale: idiomaOuPadrao(usuario.idioma),
   });
+  // Provedor recusou: não diga "enviamos" (ver reenviarVerificacao em painel/actions.ts).
+  if (envio.status === "falhou") {
+    return { mensagem: t("erroEnvioVerificacao") };
+  }
 
   return { tipo: "sucesso", mensagem: t("verificacaoReenviada", { email: usuario.email }) };
 }

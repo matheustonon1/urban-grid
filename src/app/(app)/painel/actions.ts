@@ -33,11 +33,17 @@ export async function reenviarVerificacao(): Promise<ResultadoAcao> {
   }
 
   const token = await criarTokenVerificacao(usuario.email);
-  await enviarEmailVerificacao({
+  const envio = await enviarEmailVerificacao({
     email: usuario.email,
     token,
     locale: idiomaOuPadrao(usuario.idioma),
   });
+  // O provedor recusou: dizer "enviamos" seria mentira e a pessoa ficaria esperando um e-mail
+  // que nunca chega. O motivo técnico fica no log do servidor, não vai para a tela. ("simulado"
+  // é o dev/CI sem provedor configurado, onde o link vai para o log: segue como sucesso.)
+  if (envio.status === "falhou") {
+    return falha(t("erroEnvioVerificacao"));
+  }
 
   revalidatePath("/painel");
 
