@@ -4,7 +4,6 @@ import {
   AMOSTRA_MINIMA,
   consumoDoModelo,
   disparosPorEixo,
-  ehFalhaDaIA,
   escolherGranularidade,
   histogramaScore,
   idadesDaFila,
@@ -21,6 +20,7 @@ import {
   volumePorPeriodo,
   type LogEstatistica,
 } from "./estatisticas";
+import { ehFalhaDaIA } from "./falha";
 
 function log(parcial: Partial<LogEstatistica> = {}): LogEstatistica {
   return {

@@ -15,7 +15,9 @@ import { ResumoLateral } from "@/components/ui/resumo-lateral";
 import { Secao } from "@/components/ui/secao";
 import { GuiaPontuacoes } from "@/components/moderacao/guia-pontuacoes";
 import { PontuacoesIA } from "@/components/moderacao/pontuacoes-ia";
+import { SemAnaliseIA } from "@/components/moderacao/sem-analise-ia";
 import { TempoNaFila } from "@/components/moderacao/tempo-na-fila";
+import { ehFalhaDaIA } from "@/lib/moderacao/falha";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/util/paginacao";
 import {
   blocoCitacao,
@@ -114,7 +116,11 @@ export default async function ModeracaoPage({ searchParams }: PageProps<"/modera
             )}
 
             {pendentes.map((reclamacao) => {
-              const log = logPorReclamacao.get(reclamacao.id);
+              // O registro de falha da IA (nota 1, nenhum eixo) NÃO é uma análise: sem esse filtro
+              // ele virava o painel "Geral 1.00" e passava por veredito. Sem análise válida, a
+              // origem cai em "falha" e a tela avisa que o moderador decide sozinho.
+              const registro = logPorReclamacao.get(reclamacao.id);
+              const log = registro && !ehFalhaDaIA(registro) ? registro : undefined;
               const blurPendente = reclamacao.midias.some(
                 (midia) => midia.statusModeracao === "REVISAO_HUMANA" && !midia.urlTratada
               );
@@ -206,7 +212,7 @@ export default async function ModeracaoPage({ searchParams }: PageProps<"/modera
                     </div>
                   )}
 
-                  {origem === "falha" && <Aviso tom="atencao">{t("semAnaliseIA")}</Aviso>}
+                  {origem === "falha" && <SemAnaliseIA />}
 
                   {blurPendente && <Aviso tom="erro">{t("desfoquePendenteDesc")}</Aviso>}
 

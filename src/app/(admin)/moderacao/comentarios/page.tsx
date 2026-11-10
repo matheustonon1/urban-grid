@@ -13,7 +13,9 @@ import { ResumoLateral } from "@/components/ui/resumo-lateral";
 import { Secao } from "@/components/ui/secao";
 import { GuiaPontuacoes } from "@/components/moderacao/guia-pontuacoes";
 import { PontuacoesIA } from "@/components/moderacao/pontuacoes-ia";
+import { EtiquetaSemAnaliseIA, SemAnaliseIA } from "@/components/moderacao/sem-analise-ia";
 import { TempoNaFila } from "@/components/moderacao/tempo-na-fila";
+import { ehFalhaDaIA } from "@/lib/moderacao/falha";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/util/paginacao";
 import {
   blocoCitacao,
@@ -98,11 +100,18 @@ export default async function ModeracaoComentariosPage({
               const comentario = comentarioPorId.get(log.alvoId);
               if (!comentario) return null;
               const nomeAutor = comentario.autor.name ?? comentario.autor.email;
+              // Falha da IA: o comentário ficou oculto só porque a análise não saiu (lado seguro),
+              // não porque a IA o reprovou. Não mostra "Reprovado (IA)" nem a nota 1.00.
+              const semAnalise = ehFalhaDaIA(log);
 
               return (
                 <article key={log.id} className={`flex flex-col gap-5 ${cartaoSecao}`}>
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <DecisaoBadge decisao="REPROVAR" origem={tHist("ia")} />
+                    {semAnalise ? (
+                      <EtiquetaSemAnaliseIA />
+                    ) : (
+                      <DecisaoBadge decisao="REPROVAR" origem={tHist("ia")} />
+                    )}
                     <TempoNaFila desde={log.createdAt} />
                   </div>
 
@@ -122,20 +131,24 @@ export default async function ModeracaoComentariosPage({
 
                   <p className={blocoCitacao}>{comentario.texto}</p>
 
-                  <div className={`flex flex-col gap-3 ${painelSuave}`}>
-                    <p className={rotuloSecao}>{tMod("analiseIA")}</p>
-                    <PontuacoesIA
-                      itens={[
-                        { rotulo: tMod("geral"), valor: log.scoreGeral, destaque: true },
-                        { rotulo: rotuloEixo(tMod("ofensivo")), valor: log.scoreOfensivo },
-                        { rotulo: rotuloEixo(tMod("spam")), valor: log.scoreSpam },
-                        { rotulo: rotuloEixo(tMod("dadosPessoais")), valor: log.scoreDadosPessoais },
-                      ]}
-                    />
-                    {log.justificativa && (
-                      <p className="text-sm text-ink-2 italic">“{log.justificativa}”</p>
-                    )}
-                  </div>
+                  {semAnalise ? (
+                    <SemAnaliseIA />
+                  ) : (
+                    <div className={`flex flex-col gap-3 ${painelSuave}`}>
+                      <p className={rotuloSecao}>{tMod("analiseIA")}</p>
+                      <PontuacoesIA
+                        itens={[
+                          { rotulo: tMod("geral"), valor: log.scoreGeral, destaque: true },
+                          { rotulo: rotuloEixo(tMod("ofensivo")), valor: log.scoreOfensivo },
+                          { rotulo: rotuloEixo(tMod("spam")), valor: log.scoreSpam },
+                          { rotulo: rotuloEixo(tMod("dadosPessoais")), valor: log.scoreDadosPessoais },
+                        ]}
+                      />
+                      {log.justificativa && (
+                        <p className="text-sm text-ink-2 italic">“{log.justificativa}”</p>
+                      )}
+                    </div>
+                  )}
 
                   <div className="flex flex-wrap gap-2 border-t border-line pt-5">
                     <FormularioAcao action={aprovarComentarioReprovado.bind(null, comentario.id)}>

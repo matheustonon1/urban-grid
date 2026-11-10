@@ -13,7 +13,6 @@ import {
 import {
   consumoDoModelo,
   disparosPorEixo,
-  ehFalhaDaIA,
   escolherGranularidade,
   histogramaScore,
   idadesDaFila,
@@ -29,6 +28,7 @@ import {
   variacaoRelativa,
   volumePorPeriodo,
 } from "@/lib/moderacao/estatisticas";
+import { ehFalhaDaIA } from "@/lib/moderacao/falha";
 import { pagina } from "@/lib/estilos";
 import { formatarNumero, formatarPorcentagem, formatarVariacao } from "@/lib/util/formatarEstatistica";
 import { metadataDaPagina } from "@/lib/metadata";

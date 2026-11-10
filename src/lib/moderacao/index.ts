@@ -6,6 +6,13 @@ import { criarNotificacao } from "@/lib/notificacoes";
 import { avisarOrgaosDaPublicacao } from "@/lib/notificacoes/orgaos";
 import { LIMITE_REPROVACAO, LIMITE_REVISAO } from "@/lib/moderacao/pontuacoes";
 
+import {
+  descreverFalha,
+  ehErroTemporario,
+  esperaAntesDaProximaTentativa,
+  registroDeFalha,
+  TENTATIVAS_DA_IA,
+} from "./falha";
 import { getGeminiClient } from "./gemini";
 
 const MODELO = "gemini-3.6-flash";
@@ -139,24 +146,34 @@ export function decidir(
 }
 
 // O modelo gratuito do Gemini retorna 503 (UNAVAILABLE) com frequência sob
-// alta demanda; essas falhas são transitórias e desaparecem em segundos.
-// Exportada pra moderarComentario() reaproveitar o mesmo retry.
+// alta demanda, em rajadas de alguns segundos. Repete só o que pode passar
+// sozinho (ver ehErroTemporario), com espera crescente: o resto falha na hora
+// e a análise vai para a revisão humana, sem quem envia esperar à toa.
+// Exportada para poder ser testada.
 export async function gerarConteudoComRetry(
   parametros: Parameters<
     ReturnType<typeof getGeminiClient>["models"]["generateContent"]
   >[0],
-  tentativas = 3
+  {
+    tentativas = TENTATIVAS_DA_IA,
+    aguardar = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)),
+  }: { tentativas?: number; aguardar?: (ms: number) => Promise<void> } = {}
 ) {
-  for (let tentativa = 1; tentativa <= tentativas; tentativa++) {
+  // Fora do laço: chave não configurada não é erro temporário, repetir não resolve.
+  const cliente = getGeminiClient();
+  for (let tentativa = 1; ; tentativa++) {
     try {
-      return await getGeminiClient().models.generateContent(parametros);
+      return await cliente.models.generateContent(parametros);
     } catch (erro) {
-      const ultimaTentativa = tentativa === tentativas;
-      if (ultimaTentativa) throw erro;
-      await new Promise((resolve) => setTimeout(resolve, tentativa * 1500));
+      if (tentativa >= tentativas || !ehErroTemporario(erro)) throw erro;
+      const espera = esperaAntesDaProximaTentativa(tentativa);
+      // Deixa rastro de cada repetição: o erro original só existia no console e se perdia.
+      console.warn(
+        `[moderação] ${descreverFalha(erro)} (tentativa ${tentativa} de ${tentativas}); nova tentativa em ${(espera / 1000).toFixed(1)} s.`
+      );
+      await aguardar(espera);
     }
   }
-  throw new Error("Falha inesperada ao chamar o modelo de moderação.");
 }
 
 // Chama o Gemini (com retry) e faz o parse/validação da resposta - parte
@@ -287,9 +304,7 @@ export async function moderarReclamacao(
         modelo: MODELO,
         versaoPrompt: VERSAO_PROMPT,
         decisao: "ENCAMINHAR_REVISAO",
-        scoreGeral: 1,
-        justificativa: "Falha ao consultar ou interpretar a resposta do modelo de moderação (ver logs do servidor).",
-        resultadoJson: "{}",
+        ...registroDeFalha(erro),
         latenciaMs: Date.now() - inicio,
       },
     });
