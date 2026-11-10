@@ -4,6 +4,7 @@ import * as z from "zod";
 import { prisma } from "@/lib/prisma";
 import { LIMITE_REPROVACAO_COMENTARIO } from "@/lib/moderacao/pontuacoes";
 
+import { registroDeFalha } from "./falha";
 import { gerarAnaliseModeracao } from "./index";
 
 const MODELO = "gemini-3.6-flash";
@@ -96,9 +97,7 @@ export async function moderarComentario(
         modelo: MODELO,
         versaoPrompt: VERSAO_PROMPT,
         decisao: "REPROVAR",
-        scoreGeral: 1,
-        justificativa: "Falha ao consultar o modelo de moderação (ver logs do servidor).",
-        resultadoJson: "{}",
+        ...registroDeFalha(erro),
         latenciaMs: Date.now() - inicio,
       },
     });

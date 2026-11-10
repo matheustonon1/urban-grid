@@ -11,6 +11,8 @@ import { ResumoLateral } from "@/components/ui/resumo-lateral";
 import { Secao } from "@/components/ui/secao";
 import { GuiaPontuacoes } from "@/components/moderacao/guia-pontuacoes";
 import { ChipsPontuacao, PontuacoesIA } from "@/components/moderacao/pontuacoes-ia";
+import { EtiquetaSemAnaliseIA, SemAnaliseIA } from "@/components/moderacao/sem-analise-ia";
+import { ehFalhaDaIA } from "@/lib/moderacao/falha";
 import { calcularSkip, calcularTotalPaginas, ITENS_POR_PAGINA, lerPaginaAtual } from "@/lib/util/paginacao";
 import {
   botaoSecundario,
@@ -91,6 +93,8 @@ export default async function HistoricoModeracaoComentariosPage({
               <ul className="-mt-2 divide-y divide-line">
                 {logs.map((log) => {
                   const comentario = comentarioPorId.get(log.alvoId);
+                  // Registro de falha da IA: não há notas a mostrar (ver sem-analise-ia.tsx).
+                  const semAnalise = ehFalhaDaIA(log);
                   const pontuacoes = [
                     { rotulo: rotuloEixo(tHist("geral")), valor: log.scoreGeral, destaque: true },
                     { rotulo: tHist("ofensivo"), valor: log.scoreOfensivo },
@@ -136,23 +140,33 @@ export default async function HistoricoModeracaoComentariosPage({
                             )}
                           </p>
                         </div>
-                        <DecisaoBadge decisao={log.decisao} origem={tHist("ia")} />
+                        {semAnalise ? (
+                          <EtiquetaSemAnaliseIA />
+                        ) : (
+                          <DecisaoBadge decisao={log.decisao} origem={tHist("ia")} />
+                        )}
                       </div>
 
-                      <ChipsPontuacao itens={pontuacoes} vazio={tHist("nenhumEixoAlto")} />
+                      {semAnalise ? (
+                        <SemAnaliseIA />
+                      ) : (
+                        <>
+                          <ChipsPontuacao itens={pontuacoes} vazio={tHist("nenhumEixoAlto")} />
 
-                      {log.justificativa && (
-                        <p className="text-sm text-ink-2 italic">“{log.justificativa}”</p>
+                          {log.justificativa && (
+                            <p className="text-sm text-ink-2 italic">“{log.justificativa}”</p>
+                          )}
+
+                          <details>
+                            <summary className="w-fit cursor-pointer text-xs font-semibold text-brand underline underline-offset-2">
+                              {tHist("todasPontuacoes")}
+                            </summary>
+                            <div className="mt-3">
+                              <PontuacoesIA itens={pontuacoes} />
+                            </div>
+                          </details>
+                        </>
                       )}
-
-                      <details>
-                        <summary className="w-fit cursor-pointer text-xs font-semibold text-brand underline underline-offset-2">
-                          {tHist("todasPontuacoes")}
-                        </summary>
-                        <div className="mt-3">
-                          <PontuacoesIA itens={pontuacoes} />
-                        </div>
-                      </details>
 
                       {log.decisaoFinal && (
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5 border-t border-line pt-3 text-xs text-ink-muted">

@@ -1,4 +1,5 @@
 import { LIMITE_REPROVACAO, LIMITE_REVISAO, nivelPontuacao, type NivelPontuacao } from "@/lib/moderacao/pontuacoes";
+import { ehFalhaDaIA } from "@/lib/moderacao/falha";
 
 // Cálculos da página de estatísticas de moderação, sem tocar no banco: o
 // carregador (carregarEstatisticasModeracao) só busca as linhas e entrega a
@@ -24,16 +25,6 @@ export interface LogEstatistica {
   decisaoFinal: Decisao | null;
   revisadoEm: Date | null;
   createdAt: Date;
-}
-
-// O pipeline grava um log de "falha" quando o modelo não responde (decisão
-// forçada pro lado seguro, scoreGeral 1, nenhum eixo preenchido). Esse log
-// não é uma avaliação: contar como "reprovada pela IA" ou entrar numa média
-// de score distorceria tudo - então sai das taxas e vira um número à parte.
-// As duas condições juntas: um registro antigo sem eixos mas com outro
-// scoreGeral não é falha, só um registro sem detalhe.
-export function ehFalhaDaIA(log: LogEstatistica): boolean {
-  return log.scoreOfensivo === null && log.scoreGeral === 1;
 }
 
 // ---------------------------------------------------------------------------

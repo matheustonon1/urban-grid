@@ -363,7 +363,7 @@
     "origem_ia": "Flagged by AI",
     "origem_recurso": "Appeal",
     "origem_falha": "No automatic analysis",
-    "semAnaliseIA": "There's no automatic analysis recorded for this complaint (processing failed before saving the result). Review the content yourself.",
+    "semAnaliseIA": "The automatic analysis wasn't completed: the AI service failed or was unavailable. Review the content yourself.",
     "naFilaDesde": "In queue since {data}"
   },
   "ModeracaoComentarios": {

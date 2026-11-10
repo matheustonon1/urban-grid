@@ -363,7 +363,7 @@
     "origem_ia": "Encaminhada pela IA",
     "origem_recurso": "Recurso",
     "origem_falha": "Sem análise automática",
-    "semAnaliseIA": "Não há análise automática registrada para esta reclamação (o processamento falhou antes de gravar o resultado). Revise o conteúdo por conta própria.",
+    "semAnaliseIA": "A análise automática não foi concluída: o serviço de IA falhou ou ficou indisponível. Revise o conteúdo por conta própria.",
     "naFilaDesde": "Na fila desde {data}"
   },
   "ModeracaoComentarios": {
